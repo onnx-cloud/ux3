@@ -1,0 +1,19 @@
+name: 'for-you'
+layout: default
+initial: loading
+states:
+  loading:
+    template: 'view/for-you/loading.html'
+    invoke:
+      src: loadForYou
+    on:
+      SUCCESS: loaded
+      ERROR: error
+  loaded:
+    template: 'view/for-you/loaded.html'
+    on:
+      REFRESH: loading
+  error:
+    template: 'view/for-you/error.html'
+    on:
+      RETRY: loading

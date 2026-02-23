@@ -1,0 +1,233 @@
+{
+  "services": {
+    "api": {
+      "adapter": "http",
+      "baseUrl": "http://localhost:1337/api",
+      "auth": {
+        "type": "bearer"
+      }
+    },
+    "realtime": {
+      "adapter": "websocket",
+      "url": "ws://localhost:1337/realtime",
+      "reconnectAttempts": 5,
+      "reconnectInterval": 2000
+    },
+    "chat": {
+      "adapter": "jsonrpc",
+      "endpoint": "http://localhost:1337/rpc/chat"
+    },
+    "chatbot": {
+      "adapter": "jsonrpc",
+      "endpoint": "http://localhost:1337/api/chatbot"
+    },
+    "eod": {
+      "adapter": "file",
+      "baseUrl": "public/api/asset/eod/{{this.symbol}}.json",
+      "caching": {
+        "enabled": true,
+        "ttl": 86400
+      }
+    }
+  },
+  "views/account": {
+    "invokes": {
+      "loadAccount": {
+        "signature": {
+          "name": "loadAccount",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      },
+      "saveAccount": {
+        "signature": {
+          "name": "saveAccount",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/asset": {
+    "invokes": {
+      "asset": {
+        "signature": {
+          "name": "asset",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/billing": {
+    "invokes": {
+      "loadBilling": {
+        "signature": {
+          "name": "loadBilling",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/blog": {
+    "invokes": {
+      "loadBlog": {
+        "signature": {
+          "name": "loadBlog",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/chat": {
+    "invokes": {
+      "loadConversations": {
+        "signature": {
+          "name": "loadConversations",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/dashboard": {
+    "invokes": {
+      "loadDashboard": {
+        "signature": {
+          "name": "loadDashboard",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/for-you": {
+    "invokes": {
+      "loadForYou": {
+        "signature": {
+          "name": "loadForYou",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/login": {
+    "invokes": {
+      "submitLogin": {
+        "signature": {
+          "name": "submitLogin",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/macro": {
+    "invokes": {
+      "loadMacro": {
+        "signature": {
+          "name": "loadMacro",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/market": {
+    "invokes": {
+      "loadMarketData": {
+        "signature": {
+          "name": "loadMarketData",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  },
+  "views/sign-up": {
+    "invokes": {
+      "validateSignUp": {
+        "signature": {
+          "name": "validateSignUp",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      },
+      "submitSignUp": {
+        "signature": {
+          "name": "submitSignUp",
+          "params": [
+            "payload",
+            "context"
+          ]
+        },
+        "validationResult": {
+          "valid": true
+        }
+      }
+    }
+  }
+}

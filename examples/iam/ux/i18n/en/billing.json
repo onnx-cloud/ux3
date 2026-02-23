@@ -1,0 +1,9 @@
+{
+  "billing": {
+    "loading": { "label": "Loading billing" },
+    "viewing": { "label": "Billing" },
+    "upgrading": { "label": "Upgrading plan" },
+    "managing_payment": { "label": "Manage payment" },
+    "error": { "label": "Unable to load billing" }
+  }
+}

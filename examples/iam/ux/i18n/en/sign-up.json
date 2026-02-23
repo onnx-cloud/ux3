@@ -1,0 +1,9 @@
+{
+  "sign-up": {
+    "idle": { "label": "Create your account" },
+    "validating": { "label": "Validating..." },
+    "submitting": { "label": "Creating account..." },
+    "success": { "label": "Account created" },
+    "error": { "label": "Sign up failed" }
+  }
+}

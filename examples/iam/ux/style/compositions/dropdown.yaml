@@ -1,0 +1,10 @@
+dropdown:
+  base: 'relative inline-block'
+  variants:
+    placement:
+      top: 'bottom-full mb-2'
+      bottom: 'top-full mt-2'
+      left: 'right-full mr-2'
+      right: 'left-full ml-2'
+  defaults:
+    placement: bottom

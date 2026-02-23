@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Style schema",
+  "type": "object",
+  "description": "Simple schema for ux/style files: style names map to either a string alias or an object of properties.",
+  "patternProperties": {
+    "^.*$": {
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "class": { "type": "string" },
+            "tokens": { "type": "array", "items": { "type": "string" } },
+            "variants": { "type": "object" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

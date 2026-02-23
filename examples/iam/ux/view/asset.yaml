@@ -1,0 +1,31 @@
+name: 'asset'
+layout: default
+initial: index
+guards:
+  - hasSymbol:
+      where:
+      - param: symbol
+        operator: exists
+states:
+  index:
+    always:
+      - cond: hasSymbol
+        target: loading
+  loading:
+    always:
+      - cond: hasSymbol
+        target: loading
+      - target: index
+    invoke:
+      src: asset
+      method: GET
+      onDone:
+        target: loaded
+      onError:
+        target: error
+  loaded:
+    on:
+      REFRESH: loading
+  error:
+    on:
+      RETRY: loading

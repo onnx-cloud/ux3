@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UX3 Dev — {{ projectName }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>/* fallback styles */ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2rem}pre{background:#f8fafc;padding:1rem;border-radius:6px}</style>
+</head>
+<body>
+  <div class="container">
+    <h1>UX3 Dev Server — {{ projectName }}</h1>
+    <div><strong>Status:</strong> Connected</div>
+
+
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <h2 class="text-lg font-semibold">Build Stats</h2>
+        <pre id="stats" class="mt-2 bg-slate-50 p-4 rounded text-sm">{{ stats }}</pre>
+
+        <h2 class="text-lg font-semibold mt-4">Configuration Summary</h2>
+        <pre id="summary" class="mt-2 bg-slate-50 p-4 rounded text-sm">{{ summary }}</pre>
+
+        <h2 class="text-lg font-semibold mt-4">Available Endpoints</h2>
+        <ul class="list-disc list-inside mt-2">
+          <li><a class="text-blue-600 hover:underline" href="/$/config"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/config</code></a> — configuration</li>
+          <li><a class="text-blue-600 hover:underline" href="/$/types"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/types</code></a> — generated types</li>
+          <li><a class="text-blue-600 hover:underline" href="/$/manifest"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/manifest</code></a> — service invokes</li>
+          <li><a class="text-blue-600 hover:underline" href="/$/stats"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/stats</code></a> — build stats</li>
+          <li><a class="text-blue-600 hover:underline" href="/$/hot-reload"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/hot-reload</code></a> — SSE endpoint</li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="text-lg font-semibold">Views</h2>
+        <div class="mt-2">
+          <ul class="space-y-2">{{ viewsHTML }}</ul>
+        </div>
+
+        <h2 class="text-lg font-semibold mt-6">i18n</h2>
+        <div class="mt-2 text-sm text-slate-700">Total keys: {{ i18nCount }}</div>
+      </div>
+    </div>
+
+    <script>
+      const es = new EventSource('/$/hot-reload');
+      es.onmessage = (e)=>{ try{ const d=JSON.parse(e.data); if(d.type==='rebuild') location.reload(); }catch(e){} };
+      async function refresh(){ try{ const s=await (await fetch('/$/stats')).json(); document.getElementById('stats').textContent = JSON.stringify(s,null,2); const c=await (await fetch('/$/config')).json(); document.getElementById('summary').textContent = JSON.stringify({ routes: Object.keys(c.routes||{}).length, services: Object.keys(c.services||{}).length, views: Object.keys(c.views||{}).length, i18n: Object.keys(c.i18n||{}).length }, null, 2);}catch(e){}}
+      window.addEventListener('load', ()=>refresh());
+    </script>
+  </div>
+</body>
+</html>

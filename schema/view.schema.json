@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "View FSM schema",
+  "type": "object",
+  "required": ["initial", "states"],
+  "properties": {
+    "name": { "type": "string" },
+    "layout": { "type": "string" },
+    "initial": { "type": "string" },
+    "states": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "properties": {
+            "template": { "type": "string" },
+            "invoke": {
+              "anyOf": [
+                { "type": "object", "properties": { "src": { "anyOf": [{ "type": "string" }, { "type": "object" }] }, "input": {} }, "additionalProperties": true },
+                { "type": "object", "properties": { "service": { "type": "string" }, "method": { "type": "string" }, "input": {} }, "additionalProperties": true }
+              ]
+            },
+            "on": { "type": "object", "additionalProperties": { "anyOf": [ { "type": "string" }, { "type": "object", "properties": { "target": { "type": "string" } }, "additionalProperties": true } ] } }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

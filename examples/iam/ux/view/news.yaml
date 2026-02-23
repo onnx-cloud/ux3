@@ -1,0 +1,17 @@
+name: 'News'
+layout: default
+initial: loading
+states:
+  loading:
+    template: 'view/news/loading.html'
+    on:
+      LOADED: loaded
+      ERROR: error
+  loaded:
+    template: 'view/news/loaded.html'
+    on:
+      RETRY: loading
+  error:
+    template: 'view/news/error.html'
+    on:
+      RETRY: loading

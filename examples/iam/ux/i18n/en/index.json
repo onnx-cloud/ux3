@@ -1,0 +1,14 @@
+{
+    "brand": {
+        "title": "InvestAmerica.money",
+        "description": "Market intelligence for everyone."
+    },
+    "nav": {
+        "home": "IAM",
+        "about": "About",
+        "contact": "Contact"
+    },
+    "footer": {
+        "copyright": "© 2026 IAM. All rights reserved."
+    }
+}

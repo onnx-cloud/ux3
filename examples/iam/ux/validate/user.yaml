@@ -1,0 +1,13 @@
+user:
+  email:
+    type: string
+    required: true
+    pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+  password:
+    type: string
+    required: true
+    minLength: 8
+  name:
+    type: string
+    required: true
+    minLength: 2

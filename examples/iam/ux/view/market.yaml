@@ -1,0 +1,19 @@
+name: 'Market'
+layout: default
+initial: loading
+states:
+  loading:
+    template: 'view/market/loading.html'
+    invoke:
+      src: loadMarketData
+    on:
+      SUCCESS: loaded
+      ERROR: error
+  loaded:
+    template: 'view/market/loaded.html'
+    on:
+      REFRESH: loading
+  error:
+    template: 'view/market/error.html'
+    on:
+      RETRY: loading

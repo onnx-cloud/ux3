@@ -1,0 +1,8 @@
+{
+  "login": {
+    "idle": { "label": "Sign in" },
+    "submitting": { "label": "Signing in..." },
+    "success": { "label": "Welcome back!" },
+    "error": { "label": "Sign in failed" }
+  }
+}

@@ -1,0 +1,28 @@
+
+services:
+  api:
+    adapter: http
+    baseUrl: http://localhost:1337/api
+    auth:
+      type: bearer
+
+  realtime:
+    adapter: websocket
+    url: ws://localhost:1337/realtime
+    reconnectAttempts: 5
+    reconnectInterval: 2000
+
+  chat:
+    adapter: jsonrpc
+    endpoint: http://localhost:1337/rpc/chat
+
+  chatbot:
+    adapter: jsonrpc
+    endpoint: http://localhost:1337/api/chatbot
+
+  eod:
+    adapter: file
+    baseUrl: public/api/asset/eod/{{this.symbol}}.json
+    caching:
+      enabled: true
+      ttl: 86400

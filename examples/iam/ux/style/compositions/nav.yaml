@@ -1,0 +1,6 @@
+nav:
+  base: 'flex gap-4 items-center'
+auth:
+  base: 'max-w-md mx-auto py-8'
+button.group:
+  base: 'inline-flex gap-2'

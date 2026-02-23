@@ -1,0 +1,32 @@
+{
+    "pages": {
+        "home": {
+            "title": "Home",
+            "description": "Welcome to UX3"
+        },
+        "login": {
+            "title": "Login",
+            "description": "Sign in to your account"
+        },
+        "dashboard": {
+            "title": "Dashboard",
+            "description": "Your dashboard"
+        },
+        "products": {
+            "title": "Products",
+            "empty": "No products found"
+        },
+        "portfolio": {
+            "title": "Portfolio",
+            "empty": "No portfolio items"
+        },
+        "watchlist": {
+            "title": "Watchlist",
+            "empty": "Watchlist is empty"
+        },
+        "market": {
+            "title": "Market",
+            "empty": "No market data"
+        }
+    }
+}

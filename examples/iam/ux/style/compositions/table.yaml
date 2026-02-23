@@ -1,0 +1,9 @@
+table:
+  base: 'w-full border-collapse'
+  variants:
+    density:
+      compact: 'text-sm'
+      normal: 'text-base'
+      comfortable: 'text-lg'
+  defaults:
+    density: normal

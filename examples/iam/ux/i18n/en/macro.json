@@ -1,0 +1,7 @@
+{
+  "macro": {
+    "loading": { "label": "Loading macro data" },
+    "loaded": { "label": "Macro insights" },
+    "error": { "label": "Unable to load macro data" }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "portfolio": {
+    "loading": { "label": "Loading portfolio" },
+    "loaded": { "label": "Portfolio" },
+    "error": { "label": "Unable to load portfolio" }
+  }
+}

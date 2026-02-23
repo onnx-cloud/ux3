@@ -1,0 +1,7 @@
+{
+  "news": {
+    "loading": { "label": "Loading news" },
+    "loaded": { "label": "News" },
+    "error": { "label": "Unable to load news" }
+  }
+}

@@ -1,0 +1,7 @@
+name: iam
+index: view/index.yaml
+domain: 'investamerica.money'
+secrets:
+  LLM_API_KEY: "{{ env.GROQ_API_KEY }}"
+cdn:
+  theme: 'https://cdn.tailwindcss.com'

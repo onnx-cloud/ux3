@@ -1,0 +1,14 @@
+{
+  "account": {
+    "loading": { "label": "Loading account" },
+    "viewing": { "label": "Account" },
+    "editing": { "label": "Edit account" },
+    "saving": { "label": "Saving account" },
+    "error": { "label": "Unable to load account" },
+    "fields": {
+      "name": { "label": "Name", "placeholder": "Full name" },
+      "email": { "label": "Email", "placeholder": "you@example.com" },
+      "bio": { "label": "Bio", "placeholder": "A short bio" }
+    }
+  }
+}

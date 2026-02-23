@@ -1,0 +1,7 @@
+{
+  "sector": {
+    "loading": { "label": "Loading sector" },
+    "loaded": { "label": "Sector" },
+    "error": { "label": "Unable to load sector" }
+  }
+}

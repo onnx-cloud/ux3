@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tokens schema",
+  "type": "object",
+  "properties": {
+    "colors": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": { "type": "string" }
+          }
+        }
+      }
+    },
+    "spacing": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "type": "string" }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

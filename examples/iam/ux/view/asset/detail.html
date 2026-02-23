@@ -1,0 +1,99 @@
+<div ux-style="asset.panel" ux-state="detail">
+  <header ux-style="asset.heading">
+    <h1 ux-style="asset.title">{{this.asset.symbol}} <small ux-style="asset.subtitle">{{this.asset.name}}</small></h1>
+    <div ux-style="asset.meta">
+      <div ux-style="asset.metric">
+        <div ux-style="asset.label">{{i18n.asset.price.label}}</div>
+        <div ux-style="asset.value">{{this.asset.price}}</div>
+      </div>
+      <div ux-style="asset.metric" ux-if="this.history && this.history.price && this.history.price.length">
+        <div ux-style="asset.label">{{i18n.asset.sparkline.label}}</div>
+        <div ux-style="asset.value">
+          <svg ux-style="asset.sparkline" role="img" aria-hidden="false" focusable="false" width="160" height="36" viewBox="0 0 160 36">
+            <title>{{i18n.asset.sparkline.label}}</title>
+            <g ux-if="this.history && this.history.sparklinePath">
+              <path d="{{this.history.sparklinePath}}" fill="none" stroke="currentColor" stroke-width="1.5" ux-style="asset.sparkline.path"></path>
+            </g>
+            <g ux-if="!this.history || !this.history.sparklinePath">
+              <path d="" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div ux-style="asset.metric">
+        <div ux-style="asset.label">{{i18n.asset.change.label}}</div>
+        <div ux-style="asset.value">{{this.asset.change}} ({{this.asset.changePercent}}%)</div>
+      </div>
+      <div ux-style="asset.metric">
+        <div ux-style="asset.label">{{i18n.asset.volume.label}}</div>
+        <div ux-style="asset.value">{{this.asset.volume}}</div>
+      </div>
+    </div>
+  </header>
+
+  <section ux-style="asset.summary">
+    <h2 ux-style="asset.section.title">{{i18n.asset.summary.title}}</h2>
+    <div ux-style="asset.grid">
+      <div ux-style="asset.cell">
+        <div ux-style="asset.label">{{i18n.asset.market.label}}</div>
+        <div ux-style="asset.value">{{this.asset.market}}</div>
+      </div>
+      <div ux-style="asset.cell">
+        <div ux-style="asset.label">{{i18n.asset.sector.label}}</div>
+        <div ux-style="asset.value">{{this.asset.sector}}</div>
+      </div>
+      <div ux-style="asset.cell">
+        <div ux-style="asset.label">{{i18n.asset.country.label}}</div>
+        <div ux-style="asset.value">{{this.asset.country}}</div>
+      </div>
+    </div>
+  </section>
+
+  <section ux-view="asset.indicators" ux-style="asset.indicators" ux-state="loaded">
+    <h2 ux-style="asset.section.title">{{i18n.asset.indicators.title}}</h2>
+    <ul ux-style="asset.list">
+      <li ux-style="asset.list.item" ux-repeat="this.indicators" ux-key="{{this.name}}">
+        <div ux-style="asset.label">
+          <span ux-if="this.name">{{i18n.asset.indicators[this.name]}}</span>
+          <span ux-if="!this.name">{{this.label}}</span>
+        </div>
+        <div ux-style="asset.value">{{this.value}}</div>
+          <span ux-style="asset.chip" ux-if="this.trend">{{this.trend}}</span>
+      </li>
+    </ul>
+  </section>
+
+  <section ux-style="asset.signals">
+    <h2 ux-style="asset.section.title">{{i18n.asset.signals.title}}</h2>
+    <ul ux-style="asset.list">
+      <li ux-style="asset.list.item" ux-repeat="this.signals" ux-key="{{this.name}}">
+        <div ux-style="asset.label">
+          <span ux-if="this.name">{{i18n.asset.signals[this.name]}}</span>
+          <span ux-if="!this.name">{{this.label}}</span>
+        </div>
+        <div ux-style="asset.value">{{this.value}}</div>
+          <span ux-style="asset.chip" ux-if="this.direction">{{this.direction}}</span>
+      </li>
+    </ul>
+  </section>
+
+  <section ux-style="asset.derived">
+    <h2 ux-style="asset.section.title">{{i18n.asset.derived.title}}</h2>
+    <ul ux-style="asset.list">
+      <li ux-style="asset.list.item" ux-repeat="this.derived" ux-key="{{this.name}}">
+        <div ux-style="asset.label">
+          <span ux-if="this.name">{{i18n.asset.derived[this.name]}}</span>
+          <span ux-if="!this.name">{{this.label}}</span>
+        </div>
+        <div ux-style="asset.value">{{this.value}}</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer ux-style="actions">
+    <div ux-style="button.group">
+      <button type="button" ux-event="REFRESH" ux-style="asset.button">{{i18n.actions.REFRESH}}</button>
+      <button type="button" ux-event="TOGGLE_WATCHLIST" ux-style="asset.button">{{i18n.asset.actions.WATCH}}</button>
+    </div>
+  </footer>
+</div>

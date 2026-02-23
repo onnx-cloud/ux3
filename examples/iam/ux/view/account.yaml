@@ -1,0 +1,26 @@
+name: 'account'
+layout: default
+initial: loading
+states:
+  loading:
+    invoke:
+      src: loadAccount
+    on:
+      SUCCESS: viewing
+      ERROR: error
+  viewing:
+    on:
+      EDIT: editing
+  editing:
+    on:
+      SAVE: saving
+      CANCEL: viewing
+  saving:
+    invoke:
+      src: saveAccount
+    on:
+      SUCCESS: viewing
+      ERROR: editing
+  error:
+    on:
+      RETRY: loading

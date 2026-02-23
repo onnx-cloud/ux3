@@ -1,0 +1,12 @@
+form:
+  base: 'space-y-4'
+  props:
+    layout: 'stack'
+field:
+  base: 'space-y-1'
+label:
+  base: 'block text-sm font-medium text-gray-700'
+heading:
+  base: 'text-xl font-semibold text-gray-900'
+small:
+  base: 'text-xs text-gray-500'

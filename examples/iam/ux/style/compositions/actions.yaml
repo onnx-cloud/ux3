@@ -1,0 +1,4 @@
+actions:
+  base: 'flex gap-2 justify-end items-center'
+  defaults:
+    align: 'right'

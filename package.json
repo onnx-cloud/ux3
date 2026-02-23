@@ -1,0 +1,126 @@
+{
+  "name": "@ux3/ux3",
+  "version": "1.0.0",
+  "description": "Lightweight declarative UI framework with FSM, security, and accessibility built-in",
+  "license": "MIT",
+  "author": "UX3 Contributors",
+  "homepage": "https://ux3.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ux3-framework/ux3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ux3-framework/ux3/issues"
+  },
+  "keywords": [
+    "ui",
+    "framework",
+    "fsm",
+    "state-machine",
+    "accessibility",
+    "wcag",
+    "security",
+    "xss-prevention",
+    "declarative",
+    "lightweight"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": false,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./widget": {
+      "import": "./dist/widget/index.js",
+      "types": "./dist/widget/index.d.ts"
+    },
+    "./fsm": {
+      "import": "./dist/fsm/index.js",
+      "types": "./dist/fsm/index.d.ts"
+    },
+    "./ui": {
+      "import": "./dist/ui/index.js",
+      "types": "./dist/ui/index.d.ts"
+    },
+    "./routing": {
+      "import": "./dist/routing/index.js",
+      "types": "./dist/routing/index.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/validation/index.js",
+      "types": "./dist/validation/index.d.ts"
+    },
+    "./state": {
+      "import": "./dist/state/index.js",
+      "types": "./dist/state/index.d.ts"
+    },
+    "./security": {
+      "import": "./dist/security/index.js",
+      "types": "./dist/security/index.d.ts"
+    },
+    "./a11y": {
+      "import": "./dist/a11y/index.js",
+      "types": "./dist/a11y/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "predev": "echo 'Skipping type-check for dev mode'",
+    "dev": "tsc --watch",
+    "dev:bg": "sh -c \"tsc --watch & echo 'TypeScript watcher started'\"",
+    "dev:iam": "npx tsx src/cli/cli.ts dev examples/iam --port 1337",
+    "validate": "npx tsx src/cli/validate.ts --projectDir ./examples/iam",
+    "validate:strict": "npx tsx src/cli/validate.ts --projectDir ./examples/iam --strict",
+    "build": "npm run clean && tsc && npm run size-check",
+    "gold": "npm run clean && tsc && vitest run && npm run size-check && npm run minify",
+    "minify": "esbuild dist/**/*.js --minify --outdir=dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint:iam": "npx tsx scripts/lint-iam.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "size-check": "du -sh dist && echo 'Bundle size OK if < 30KB'",
+    "security-audit": "npm audit --production",
+    "a11y-audit": "node scripts/a11y-audit.js",
+    "example": "node scripts/run-example.mjs",
+    "prepublish": "npm run build && npm run test && npm test:coverage",
+    "publish": "npm publish --access public"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "ajv-formats": "^3.0.1",
+    "chokidar": "^5.0.0",
+    "commander": "^11.1.0",
+    "esbuild": "^0.19.0",
+    "eslint": "^8.54.0",
+    "fs-extra": "^11.3.3",
+    "glob": "^13.0.1",
+    "jsdom": "^28.0.0",
+    "mocha": "^11.7.5",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4",
+    "yaml": "^2.8.2"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Routes schema",
+  "type": "object",
+  "required": ["routes"],
+  "properties": {
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "view"],
+        "properties": {
+          "path": { "type": "string" },
+          "view": { "type": "string" },
+          "name": { "type": "string" },
+          "methods": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

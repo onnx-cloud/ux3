@@ -1,0 +1,7 @@
+{
+  "market": {
+    "loading": { "label": "Loading market data" },
+    "loaded": { "label": "Market" },
+    "error": { "label": "Unable to load market data" }
+  }
+}

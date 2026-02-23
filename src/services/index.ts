@@ -1,0 +1,19 @@
+/**
+ * Services Index
+ * Export all service implementations
+ */
+
+export { Service } from './base.js';
+export type { Middleware, ErrorHandler, ServiceConfig, RequestConfig } from './types.js';
+export { HTTPService } from './http.js';
+export type { WebSocketConfig } from './websocket.js';
+export { WebSocketService } from './websocket.js';
+export { JSONRPCService } from './jsonrpc.js';
+export type {
+  ServiceResponse,
+  WebSocketMessage,
+  JSONRPCRequest,
+  JSONRPCResponse,
+  SubscriptionHandler,
+  SubscriptionUnsubscribe,
+} from './types.js';

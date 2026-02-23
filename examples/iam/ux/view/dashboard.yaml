@@ -1,0 +1,19 @@
+name: 'Dashboard'
+layout: default
+initial: loading
+states:
+  loading:
+    template: 'view/dashboard/loading.html'
+    invoke:
+      src: loadDashboard
+    on:
+      SUCCESS: loaded
+      ERROR: error
+  loaded:
+    template: 'view/dashboard/loaded.html'
+    on:
+      REFRESH: loading
+  error:
+    template: 'view/dashboard/error.html'
+    on:
+      RETRY: loading

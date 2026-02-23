@@ -1,0 +1,23 @@
+name: 'Login'
+layout: auth
+initial: idle
+states:
+  idle:
+    template: 'view/login/idle.html'
+    on:
+      SUBMIT: submitting
+  submitting:
+    template: 'view/login/submitting.html'
+    invoke:
+      src: submitLogin
+    on:
+      SUCCESS: success
+      ERROR: error
+  success:
+    template: 'view/login/success.html'
+    on:
+      NAVIGATE: navigate
+  error:
+    template: 'view/login/error.html'
+    on:
+      RETRY: idle
