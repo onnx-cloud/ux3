@@ -902,7 +902,6 @@ export const config = {
       "error": "<div ux-view=\"billing\" ux-state=\"billing.error\">\n  <div ux-style=\"alert\">{{i18n.billing.error.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n</div>\n"
     },
     "blog": {
-      "loading": "<div ux-view=\"blog\" ux-state=\"blog.loading\">\n  <div ux-style=\"spinner\">{{i18n.blog.loading.label}}</div>\n</div>\n",
       "loaded": "<div ux-view=\"blog\" ux-state=\"blog.loaded\">\n  <div ux-style=\"widget\">{{i18n.blog.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"PREV_PAGE\">{{i18n.actions.PREV_PAGE}}</button>\n    <button type=\"button\" ux-event=\"NEXT_PAGE\">{{i18n.actions.NEXT_PAGE}}</button>\n    <button type=\"button\" ux-event=\"REFRESH\">{{i18n.actions.REFRESH}}</button>\n  </div>\n</div>\n",
       "error": "<div ux-view=\"blog\" ux-state=\"blog.error\">\n  <div ux-style=\"alert\">{{i18n.blog.error.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n</div>\n"
     },

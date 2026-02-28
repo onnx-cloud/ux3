@@ -124,7 +124,9 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
    */
   private loadTemplates(viewName: string): void {
     const fsmName = this.getAttribute('ux-fsm')!;
-    const fsmConfig = this.app.machines[fsmName].getStateConfig(undefined);
+    const machine = this.app.machines[fsmName];
+    // @ts-ignore - Check if machine has getMachineConfig (newly added) or falls back
+    const fsmConfig = machine.getMachineConfig ? (machine as any).getMachineConfig() : machine.getStateConfig(undefined);
 
     if (!fsmConfig.states) {
       console.warn(`[ViewComponent] FSM has no states: ${fsmName}`);

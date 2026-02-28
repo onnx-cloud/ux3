@@ -22,7 +22,7 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:1337',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -68,7 +68,8 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev:iam',
-    url: 'http://localhost:5173',
+    url: 'http://127.0.0.1:1337',
     reuseExistingServer: !process.env.CI,
+    timeout: 120000,
   },
 });

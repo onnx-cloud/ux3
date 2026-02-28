@@ -4,6 +4,7 @@
  */
 
 import { escapeHtml } from '../security/sanitizer.js';
+import { HandlebarsLite } from '../hbs/index.js';
 
 /**
  * Interface for simple template context
@@ -43,6 +44,25 @@ export function stampTemplate(template: HTMLTemplateElement, context: TemplateCo
   });
 
   return fragment;
+}
+
+/**
+ * Stamps template with HBS engine (supports full Handlebars syntax)
+ * Use this when you need blocks (if/each) and helpers in your templates
+ * 
+ * @param template The template element to stamp
+ * @param context The data context for interpolation
+ * @returns A DocumentFragment containing the stamped nodes
+ */
+export function stampTemplateWithHBS(
+  template: HTMLTemplateElement,
+  context: TemplateContext
+): DocumentFragment {
+  const hbs = new HandlebarsLite();
+  const html = hbs.render(template.innerHTML, context);
+  const fragment = document.createElement('template');
+  fragment.innerHTML = html;
+  return fragment.content;
 }
 
 /**

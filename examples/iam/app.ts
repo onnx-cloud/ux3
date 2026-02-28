@@ -6,6 +6,7 @@
  */
 
 import { createAppContext } from '@ux3/ui/context-builder';
+import { setupNavigation } from '@ux3/ui/navigation-handler';
 import { config } from './generated/config.js';
 import type { AppContext } from '@ux3/ui/app';
 
@@ -29,6 +30,9 @@ export async function initializeApp(): Promise<AppContext> {
       services: Object.keys(appInstance.services).length,
       machines: Object.keys(appInstance.machines).length,
     });
+    
+    // Setup client-side navigation (URL → FSM routing)
+    setupNavigation(appInstance);
     
     // Setup telemetry
     setupTelemetry();

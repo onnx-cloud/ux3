@@ -1,5 +1,6 @@
 import { StateMachine } from "src/fsm";
 import type { Service } from "src/services/types";
+import type { NavConfig } from "src/services/router";
 import type { Widget } from "./widget";
 import { WidgetFactory } from "./widget/factory";
 
@@ -15,6 +16,7 @@ export interface AppContext {
   ui: Record<string, Widget>; // global UI state
   template: (name: string) => string; // template registry function
   i18n: (key: string, props?: Record<string,any>) => string; // i18n function
+  nav: NavConfig | null; // navigation config (routes, current path, canNavigate)
 }
 
 export interface AppContextLoader {

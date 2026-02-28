@@ -53,9 +53,9 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
     const viewTemplate = await fs.readFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), 'utf-8');
     const layoutHtmlRaw = await fs.readFile(path.join(temp, 'ux', 'layout', 'default.html'), 'utf-8');
     const normalized = layoutHtmlRaw.replace(/\{\{\{\s*content\s*\}\}\}/g, '{{ site.template }}').replace(/\{\{\s*>\s*layout\s*\}\}/g, '{{ site.template }}');
-    function localRender(tpl, ctx = {}) {
-      return tpl.replace(/\{\{\s*([^\}]+?)\s*\}\}/g, (_, key) => {
-        const val = key.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined), ctx);
+    function localRender(tpl: string, ctx: any = {}) {
+      return tpl.replace(/\{\{\s*([^\}]+?)\s*\}\}/g, (_: any, key: any) => {
+        const val = key.split('.').reduce((acc: any, part: any) => (acc && acc[part] !== undefined ? acc[part] : undefined), ctx);
         if (val === undefined || val === null) return '';
         if (typeof val === 'object') return JSON.stringify(val);
         return String(val);

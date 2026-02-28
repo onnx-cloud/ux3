@@ -3,7 +3,6 @@ layout: default
 initial: loading
 states:
   loading:
-    template: 'view/blog/loading.html'
     invoke:
       src: loadBlog
     on:

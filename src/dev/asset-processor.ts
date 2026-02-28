@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import YAML from 'yaml';
+import { HandlebarsLite } from '../hbs/index.js';
 
 /**
  * Standardizes asset extraction (scripts/styles) from manifest or project config.
@@ -51,34 +52,11 @@ export function processAssets(manifest: any, projectDir: string) {
 }
 
 /**
- * A lightweight template renderer for dev-server 'chrome'.
- * Not intended to replace the full compiler, but to handle base layout injection.
+ * A lightweight template renderer for dev-server 'chrome' using HBS.
+ * Handles base layout injection with i18n and site variables.
  */
+const hbsEngine = new HandlebarsLite();
+
 export function renderTpl(tpl: string, ctx: { site: any; i18n?: any; [key: string]: any }) {
-  let out = tpl;
-
-  // Replace i18n placeholders: {{i18n.key.path}}
-  out = out.replace(/\{\{\s*i18n\.([\w\.]+)\s*\}\}/g, (_, key) => {
-    const parts = key.split('.');
-    let val = parts.reduce((o: any, i: string) => o?.[i], ctx.i18n);
-    // Try English fallback
-    if (val === undefined && ctx.i18n?.en) {
-      val = parts.reduce((o: any, i: string) => o?.[i], ctx.i18n.en);
-    }
-    return val !== undefined ? val : `[${key}]`;
-  });
-
-  // Replace site placeholders with HTML support: {{{site.head}}} etc.
-  out = out.replace(/\{\{\{\s*site\.([\w\.]+)\s*\}\}\}/g, (_, key) => {
-    const val = key.split('.').reduce((o: any, i: string) => o?.[i], ctx.site);
-    return val !== undefined ? val : '';
-  });
-
-  // Replace simple site placeholders: {{site.title}}
-  out = out.replace(/\{\{\s*site\.([\w\.]+)\s*\}\}/g, (_, key) => {
-    const val = key.split('.').reduce((o: any, i: string) => o?.[i], ctx.site);
-    return val !== undefined ? val : `[site.${key}]`;
-  });
-
-  return out;
+  return hbsEngine.render(tpl, ctx);
 }

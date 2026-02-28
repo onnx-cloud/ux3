@@ -1,8 +1,14 @@
 <header id="site-header">
   <nav ux-style="nav">
-    <a href="/">{{i18n.header.home}}</a>
-    <a href="/market">{{i18n.header.market}}</a>
-    <a href="/account">{{i18n.header.account}}</a>
+    {{#if nav}}
+      {{#each nav.routes}}
+        <a href="{{this.path}}"
+           {{#if (eq ../nav.current.path this.path)}}class="active"{{/if}}
+           {{#unless (../nav.canNavigate this.view)}}disabled{{/unless}}>
+          {{../nav.getLabel this}}
+        </a>
+      {{/each}}
+    {{/if}}
   </nav>
 </header>
 

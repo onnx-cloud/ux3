@@ -168,9 +168,16 @@ export class StateMachine<T extends Record<string, any>> {
   }
 
   /**
+   * Get machine configuration
+   */
+  getMachineConfig(): StateConfig<T> {
+    return this.config;
+  }
+
+  /**
    * Get state configuration
    */
-  getStateConfig(stateName?: string): StateConfig<T> {
+  getStateConfig(stateName?: string): any {
     const state = stateName || this.currentState;
     return this.config.states[state] || {};
   }

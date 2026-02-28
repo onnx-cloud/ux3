@@ -1,275 +1,24 @@
-import * as http from 'http';
-import * as path from 'path';
-import { promises as fsp } from 'fs';
-import fsExtra from 'fs-extra';
-import YAML from 'yaml';
-import { processAssets } from './asset-processor';
-import { renderDashboard } from './dashboard';
-import { HandlebarsLite } from '../hbs/index.js';
-
-export interface DevServerOptions {
-  verbose?: boolean;
-  onError?: (error: Error) => void;
-}
-
-export interface ServerManifest {
-  config: Record<string, any>;
-  types: Record<string, any>;
-  invokes: Record<string, any>;
-  stats: {
-    buildTime: number;
-    configSize?: number;
-    typesSize?: number;
-    bundleSize?: number;
-  };
-}
-
-
-async function getSiteConfig(projectDir: string, manifest: ServerManifest | null): Promise<any> {
-  let ux3Config: any = {};
-  try {
-    const rootUx3 = path.join(projectDir, 'ux3.yaml');
-    const legacyUx3 = path.join(projectDir, 'ux', 'ux3.yaml');
-    const ux3Content = fsExtra.existsSync(rootUx3) ? await fsp.readFile(rootUx3, 'utf-8') : (fsExtra.existsSync(legacyUx3) ? await fsp.readFile(legacyUx3, 'utf-8') : '');
-    if (ux3Content) ux3Config = YAML.parse(ux3Content);
-  } catch {}
-
-  const siteFromManifest = (manifest?.config as any)?.site || {};
-  const siteFields = {
-    title: path.basename(projectDir),
-    ...siteFromManifest,
-    ...(ux3Config.site || {})
-  };
-  return processAssets({ config: { ...manifest?.config, site: siteFields } }, projectDir);
-}
-
-/**
- * Build a NavConfig for template rendering based on routes from manifest
- */
-function buildNavConfig(
-  pathname: string,
-  routes: Array<{ path: string; view: string }>,
-  i18n: Record<string, any> = {}
-): Record<string, any> {
-  // Find current route
-  let currentPath = pathname;
-  let currentView = 'home';
-  
-  for (const route of routes) {
-    if (route.path === pathname) {
-      currentPath = route.path;
-      currentView = route.view;
-      break;
-    }
-  }
-
-  // Build nav routes with labels
-  const navRoutes = routes.map(route => {
-    let label: string | undefined;
-    // Derive label from common i18n keys
-    if (route.view === 'home') label = 'header.home';
-    else if (route.view === 'market') label = 'header.market';
-    else if (route.view === 'account') label = 'header.account';
-
-    return {
-      path: route.path,
-      view: route.view,
-      label,
-    };
-  });
-
-  // Helper function to resolve i18n labels
-  const getLabel = (route: any): string => {
-    if (!route.label) return route.view;
-    
-    const parts = route.label.split('.');
-    let value: any = i18n;
-    for (const part of parts) {
-      value = value?.[part];
-    }
-
-    if (typeof value === 'string') return value;
-    return route.view;
-  };
-
-  return {
-    routes: navRoutes,
-    current: {
-      path: currentPath,
-      view: currentView,
-      params: {},
-    },
-    canNavigate: (targetView?: string) => true, // In dev server, all views are navigable
-    getLabel,
-  };
-}
-
-async function getShellLayout(projectDir: string, view: any): Promise<{ chromeWrapperHtml: string, viewLayoutHtml: string }> {
-  const viewLayoutName = (view && view.layout) ? String(view.layout) : '_';
-  
-  const candidateLayoutA = path.join(projectDir, 'ux', 'layout', `${viewLayoutName}.html`);
-  const candidateLayoutB = path.join(projectDir, 'ux', 'layout', viewLayoutName, '_.html');
-  const projectDefaultLayout = path.join(projectDir, 'ux', 'layout', '_.html');
-  const frameworkDefaultPath = path.join(process.cwd(), 'src', 'ui', 'layouts', '_.html');
-  const chromeWrapperPath = path.join(projectDir, 'ux', 'layout', 'chrome', 'wrapper.html');
-
-  let projectLayoutPath = '';
-
-  if (fsExtra.existsSync(candidateLayoutA)) projectLayoutPath = candidateLayoutA;
-  else if (fsExtra.existsSync(candidateLayoutB)) projectLayoutPath = candidateLayoutB;
-  else if (fsExtra.existsSync(projectDefaultLayout)) projectLayoutPath = projectDefaultLayout;
-
-  let chromeWrapperHtml = '';
-  let viewLayoutHtml = '';
-
-  if (fsExtra.existsSync(chromeWrapperPath)) {
-    chromeWrapperHtml = await fsp.readFile(chromeWrapperPath, 'utf-8');
-    if (projectLayoutPath && fsExtra.existsSync(projectLayoutPath)) {
-      viewLayoutHtml = await fsp.readFile(projectLayoutPath, 'utf-8');
-    }
-  } else if (fsExtra.existsSync(projectDefaultLayout)) {
-    chromeWrapperHtml = await fsp.readFile(projectDefaultLayout, 'utf-8');
-    if (viewLayoutName !== '_' && projectLayoutPath && projectLayoutPath !== projectDefaultLayout && fsExtra.existsSync(projectLayoutPath)) {
-      viewLayoutHtml = await fsp.readFile(projectLayoutPath, 'utf-8');
-    }
-  } else if (fsExtra.existsSync(frameworkDefaultPath)) {
-    chromeWrapperHtml = await fsp.readFile(frameworkDefaultPath, 'utf-8');
-    if (projectLayoutPath && projectLayoutPath !== frameworkDefaultPath && fsExtra.existsSync(projectLayoutPath)) {
-      viewLayoutHtml = await fsp.readFile(projectLayoutPath, 'utf-8');
-    }
-  }
-  
-  return { chromeWrapperHtml, viewLayoutHtml };
-}
-
-async function resolveAndRenderLayout(
-  projectDir: string,
-  view: any,
-  renderedTemplate: string,
-  context: any,
-  renderFn: (tpl: string, ctx: any) => string
-): Promise<string> {
-  const { chromeWrapperHtml, viewLayoutHtml } = await getShellLayout(projectDir, view);
-
-  let tempHtml = renderedTemplate;
-  if (viewLayoutHtml) {
-    tempHtml = viewLayoutHtml.replace(/\{\{\{\s*content\s*\}\}\}/g, renderedTemplate)
-                             .replace(/\{\{\s*>\s*layout\s*\}\}/g, renderedTemplate)
-                             .replace(/\{\{\s*site\.template\s*\}\}/g, renderedTemplate);
-  }
-
-  let finalHtml = tempHtml;
-  if (chromeWrapperHtml) {
-    finalHtml = chromeWrapperHtml.replace(/\{\{\{\s*content\s*\}\}\}/g, tempHtml)
-                                 .replace(/\{\{\s*>\s*layout\s*\}\}/g, tempHtml)
-                                 .replace(/\{\{\s*site\.template\s*\}\}/g, tempHtml);
-  }
-
-  return renderFn(finalHtml, context);
-}
-
-export class DevServer {
-  private server: http.Server | null = null;
-  private manifest: ServerManifest | null = null;
-  private clients: Set<http.ServerResponse> = new Set();
-  private options: Required<DevServerOptions>;
-
-  constructor(
-    private projectDir: string,
-    private port: number,
-    private host: string,
-    options: DevServerOptions = {}
-  ) {
-    this.options = {
-      verbose: options.verbose ?? false,
-      onError: options.onError ?? ((e) => console.error('Server error:', e)),
-    };
-  }
-
-  async start(): Promise<void> {
-    void this.findRepoRoot(this.projectDir);
-    this.server = http.createServer(async (req, res) => {
-      // avoid MaxListenersExceeded when many clients connect during dev
-      try { this.server?.setMaxListeners(0); } catch {}
-      try {
-        if (!req.url || !req.headers.host) {
-          res.writeHead(400, { 'Content-Type': 'text/plain' });
-          res.end('Bad Request');
-          return;
-        }
-
-        // Construct URL with host as base to support relative req.url values
-        const url = new URL(req.url, `http://${req.headers.host}`);
-        const pathname = url.pathname;
-
-        // CORS headers
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-        if (req.method === 'OPTIONS') {
-          res.writeHead(204);
-          res.end();
-          return;
-        }
-
-        // Hot reload and API endpoints (namespaced under /$/ to avoid app conflicts)
-        // Dev namespace root (dashboard HTML)
-        if (pathname === '/$' || pathname === '/$/') {
-          const site = await getSiteConfig(this.projectDir, this.manifest);
-          const html = await renderDashboard(this.projectDir, this.manifest, site);
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(html);
-          return;
-        }
-
-        // API endpoints under /$/
-        if (pathname.startsWith('/$/')) {
-          if (pathname === '/$/hot-reload') {
-            this.handleHotReload(res);
-            return;
-          }
-
-          if (pathname === '/$/config') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(this.manifest?.config ?? {}, null, 2));
-            return;
-          }
-
-          if (pathname === '/$/types') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(this.manifest?.types ?? {}, null, 2));
-            return;
-          }
-
-          if (pathname === '/$/manifest') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(this.manifest?.invokes ?? {}, null, 2));
-            return;
-          }
-
-          if (pathname === '/$/stats') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(this.manifest?.stats ?? {}, null, 2));
-            return;
-          }
-
-          // Unknown /$/ path
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.end('Not found');
-          return;
-        }
-
-        // Serve application front page
+// Serve application front page
         // Priority: project ux3.yaml -> ux/view/index.yaml -> public/index.html -> fallback message
         if (pathname === '/') {
           const i18n = (this.manifest?.config as any)?.i18n || {};
           
           // First, try loading root ux3.yaml to get the most accurate site settings for front page
-          
+          let ux3Config: any = {};
+          try {
+            const rootUx3 = path.join(this.projectDir, 'ux3.yaml');
+            const legacyUx3 = path.join(this.projectDir, 'ux', 'ux3.yaml');
+            const ux3Content = fsExtra.existsSync(rootUx3) ? await fsp.readFile(rootUx3, 'utf-8') : (fsExtra.existsSync(legacyUx3) ? await fsp.readFile(legacyUx3, 'utf-8') : '');
+            if (ux3Content) ux3Config = YAML.parse(ux3Content);
+          } catch {}
 
-          const site = await getSiteConfig(this.projectDir, this.manifest);
-
+          const siteFromManifest = (this.manifest?.config as any)?.site || {};
+          const siteFields = {
+            title: path.basename(this.projectDir),
+            ...siteFromManifest,
+            ...(ux3Config.site || {})
+          };
+          const site = processAssets({ config: { ...this.manifest?.config, site: siteFields } }, this.projectDir);
 
           // First, try fallback: ux/view/index.yaml (if any)
           try {
@@ -335,14 +84,10 @@ export class DevServer {
               if (!templateHtml) {
                 templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
               }
-              // Build nav config
-              const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
-              const nav = buildNavConfig(pathname, routes, i18n);
-              
               // Final fallback to project-specific index view logic
-              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
+              const renderedTemplate = renderTpl(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site });
 
-              const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
+              const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, i18n, site, renderTpl);
 
               res.writeHead(200, { 'Content-Type': 'text/html' });
               res.end(finalHtml);
@@ -366,8 +111,16 @@ export class DevServer {
               try { uxConfig = YAML.parse(ux3Content); } catch { /* ignore */ }
 
               const i18n = (this.manifest?.config as any)?.i18n || {};
-              const site = await getSiteConfig(this.projectDir, this.manifest);
+              const siteFromManifest = (this.manifest?.config as any)?.site || {};
+              const siteFromYaml = uxConfig.site || {};
+              
+              const mergedSite = {
+                title: path.basename(this.projectDir), // base fallback
+                ...siteFromManifest,
+                ...siteFromYaml
+              };
 
+              const site = processAssets({ config: { ...this.manifest?.config, site: mergedSite } }, this.projectDir);
 
               const indexSpec: string = uxConfig.index || 'view/index.yaml';
               const indexPath = path.join(this.projectDir, 'ux', indexSpec.replace(/^\//, ''));
@@ -432,11 +185,35 @@ export class DevServer {
                 }
 
                 // Render the template into layout, resolving layoutName/title similar to other index path
-                const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
-                const nav = buildNavConfig(pathname, routes, i18n);
-                const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
+                const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site });
 
-                const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
+                // Layout selection priority (most specific -> fallback):
+                // 1) ux/layout/<layoutName>.html
+                // 2) ux/layout/<layoutName>/_.html
+                // 3) ux/layout/_.html (project default)
+                // 4) src/ui/layouts/_.html (framework default)
+                // This ensures compiled manifest templates that include app bootstrapping are wrapped consistently.
+                const layoutName = (view && view.layout) ? String(view.layout) : '_';
+                const candidateLayoutA = path.join(this.projectDir, 'ux', 'layout', `${layoutName}.html`);
+                const candidateLayoutB = path.join(this.projectDir, 'ux', 'layout', layoutName, '_.html');
+                const projectDefaultLayout = path.join(this.projectDir, 'ux', 'layout', '_.html');
+                const defaultLayout = path.join(process.cwd(), 'src', 'ui', 'layouts', '_.html');
+
+                let layoutPath = defaultLayout;
+                if (fsExtra.existsSync(candidateLayoutA)) layoutPath = candidateLayoutA;
+                else if (fsExtra.existsSync(candidateLayoutB)) layoutPath = candidateLayoutB;
+                else if (fsExtra.existsSync(projectDefaultLayout)) layoutPath = projectDefaultLayout;
+
+                let layoutHtml = '';
+                try { layoutHtml = await fsp.readFile(layoutPath, 'utf-8'); } catch {}
+
+                // Render layout with site/i18n context
+                let layoutToRender = layoutHtml || '';
+                // Normalize layout placeholders to a canonical site.template token, then render.
+                layoutToRender = layoutToRender.replace(/\{\{\{\s*content\s*\}\}\}/g, '{{ site.template }}');
+                layoutToRender = layoutToRender.replace(/\{\{\s*>\s*layout\s*\}\}/g, '{{ site.template }}');
+                
+                const finalHtml = renderTemplate(layoutToRender, { site: { ...site, template: renderedTemplate }, i18n });
 
                 res.writeHead(200, { 'Content-Type': 'text/html' });
                 res.end(finalHtml);
@@ -487,7 +264,7 @@ export class DevServer {
               try { view = YAML.parse(viewYaml); } catch {}
 
               const i18n = (this.manifest?.config as any)?.i18n || {};
-              const site = await getSiteConfig(this.projectDir, this.manifest);
+              const site = processAssets(this.manifest, this.projectDir);
 
               const templateRel = view.template || '';
               let templateHtml = '';
@@ -515,11 +292,9 @@ export class DevServer {
                 }
               } catch (e) {}
 
-              const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
-              const nav = buildNavConfig(pathname, routes, i18n);
-              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
+              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site });
 
-              const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
+              const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, i18n, site, renderTemplate);
 
               res.writeHead(200, { 'Content-Type': 'text/html' });
               res.end(finalHtml);
@@ -647,19 +422,31 @@ export class DevServer {
   }
 }
 
-/**
- * Template rendering using HBS (Handlebars-Lite) engine
- * Supports {{#if}}, {{#each}}, {{#unless}}, {{key}}, {{{html}}} and helpers
- */
-const hbsEngine = new HandlebarsLite({
-  helpers: {
-    eq: (a: any, b: any) => a === b,
-    ne: (a: any, b: any) => a !== b,
-  },
-});
-
 function renderTemplate(template: string, context: Record<string, any> = {}): string {
   if (!template) return '';
-  return hbsEngine.render(template, context);
+
+  let html = template;
+
+  // Handle i18n placeholders: {{i18n.key.path}}
+  html = html.replace(/\{\{\s*i18n\.([^\}]+?)\s*\}\}/g, (_, key) => {
+    const val = key.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), context.i18n || {});
+    return val !== undefined ? String(val) : `[${key}]`;
+  });
+
+  // Handle triple-mustache {{{ key }}} first for raw insertion (e.g., unescaped HTML)
+  html = html.replace(/\{\{\{\s*([^\}]+?)\s*\}\}\}/g, (_, key) => {
+    const val = key.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), context);
+    if (val === undefined || val === null) return '';
+    if (typeof val === 'object') return JSON.stringify(val);
+    return String(val);
+  });
+
+  // Then handle double-mustache with escaping semantics (basic: return string value)
+  return html.replace(/\{\{\s*([^\}]+?)\s*\}\}/g, (_, key) => {
+    const val = key.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), context);
+    if (val === undefined || val === null) return '';
+    if (typeof val === 'object') return JSON.stringify(val);
+    return String(val);
+  });
 }
 

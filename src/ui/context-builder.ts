@@ -8,9 +8,12 @@ import type { StateConfig } from '../fsm/types.js';
 import { HttpService } from '../services/http.js';
 import { WebSocketService } from '../services/websocket.js';
 import { JSONRPCService } from '../services/jsonrpc.js';
+import { Router } from '../services/router.js';
 import type { Service, ServiceConfig } from '../services/types.js';
+import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
+import { HandlebarsLite } from '../hbs/index.js';
 
 /**
  * Generated configuration structure
@@ -37,6 +40,7 @@ export class AppContextBuilder {
   private i18nData: Record<string, Record<string, string>> = {};
   private templates: Record<string, Record<string, string>> = {};
   private styles: Record<string, string> = {};
+  private router: Router | null = null;
   private errorHandlers: Array<(error: Error) => void> = [];
   private buildErrors: Error[] = [];
   constructor(config: GeneratedConfig) {
@@ -174,6 +178,24 @@ export class AppContextBuilder {
   }
 
   /**
+   * Build router – initialize NavConfig from routes and machines
+   */
+  withRouter(): this {
+    try {
+      if (!this.machines || this.machines.size === 0) {
+        throw new Error('Machines must be built before router (call withMachines first)');
+      }
+
+      const i18n = this.i18nData['en'] || {};
+      this.router = new Router(this.config.routes, this.machines, i18n);
+    } catch (error) {
+      this.handleError(new Error(`Failed to build router: ${error}`));
+    }
+
+    return this;
+  }
+
+  /**
    * Build i18n provider
    */
   withI18n(): this {
@@ -253,6 +275,10 @@ export class AppContextBuilder {
       this.withWidgets();
     }
 
+    if (!this.router) {
+      this.withRouter();
+    }
+
     const machines: Record<string, StateMachine<any>> = {};
     for (const [name, machine] of this.machines) {
       machines[name] = machine;
@@ -272,11 +298,10 @@ export class AppContextBuilder {
 
       let value = translations[key] || key;
 
-      // Simple interpolation
+      // Use HBS for interpolation (supports {{key}}, {{#if}}, {{#each}}, helpers, etc.)
       if (props) {
-        for (const [k, v] of Object.entries(props)) {
-          value = value.replace(`{{${k}}}`, String(v));
-        }
+        const hbs = new HandlebarsLite();
+        value = hbs.render(value, props);
       }
 
       return value;
@@ -297,6 +322,8 @@ export class AppContextBuilder {
       return '';
     };
 
+    const navConfig: NavConfig | null = this.router ? this.router.getNavConfig() : null;
+
     const context: AppContext = {
       machines,
       services,
@@ -305,6 +332,7 @@ export class AppContextBuilder {
       ui: {},
       template: templateFn,
       i18n: i18nFn,
+      nav: navConfig,
     };
 
     // Export globally for testing/debugging

@@ -9,6 +9,7 @@ export { HTTPService } from './http.js';
 export type { WebSocketConfig } from './websocket.js';
 export { WebSocketService } from './websocket.js';
 export { JSONRPCService } from './jsonrpc.js';
+export { Router } from './router.js';
 export type {
   ServiceResponse,
   WebSocketMessage,
@@ -17,3 +18,9 @@ export type {
   SubscriptionHandler,
   SubscriptionUnsubscribe,
 } from './types.js';
+export type {
+  NavRoute,
+  NavConfig,
+  RouteConfig,
+  RouteMatch,
+} from './router.js';
