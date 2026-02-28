@@ -442,7 +442,453 @@ export const config = {
       }
     }
   },
-  "i18n": {},
+  "i18n": {
+    "en": {
+      "account": {
+        "loading": {
+          "label": "Loading account"
+        },
+        "viewing": {
+          "label": "Account"
+        },
+        "editing": {
+          "label": "Edit account"
+        },
+        "saving": {
+          "label": "Saving account"
+        },
+        "error": {
+          "label": "Unable to load account"
+        },
+        "fields": {
+          "name": {
+            "label": "Name",
+            "placeholder": "Full name"
+          },
+          "email": {
+            "label": "Email",
+            "placeholder": "you@example.com"
+          },
+          "bio": {
+            "label": "Bio",
+            "placeholder": "A short bio"
+          }
+        }
+      },
+      "actions": {
+        "REFRESH": "Refresh",
+        "BUY": "Buy",
+        "SELL": "Sell",
+        "EDIT": "Edit",
+        "SAVE": "Save",
+        "CANCEL": "Cancel",
+        "RETRY": "Retry",
+        "VIEW": "View",
+        "SUBMIT": "Submit",
+        "NAVIGATE": "Navigate",
+        "SEARCH": "Search",
+        "FILTER": "Filter",
+        "SELECT": "Select",
+        "SELECT_CONVERSATION": "Select conversation",
+        "SEND_MESSAGE": "Send message",
+        "NEXT_PAGE": "Next",
+        "PREV_PAGE": "Prev",
+        "BACK": "Back",
+        "UPGRADE": "Upgrade",
+        "MANAGE_PAYMENT": "Manage payment",
+        "CONFIRM": "Confirm",
+        "CLOSE": "Close",
+        "SIGN_IN": "Sign In",
+        "GET_STARTED": "Get Started"
+      },
+      "asset": {
+        "symbol": {
+          "label": "Ticker"
+        },
+        "price": {
+          "label": "Price"
+        },
+        "sparkline": {
+          "label": "Sparkline"
+        },
+        "change": {
+          "label": "Change"
+        },
+        "volume": {
+          "label": "Volume"
+        },
+        "summary": {
+          "title": "Summary"
+        },
+        "market": {
+          "label": "Market"
+        },
+        "sector": {
+          "label": "Sector"
+        },
+        "country": {
+          "label": "Country"
+        },
+        "indicators": {
+          "title": "Indicators",
+          "rsi": "RSI",
+          "sma50": "SMA (50)",
+          "sma200": "SMA (200)"
+        },
+        "signals": {
+          "title": "Signals",
+          "macd": "MACD",
+          "bollinger": "Bollinger Bands"
+        },
+        "derived": {
+          "title": "Derived Metrics",
+          "marketCap": "Market Cap",
+          "pe": "P/E",
+          "dividendYield": "Dividend Yield"
+        },
+        "actions": {
+          "WATCH": "Add to Watchlist"
+        }
+      },
+      "billing": {
+        "loading": {
+          "label": "Loading billing"
+        },
+        "viewing": {
+          "label": "Billing"
+        },
+        "upgrading": {
+          "label": "Upgrading plan"
+        },
+        "managing_payment": {
+          "label": "Manage payment"
+        },
+        "error": {
+          "label": "Unable to load billing"
+        }
+      },
+      "blog": {
+        "loading": {
+          "label": "Loading posts"
+        },
+        "loaded": {
+          "label": "Latest posts"
+        },
+        "error": {
+          "label": "Unable to load blog"
+        }
+      },
+      "chat": {
+        "loading": {
+          "label": "Loading conversations"
+        },
+        "ready": {
+          "label": "Conversations"
+        },
+        "chatting": {
+          "label": "Conversation"
+        },
+        "error": {
+          "label": "Unable to load chat"
+        }
+      },
+      "dashboard": {
+        "loading": {
+          "label": "Loading dashboard"
+        },
+        "loaded": {
+          "label": "Your dashboard"
+        },
+        "error": {
+          "label": "Unable to load dashboard"
+        }
+      },
+      "footer": {
+        "copyright": "© 2026 IAM. All rights reserved."
+      },
+      "for-you": {
+        "loading": {
+          "label": "Loading recommendations"
+        },
+        "loaded": {
+          "label": "For you"
+        },
+        "error": {
+          "label": "Unable to load recommendations"
+        }
+      },
+      "header": {
+        "home": "Home",
+        "market": "Market",
+        "account": "Account"
+      },
+      "home": {
+        "ready": {
+          "label": "Welcome to Invest America"
+        },
+        "loading": {
+          "label": "Loading home"
+        },
+        "loaded": {
+          "label": "Featured"
+        },
+        "error": {
+          "label": "Unable to load home",
+          "message": "We're having trouble loading the home page. Please try again."
+        },
+        "cta": {
+          "start_investing": "Start Investing",
+          "learn_more": "Learn More"
+        }
+      },
+      "brand": {
+        "name": "InvestAmerica.money",
+        "tagline": "Your gateway to smart investments",
+        "domain": "https://investamerica.money",
+        "logo": "/assets/logo.svg"
+      },
+      "nav": {
+        "home": "Home",
+        "login": "Login",
+        "dashboard": "Dashboard",
+        "products": "Products",
+        "portfolio": "Portfolio",
+        "watchlist": "Watchlist",
+        "market": "Market"
+      },
+      "login": {
+        "idle": {
+          "label": "Sign in"
+        },
+        "submitting": {
+          "label": "Signing in..."
+        },
+        "success": {
+          "label": "Welcome back!"
+        },
+        "error": {
+          "label": "Sign in failed"
+        }
+      },
+      "macro": {
+        "loading": {
+          "label": "Loading macro data"
+        },
+        "loaded": {
+          "label": "Macro insights"
+        },
+        "error": {
+          "label": "Unable to load macro data"
+        }
+      },
+      "market": {
+        "loading": {
+          "label": "Loading market data"
+        },
+        "loaded": {
+          "label": "Market"
+        },
+        "error": {
+          "label": "Unable to load market data"
+        }
+      },
+      "news": {
+        "loading": {
+          "label": "Loading news"
+        },
+        "loaded": {
+          "label": "News"
+        },
+        "error": {
+          "label": "Unable to load news"
+        }
+      },
+      "pages": {
+        "home": {
+          "title": "Home",
+          "description": "Welcome to UX3"
+        },
+        "login": {
+          "title": "Login",
+          "description": "Sign in to your account"
+        },
+        "dashboard": {
+          "title": "Dashboard",
+          "description": "Your dashboard"
+        },
+        "products": {
+          "title": "Products",
+          "empty": "No products found"
+        },
+        "portfolio": {
+          "title": "Portfolio",
+          "empty": "No portfolio items"
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "empty": "Watchlist is empty"
+        },
+        "market": {
+          "title": "Market",
+          "empty": "No market data"
+        }
+      },
+      "portfolio": {
+        "loading": {
+          "label": "Loading portfolio"
+        },
+        "loaded": {
+          "label": "Portfolio"
+        },
+        "error": {
+          "label": "Unable to load portfolio"
+        }
+      },
+      "products": {
+        "searching": {
+          "label": "Searching products"
+        },
+        "idle": {
+          "label": "Products"
+        },
+        "loaded": {
+          "label": "Products"
+        },
+        "error": {
+          "label": "Unable to load products"
+        }
+      },
+      "search": {
+        "results": {
+          "label": "Search results"
+        },
+        "searching": {
+          "label": "Searching"
+        },
+        "idle": {
+          "label": "Search"
+        },
+        "error": {
+          "label": "No results"
+        }
+      },
+      "sector": {
+        "loading": {
+          "label": "Loading sector"
+        },
+        "loaded": {
+          "label": "Sector"
+        },
+        "error": {
+          "label": "Unable to load sector"
+        }
+      },
+      "sign-up": {
+        "idle": {
+          "label": "Create your account"
+        },
+        "validating": {
+          "label": "Validating..."
+        },
+        "submitting": {
+          "label": "Creating account..."
+        },
+        "success": {
+          "label": "Account created"
+        },
+        "error": {
+          "label": "Sign up failed"
+        }
+      },
+      "today": {
+        "loading": {
+          "label": "Loading today"
+        },
+        "loaded": {
+          "label": "Today"
+        },
+        "error": {
+          "label": "Unable to load today"
+        }
+      },
+      "common": {
+        "name": "Invest America",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Success",
+        "warning": "Warning"
+      },
+      "button": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "submit": "Submit",
+        "retry": "Retry",
+        "close": "Close",
+        "ariaLabel": "Click to activate"
+      },
+      "input": {
+        "placeholder": "Enter text",
+        "ariaLabel": "Input field"
+      },
+      "select": {
+        "ariaLabel": "Select an option"
+      },
+      "checkbox": {
+        "label": "Option"
+      },
+      "modal": {
+        "title": "Modal",
+        "closeLabel": "Close modal"
+      },
+      "dropdown": {
+        "label": "Menu"
+      },
+      "card": {
+        "title": "Card"
+      },
+      "table": {
+        "empty": "No data"
+      },
+      "validation": {
+        "user": {
+          "email": {
+            "required": "Email is required",
+            "pattern": "Invalid email format"
+          },
+          "password": {
+            "required": "Password is required",
+            "minLength": "Password must be at least 8 characters"
+          },
+          "name": {
+            "required": "Name is required",
+            "minLength": "Name must be at least 2 characters"
+          }
+        },
+        "contact": {
+          "email": {
+            "required": "Email is required",
+            "pattern": "Invalid email format"
+          },
+          "message": {
+            "required": "Message is required",
+            "minLength": "Message must be at least 10 characters"
+          }
+        }
+      },
+      "watchlist": {
+        "loading": {
+          "label": "Loading watchlist"
+        },
+        "loaded": {
+          "label": "Your watchlist"
+        },
+        "error": {
+          "label": "Unable to load watchlist"
+        }
+      }
+    }
+  },
   "widgets": {},
   "styles": {},
   "templates": {

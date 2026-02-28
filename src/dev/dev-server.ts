@@ -3,6 +3,8 @@ import * as path from 'path';
 import { promises as fsp } from 'fs';
 import fsExtra from 'fs-extra';
 import YAML from 'yaml';
+import { processAssets, renderTpl } from './asset-processor';
+import { renderDashboard } from './dashboard';
 
 export interface DevServerOptions {
   verbose?: boolean;
@@ -69,41 +71,11 @@ export class DevServer {
         // Hot reload and API endpoints (namespaced under /$/ to avoid app conflicts)
         // Dev namespace root (dashboard HTML)
         if (pathname === '/$' || pathname === '/$/') {
-          try {
-            // Resolve dev widget from either source or dist to avoid static import failures during tests
-            let DevWidget: any = undefined;
-
-            const sourcePath = path.join(this.projectDir, 'src', 'ui', 'compositions', 'dev-widget.js');
-            const distPath = path.join(process.cwd(), 'dist', 'ui', 'compositions', 'dev-widget.js');
-
-            if (fsExtra.existsSync(sourcePath)) {
-              const mod = await import(sourcePath);
-              DevWidget = mod.DevWidget;
-            } else if (fsExtra.existsSync(distPath)) {
-              const mod = await import(distPath);
-              DevWidget = mod.DevWidget;
-            }
-
-            if (DevWidget && this.manifest) {
-              const widget = new DevWidget();
-              await widget.initialize();
-              const html = widget.render({ props: { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), projectDir: this.projectDir } });
-              res.writeHead(200, { 'Content-Type': 'text/html' });
-              res.end(html);
-              return;
-            }
-
-            // If DevWidget is present but we don't yet have a manifest, prefer a filesystem-derived summary
-            const indexContent = this.generateIndexFromManifest();
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(indexContent);
-            return;
-          } catch (e) {
-            const indexContent = this.generateIndexFromManifest();
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(indexContent);
-            return;
-          }
+          const site = processAssets(this.manifest, this.projectDir);
+          const html = await renderDashboard(this.projectDir, this.manifest, site);
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(html);
+          return;
         }
 
         // API endpoints under /$/
@@ -146,6 +118,25 @@ export class DevServer {
         // Serve application front page
         // Priority: project ux3.yaml -> ux/view/index.yaml -> public/index.html -> fallback message
         if (pathname === '/') {
+          const i18n = (this.manifest?.config as any)?.i18n || {};
+          
+          // First, try loading root ux3.yaml to get the most accurate site settings for front page
+          let ux3Config: any = {};
+          try {
+            const rootUx3 = path.join(this.projectDir, 'ux3.yaml');
+            const legacyUx3 = path.join(this.projectDir, 'ux', 'ux3.yaml');
+            const ux3Content = fsExtra.existsSync(rootUx3) ? await fsp.readFile(rootUx3, 'utf-8') : (fsExtra.existsSync(legacyUx3) ? await fsp.readFile(legacyUx3, 'utf-8') : '');
+            if (ux3Content) ux3Config = YAML.parse(ux3Content);
+          } catch {}
+
+          const siteFromManifest = (this.manifest?.config as any)?.site || {};
+          const siteFields = {
+            title: path.basename(this.projectDir),
+            ...siteFromManifest,
+            ...(ux3Config.site || {})
+          };
+          const site = processAssets({ config: { ...this.manifest?.config, site: siteFields } }, this.projectDir);
+
           // First, try fallback: ux/view/index.yaml (if any)
           try {
             const defaultIndexPath = path.join(this.projectDir, 'ux', 'view', 'index.yaml');
@@ -170,23 +161,23 @@ export class DevServer {
                 const viewName = m ? m[1] : null;
                 const stateName = m && m[2] ? m[2].replace(/\.html$/, '') : undefined;
 
-if (this.manifest && this.manifest.config && typeof this.manifest.config.templates === 'object') {
-                    const tplMap = (this.manifest.config as any).templates || {};
-                    // Prefer template map by the path-derived view name, but fall back to the current view's name (e.g., index) if not found
-                    const viewTpl = viewName ? (tplMap[viewName] || {}) : {};
-                    let candidate = (stateName && viewTpl[stateName]) || Object.values(viewTpl)[0];
+                if (this.manifest && this.manifest.config && typeof this.manifest.config.templates === 'object') {
+                  const tplMap = (this.manifest.config as any).templates || {};
+                  // Prefer template map by the path-derived view name, but fall back to the current view's name (e.g., index) if not found
+                  const viewTpl = viewName ? (tplMap[viewName] || {}) : {};
+                  let candidate = (stateName && viewTpl[stateName]) || Object.values(viewTpl)[0];
 
-                    if (!candidate) {
-                      const currentViewName = (view && view.name) ? String(view.name) : 'index';
-                      const currentTpl = tplMap[currentViewName] || {};
-                      candidate = (stateName && currentTpl[stateName]) || Object.values(currentTpl)[0];
-                      if (candidate) { /* resolved template from manifest for current view/state */ }
-                    } else {
-                      /* resolved template from manifest */
-                    }
+                  if (!candidate) {
+                    const currentViewName = (view && view.name) ? String(view.name) : 'index';
+                    const currentTpl = tplMap[currentViewName] || {};
+                    candidate = (stateName && currentTpl[stateName]) || Object.values(currentTpl)[0];
+                    if (candidate) { /* resolved template from manifest for current view/state */ }
+                  } else {
+                    /* resolved template from manifest */
+                  }
 
-                    if (candidate) {
-                      templateHtml = String(candidate);
+                  if (candidate) {
+                    templateHtml = String(candidate);
                   }
                 }
 
@@ -206,89 +197,71 @@ if (this.manifest && this.manifest.config && typeof this.manifest.config.templat
                 /* manifest/template resolution failed */
               }
 
-              // If still missing, instruct developer to compile (fail-fast, don't guess)
-              if (!templateHtml) {
-                templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
+              // Final fallback to project-specific index view logic
+              const renderedTemplate = renderTpl(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site });
+
+              const viewLayoutName = (view && view.layout) ? String(view.layout) : 'default';
+              const chromeWrapperPath = path.join(this.projectDir, 'ux', 'layout', 'chrome', 'wrapper.html');
+
+              // Layout selection priority:
+              // 1. Specific view layout (e.g., default.html)
+              // 2. Project default layout (ux/layout/_.html)
+              // 3. Framework default layout (src/ui/layouts/_.html)
+              let projectLayoutPath = path.join(this.projectDir, 'ux', 'layout', `${viewLayoutName}.html`);
+              if (!fsExtra.existsSync(projectLayoutPath)) {
+                projectLayoutPath = path.join(this.projectDir, 'ux', 'layout', '_.html');
               }
+              const frameworkDefaultPath = path.join(process.cwd(), 'src', 'ui', 'layouts', '_.html');
 
-              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir) });
-              /* index: renderedTemplate preview removed */
+              let chromeWrapperHtml = '';
+              let viewLayoutHtml = '';
 
-              // Resolve layout: prefer view.layout name (if provided in index.yaml), then project layout files, then default
-              const layoutName = (view && view.layout) ? String(view.layout) : '_';
-              const candidateLayoutA = path.join(this.projectDir, 'ux', 'layout', `${layoutName}.html`);
-              const candidateLayoutB = path.join(this.projectDir, 'ux', 'layout', layoutName, '_.html');
-              const projectDefaultLayout = path.join(this.projectDir, 'ux', 'layout', '_.html');
-              const defaultLayout = path.join(process.cwd(), 'src', 'ui', 'layouts', '_.html');
-
-              let layoutPath = defaultLayout;
-              if (fsExtra.existsSync(candidateLayoutA)) layoutPath = candidateLayoutA;
-              else if (fsExtra.existsSync(candidateLayoutB)) layoutPath = candidateLayoutB;
-              else if (fsExtra.existsSync(projectDefaultLayout)) layoutPath = projectDefaultLayout;
-
-              let layoutHtml = '';
-              try { layoutHtml = await fsp.readFile(layoutPath, 'utf-8'); } catch {}
-
-              // If manifest provides cdn, inject
-              const cdnList = (this.manifest?.config && (this.manifest.config as any).cdn) || [];
-              if (cdnList && Array.isArray(cdnList) && cdnList.length) {
-                const scripts = cdnList.map((u: string) => `<script src="${u}"></script>`).join('\n');
-                layoutHtml = layoutHtml.replace(/<script[^>]*ux-repeat="site\.cdn"[^>]*src="[^"]*"[^>]*>\s*<\/script>/g, scripts);
-                if (layoutHtml.includes('ux-repeat="site.cdn"') || layoutHtml.includes("ux-repeat='site.cdn'")) {
-                  layoutHtml = layoutHtml.replace('</head>', scripts + '\n</head>');
+              // Load chrome/wrapper or project _.html as the root shell
+              if (fsExtra.existsSync(chromeWrapperPath)) {
+                chromeWrapperHtml = await fsp.readFile(chromeWrapperPath, 'utf-8');
+                // If we have a wrapper, the view's layout goes inside IT
+                if (fsExtra.existsSync(projectLayoutPath)) {
+                  viewLayoutHtml = await fsp.readFile(projectLayoutPath, 'utf-8');
+                }
+              } else if (fsExtra.existsSync(path.join(this.projectDir, 'ux', 'layout', '_.html'))) {
+                // If there's an ux/layout/_.html, it MUST be the chrome (shell)
+                chromeWrapperHtml = await fsp.readFile(path.join(this.projectDir, 'ux', 'layout', '_.html'), 'utf-8');
+                // The specific layout (default.html) then becomes the inner layout
+                if (viewLayoutName !== '_' && fsExtra.existsSync(path.join(this.projectDir, 'ux', 'layout', `${viewLayoutName}.html`))) {
+                    viewLayoutHtml = await fsp.readFile(path.join(this.projectDir, 'ux', 'layout', `${viewLayoutName}.html`), 'utf-8');
+                }
+              } else if (fsExtra.existsSync(frameworkDefaultPath)) {
+                chromeWrapperHtml = await fsp.readFile(frameworkDefaultPath, 'utf-8');
+                if (fsExtra.existsSync(projectLayoutPath)) {
+                  viewLayoutHtml = await fsp.readFile(projectLayoutPath, 'utf-8');
                 }
               }
 
-              /* defaultIndex: layout preview removed */
-              /* defaultIndex: layoutHtml preview removed */
-              /* defaultIndex: layoutHtml full removed */
-              // Also consider ux3.yaml at project root or ux/ux3.yaml for cdn entries
-              try {
-                let ux3Path: string | null = null;
-                const rootUx3 = path.join(this.projectDir, 'ux3.yaml');
-                const legacyUx3 = path.join(this.projectDir, 'ux', 'ux3.yaml');
-                if (fsExtra.existsSync(rootUx3)) ux3Path = rootUx3;
-                else if (fsExtra.existsSync(legacyUx3)) ux3Path = legacyUx3;
-
-                if (ux3Path) {
-                  const ux3Content = await fsp.readFile(ux3Path, 'utf-8');
-                  let uxConfig: any = {};
-                  try { uxConfig = YAML.parse(ux3Content); } catch {}
-                  if (uxConfig.cdn && Array.isArray(uxConfig.cdn) && uxConfig.cdn.length) {
-                    const scripts = uxConfig.cdn.map((u: string) => `<script src="${u}"></script>`).join('\n');
-                    layoutHtml = layoutHtml.replace(/<script[^>]*ux-repeat="site\.cdn"[^>]*src="[^\"]*"[^>]*>\s*<\/script>/g, scripts);
-                    if (layoutHtml.includes('ux-repeat="site.cdn"') || layoutHtml.includes("ux-repeat='site.cdn'")) {
-                      layoutHtml = layoutHtml.replace('</head>', scripts + '\n</head>');
-                    }
-                  }
-                }
-              } catch (e) {
-                // ignore
-              }
-              // Prefer title from manifest.config.title then from i18n index.json then fallback
-              let title = (this.manifest?.config && (this.manifest.config as any).title) || path.basename(this.projectDir);
-              try {
-                const i18nIndex = path.join(this.projectDir, 'ux', 'i18n', 'en', 'index.json');
-                if (fsExtra.existsSync(i18nIndex)) {
-                  const content = await fsp.readFile(i18nIndex, 'utf-8');
-                  const i18nData = JSON.parse(content);
-                  if (i18nData && i18nData.site && i18nData.site.title) {
-                    title = i18nData.site.title;
-                  }
-                }
-              } catch {}
-
-              let layoutToRender = layoutHtml || '';
-              let html = '';
-              if (/{{\s*>\s*layout\s*}}/.test(layoutToRender)) {
-                layoutToRender = layoutToRender.replace(/{{\s*>\s*layout\s*}}/g, renderedTemplate);
-                html = renderTemplate(layoutToRender, { site: { title } });
+              // Assemble: chrome <- viewLayout <- renderedTemplate
+              
+              if (viewLayoutHtml) {
+                // Inject view into viewLayout
+                viewLayoutHtml = viewLayoutHtml.replace(/\{\{\{\s*content\s*\}\}\}/g, renderedTemplate);
+                viewLayoutHtml = renderTpl(viewLayoutHtml, { i18n, site });
               } else {
-                html = renderTemplate(layoutToRender, { site: { template: renderedTemplate, title } });
+                viewLayoutHtml = renderedTemplate;
               }
-              /* defaultIndex: final html preview removed */
+
+              let finalHtml = '';
+              if (chromeWrapperHtml) {
+                // Inject viewLayout into chrome
+                finalHtml = chromeWrapperHtml
+                  .replace(/\{\{\{\s*content\s*\}\}\}/g, viewLayoutHtml)
+                  .replace(/\{\{\s*>\s*layout\s*\}\}/g, viewLayoutHtml)
+                  .replace(/\{\{\s*site\.template\s*\}\}/g, viewLayoutHtml);
+                
+                finalHtml = renderTpl(finalHtml, { i18n, site });
+              } else {
+                finalHtml = viewLayoutHtml;
+              }
+
               res.writeHead(200, { 'Content-Type': 'text/html' });
-              res.end(html);
+              res.end(finalHtml);
               return;
             }
           } catch (e) {
@@ -307,6 +280,18 @@ if (this.manifest && this.manifest.config && typeof this.manifest.config.templat
               const ux3Content = await fsp.readFile(ux3Path, 'utf-8');
               let uxConfig: any = {};
               try { uxConfig = YAML.parse(ux3Content); } catch { /* ignore */ }
+
+              const i18n = (this.manifest?.config as any)?.i18n || {};
+              const siteFromManifest = (this.manifest?.config as any)?.site || {};
+              const siteFromYaml = uxConfig.site || {};
+              
+              const mergedSite = {
+                title: path.basename(this.projectDir), // base fallback
+                ...siteFromManifest,
+                ...siteFromYaml
+              };
+
+              const site = processAssets({ config: { ...this.manifest?.config, site: mergedSite } }, this.projectDir);
 
               const indexSpec: string = uxConfig.index || 'view/index.yaml';
               const indexPath = path.join(this.projectDir, 'ux', indexSpec.replace(/^\//, ''));
@@ -371,7 +356,7 @@ if (this.manifest && this.manifest.config && typeof this.manifest.config.templat
                 }
 
                 // Render the template into layout, resolving layoutName/title similar to other index path
-                const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir) });
+                const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site });
 
                 // Layout selection priority (most specific -> fallback):
                 // 1) ux/layout/<layoutName>.html
@@ -393,69 +378,15 @@ if (this.manifest && this.manifest.config && typeof this.manifest.config.templat
                 let layoutHtml = '';
                 try { layoutHtml = await fsp.readFile(layoutPath, 'utf-8'); } catch {}
 
-                // If manifest provides cdn, inject
-                const cdnList = (this.manifest?.config && (this.manifest.config as any).cdn) || [];
-                if (cdnList && Array.isArray(cdnList) && cdnList.length) {
-                  const scripts = cdnList.map((u: string) => `<script src="${u}"></script>`).join('\n');
-                  layoutHtml = layoutHtml.replace(/<script[^>]*ux-repeat="site\.cdn"[^>]*src="[^"]*"[^>]*>\s*<\/script>/g, scripts);
-                  if (layoutHtml.includes('ux-repeat="site.cdn"') || layoutHtml.includes("ux-repeat='site.cdn'")) {
-                    layoutHtml = layoutHtml.replace('</head>', scripts + '\n</head>');
-                  }
-                }
-
-                // DEBUG: log template and renderedTemplate sizes to diagnose missing insertion
-                /* index: templateHtml len removed */
-                try { const tmp = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir) }); /* renderTemplate executed */ } catch (e) { /* renderTemplate failed */ }
-
-                // Also consider ux3.yaml at project root or ux/ for cdn entries
-                try {
-                  let ux3Path: string | null = null;
-                  const rootUx3 = path.join(this.projectDir, 'ux3.yaml');
-                  const legacyUx3 = path.join(this.projectDir, 'ux', 'ux3.yaml');
-                  if (fsExtra.existsSync(rootUx3)) ux3Path = rootUx3;
-                  else if (fsExtra.existsSync(legacyUx3)) ux3Path = legacyUx3;
-
-                  if (ux3Path) {
-                    const ux3Content = await fsp.readFile(ux3Path, 'utf-8');
-                    let uxConfig: any = {};
-                    try { uxConfig = YAML.parse(ux3Content); } catch {}
-                    if (uxConfig.cdn && Array.isArray(uxConfig.cdn) && uxConfig.cdn.length) {
-                      const scripts = uxConfig.cdn.map((u: string) => `<script src="${u}"></script>`).join('\n');
-                      layoutHtml = layoutHtml.replace(/<script[^>]*ux-repeat="site\.cdn"[^>]*src="[^"]*"[^>]*>\s*<\/script>/g, scripts);
-                      if (layoutHtml.includes('ux-repeat="site.cdn"') || layoutHtml.includes("ux-repeat='site.cdn'")) {
-                        layoutHtml = layoutHtml.replace('</head>', scripts + '\n</head>');
-                      }
-                    }
-                  }
-                } catch (e) {
-                  // ignore
-                }
-
-                // Prefer title from manifest.config.title then from i18n index.json then fallback
-                let title = (this.manifest?.config && (this.manifest.config as any).title) || path.basename(this.projectDir);
-                try {
-                  const i18nIndex = path.join(this.projectDir, 'ux', 'i18n', 'en', 'index.json');
-                  if (fsExtra.existsSync(i18nIndex)) {
-                    const content = await fsp.readFile(i18nIndex, 'utf-8');
-                    const i18nData = JSON.parse(content);
-                    if (i18nData && i18nData.site && i18nData.site.title) {
-                      title = i18nData.site.title;
-                    }
-                  }
-                } catch {}
-
-                /* index: layoutPath resolved */
+                // Render layout with site/i18n context
                 let layoutToRender = layoutHtml || '';
                 // Normalize layout placeholders to a canonical site.template token, then render.
-                // This avoids accidental partial parsing of triple-brace syntax by the templater.
                 layoutToRender = layoutToRender.replace(/\{\{\{\s*content\s*\}\}\}/g, '{{ site.template }}');
                 layoutToRender = layoutToRender.replace(/\{\{\s*>\s*layout\s*\}\}/g, '{{ site.template }}');
-                const html = renderTemplate(layoutToRender, { site: { template: renderedTemplate, title } });
-                /* index: final html preview removed */
+                
+                const finalHtml = renderTemplate(layoutToRender, { site: { ...site, template: renderedTemplate }, i18n });
 
                 res.writeHead(200, { 'Content-Type': 'text/html' });
-                // Final pass: ensure any remaining layout placeholders are replaced with the rendered template
-                const finalHtml = html.replace(/\{\{\{\s*content\s*\}\}\}/g, renderedTemplate).replace(/\{\{\s*>\s*layout\s*\}\}/g, renderedTemplate).replace(/\{\{\s*site\.template\s*\}\}/g, renderedTemplate);
                 res.end(finalHtml);
                 return;
               }
@@ -503,79 +434,64 @@ if (this.manifest && this.manifest.config && typeof this.manifest.config.templat
               let view: any = {};
               try { view = YAML.parse(viewYaml); } catch {}
 
+              const i18n = (this.manifest?.config as any)?.i18n || {};
+              const site = processAssets(this.manifest, this.projectDir);
+
               const templateRel = view.template || '';
               let templateHtml = '';
 
-              // Try compiled manifest template for this view first (so compiled app wrapper / bootstrapping is used when available)
+              // Try compiled manifest template for this view first
               try {
-                const m = String(templateRel).match(/^view\/([^\/]+)(?:\/(.*))?$/);
-                const tplViewName = m ? m[1] : viewName;
-                const tplStateName = m && m[2] ? m[2].replace(/\.html$/,'') : undefined;
-
                 if (this.manifest && this.manifest.config && typeof this.manifest.config.templates === 'object') {
                   const tplMap = (this.manifest.config as any).templates || {};
-
-                  // Try the view name derived from the template path first, then fall back to the view's own name
-                  const viewTpl = tplViewName ? (tplMap[tplViewName] || {}) : {};
-                  let candidate = (tplStateName && viewTpl[tplStateName]) || Object.values(viewTpl)[0];
-
-                  if (!candidate) {
-                    const currentViewTpl = tplMap[viewName] || {};
-                    candidate = (tplStateName && currentViewTpl[tplStateName]) || Object.values(currentViewTpl)[0];
-                    if (candidate) { /* resolved template from manifest for current view/state */ }
-                  } else {
-                    /* resolved template from manifest */
+                  const viewTpl = tplMap[viewName] || {};
+                  // Use specific state template or first available
+                  const stateName = (view.initial || 'index');
+                  const candidate = viewTpl[stateName] || Object.values(viewTpl)[0];
+                  if (candidate) {
                     templateHtml = String(candidate);
                   }
                 }
 
-                if (!templateHtml) {
-                  const templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//, ''));
-                  try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) { /* ignore */ }
+                if (!templateHtml && templateRel) {
+                  let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//,''));
+                  if (!fsExtra.existsSync(templatePath)) {
+                    const alt = path.join(this.projectDir, templateRel.replace(/^\//,''));
+                    if (fsExtra.existsSync(alt)) templatePath = alt;
+                  }
+                  templateHtml = await fsp.readFile(templatePath, 'utf-8');
                 }
-              } catch (err) {
-                /* manifest/template resolution failed */
-              }
+              } catch (e) {}
 
-              // Resolve layout: prefer view.layout name (if provided in view YAML), then project layout files, then default
+              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site });
+
               const layoutName = (view && view.layout) ? String(view.layout) : '_';
               const candidateLayoutA = path.join(this.projectDir, 'ux', 'layout', `${layoutName}.html`);
-              const candidateLayoutB = path.join(this.projectDir, 'ux', 'layout', layoutName, '_.html');
               const projectDefaultLayout = path.join(this.projectDir, 'ux', 'layout', '_.html');
               const defaultLayout = path.join(process.cwd(), 'src', 'ui', 'layouts', '_.html');
 
               let layoutPath = defaultLayout;
               if (fsExtra.existsSync(candidateLayoutA)) layoutPath = candidateLayoutA;
-              else if (fsExtra.existsSync(candidateLayoutB)) layoutPath = candidateLayoutB;
               else if (fsExtra.existsSync(projectDefaultLayout)) layoutPath = projectDefaultLayout;
 
               let layoutHtml = '';
               try { layoutHtml = await fsp.readFile(layoutPath, 'utf-8'); } catch {}
 
-              // Render the view template
-              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir) });
-
-              // Inject cdn from ux3.yaml if present in manifest.config
-              const cdnList = (this.manifest?.config && (this.manifest.config as any).cdn) || [];
-              if (cdnList && Array.isArray(cdnList) && cdnList.length) {
-                const scripts = cdnList.map((u: string) => `<script src="${u}"></script>`).join('\n');
-                layoutHtml = layoutHtml.replace(/<script[^>]*ux-repeat="site\.cdn"[^>]*src="[^"]*"[^>]*>\s*<\/script>/g, scripts);                if (layoutHtml.includes('ux-repeat="site.cdn"') || layoutHtml.includes("ux-repeat='site.cdn'")) {
-                  layoutHtml = layoutHtml.replace('</head>', scripts + '\n</head>');
-                }              }
-
-              const title = (this.manifest?.config && (this.manifest.config as any).title) || path.basename(this.projectDir);
-
-              let layoutToRender = layoutHtml || '';
-              // Normalize triple-brace and partial placeholders to canonical `{{ site.template }}` and render.
-              layoutToRender = layoutToRender.replace(/\{\{\{\s*content\s*\}\}\}/g, '{{ site.template }}');
-              layoutToRender = layoutToRender.replace(/\{\{\s*>\s*layout\s*\}\}/g, '{{ site.template }}');
-              const html = renderTemplate(layoutToRender, { site: { template: renderedTemplate, title } });
-
-              /* route: final html preview removed */
+              let finalHtml = '';
+              if (layoutHtml) {
+                // First pass: replace content/layout placeholders with the actual template
+                const assembled = layoutHtml
+                  .replace(/\{\{\{\s*content\s*\}\}\}/g, renderedTemplate)
+                  .replace(/\{\{\s*>\s*layout\s*\}\}/g, renderedTemplate)
+                  .replace(/\{\{\s*site\.template\s*\}\}/g, renderedTemplate);
+                
+                // Second pass: render the final result with site/i18n tags
+                finalHtml = renderTemplate(assembled, { site, i18n });
+              } else {
+                finalHtml = renderedTemplate;
+              }
 
               res.writeHead(200, { 'Content-Type': 'text/html' });
-              // Final pass: ensure any remaining layout placeholders are replaced with the rendered template
-              const finalHtml = html.replace(/\{\{\{\s*content\s*\}\}\}/g, renderedTemplate).replace(/\{\{\s*>\s*layout\s*\}\}/g, renderedTemplate).replace(/\{\{\s*site\.template\s*\}\}/g, renderedTemplate);
               res.end(finalHtml);
               return;
             }
@@ -791,8 +707,16 @@ if (this.manifest && this.manifest.config && typeof this.manifest.config.templat
 function renderTemplate(template: string, context: Record<string, any> = {}): string {
   if (!template) return '';
 
+  let html = template;
+
+  // Handle i18n placeholders: {{i18n.key.path}}
+  html = html.replace(/\{\{\s*i18n\.([^\}]+?)\s*\}\}/g, (_, key) => {
+    const val = key.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), context.i18n || {});
+    return val !== undefined ? String(val) : `[${key}]`;
+  });
+
   // Handle triple-mustache {{{ key }}} first for raw insertion (e.g., unescaped HTML)
-  template = template.replace(/\{\{\{\s*([^\}]+?)\s*\}\}\}/g, (_, key) => {
+  html = html.replace(/\{\{\{\s*([^\}]+?)\s*\}\}\}/g, (_, key) => {
     const val = key.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), context);
     if (val === undefined || val === null) return '';
     if (typeof val === 'object') return JSON.stringify(val);
@@ -800,7 +724,7 @@ function renderTemplate(template: string, context: Record<string, any> = {}): st
   });
 
   // Then handle double-mustache with escaping semantics (basic: return string value)
-  return template.replace(/\{\{\s*([^\}]+?)\s*\}\}/g, (_, key) => {
+  return html.replace(/\{\{\s*([^\}]+?)\s*\}\}/g, (_, key) => {
     const val = key.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), context);
     if (val === undefined || val === null) return '';
     if (typeof val === 'object') return JSON.stringify(val);

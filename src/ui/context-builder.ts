@@ -114,12 +114,16 @@ export class AppContextBuilder {
       case 'http':
         return new HttpService(spec.config);
       case 'websocket':
-        return new WebSocketService(spec.config);
+        // config may not strictly match WebSocketConfig but is assumed to contain url
+        return new WebSocketService(spec.config as any);
       case 'jsonrpc':
         return new JSONRPCService(spec.config);
       case 'mock':
         // Mock service returns predefined responses
         return {
+          async fetch(_req: any) {
+            return { success: true };
+          },
           async call(method: string, params?: any) {
             return { success: true, method, params };
           },

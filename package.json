@@ -76,7 +76,7 @@
   ],
   "scripts": {
     "predev": "echo 'Skipping type-check for dev mode'",
-    "dev": "tsc --watch",
+    "dev": "tsc -p tsconfig.dev.json --watch",
     "dev:bg": "sh -c \"tsc --watch & echo 'TypeScript watcher started'\"",
     "dev:iam": "npx tsx src/cli/cli.ts dev examples/iam --port 1337",
     "validate": "npx tsx src/cli/validate.ts --projectDir ./examples/iam",

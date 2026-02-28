@@ -1,0 +1,18 @@
+<header class="action-bar" part="host">
+  <div class="action-bar__start" part="start">
+    <slot name="start"></slot>
+  </div>
+  
+  <div class="action-bar__center" part="center">
+    <slot name="center"></slot>
+  </div>
+
+  <div class="action-bar__actions" part="actions">
+    <slot name="actions">
+      <!-- Fallback content if no actions provided -->
+      <button type="button" ux-style="btn-primary" ux-event="SAVE">
+        {{i18n.actions.SAVE}}
+      </button>
+    </slot>
+  </div>
+</header>

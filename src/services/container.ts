@@ -167,7 +167,7 @@ export class ServiceContainer {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         // Invoke the service
-        const result = await service.call(method, params);
+        const result = service.call ? await service.call(method, params) : undefined;
         return result;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));

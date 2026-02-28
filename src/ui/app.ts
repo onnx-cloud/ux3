@@ -1,6 +1,7 @@
 import { StateMachine } from "src/fsm";
-import { Service } from "src/services";
-import { Widget, WidgetFactory } from "./widget";
+import type { Service } from "src/services/types";
+import type { Widget } from "./widget";
+import { WidgetFactory } from "./widget/factory";
 
 /**
  * App Context

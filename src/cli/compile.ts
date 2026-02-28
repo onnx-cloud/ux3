@@ -35,7 +35,8 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   // Compile views
   if (config.views) {
     try {
-      await compileAllViews(config.views, config.output, config.baseDir);
+      // `compileAllViews` currently only accepts src and dest directories
+      await compileAllViews(config.views, config.output);
     } catch (e) {
       console.error('✗ View compilation failed:', e);
       process.exit(1);

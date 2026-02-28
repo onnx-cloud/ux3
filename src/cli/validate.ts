@@ -36,8 +36,10 @@ async function main(): Promise<void> {
 
   if ((result.warnings || []).length > 0) {
     console.warn('Validation warnings:');
-    for (const w of result.warnings) {
-      console.warn(`- ${w.file} - ${w.message}`);
+    if (result.warnings) {
+      for (const w of result.warnings) {
+        console.warn(`- ${w.file} - ${w.message}`);
+      }
     }
   }
 

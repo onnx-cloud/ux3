@@ -5,6 +5,8 @@
 
 import { StateMachine } from '../fsm/state-machine.js';
 import type { AppContext } from './app.js';
+import { stampTemplate } from './template-stamp.js';
+import { observeSlot, getAssignedElements } from './slot-utils.js';
 
 /**
  * Template bindings metadata
@@ -24,7 +26,7 @@ export interface TemplateBindings {
  * - Templates (HTML for each FSM state)
  * - Bindings (event listeners, reactive updates, etc.)
  */
-export abstract class ViewComponent<Context = any> extends HTMLElement {
+export abstract class ViewComponent<Context extends Record<string, any> = any> extends HTMLElement {
   protected app!: AppContext;
   protected fsm!: StateMachine<Context>;
   protected layout: string = '';
@@ -51,16 +53,10 @@ export abstract class ViewComponent<Context = any> extends HTMLElement {
         throw new Error('AppContext not initialized. Call createAppContext first.');
       }
 
-      // 2. Extract configuration from attributes
-      const fsmName = this.getAttribute('ux-fsm');
-      const layoutName = this.getAttribute('ux-layout');
-      const viewName = this.getAttribute('ux-view');
-
-      if (!fsmName || !layoutName) {
-        throw new Error(
-          `ViewComponent requires ux-fsm and ux-layout attributes`
-        );
-      }
+      // 2. Extract configuration from attributes or convention
+      const fsmName = this.getAttribute('ux-fsm') || this.tagName.toLowerCase().replace(/^ux-/, '');
+      const viewName = this.getAttribute('ux-view') || fsmName;
+      const layoutName = this.getAttribute('ux-layout') || 'default';
 
       // 3. Load FSM and layout
       this.fsm = this.app.machines[fsmName];
@@ -204,6 +200,10 @@ export abstract class ViewComponent<Context = any> extends HTMLElement {
     try {
       if (this.currentState !== state) {
         this.currentState = state;
+        
+        // Reflect state to attribute for CSS-driven visibility
+        this.setAttribute('data-state', state);
+        
         this.renderState(state);
 
         this.emitTelemetry('fsm:state-change', {
@@ -254,9 +254,27 @@ export abstract class ViewComponent<Context = any> extends HTMLElement {
     const contentArea = this.shadowRoot?.querySelector('#ux-content');
     if (!contentArea) return;
 
-    // Find all elements with ux-on:* attributes
-    const elements = contentArea.querySelectorAll('[ux-on\\:*]');
+    // Find all elements with ux-on:* OR ux-event attributes
+    const elements = contentArea.querySelectorAll('[ux-on\\:*], [ux-event]');
     elements.forEach((element) => {
+      // 1. Handle ux-event directive: "click:SUBMIT"
+      const uxEvent = element.getAttribute('ux-event');
+      if (uxEvent) {
+        const [eventName, action] = uxEvent.split(':');
+        if (eventName && action) {
+          const listener = (event: Event) => {
+            if (element.tagName === 'FORM' && event.type === 'submit') {
+              event.preventDefault();
+            }
+            const payload = this.extractPayload(element as HTMLElement, event);
+            this.fsm.send({ type: action, payload });
+          };
+          element.addEventListener(eventName, listener);
+          this.eventListeners.set(`${element.tagName}:${eventName}:${action}`, listener);
+        }
+      }
+
+      // 2. Handle legacy ux-on:* attributes
       for (const attr of element.attributes) {
         if (attr.name.startsWith('ux-on:')) {
           const eventName = attr.name.slice(6); // "ux-on:click" → "click"
@@ -397,5 +415,36 @@ export abstract class ViewComponent<Context = any> extends HTMLElement {
    */
   sendFSMEvent(action: string, payload?: any): void {
     this.fsm.send({ type: action, payload });
+  }
+
+  /**
+   * Stamps a consumer-provided template with data
+   * @param slotName The name of the slot containing the template
+   * @param data The data context for interpolation
+   */
+  protected stampSlotTemplate(slotName: string, data: any): DocumentFragment | null {
+    const template = this.querySelector(`template[slot="${slotName}"]`) as HTMLTemplateElement;
+    if (!template) {
+      console.warn(`[ViewComponent] No template found for slot: ${slotName}`);
+      return null;
+    }
+    return stampTemplate(template, data);
+  }
+
+  /**
+   * Observes a slot for assignment changes
+   */
+  protected observeViewSlot(slotName: string | null, callback: (nodes: Node[]) => void): () => void {
+    return observeSlot(this, slotName, callback);
+  }
+
+  /**
+   * Gets assigned elements for a slot
+   */
+  protected getAssignedViewElements(slotName: string | null): Element[] {
+    const slotSelector = slotName ? `slot[name="${slotName}"]` : 'slot:not([name])';
+    const slot = this.shadowRoot?.querySelector(slotSelector) as HTMLSlotElement;
+    if (!slot) return [];
+    return getAssignedElements(slot);
   }
 }

@@ -49,6 +49,7 @@ export class HTTPService extends Service<RequestConfig, any> {
 
       const data = await this.parseResponse(response);
       const result: ServiceResponse<T> = {
+        method: options.method || 'GET',
         ok: response.ok,
         status: response.status,
         data: data as T,
@@ -65,6 +66,7 @@ export class HTTPService extends Service<RequestConfig, any> {
       return result;
     } catch (error) {
       return {
+        method: options.method || 'request',
         ok: false,
         status: 0,
         data: null as any,

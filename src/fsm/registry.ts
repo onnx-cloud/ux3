@@ -29,6 +29,40 @@ export interface FSMRegistryConfig {
  */
 export class FSMRegistry {
   private static instances = new Map<string, StateMachine<any>>();
+  private static globalContext: Record<string, any> = {};
+  private static globalServices: Record<string, any> = {};
+
+  /**
+   * Set global context shared across all FSMs
+   */
+  static setGlobalContext(ctx: Record<string, any>): void {
+    this.globalContext = { ...this.globalContext, ...ctx };
+    // Update existing machines if they support global injection
+    for (const fsm of this.instances.values()) {
+      (fsm as any).updateGlobalContext?.(this.globalContext);
+    }
+  }
+
+  /**
+   * Get global context
+   */
+  static getGlobalContext(): Record<string, any> {
+    return this.globalContext;
+  }
+
+  /**
+   * Register global services
+   */
+  static registerServices(services: Record<string, any>): void {
+    this.globalServices = { ...this.globalServices, ...services };
+  }
+
+  /**
+   * Get global services
+   */
+  static getServices(): Record<string, any> {
+    return this.globalServices;
+  }
 
   /**
    * Register an FSM under a namespace

@@ -2,10 +2,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="{{ site.description }}" />
+    <meta name="title" content="{{ site.title }}" />
     <title>{{ site.title }}</title>
-    <script ux-repeat="site.cdn" src="{{this}}"></script>
+    {{{ site.head }}}
+</head>
 <body>
     {{ >layout }}
+    {{{ site.scripts }}}
 </body>
 
 </html>

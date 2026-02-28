@@ -1,7 +1,16 @@
 name: iam
 index: view/index.yaml
 domain: 'investamerica.money'
+site:
+  title: "Invest America"
+  decription: "Your gateway to smart investments."
+  assets:
+    - type: "script"
+      src: "https://cdn.tailwindcss.com"
+    - type: "script"
+      src: "/js/analytics.js"
+      defer: true
+    - type: "style"
+      href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
 secrets:
   LLM_API_KEY: "{{ env.GROQ_API_KEY }}"
-cdn:
-  theme: 'https://cdn.tailwindcss.com'

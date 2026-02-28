@@ -131,18 +131,20 @@ export class WebSocketService extends Service<WebSocketMessage> {
       // Handle subscription failure
     });
 
-    return () => {
-      handlers.delete(handler as SubscriptionHandler);
-      if (handlers.size === 0) {
-        this.subscriptions.delete(topic);
-        // Notify server of unsubscription
-        this.send({
-          type: 'unsubscribe',
-          payload: { topic },
-        }).catch(() => {
-          // Handle unsubscription failure
-        });
-      }
+    return {
+      unsubscribe: () => {
+        handlers.delete(handler as SubscriptionHandler);
+        if (handlers.size === 0) {
+          this.subscriptions.delete(topic);
+          // Notify server of unsubscription
+          this.send({
+            type: 'unsubscribe',
+            payload: { topic },
+          }).catch(() => {
+            // Handle unsubscription failure
+          });
+        }
+      },
     };
   }
 

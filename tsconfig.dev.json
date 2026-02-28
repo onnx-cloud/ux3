@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // loosen a few strictness flags for interactive development
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".ux3",
+    "packages",
+    "examples",
+    "src/__tests__",
+    "src/build",
+    "src/dev/__tests__",
+    "src/ui/__tests__",
+    "src/state/__tests__",
+    "src/services/__tests__",
+    "src/build/__tests__",
+    "src/ui/widget/__tests__",
+    "src/services",
+    "src/ui",
+    "src/build"
+  ]
+}

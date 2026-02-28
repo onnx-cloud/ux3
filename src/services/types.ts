@@ -40,8 +40,12 @@ export interface ServiceResponse<T = any> {
   method: string;
   status: number;
   data: T;
+  ok?: boolean;
   error?: Error;
 }
+
+// alias used by websocket service to indicate unsubscribe function
+export type SubscriptionUnsubscribe = Subscriber;
 
 export interface WebSocketMessage<T = any> {
   type: string;
@@ -72,7 +76,8 @@ export type Service<T = any, R = any> = {
   call?(method: string, params?: any): Promise<any>;
   update?(request: T): Promise<R>;
   find?(options?: Record<string,any>): Promise<R[]>;
-  subscribe?(handler: SubscriptionHandler<R>): Subscriber; 
+  // WebSocket-style subscribe takes a topic and handler, returning unsubscribe
+  subscribe?(topic: string, handler: SubscriptionHandler<R>): SubscriptionUnsubscribe;
 }
 
 export type Subscriber = {
