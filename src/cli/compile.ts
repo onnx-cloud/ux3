@@ -7,6 +7,7 @@
  */
 
 import * as fs from 'fs/promises';
+import { Command } from 'commander';
 import YAML from 'yaml';
 import { compileAllViews } from '../build/view-compiler.js';
 
@@ -63,6 +64,28 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   console.log('\n✓ Compilation complete');
 }
 
+export { runCompiler, loadConfig };
+
+export const compileCommand = new Command()
+  .name('compile')
+  .description('Compile UX3 views into generated code')
+  .option('--views <path>', 'source views directory')
+  .option('--output <path>', 'output directory')
+  .option('--config <path>', 'path to config file')
+  .action(async (options) => {
+    let config: CompilerConfig;
+    if (options.config) {
+      config = await loadConfig(options.config);
+    } else {
+      config = {
+        views: options.views || '',
+        output: options.output || '',
+      } as CompilerConfig;
+    }
+
+    await runCompiler(config);
+  });
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
@@ -115,7 +138,9 @@ async function main(): Promise<void> {
   await runCompiler(config);
 }
 
-main().catch((e) => {
-  console.error('Error:', e);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch((e) => {
+    console.error('Error:', e);
+    process.exit(1);
+  });
+}

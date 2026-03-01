@@ -1,0 +1,113 @@
+// @vitest-environment node
+
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+// import commands directly (use .js extension for runtime)
+import { createCommand } from '../../src/cli/commands/create.js';
+import { checkCommand } from '../../src/cli/commands/check.js';
+import { buildCommand } from '../../src/cli/commands/build.js';
+
+// helper to run a command and capture exit code
+async function runCommand(cmd: any, args: string[], cwd: string) {
+  const originalCwdFn = process.cwd;
+  const originalExit = process.exit;
+  let code = 0;
+  let exitCalled = false;
+
+  // override cwd function so code thinks it's running in the desired folder
+  (process as any).cwd = () => cwd;
+
+  // override exit so tests don't terminate the process
+  (process as any).exit = (c?: number) => {
+    exitCalled = true;
+    code = typeof c === 'number' ? c : 0;
+    throw { exitCode: code, message: 'process.exit called' };
+  };
+
+  try {
+    // commander takes the first element as the command name when from='user'
+    await cmd.parseAsync(args, { from: 'user' });
+  } catch (e: any) {
+    // capture exit exceptions thrown by our override
+    if (e && typeof e.exitCode === 'number') {
+      code = e.exitCode;
+    } else if (e.code === 'ERR_COMMAND_FAILED') {
+      code = 1;
+    } else {
+      process.exit = originalExit;
+      (process as any).cwd = originalCwdFn;
+      throw e;
+    }
+  } finally {
+    process.exit = originalExit;
+    (process as any).cwd = originalCwdFn;
+  }
+
+  return code;
+}
+
+describe('UX3 CLI commands', () => {
+  const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'cli-commands');
+
+  beforeEach(async () => {
+    await fs.remove(tmpRoot);
+    await fs.ensureDir(tmpRoot);
+  });
+
+  afterEach(async () => {
+    await fs.remove(tmpRoot);
+  });
+
+  it('`create` scaffolds a basic project', async () => {
+    const project = path.join(tmpRoot, 'proj1');
+    const exit = await runCommand(createCommand, ['proj1'], tmpRoot);
+    expect(exit).toBe(0);
+
+    const pkg = await fs.readJson(path.join(project, 'package.json'));
+    expect(pkg.name).toBe('proj1');
+    expect(await fs.pathExists(path.join(project, 'src'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'public'))).toBe(true);
+  });
+
+  it('`create` refuses to overwrite existing package.json', async () => {
+    const project = path.join(tmpRoot, 'proj2');
+    await fs.ensureDir(project);
+    await fs.writeJson(path.join(project, 'package.json'), { name: 'existing' });
+
+    // run create command against existing directory
+    const code = await runCommand(createCommand, ['proj2'], tmpRoot);
+    expect(code).toBe(1);
+  });
+
+  it('`check --logic` detects unused exports', async () => {
+    const project = path.join(tmpRoot, 'proj3');
+    await fs.ensureDir(path.join(project, 'ux', 'logic'));
+    await fs.ensureDir(path.join(project, 'ux', 'view'));
+    await fs.writeFile(path.join(project, 'ux', 'logic', 'foo.ts'), 'export function used(){}\nexport function unused(){}\n');
+    await fs.writeFile(
+      path.join(project, 'ux', 'view', 'v.yaml'),
+      'initial: s\nstates:\n  s:\n    entry: enter1\n'
+    );
+
+    const code = await runCommand(checkCommand, ['--logic'], project);
+    expect(code).toBe(1);
+  });
+
+  it('`build` creates generated/config.ts and dist directory', async () => {
+    const project = path.join(tmpRoot, 'proj4');
+    await fs.ensureDir(path.join(project, 'ux', 'route'));
+    await fs.writeFile(path.join(project, 'ux', 'route', 'routes.yaml'), 'routes: []');
+    // provide a minimal package.json to get version
+    await fs.writeJson(path.join(project, 'package.json'), { name: 'p4', version: '1.2.3' });
+
+    // run build without bundling, we only care about config/type generation
+    const code = await runCommand(buildCommand, ['--skip-bundle'], project);
+    expect(code).toBe(0);
+
+    expect(await fs.pathExists(path.join(project, 'generated', 'config.ts'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'generated', 'types.ts'))).toBe(true);
+    // dist directory may not be created when bundling is skipped
+  });
+});

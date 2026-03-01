@@ -7,9 +7,6 @@ site:
   assets:
     - type: "script"
       src: "https://cdn.tailwindcss.com"
-    - type: "script"
-      src: "/js/analytics.js"
-      defer: true
     - type: "style"
       href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
   # runtime section is used by the build/dev servers to inject the bundle
@@ -19,3 +16,18 @@ site:
     # initialState: null          # optional initial state variable name
 secrets:
   LLM_API_KEY: "{{ env.GROQ_API_KEY }}"
+development:
+  hot-reload: true # enable hot reloading for faster development iterations
+  logging: "debug" # verbose logging for development
+  inspector: true # enable client-side inspector for debugging
+## refactored from site section to be top-level for better merging and runtime access
+assets:
+  - type: "script"
+    src: "https://cdn.tailwindcss.com"
+  - type: "style"
+    href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+# runtime section is used by the build/dev servers to manage/inject the bundle
+runtime:
+  bundleKey: "ux3.bundle"      # must match manifest.runtime.bundle
+  hydrationFn: "initApp"       # exported from bundle entry
+  # initialState: null          # optional initial state variable name

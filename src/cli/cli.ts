@@ -5,6 +5,7 @@ import { createCommand } from './commands/create.js';
 import { devCommand } from './commands/dev.js';
 import { buildCommand } from './commands/build.js';
 import { checkCommand } from './commands/check.js';
+import { compileCommand } from './compile.js';
 
 const version = '0.1.0';
 
@@ -14,6 +15,7 @@ program.addCommand(createCommand);
 program.addCommand(devCommand);
 program.addCommand(buildCommand);
 program.addCommand(checkCommand);
+program.addCommand(compileCommand);
 
 program.parse(process.argv);
 

@@ -1,0 +1,22 @@
+{
+  "name": "node",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ux3 dev",
+    "build": "ux3 build",
+    "preview": "ux3 preview",
+    "check": "ux3 check"
+  },
+  "dependencies": {
+    "@ux3/core": "^0.1.0",
+    "@ux3/stdlib": "^0.1.0",
+    "@ux3/router": "^0.1.0",
+    "@ux3/forms": "^0.1.0",
+    "@ux3/store": "^0.1.0"
+  },
+  "devDependencies": {
+    "@ux3/cli": "^0.1.0",
+    "typescript": "^5.3.3"
+  }
+}

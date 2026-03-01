@@ -473,8 +473,8 @@ export class DevServer {
           return;
         }
 
-        // Serve static files
-        const filePath = path.join(this.projectDir, 'public', pathname);
+        // Serve static files from public directory
+        let filePath = path.join(this.projectDir, 'public', pathname);
         try {
           const content = await fsp.readFile(filePath);
           const contentType = this.getContentType(filePath);
@@ -482,7 +482,21 @@ export class DevServer {
           res.end(content);
           return;
         } catch (e) {
-          // File not found - continue
+          // File not found in public - fall through
+        }
+
+        // Also serve files from dist directory (bundles, styles)
+        if (pathname.startsWith('/dist/')) {
+          filePath = path.join(this.projectDir, pathname.replace(/^\//, ''));
+          try {
+            const content = await fsp.readFile(filePath);
+            const contentType = this.getContentType(filePath);
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content);
+            return;
+          } catch (e) {
+            // not found in dist either
+          }
         }
 
         // Try to resolve as a configured route -> view

@@ -14,7 +14,16 @@ Guidelines
 ---
 - Prefer `ux-style="<key>"` in templates — the compiler resolves it to `<key>` and composition classes.
 - Use tokens for themeable values; override in a scope using CSS variables (e.g., `:root { --color-bg-surface: #fff; }`).
-- Keep component templates CSS-free; let the style system generate and Apply classes.
+- Keep component templates CSS-free; let the style system generate and apply classes.
+
+
+### Runtime Registry
+
+A small runtime helper is included as `@ux3/ui/style-registry`.  Projects should
+register their semantic-to-utility map during startup and invoke
+`initStyleRegistry()` once; this automatically applies classes on
+`DOMContentLoaded` and when `ViewComponent` layouts mount.  See the IAM example
+(`examples/iam/app.ts`) for a complete usage pattern.
 
 Examples
 ---

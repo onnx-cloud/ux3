@@ -292,6 +292,18 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       expect(app.styles).toBeDefined();
       expect(app.styles['primary']).toBe('btn btn-primary');
     });
+
+    it('should propagate styles into the global registry', () => {
+      const registry = require('@ux3/ui/style-registry');
+      // clear before running builder to avoid leftover state
+      registry.clearStyles();
+
+      const builder = new AppContextBuilder(config);
+      builder.withStyles();
+      builder.build();
+
+      expect(registry.getRegisteredStyles()).toEqual(config.styles);
+    });
   });
 
   describe('build()', () => {

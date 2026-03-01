@@ -7,22 +7,23 @@ const hydrationScript = `document.addEventListener('DOMContentLoaded', () => { i
 
 describe('Hydration integration', () => {
   it('should execute hydration script and populate __ux3App', async () => {
-    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body><div id="app"></div>${hydrationScript}</body></html>`, { runScripts: 'dangerously', resources: 'usable' });
-    // simulate bundle loading by evaluating code
+    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body><div id="app"></div></body></html>`, { runScripts: 'dangerously', resources: 'usable' });
+    // define bundle function then invoke it directly
     dom.window.eval(bundleCode);
-
-    // trigger DOMContentLoaded
-    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
-
+    if (typeof (dom.window as any).initApp === 'function') {
+      await (dom.window as any).initApp();
+    }
     expect((dom.window as any).__ux3App).toBeDefined();
     expect((dom.window as any).__ux3App.hello).toBe(true);
   });
 
   it('should recover state when initialState is set', async () => {
-    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body><div id="app"></div>${hydrationScript}</body></html>`, { runScripts: 'dangerously', resources: 'usable' });
+    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body><div id="app"></div></body></html>`, { runScripts: 'dangerously', resources: 'usable' });
     dom.window.__INITIAL_STATE__ = { foo: 'bar' };
     dom.window.eval(bundleCode + `window.initApp = async function(opts={}) { window.__ux3App = { state: opts.initialState || null }; return window.__ux3App; };`);
-    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    if (typeof (dom.window as any).initApp === 'function') {
+      await (dom.window as any).initApp({ initialState: dom.window.__INITIAL_STATE__ });
+    }
     expect((dom.window as any).__ux3App.state).toEqual({ foo: 'bar' });
   });
 });

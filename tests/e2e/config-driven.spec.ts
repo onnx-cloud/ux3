@@ -71,6 +71,14 @@ test.describe(`Config-driven tests: ${config.name || PROJECT_DIR}`, () => {
     }
   });
 
+  test('should include runtime injection tags when configured', async ({ page }) => {
+    await page.goto(BASE_URL);
+    if (config.site?.runtime?.bundleKey) {
+      await expect(page.locator('script[data-ux3="app"][type="module"]')).toBeVisible();
+      await expect(page.locator('script[data-ux3="hydration"]')).toBeVisible();
+    }
+  });
+
   test('should render navigation based on i18n keys', async ({ page }) => {
     await page.goto(BASE_URL);
     

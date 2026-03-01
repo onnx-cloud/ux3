@@ -57,7 +57,7 @@ export function processAssets(manifest: any, projectDir: string) {
     const version = runtime.version || '';
     const bundleUrl = runtime.bundle;
     scriptInjections.push(
-      `<script src="${bundleUrl}" ` +
+      `<script type="module" src="${bundleUrl}" ` +
       `data-ux3="app" ` +
       `data-ux3-version="${version}" ` +
       `defer></script>`

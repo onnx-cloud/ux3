@@ -10,11 +10,12 @@ import { setupNavigation } from '@ux3/ui/navigation-handler';
 import { config } from './generated/config.js';
 import type { AppContext } from '@ux3/ui/app';
 import { ViewComponent } from '@ux3/ui';
+import { registerStyles, initStyleRegistry } from '@ux3/ui/style-registry';
 
 // -----------------------------------------------------------------------------
-// simple style registry for IAM example. keys correspond to `ux-style` values
-// found in generated templates. utilities are declared centrally for easy
-// theming/maintenance; no Tailwind classes appear in HTML files.
+// style registry – map keys used in templates to Tailwind utility lists.  the
+// shared `@ux3/ui/style-registry` module handles runtime injection (view
+// components and DOMContentLoaded) so we just need to register our map here.
 // -----------------------------------------------------------------------------
 const styles: Record<string,string> = {
   widget: 'p-4 bg-white rounded shadow',
@@ -26,9 +27,9 @@ const styles: Record<string,string> = {
   // manually-added overrides can sit alongside generated entries
 };
 
-// load YAML compositions from the iam example so that the registry mirrors
-// ux/style/compositions without hard‑coding each key. requires Vite-style
-// glob support (used by the build system already for plugins, etc.).
+// load YAML compositions so that the registry mirrors ux/style/compositions
+// without hard‑coding each key. requires Vite-style glob support (used by the
+// build system already for plugins, etc.).
 if (typeof import.meta !== 'undefined' && import.meta.glob) {
   const files = import.meta.glob('./ux/style/compositions/**/*.yaml', { eager: true });
   const mergeStyles = (obj: any, prefix = '') => {
@@ -51,30 +52,9 @@ if (typeof import.meta !== 'undefined' && import.meta.glob) {
   }
 }
 
-function applyStyles(root: HTMLElement) {
-  root.querySelectorAll('[data-style], [ux-style]').forEach(el => {
-    const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
-    const cls = styles[key];
-    if (cls) (el as HTMLElement).className = cls;
-  });
-}
-
-// patch ViewComponent to inject styles automatically when layout mounts
-const origMount = ViewComponent.prototype['mountLayout'];
-ViewComponent.prototype['mountLayout'] = function(this: any) {
-  origMount.call(this);
-  try {
-    if (this.shadowRoot) applyStyles(this.shadowRoot);
-    applyStyles(this);
-  } catch (e) {
-    console.warn('[IAM] style injection failed', e);
-  }
-};
-
-// ensure body is styled as soon as possible
-if (typeof document !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => applyStyles(document.body));
-}
+// register and kick off automatic injection
+registerStyles(styles);
+initStyleRegistry();
 
 // built-in plugins
 import { SpaCore } from '../src/plugins/spa-core';

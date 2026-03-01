@@ -14,6 +14,17 @@ export const createCommand = new Command()
 
     const projectDir = path.resolve(process.cwd(), name);
 
+    // prevent accidental overwrite
+    if (await fs.stat(projectDir).catch(() => null)) {
+      const existingPkg = path.join(projectDir, 'package.json');
+      if (await fs.stat(existingPkg).catch(() => null)) {
+        console.error(
+          `❗ Project directory already contains a package.json, aborting to avoid overwrite.`
+        );
+        process.exit(1);
+      }
+    }
+
     // Create directory structure
     await fs.mkdir(projectDir, { recursive: true });
     await fs.mkdir(path.join(projectDir, 'src'), { recursive: true });
@@ -45,10 +56,13 @@ export const createCommand = new Command()
       },
     };
 
-    await fs.writeFile(
-      path.join(projectDir, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
+    const packagePath = path.join(projectDir, 'package.json');
+    if (!await fs.stat(packagePath).catch(() => null)) {
+      await fs.writeFile(
+        packagePath,
+        JSON.stringify(packageJson, null, 2)
+      );
+    }
 
     // Create standalone tsconfig.json
     const tsconfig = {
@@ -58,11 +72,14 @@ export const createCommand = new Command()
       },
     };
 
-    // TODO: don't overwrite existing files if they exist, to prevent data loss
-    await fs.writeFile(
-      path.join(projectDir, 'tsconfig.json'),
-      JSON.stringify(tsconfig, null, 2)
-    );
+    // don't overwrite existing configuration files
+    const tsconfigPath = path.join(projectDir, 'tsconfig.json');
+    if (!await fs.stat(tsconfigPath).catch(() => null)) {
+      await fs.writeFile(
+        tsconfigPath,
+        JSON.stringify(tsconfig, null, 2)
+      );
+    }
 
     console.log(`✅ Project created at ${projectDir}`);
     console.log(`\n📖 Next steps:\n`);

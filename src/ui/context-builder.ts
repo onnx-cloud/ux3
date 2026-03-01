@@ -14,6 +14,7 @@ import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
 import { HandlebarsLite } from '../hbs/index.js';
+import { registerStyles, initStyleRegistry } from './style-registry.js';
 
 /**
  * Generated configuration structure
@@ -337,6 +338,10 @@ export class AppContextBuilder {
       i18n: i18nFn,
       nav: navConfig,
     };
+
+    // keep a global style registry in sync so that runtime class injection works
+    registerStyles(context.styles || {});
+    initStyleRegistry();
 
     // Export globally for testing/debugging
     if (typeof window !== 'undefined') {

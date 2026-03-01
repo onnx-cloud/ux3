@@ -8,6 +8,7 @@ import { ServiceResolver } from '../../build/service-resolver.js';
 import { Validator } from '../../build/validator.js';
 import { ManifestGenerator } from '../../build/manifest-generator.js';
 import { BuildWatcher } from '../../build/watch.js';
+import { Bundler } from '../../build/bundler.js';
 import { DevServer } from '../../dev/dev-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -83,8 +84,8 @@ export const devCommand = new Command()
 
           const buildTime = Date.now() - startTime;
 
-          // compute runtime bundle info similarly to build command (bundle may not exist when deving)
-          const bundleRel = ''; // dev server doesn't actually write bundle here
+          // compute runtime info: bundle & styles may exist under dist path
+          let bundleRel = '';
           const styles: string[] = [];
           let pkgVersion = '0.0.0';
           try {
@@ -92,6 +93,36 @@ export const devCommand = new Command()
             const pkg = JSON.parse(pkgData);
             if (pkg.version) pkgVersion = pkg.version;
           } catch {}
+
+          // ensure dist folder exists and generate bundle on-demand
+          const outputDir = path.join(projectDir, 'dist');
+          if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+          }
+
+          try {
+            const bundler = new Bundler({
+              projectDir,
+              generatedDir,
+              outputDir,
+              minify: false,
+              sourcemaps: true,
+            });
+            const bundlePath = await bundler.bundle();
+            bundleRel = path.relative(projectDir, bundlePath).replace(/\\/g, '/');
+          } catch (e) {
+            // bundling failed or skipped; continue gracefully
+          }
+
+          if (bundleRel) {
+            // collect css files
+            const files = fs.readdirSync(outputDir);
+            for (const f of files) {
+              if (f.endsWith('.css')) {
+                styles.push(path.join(path.relative(projectDir, outputDir), f).replace(/\\/g, '/'));
+              }
+            }
+          }
 
           const runtimeInfo = bundleRel ? {
             bundle: bundleRel,

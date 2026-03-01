@@ -951,7 +951,8 @@ export const config = {
       "submitting": "<div ux-state=\"sign-up.submitting\">\n  <div ux-style=\"spinner\">{{i18n.sign-up.submitting.label}}</div>\n</div>\n",
       "success": "<div ux-state=\"sign-up.success\">\n  <div ux-style=\"widget\">{{i18n.sign-up.success.label}}</div>\n</div>\n"
     }
-  }
+  },
+  "version": "0.1.0"
 };
 
 export default config;

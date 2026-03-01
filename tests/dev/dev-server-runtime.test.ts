@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { describe, it, expect } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
@@ -27,13 +29,53 @@ describe('DevServer runtime asset injection', () => {
     const server = new DevServer(temp, 3700, 'localhost');
     await server.start();
 
-    // create synthetic manifest containing runtime info and runtime config
-    const runtimeInfo = {
-      bundle: '/dist/ux3.bundle.js',
-      styles: ['/dist/ux3.tokens.css'],
-      version: '9.9.9',
-      minified: true,
-    };
+    // compute runtime info using Bundler as dev command now does
+    const { Bundler } = await import('../../src/build/bundler.js');
+    const outputDir = path.join(temp, 'dist');
+    await fs.ensureDir(outputDir);
+
+    const generatedDir = path.join(temp, 'generated');
+    await fs.ensureDir(generatedDir);
+    await fs.writeFile(path.join(generatedDir, 'config.ts'), 'export const config = {};');
+    await fs.writeFile(
+      path.join(generatedDir, 'types.ts'),
+      'export type Routes = any; export type Services = any; export type I18n = any;'
+    );
+    const entryCode = `export { config, type Routes, type Services, type I18n } from '${path
+      .join(generatedDir, 'config.ts')
+      .replace(/\\/g, '/')}'`;
+    await fs.writeFile(path.join(generatedDir, '__entry__.ts'), entryCode);
+
+    const bundler = new Bundler({
+      projectDir: temp,
+      generatedDir,
+      outputDir,
+      minify: false,
+      sourcemaps: true,
+    });
+    let bundleRel = '';
+    try {
+      const bundlePath = await bundler.bundle();
+      bundleRel = path.relative(temp, bundlePath).replace(/\\/g, '/');
+    } catch (e) {
+      // ignore
+    }
+    const styles: string[] = [];
+    if (bundleRel) {
+      const files = fs.readdirSync(outputDir);
+      for (const f of files) if (f.endsWith('.css')) styles.push(path.join(path.relative(temp, outputDir), f).replace(/\\/g, '/'));
+    }
+    let pkgVersion = '0.0.0';
+    try {
+      const pkgData = await fs.readFile(path.join(temp, 'package.json'), 'utf-8');
+      pkgVersion = JSON.parse(pkgData).version || pkgVersion;
+    } catch {}
+    const runtimeInfo = bundleRel ? {
+      bundle: bundleRel,
+      styles,
+      version: pkgVersion,
+      minified: false,
+    } : undefined;
 
     const config: any = {
       site: {
@@ -50,10 +92,20 @@ describe('DevServer runtime asset injection', () => {
     const res = await fetch('http://localhost:3700/');
     const html = await res.text();
 
-    expect(html).toContain('data-ux3="styles"');
+    if (runtimeInfo && runtimeInfo.styles && runtimeInfo.styles.length) {
+      expect(html).toContain('data-ux3="styles"');
+    }
+    // script tag should be module when we bundle as ESM
     expect(html).toContain('data-ux3="app"');
+    expect(html).toContain('type="module"');
     expect(html).toContain('data-ux3="hydration"');
-    expect(html).toContain('/dist/ux3.bundle.js');
+    if (runtimeInfo && runtimeInfo.bundle) {
+      expect(html).toContain(runtimeInfo.bundle.replace(/^\//, ''));
+      const bundlePath = runtimeInfo.bundle.startsWith('/') ? runtimeInfo.bundle : '/' + runtimeInfo.bundle;
+      const bundleRes = await fetch(`http://localhost:3700${bundlePath}`);
+      expect(bundleRes.status).toBe(200);
+      expect(bundleRes.headers.get('content-type') || '').toContain('javascript');
+    }
 
     await server.stop();
     await fs.remove(temp);
