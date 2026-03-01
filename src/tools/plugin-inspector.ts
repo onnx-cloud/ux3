@@ -32,4 +32,4 @@ export function installInspector(registry: PluginRegistry): void {
 }
 
 // call from app initialization
-default installInspector;
+export default installInspector;

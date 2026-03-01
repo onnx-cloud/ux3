@@ -253,6 +253,7 @@ Options:
 - `--views` — View source directory
 - `--output` — Output directory
 - `--config` — Config file
+- `--logic-manifest` — Print logic manifests generated for each view
 
 ### ux3 validate
 

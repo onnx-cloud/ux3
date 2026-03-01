@@ -134,6 +134,15 @@ fsm.send('EVENT2');  // Queued
 // Both processed in order when FSM has time
 ```
 
+#### Global Events
+Some application‑level events may affect multiple machines. `FSMRegistry.broadcastGlobal(event)`
+broadcasts an event to every registered FSM and notifies any global subscribers. Transitions
+can listen for these using a `*` prefix:
+```yaml
+on:
+  '*LOGOUT': idle
+```
+
 ### Guard Conditions
 
 Guards prevent unwanted transitions:

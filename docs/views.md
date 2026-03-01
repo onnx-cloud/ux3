@@ -53,8 +53,12 @@ states:
 
 **Optional:**
 - `invoke`: Service invocation on state entry
-- `entry`/`exit`: Lifecycle actions
-- `guard`: Conditional transitions
+- `guard`: Conditional transition using named logic
+- `actions`: array of named logic or inline functions
+- `entry`/`exit`: Lifecycle actions (also reference logic)
+
+Refer to `ux/logic/*` modules for implementations – the compiler auto‑imports
+functions matching the names used here.  See the logic patterns guide for details.
 
 ---
 

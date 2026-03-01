@@ -190,7 +190,10 @@ export class StateMachine<T extends Record<string, any>> {
   }
 
   /**
-   * Match current state against pattern
+   * Match current state against a pattern or list of patterns.
+   * Useful for `ux-state` rendering or guard checks in components.
+   * @param pattern single state name or array of names to compare against
+   * @returns true if the current state is included in the pattern(s)
    */
   matches(pattern: string | string[]): boolean {
     const patterns = Array.isArray(pattern) ? pattern : [pattern];

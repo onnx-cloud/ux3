@@ -16,6 +16,7 @@ interface CompilerConfig {
   baseDir?: string;
   fsms?: string;
   styles?: string;
+  logicManifest?: boolean;
 }
 
 async function loadConfig(configPath: string): Promise<CompilerConfig> {
@@ -40,6 +41,18 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
     } catch (e) {
       console.error('✗ View compilation failed:', e);
       process.exit(1);
+    }
+
+    if (config.logicManifest) {
+      // read manifest files and print summary
+      const items = await fs.readdir(config.output);
+      const manifests = items.filter((f) => f.endsWith('.logic.json'));
+      console.log(`\nLogic manifests (${manifests.length}):`);
+      for (const m of manifests) {
+        const txt = await fs.readFile(path.join(config.output, m), 'utf-8');
+        console.log(`--- ${m} ---`);
+        console.log(txt);
+      }
     }
   }
 
@@ -89,6 +102,11 @@ async function main(): Promise<void> {
           break;
         case 'styles':
           config.styles = value;
+          break;
+        case 'logic-manifest':
+          // presence of flag is enough; value may be undefined
+          config.logicManifest = true;
+          i -= 1; // don't consume a nonexistent value
           break;
       }
     }

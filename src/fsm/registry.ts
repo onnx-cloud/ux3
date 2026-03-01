@@ -17,6 +17,7 @@
  */
 
 import { StateMachine } from './state-machine.js';
+import type { StateEvent } from './types.js';
 
 export interface FSMRegistryConfig {
   namespace: string;
@@ -31,6 +32,7 @@ export class FSMRegistry {
   private static instances = new Map<string, StateMachine<any>>();
   private static globalContext: Record<string, any> = {};
   private static globalServices: Record<string, any> = {};
+  private static globalSubscribers: Array<(event: StateEvent) => void> = [];
 
   /**
    * Set global context shared across all FSMs
@@ -75,6 +77,18 @@ export class FSMRegistry {
       throw new Error(`[UX3] FSM for namespace '${namespace}' must be defined`);
     }
     this.instances.set(namespace, fsm);
+  }
+
+  /**
+   * Subscribe to all global events broadcast via `broadcastGlobal`.
+   * Returns an unsubscribe function.
+   */
+  static subscribeGlobal(listener: (event: StateEvent) => void): () => void {
+    this.globalSubscribers.push(listener);
+    return () => {
+      const idx = this.globalSubscribers.indexOf(listener);
+      if (idx !== -1) this.globalSubscribers.splice(idx, 1);
+    };
   }
 
   /**
@@ -129,6 +143,26 @@ export class FSMRegistry {
       console.error(`[UX3] Missing FSM registrations: ${missing.join(', ')}`);
     }
     return missing;
+  }
+
+  /**
+   * Broadcast an event to all registered FSMs. Useful for global events.
+   */
+  static broadcastGlobal(event: StateEvent | string): void {
+    const normalized: StateEvent =
+      typeof event === 'string' ? { type: event } : event;
+    // deliver to all machines
+    for (const fsm of this.instances.values()) {
+      fsm.send(normalized);
+    }
+    // notify global subscribers as well
+    this.globalSubscribers.forEach((sub) => {
+      try {
+        sub(normalized);
+      } catch (_e) {
+        // swallow
+      }
+    });
   }
 }
 
