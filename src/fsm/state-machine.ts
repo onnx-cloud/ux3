@@ -92,9 +92,30 @@ export class StateMachine<T extends Record<string, any>> {
       return;
     }
 
-    // Execute transition actions
+    // Execute transition actions; allow functions to return partial context updates
     if (transitionConfig.actions) {
-      transitionConfig.actions.forEach((action) => action(this.context, event));
+      transitionConfig.actions.forEach((action) => {
+        try {
+          const result = action(this.context, event);
+          if (result && typeof result === 'object') {
+            // merge returned context updates
+            this.setState(result as Partial<T>);
+          } else if (result && typeof result.then === 'function') {
+            // async result
+            (result as Promise<any>)
+              .then((update) => {
+                if (update && typeof update === 'object') {
+                  this.setState(update as Partial<T>);
+                }
+              })
+              .catch(() => {
+                /* swallow */
+              });
+          }
+        } catch (e) {
+          console.error('[StateMachine] action error', e);
+        }
+      });
     }
 
     // Transition to new state if target exists
@@ -129,7 +150,16 @@ export class StateMachine<T extends Record<string, any>> {
 
     const actions = actionType === 'entry' ? stateConfig.entry : stateConfig.exit;
     if (actions) {
-      actions.forEach((action) => action(this.context));
+      actions.forEach((action) => {
+        try {
+          const result = action(this.context);
+          if (result && typeof result === 'object') {
+            this.setState(result as Partial<T>);
+          }
+        } catch (e) {
+          console.error('[StateMachine] entry/exit action error', e);
+        }
+      });
     }
   }
 

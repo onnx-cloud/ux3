@@ -104,6 +104,32 @@ describe('StateMachine', () => {
     expect(action).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: 'GO', data: 'some-payload' }));
   });
 
+  it('should merge partial context updates returned from actions', () => {
+    const config: StateConfig<{ foo: number; bar?: string }> = {
+      id: 'update-test',
+      initial: 'idle',
+      context: { foo: 1 },
+      states: {
+        idle: {
+          on: {
+            UPDATE: {
+              target: 'idle',
+              actions: [
+                (ctx) => {
+                  return { foo: ctx.foo + 1 };
+                },
+                (ctx) => ({ bar: 'hello' })
+              ]
+            }
+          }
+        }
+      }
+    };
+    const fsm = new StateMachine(config);
+    fsm.send('UPDATE');
+    expect(fsm.getContext()).toEqual({ foo: 2, bar: 'hello' });
+  });
+
   it('should handle complex state config (nested/parallel not supported yet by current impl but checking basic structure)', () => {
     // Current implementation seems to be a flat FSM based on the code read.
     const config: StateConfig<any> = {
@@ -122,5 +148,29 @@ describe('StateMachine', () => {
     expect(fsm.getState()).toBe('c');
     fsm.send('RESET');
     expect(fsm.getState()).toBe('a');
+  });
+
+  it('FSMRegistry.broadcastGlobal should deliver events to all machines', () => {
+    const config1: StateConfig<any> = {
+      id: 'g1',
+      initial: 'idle',
+      states: { idle: { on: { GLOBAL: 'done' } }, done: {} }
+    };
+    const config2: StateConfig<any> = {
+      id: 'g2',
+      initial: 'idle',
+      states: { idle: { on: { GLOBAL: 'done' } }, done: {} }
+    };
+    const fsm1 = new StateMachine(config1);
+    const fsm2 = new StateMachine(config2);
+    const { FSMRegistry } = require('../../fsm/registry.js');
+    FSMRegistry.clear();
+    FSMRegistry.register('one', fsm1);
+    FSMRegistry.register('two', fsm2);
+
+    FSMRegistry.broadcastGlobal({ type: 'GLOBAL' });
+
+    expect(fsm1.getState()).toBe('done');
+    expect(fsm2.getState()).toBe('done');
   });
 });

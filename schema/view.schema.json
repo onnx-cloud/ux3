@@ -20,7 +20,9 @@
                 { "type": "object", "properties": { "service": { "type": "string" }, "method": { "type": "string" }, "input": {} }, "additionalProperties": true }
               ]
             },
-            "on": { "type": "object", "additionalProperties": { "anyOf": [ { "type": "string" }, { "type": "object", "properties": { "target": { "type": "string" } }, "additionalProperties": true } ] } }
+            "on": { "type": "object", "additionalProperties": { "anyOf": [ { "type": "string" }, { "type": "object", "properties": { "target": { "type": "string" } }, "additionalProperties": true } ] } },
+            "entry": { "anyOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
+            "exit": { "anyOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] }
           },
           "additionalProperties": true
         }
