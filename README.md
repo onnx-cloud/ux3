@@ -1,141 +1,83 @@
-# UX3 — Idiomatic Development Guide (Simplified)
+# UX3 — A Lightweight Framework for Building Modern SPAs 🌟
 
-**UX3 favors configuration first, code only when necessary.**
-Describe the UI as data; use code as an escape hatch.
+UX3 is a tiny, zero‑dependency single‑page application framework designed for developers who value clarity, speed, and maintainability. 
 
----
+It brings a configuration‑first approach to UI development, enabling you to declare the structure of your app in YAML and HTML while the framework handles the wiring, state management, and type safety.
 
-## Core Principles
+Whether you’re building an internal dashboard, a customer portal, or a full‑fledged public web app, UX3 gives you the tools to stay productive without sacrificing control. 
 
-1. **Declare, Don’t Imperative** — say *what* the UI is, not *how* to build it
-2. **Concerns Are Modular** — `token/ view/ style/ route/ page/ layout/ validation/ i18n/`
-3. **Compile > Interpret** — push complexity to build-time
-4. **Composable by Default** — widgets nest and reuse easily
-5. **Types Everywhere** — full TypeScript coverage
+The core of UX3 is a small runtime coupled with a powerful compile‑time toolchain that generates strongly‑typed components, validators, and view logic — letting you catch errors before they reach the browser.
 
 ---
 
-## Project Structure & Contexts
+## Why UX3?
 
-* Each top-level folder = a **concern** supported by the framework.
-* Concerns are available in the **`app` context**.
-* Three main contexts: **`app`**, **`route`**, **`view`**.
-* Inside views, data/params are **`this`** for ergonomics.
-* Concern subfolders merge into a global namespace.
-* Routes map to named views in `ux/view/`.
-* At render:
-
-  * Route params → `route.params`
-  * Widget `this` defaults to route params unless overridden.
-* Views define an **FSM** with `states` and `initial` (must be valid).
-* Optional `template` points to HTML.
-* Template tags with `ux-state=` render only when matched.
-* FSM `invoke` handles side-effects (data loading, etc.), using a UX3-specific syntax.
+* **Zero runtime dependencies** – the framework ships as a handful of kilobytes and works with plain HTML and TypeScript.
+* **Config over code** – define UI, validation, styles, and text in declarative files; write behavioral code only when necessary.
+* **Compile‑time guarantees** – schemas, view definitions, and templates are validated and type‑checked during build.
+* **Modular by design** – organise your project by concern (`view`, `style`, `i18n`, etc.), not by feature, making it easy to scale and collaborate.
+* **Built‑in state machines** – every view is an FSM; complex interactions are modelled declaratively and remain predictable.
+* **Fully typed** – generated TypeScript interfaces for validation rules, API responses, and view parameters keep you in the editor with autocomplete.
 
 ---
 
-## Idiomatic Checklist
+## Key Concepts at a Glance
 
-* Widgets = **template + behavior only** (no styles)
-* All styles in `ux/style/`, referenced by widget name
-* Validation = **rules only**, no text
-* All user text in `ux/i18n/*.json` (nested)
-* All tokens in `ux/token/`, referenced as `$token-name`
-* Variants in YAML, not TypeScript conditionals
-* Complex views use **FSM**, not imperative logic
-* No hard-coded strings
-* Types auto-generated from validation + API schemas
+* **Views** – described in YAML with an `initial` state and optional `template`. They form the UI components of your app and drive rendering using finite state machines.
+* **Templates** – HTML files with lightweight markers like `ux-state` and `ux-event` that connect UI to FSM states and events.
+* **Styles** – all visual rules live in `ux/style/` and are referenced by widget name; variants are data‑driven.
+* **Tokens** – design primitives (colors, spacing, typography) defined in YAML and consumed across styles.
+* **Validation** – rules in `ux/validation/` with messages kept separately in `ux/i18n/` for translations.
+* **i18n** – nested JSON files mirroring your route/view hierarchy; no strings in code.
 
 ---
 
-## Philosophy
+## Getting Started
 
-**Config Over Code**
+1. **Install**
 
-* Config = specification
-* Code = behavior only
-* Prefer build-time over runtime
-* Outcome: simpler, faster, type-safe systems
+   ```bash
+   npm install ux3
+   ```
 
-**Goal:** spend time designing, not wiring.
+2. **Create `ux/` folders**
 
----
+   Start with `ux/view`, `ux/style`, `ux/validation`, `ux/i18n`, and `ux/token`.
 
-## Styling Layout
+3. **Write your first view**
 
-* Tailwind + named styles
-* Tokens define primitives; styles consume tokens; views consume styles.
+   ```yaml
+   # ux/view/login.yaml
+   initial: idle
+   states:
+     idle: 'view/login/idle.html'
+     submitting:
+       template: 'view/login/submitting.html'
+       invoke:
+         src: submitLogin
+       on:
+         SUCCESS: success
+         ERROR: idle
+   ```
 
-```
-ux/token/{colors,spacing,typography}.yaml
-ux/view/{primitive,composition,layout}/*.yaml
-ux/style/{primitive,composition,layout}/*.yaml
-```
+4. **Compile & build**
 
----
+   ```bash
+   npx ux3 compile --views ./ux/view --output ./src/generated
+   npm run build
+   ```
 
-## Three Centralization Rules
-
-### 1. Styles: Centralized & Implicit
-
-* **Never embed styles in widgets.**
-* Define once in `ux/style/`; reference by widget name.
-* Benefit: single source of truth, clean variants, pure data.
-
-### 2. Text: Centralized in i18n
-
-* **No user text in widgets or validation.**
-* Nested JSON mirrors app structure.
-* Benefit: maintainable and translatable.
-
-### 3. Validation: Rules Only
-
-* **Schemas contain constraints, not messages.**
-* Messages live in i18n.
-* Benefit: clean separation of data vs. content.
+5. **Run tests** – Use `npm run test` for unit tests and `npm run test:e2e` for Playwright tests.
 
 ---
 
-## Idiomatic Patterns
+## Learn More
 
-**Everything Is Data**
-UI, style, validation, and state are declarative artifacts.
-
-**Token-Based Design**
-Styles reference `$tokens`, not literals.
-
-**Variants Over Conditionals**
-Use YAML variant maps instead of `if` branches.
-
-**FSM for State**
-Views model lifecycle and effects explicitly.
+* See the [docs folder](docs/README.md) for architecture deep dives and guides.
+* Check out the `examples/` directory for working sample apps (`todo`, `iam`).
+* Use `npm run dev` to start a live‑reload development server.
 
 ---
 
-## Common Workflows
+UX3 is intentionally small so you can stay focused on building features. Welcome to a new way of thinking about frontend development — where configuration is your source of truth and the compiler is your teammate. 🎯
 
-### Add a Widget
-
-1. Create style in `ux/style/...`
-2. Create template HTML
-3. Create view YAML
-4. Style auto-applies by name
-
-### Add Validation
-
-1. Define rules in `ux/validation/...`
-2. Add messages in `ux/i18n/...`
-3. Compiler generates TypeScript types
-4. Consume with full type safety
-
-### Add i18n Keys
-
-* Extend nested JSON under `ux/i18n/`.
-* Structure mirrors routes/views.
-
----
-
-## Modular Config Architecture
-
-All UX3 projects use a `ux/` directory organized **by concern**, not by feature.
-Each concern stays small, mergeable, and globally addressable—no monolithic files.

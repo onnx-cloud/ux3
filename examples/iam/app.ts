@@ -9,6 +9,72 @@ import { createAppContext } from '@ux3/ui/context-builder';
 import { setupNavigation } from '@ux3/ui/navigation-handler';
 import { config } from './generated/config.js';
 import type { AppContext } from '@ux3/ui/app';
+import { ViewComponent } from '@ux3/ui';
+
+// -----------------------------------------------------------------------------
+// simple style registry for IAM example. keys correspond to `ux-style` values
+// found in generated templates. utilities are declared centrally for easy
+// theming/maintenance; no Tailwind classes appear in HTML files.
+// -----------------------------------------------------------------------------
+const styles: Record<string,string> = {
+  widget: 'p-4 bg-white rounded shadow',
+  actions: 'flex gap-2 mt-2',
+  spinner: 'animate-spin h-5 w-5 text-gray-500',
+  alert: 'p-3 bg-red-100 text-red-700 rounded',
+  'upgrade.modal': 'p-6 bg-white rounded shadow-lg max-w-md mx-auto',
+  'payment.form': 'space-y-4',
+  // manually-added overrides can sit alongside generated entries
+};
+
+// load YAML compositions from the iam example so that the registry mirrors
+// ux/style/compositions without hard‑coding each key. requires Vite-style
+// glob support (used by the build system already for plugins, etc.).
+if (typeof import.meta !== 'undefined' && import.meta.glob) {
+  const files = import.meta.glob('./ux/style/compositions/**/*.yaml', { eager: true });
+  const mergeStyles = (obj: any, prefix = '') => {
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      const key = prefix ? `${prefix}.${k}` : k;
+      if (typeof v === 'string') {
+        styles[key] = v;
+      } else if (v && typeof v === 'object') {
+        if (typeof v.base === 'string') {
+          styles[key] = v.base;
+        }
+        mergeStyles(v, key);
+      }
+    }
+  };
+  for (const path in files) {
+    const mod: any = (files as any)[path];
+    mergeStyles(mod);
+  }
+}
+
+function applyStyles(root: HTMLElement) {
+  root.querySelectorAll('[data-style], [ux-style]').forEach(el => {
+    const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
+    const cls = styles[key];
+    if (cls) (el as HTMLElement).className = cls;
+  });
+}
+
+// patch ViewComponent to inject styles automatically when layout mounts
+const origMount = ViewComponent.prototype['mountLayout'];
+ViewComponent.prototype['mountLayout'] = function(this: any) {
+  origMount.call(this);
+  try {
+    if (this.shadowRoot) applyStyles(this.shadowRoot);
+    applyStyles(this);
+  } catch (e) {
+    console.warn('[IAM] style injection failed', e);
+  }
+};
+
+// ensure body is styled as soon as possible
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => applyStyles(document.body));
+}
 
 // built-in plugins
 import { SpaCore } from '../src/plugins/spa-core';
@@ -78,6 +144,20 @@ export async function initializeApp(): Promise<AppContext> {
     
     // Create the app context from generated config
     appInstance = await createAppContext(config);
+
+    // add a version string for bundle compatibility checks
+    if (appInstance.config) {
+      appInstance.config.version = appInstance.config.version || '1.0.0';
+      // add script asset pointing at build output
+      appInstance.config.site = appInstance.config.site || {};
+      appInstance.config.site.assets = appInstance.config.site.assets || [];
+      appInstance.config.site.assets.push({
+        type: 'script',
+        src: '/dist/app.bundle.js',
+        defer: true,
+        version: appInstance.config.version
+      });
+    }
 
     // install built-in plugins so their hooks/services are available
     const plugins = [SpaCore, SpaRouter, SpaForms, SpaAuth];

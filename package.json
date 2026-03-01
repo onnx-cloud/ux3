@@ -100,7 +100,8 @@
     "a11y-audit": "node scripts/a11y-audit.js",
     "example": "node scripts/run-example.mjs",
     "prepublish": "npm run build && npm run test && npm test:coverage",
-    "publish": "npm publish --access public"
+    "publish": "npm publish --access public",
+    "bundle:iam": "esbuild examples/iam/index.ts --bundle --platform=browser --format=esm --external:@ux3/* --external:../src/plugins/* --outfile=examples/iam/dist/app.bundle.js --sourcemap --minify"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
