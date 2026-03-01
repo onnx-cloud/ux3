@@ -111,6 +111,7 @@
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
     "ajv-formats": "^3.0.1",
     "chokidar": "^5.0.0",
     "commander": "^11.1.0",

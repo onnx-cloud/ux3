@@ -6,6 +6,8 @@ import { devCommand } from './commands/dev.js';
 import { buildCommand } from './commands/build.js';
 import { checkCommand } from './commands/check.js';
 import { compileCommand } from './compile.js';
+import { configCommand } from './commands/config.js';
+import { previewCommand } from './commands/preview.js';
 
 const version = '0.1.0';
 
@@ -16,6 +18,8 @@ program.addCommand(devCommand);
 program.addCommand(buildCommand);
 program.addCommand(checkCommand);
 program.addCommand(compileCommand);
+program.addCommand(configCommand);
+program.addCommand(previewCommand);
 
 program.parse(process.argv);
 

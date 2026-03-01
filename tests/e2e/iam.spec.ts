@@ -17,6 +17,21 @@ test.describe('IAM Application E2E Tests', () => {
     await expect(appContainer).toBeVisible();
   });
 
+  test('development logging should emit inspector message', async ({ page }) => {
+    let saw = false;
+    page.on('console', msg => {
+      if (msg.text().includes('inspector enabled')) {
+        saw = true;
+      }
+    });
+    // reload to ensure runtime script runs
+    await page.reload({ waitUntil: 'networkidle' });
+    expect(saw).toBe(true);
+    // inspector element should be present in DOM
+    const inspector = await page.locator('ux3-inspector');
+    await expect(inspector).toHaveCount(1);
+  });
+
   test('should display login form initially', async ({ page }) => {
     // Look for login form elements
     const loginForm = page.locator('form');

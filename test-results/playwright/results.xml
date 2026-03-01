@@ -1,2 +1,1372 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="0.023776000000000068">
+<testsuites id="" name="" tests="85" failures="85" skipped="0" errors="0" time="38.626244">
+<testsuite name="iam.spec.ts" timestamp="2026-03-01T13:43:06.816Z" hostname="chromium" tests="17" failures="17" skipped="0" time="0.065" errors="0">
+<testcase name="IAM Application E2E Tests › should load IAM application" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:14:3 should load IAM application" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:14:3 › IAM Application E2E Tests › should load IAM application ──────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › development logging should emit inspector message" classname="iam.spec.ts" time="0.005">
+<failure message="iam.spec.ts:20:3 development logging should emit inspector message" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:20:3 › IAM Application E2E Tests › development logging should emit inspector message 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display login form initially" classname="iam.spec.ts" time="0.006">
+<failure message="iam.spec.ts:35:3 should display login form initially" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:35:3 › IAM Application E2E Tests › should display login form initially ──
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should validate form inputs" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:50:3 should validate form inputs" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:50:3 › IAM Application E2E Tests › should validate form inputs ──────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle user input" classname="iam.spec.ts" time="0.007">
+<failure message="iam.spec.ts:64:3 should handle user input" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:64:3 › IAM Application E2E Tests › should handle user input ─────────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle form submission" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:79:3 should handle form submission" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:79:3 › IAM Application E2E Tests › should handle form submission ────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain state during navigation" classname="iam.spec.ts" time="0.006">
+<failure message="iam.spec.ts:101:3 should maintain state during navigation" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:101:3 › IAM Application E2E Tests › should maintain state during navigation 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle rapid interactions" classname="iam.spec.ts" time="0.005">
+<failure message="iam.spec.ts:116:3 should handle rapid interactions" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:116:3 › IAM Application E2E Tests › should handle rapid interactions ────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display UI components correctly" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:130:3 should display UI components correctly" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:130:3 › IAM Application E2E Tests › should display UI components correctly 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should not have console errors" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:143:3 should not have console errors" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:143:3 › IAM Application E2E Tests › should not have console errors ──────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle network errors gracefully" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:161:3 should handle network errors gracefully" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:161:3 › IAM Application E2E Tests › should handle network errors gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should respond to accessibility interactions" classname="iam.spec.ts" time="0.006">
+<failure message="iam.spec.ts:179:3 should respond to accessibility interactions" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:179:3 › IAM Application E2E Tests › should respond to accessibility interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display responsive layout" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:189:3 should display responsive layout" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:189:3 › IAM Application E2E Tests › should display responsive layout ────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle modal/dialog if present" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:204:3 should handle modal/dialog if present" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:204:3 › IAM Application E2E Tests › should handle modal/dialog if present 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain data consistency" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:214:3 should maintain data consistency" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:214:3 › IAM Application E2E Tests › should maintain data consistency ────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle loading states" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:232:3 should handle loading states" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:232:3 › IAM Application E2E Tests › should handle loading states ────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display success/error messages" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:241:3 should display success/error messages" type="FAILURE">
+<![CDATA[  [chromium] › iam.spec.ts:241:3 › IAM Application E2E Tests › should display success/error messages 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="iam.spec.ts" timestamp="2026-03-01T13:43:06.816Z" hostname="firefox" tests="17" failures="17" skipped="0" time="0.055" errors="0">
+<testcase name="IAM Application E2E Tests › should load IAM application" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:14:3 should load IAM application" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:14:3 › IAM Application E2E Tests › should load IAM application ───────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › development logging should emit inspector message" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:20:3 development logging should emit inspector message" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:20:3 › IAM Application E2E Tests › development logging should emit inspector message 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display login form initially" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:35:3 should display login form initially" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:35:3 › IAM Application E2E Tests › should display login form initially ───
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should validate form inputs" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:50:3 should validate form inputs" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:50:3 › IAM Application E2E Tests › should validate form inputs ───────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle user input" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:64:3 should handle user input" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:64:3 › IAM Application E2E Tests › should handle user input ──────────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle form submission" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:79:3 should handle form submission" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:79:3 › IAM Application E2E Tests › should handle form submission ─────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain state during navigation" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:101:3 should maintain state during navigation" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:101:3 › IAM Application E2E Tests › should maintain state during navigation 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle rapid interactions" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:116:3 should handle rapid interactions" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:116:3 › IAM Application E2E Tests › should handle rapid interactions ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display UI components correctly" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:130:3 should display UI components correctly" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:130:3 › IAM Application E2E Tests › should display UI components correctly 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should not have console errors" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:143:3 should not have console errors" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:143:3 › IAM Application E2E Tests › should not have console errors ───────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle network errors gracefully" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:161:3 should handle network errors gracefully" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:161:3 › IAM Application E2E Tests › should handle network errors gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should respond to accessibility interactions" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:179:3 should respond to accessibility interactions" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:179:3 › IAM Application E2E Tests › should respond to accessibility interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display responsive layout" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:189:3 should display responsive layout" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:189:3 › IAM Application E2E Tests › should display responsive layout ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle modal/dialog if present" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:204:3 should handle modal/dialog if present" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:204:3 › IAM Application E2E Tests › should handle modal/dialog if present 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain data consistency" classname="iam.spec.ts" time="0.006">
+<failure message="iam.spec.ts:214:3 should maintain data consistency" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:214:3 › IAM Application E2E Tests › should maintain data consistency ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle loading states" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:232:3 should handle loading states" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:232:3 › IAM Application E2E Tests › should handle loading states ─────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display success/error messages" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:241:3 should display success/error messages" type="FAILURE">
+<![CDATA[  [firefox] › iam.spec.ts:241:3 › IAM Application E2E Tests › should display success/error messages 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/firefox-1509/firefox/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="iam.spec.ts" timestamp="2026-03-01T13:43:06.816Z" hostname="webkit" tests="17" failures="17" skipped="0" time="0.056" errors="0">
+<testcase name="IAM Application E2E Tests › should load IAM application" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:14:3 should load IAM application" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:14:3 › IAM Application E2E Tests › should load IAM application ────────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › development logging should emit inspector message" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:20:3 development logging should emit inspector message" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:20:3 › IAM Application E2E Tests › development logging should emit inspector message 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display login form initially" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:35:3 should display login form initially" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:35:3 › IAM Application E2E Tests › should display login form initially ────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should validate form inputs" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:50:3 should validate form inputs" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:50:3 › IAM Application E2E Tests › should validate form inputs ────────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle user input" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:64:3 should handle user input" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:64:3 › IAM Application E2E Tests › should handle user input ───────────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle form submission" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:79:3 should handle form submission" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:79:3 › IAM Application E2E Tests › should handle form submission ──────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain state during navigation" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:101:3 should maintain state during navigation" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:101:3 › IAM Application E2E Tests › should maintain state during navigation 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle rapid interactions" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:116:3 should handle rapid interactions" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:116:3 › IAM Application E2E Tests › should handle rapid interactions ──────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display UI components correctly" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:130:3 should display UI components correctly" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:130:3 › IAM Application E2E Tests › should display UI components correctly 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should not have console errors" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:143:3 should not have console errors" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:143:3 › IAM Application E2E Tests › should not have console errors ────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle network errors gracefully" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:161:3 should handle network errors gracefully" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:161:3 › IAM Application E2E Tests › should handle network errors gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should respond to accessibility interactions" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:179:3 should respond to accessibility interactions" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:179:3 › IAM Application E2E Tests › should respond to accessibility interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display responsive layout" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:189:3 should display responsive layout" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:189:3 › IAM Application E2E Tests › should display responsive layout ──────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle modal/dialog if present" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:204:3 should handle modal/dialog if present" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:204:3 › IAM Application E2E Tests › should handle modal/dialog if present ─
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain data consistency" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:214:3 should maintain data consistency" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:214:3 › IAM Application E2E Tests › should maintain data consistency ──────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle loading states" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:232:3 should handle loading states" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:232:3 › IAM Application E2E Tests › should handle loading states ──────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display success/error messages" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:241:3 should display success/error messages" type="FAILURE">
+<![CDATA[  [webkit] › iam.spec.ts:241:3 › IAM Application E2E Tests › should display success/error messages ─
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="iam.spec.ts" timestamp="2026-03-01T13:43:06.816Z" hostname="Mobile Chrome" tests="17" failures="17" skipped="0" time="0.054" errors="0">
+<testcase name="IAM Application E2E Tests › should load IAM application" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:14:3 should load IAM application" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:14:3 › IAM Application E2E Tests › should load IAM application ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › development logging should emit inspector message" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:20:3 development logging should emit inspector message" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:20:3 › IAM Application E2E Tests › development logging should emit inspector message 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display login form initially" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:35:3 should display login form initially" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:35:3 › IAM Application E2E Tests › should display login form initially 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should validate form inputs" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:50:3 should validate form inputs" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:50:3 › IAM Application E2E Tests › should validate form inputs ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle user input" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:64:3 should handle user input" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:64:3 › IAM Application E2E Tests › should handle user input ────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle form submission" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:79:3 should handle form submission" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:79:3 › IAM Application E2E Tests › should handle form submission ───
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain state during navigation" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:101:3 should maintain state during navigation" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:101:3 › IAM Application E2E Tests › should maintain state during navigation 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle rapid interactions" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:116:3 should handle rapid interactions" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:116:3 › IAM Application E2E Tests › should handle rapid interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display UI components correctly" classname="iam.spec.ts" time="0.005">
+<failure message="iam.spec.ts:130:3 should display UI components correctly" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:130:3 › IAM Application E2E Tests › should display UI components correctly 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should not have console errors" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:143:3 should not have console errors" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:143:3 › IAM Application E2E Tests › should not have console errors ─
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle network errors gracefully" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:161:3 should handle network errors gracefully" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:161:3 › IAM Application E2E Tests › should handle network errors gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should respond to accessibility interactions" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:179:3 should respond to accessibility interactions" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:179:3 › IAM Application E2E Tests › should respond to accessibility interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display responsive layout" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:189:3 should display responsive layout" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:189:3 › IAM Application E2E Tests › should display responsive layout 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle modal/dialog if present" classname="iam.spec.ts" time="0.005">
+<failure message="iam.spec.ts:204:3 should handle modal/dialog if present" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:204:3 › IAM Application E2E Tests › should handle modal/dialog if present 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain data consistency" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:214:3 should maintain data consistency" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:214:3 › IAM Application E2E Tests › should maintain data consistency 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle loading states" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:232:3 should handle loading states" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:232:3 › IAM Application E2E Tests › should handle loading states ───
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display success/error messages" classname="iam.spec.ts" time="0.005">
+<failure message="iam.spec.ts:241:3 should display success/error messages" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › iam.spec.ts:241:3 › IAM Application E2E Tests › should display success/error messages 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="iam.spec.ts" timestamp="2026-03-01T13:43:06.816Z" hostname="Mobile Safari" tests="17" failures="17" skipped="0" time="0.056" errors="0">
+<testcase name="IAM Application E2E Tests › should load IAM application" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:14:3 should load IAM application" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:14:3 › IAM Application E2E Tests › should load IAM application ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › development logging should emit inspector message" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:20:3 development logging should emit inspector message" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:20:3 › IAM Application E2E Tests › development logging should emit inspector message 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display login form initially" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:35:3 should display login form initially" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:35:3 › IAM Application E2E Tests › should display login form initially 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should validate form inputs" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:50:3 should validate form inputs" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:50:3 › IAM Application E2E Tests › should validate form inputs ─────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle user input" classname="iam.spec.ts" time="0.006">
+<failure message="iam.spec.ts:64:3 should handle user input" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:64:3 › IAM Application E2E Tests › should handle user input ────────
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle form submission" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:79:3 should handle form submission" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:79:3 › IAM Application E2E Tests › should handle form submission ───
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain state during navigation" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:101:3 should maintain state during navigation" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:101:3 › IAM Application E2E Tests › should maintain state during navigation 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle rapid interactions" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:116:3 should handle rapid interactions" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:116:3 › IAM Application E2E Tests › should handle rapid interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display UI components correctly" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:130:3 should display UI components correctly" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:130:3 › IAM Application E2E Tests › should display UI components correctly 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should not have console errors" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:143:3 should not have console errors" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:143:3 › IAM Application E2E Tests › should not have console errors ─
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle network errors gracefully" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:161:3 should handle network errors gracefully" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:161:3 › IAM Application E2E Tests › should handle network errors gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should respond to accessibility interactions" classname="iam.spec.ts" time="0.003">
+<failure message="iam.spec.ts:179:3 should respond to accessibility interactions" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:179:3 › IAM Application E2E Tests › should respond to accessibility interactions 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display responsive layout" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:189:3 should display responsive layout" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:189:3 › IAM Application E2E Tests › should display responsive layout 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle modal/dialog if present" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:204:3 should handle modal/dialog if present" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:204:3 › IAM Application E2E Tests › should handle modal/dialog if present 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should maintain data consistency" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:214:3 should maintain data consistency" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:214:3 › IAM Application E2E Tests › should maintain data consistency 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should handle loading states" classname="iam.spec.ts" time="0.004">
+<failure message="iam.spec.ts:232:3 should handle loading states" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:232:3 › IAM Application E2E Tests › should handle loading states ───
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="IAM Application E2E Tests › should display success/error messages" classname="iam.spec.ts" time="0.002">
+<failure message="iam.spec.ts:241:3 should display success/error messages" type="FAILURE">
+<![CDATA[  [Mobile Safari] › iam.spec.ts:241:3 › IAM Application E2E Tests › should display success/error messages 
+
+    Error: browserType.launch: Executable doesn't exist at /home/me/.cache/ms-playwright/webkit-2248/pw_run.sh
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
 </testsuites>

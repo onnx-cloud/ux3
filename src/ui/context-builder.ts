@@ -6,6 +6,7 @@
 import { StateMachine } from '../fsm/state-machine.js';
 import type { StateConfig } from '../fsm/types.js';
 import { HttpService } from '../services/http.js';
+import { LogLevel } from '../security/observability.js';
 import { WebSocketService } from '../services/websocket.js';
 import { JSONRPCService } from '../services/jsonrpc.js';
 import { Router } from '../services/router.js';
@@ -30,6 +31,11 @@ export interface GeneratedConfig {
   // additional fields that may be added at build time
   version?: string;
   site?: Record<string, any>;
+  development?: {
+    logging?: LogLevel;
+    hotReload?: boolean;
+    inspector?: boolean;
+  };
 }
 
 /**
@@ -76,7 +82,12 @@ export class AppContextBuilder {
         const machine = new StateMachine(machineConfig);
         this.machines.set(name, machine);
 
-        // Subscribe to state changes for telemetry
+        // debug log creation
+        import('../security/observability.js').then(({ defaultLogger }) => {
+          defaultLogger.debug('machine.initialized', { name });
+        });
+
+        // Subscribe to state changes for telemetry (and will be logged if debug)
         machine.subscribe((state, context) => {
           this.emitTelemetry(`fsm:transition`, {
             machine: name,
@@ -103,6 +114,9 @@ export class AppContextBuilder {
       )) {
         const service = this.createService(name, serviceSpec);
         this.services.set(name, service);
+        import('../security/observability.js').then(({ defaultLogger }) => {
+          defaultLogger.debug('service.initialized', { name, type: serviceSpec.type });
+        });
       }
     } catch (error) {
       this.handleError(new Error(`Failed to build services: ${error}`), true);
@@ -362,7 +376,34 @@ export class AppContextBuilder {
 export async function createAppContext(
   config: GeneratedConfig
 ): Promise<AppContext> {
-  return new AppContextBuilder(config)
+  // prepare logger if we need to touch it
+  let defaultLogger: typeof import('../security/observability').defaultLogger | null = null;
+
+
+  if (
+    config.development &&
+    (config.development.logging || config.development.inspector)
+  ) {
+    // synchronously load the module so we can configure before building
+    const mod = await import('../security/observability.js');
+    defaultLogger = mod.defaultLogger;
+
+    if (config.development.logging) {
+      defaultLogger.config.minLevel = config.development
+        .logging as LogLevel;
+    }
+
+    if (
+      config.development.logging === 'debug' &&
+      typeof window !== 'undefined'
+    ) {
+      window.__ux3Telemetry = (evt: string, data: any) => {
+        defaultLogger!.debug(evt, data);
+      };
+    }
+  }
+
+  const context = new AppContextBuilder(config)
     .withMachines()
     .withServices()
     .withWidgets()
@@ -370,4 +411,31 @@ export async function createAppContext(
     .withTemplates()
     .withStyles()
     .build();
+
+  // inspector: attach context to window and log
+  if (
+    config.development &&
+    config.development.inspector &&
+    typeof window !== 'undefined'
+  ) {
+    (window as any).__ux3Inspector = context;
+    if (defaultLogger) {
+      defaultLogger.debug('inspector enabled', {});
+    }
+
+    // synchronously load the inspector component and mount it before
+    // returning so callers (and tests) can rely on its presence.
+    try {
+      await import('./inspector-widget.js');
+      // make sure we don't stack multiple overlays when called repeatedly
+      const existing = document.body.querySelector('ux3-inspector');
+      if (existing) existing.remove();
+      const el = document.createElement('ux3-inspector');
+      document.body.appendChild(el);
+    } catch (err) {
+      console.warn('[AppContextBuilder] failed to mount inspector element', err);
+    }
+  }
+
+  return context;
 }

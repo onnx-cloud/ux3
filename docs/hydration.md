@@ -71,4 +71,35 @@ A small amount of application state (usually the current FSM states and contexts
 
 ---
 
+## Development Helpers
+
+When `ux3.yaml` contains a `development` section the runtime builder
+will enable additional diagnostics during `createAppContext`.
+
+```yaml
+development:
+  logging: debug        # lowers logger threshold to `debug`
+  inspector: true       # expose `window.__ux3Inspector`
+```
+
+*Setting `logging: debug` also wires `window.__ux3Telemetry` so that
+any telemetry events produced by the core are written via the logger.
+Projects can supply their own telemetry hook or simply inspect the
+console.*
+
+If `inspector` is enabled a small overlay widget (`<ux3-inspector>`) is
+automatically mounted into the document body.  It shows a JSON snapshot
+of the current FSM states and registered services, updating live as
+machines transition.  The overlay is rendered using the UX3 framework
+primitives so your own applications can extend or re-skin it if desired.
+Clicking the panel will toggle its visibility.
+
+The inspector reference attached to `window.__ux3Inspector` is simply
+the `AppContext` object; tooling or tests can interact with it directly
+(e.g. `window.__ux3Inspector.machines.home.getState()`).  When the
+debugger is enabled a log message (`inspector enabled`) will be emitted
+at startup.
+
+## References
+
 For full examples and tests refer to `examples/iam` and the unit tests under `tests/ui/hydration.test.ts`.

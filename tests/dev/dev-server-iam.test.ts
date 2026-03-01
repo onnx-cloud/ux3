@@ -23,15 +23,25 @@ describe('DevServer with IAM example', () => {
       version: require(path.join(projectDir, 'package.json')).version || '0.0.0',
       minified: true,
     };
+
+    const configObj: any = { site: { runtime: { bundleKey: 'ux3.bundle', hydrationFn: 'initApp' } } };
+    server.setManifest({ config: configObj, types: {}, invokes: {}, stats: { buildTime: 0 }, runtime: runtimeInfo });
+
+    // after manifest has been set we can fetch and assert it contains styles
+    const manifestResp = await fetch('http://localhost:3720/$/manifest');
+    expect(manifestResp.status).toBe(200);
+    const cfg: any = await manifestResp.json();
+    // server returns the config object directly
+    expect(cfg).toBeDefined();
+    // styles object should exist and not be empty (IAM example has compositions)
+    expect(cfg.styles).toBeDefined();
+    expect(Object.keys(cfg.styles).length).toBeGreaterThan(0);
     try {
       const files = fs.readdirSync(path.join(projectDir, 'dist'));
       for (const f of files) {
         if (f.endsWith('.css')) runtimeInfo.styles.push(`/dist/${f}`);
       }
     } catch {}
-    const configObj: any = { site: { runtime: { bundleKey: 'ux3.bundle', hydrationFn: 'initApp' } } };
-    server.setManifest({ config: configObj, types: {}, invokes: {}, stats: { buildTime: 0 }, runtime: runtimeInfo });
-
     const url = 'http://localhost:3720/dist/app.bundle.js';
     const res = await fetch(url);
     expect(res.status).toBe(200);

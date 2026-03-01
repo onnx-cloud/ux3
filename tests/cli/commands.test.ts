@@ -8,6 +8,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createCommand } from '../../src/cli/commands/create.js';
 import { checkCommand } from '../../src/cli/commands/check.js';
 import { buildCommand } from '../../src/cli/commands/build.js';
+import { compileCommand } from '../../src/cli/compile.js';
+import { configCommand } from '../../src/cli/commands/config.js';
+import { previewCommand } from '../../src/cli/commands/preview.js';
 
 // helper to run a command and capture exit code
 async function runCommand(cmd: any, args: string[], cwd: string) {
@@ -50,6 +53,17 @@ async function runCommand(cmd: any, args: string[], cwd: string) {
 
 describe('UX3 CLI commands', () => {
   const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'cli-commands');
+
+  it('index module exports all expected commands', async () => {
+    const idx = await import('../../src/cli/index.js');
+    expect(idx.createCommand).toBeDefined();
+    expect(idx.devCommand).toBeDefined();
+    expect(idx.buildCommand).toBeDefined();
+    expect(idx.checkCommand).toBeDefined();
+    expect(idx.compileCommand).toBeDefined();
+    expect(idx.configCommand).toBeDefined();
+    expect(idx.previewCommand).toBeDefined();
+  });
 
   beforeEach(async () => {
     await fs.remove(tmpRoot);
@@ -109,5 +123,70 @@ describe('UX3 CLI commands', () => {
     expect(await fs.pathExists(path.join(project, 'generated', 'config.ts'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'generated', 'types.ts'))).toBe(true);
     // dist directory may not be created when bundling is skipped
+  });
+
+  it('`compile` command works (via CLI wrapper)', async () => {
+    const project = path.join(tmpRoot, 'proj5');
+    await fs.ensureDir(path.join(project, 'ux', 'view'));
+    await fs.writeFile(
+      path.join(project, 'ux', 'view', 'myview.yaml'),
+      `name: myview\nstates:\n  idle: idle.html\n`
+    );
+    await fs.writeFile(path.join(project, 'ux', 'view', 'idle.html'), `<div>idle</div>`);
+
+    const exit = await runCommand(
+      compileCommand,
+      ['--views', 'ux/view', '--output', 'generated'],
+      project
+    );
+    expect(exit).toBe(0);
+    expect(await fs.pathExists(path.join(project, 'generated', 'myview.ts'))).toBe(true);
+  });
+
+  it('`config` command can display and query configuration', async () => {
+    const project = path.join(tmpRoot, 'proj6');
+    const cfgDir = path.join(project, 'configs');
+    await fs.ensureDir(cfgDir);
+    await fs.writeFile(
+      path.join(cfgDir, 'a.yaml'),
+      `routes: [{ path: "/" }]\nservices: []\ntokens: {}\n`
+    );
+
+    let logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: any[]) => {
+      logs.push(args.join(' '));
+      origLog(...args);
+    };
+
+    const exit1 = await runCommand(configCommand, [], project);
+    expect(exit1).toBe(0);
+    expect(logs.join('\n')).toContain('routes');
+
+    logs = [];
+    const exit2 = await runCommand(configCommand, ['--get', 'routes.0.path'], project);
+    expect(exit2).toBe(0);
+    expect(logs.join('')).toContain('/');
+
+    console.log = origLog;
+  });
+
+  it('`preview` command handles direction and once flag', async () => {
+    const project = path.join(tmpRoot, 'proj7');
+    await fs.ensureDir(path.join(project, 'dist'));
+    await fs.writeFile(path.join(project, 'dist', 'index.html'), '<h1>hi</h1>');
+
+    let logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: any[]) => {
+      logs.push(args.join(' '));
+      origLog(...args);
+    };
+
+    const exit = await runCommand(previewCommand, ['--dir', 'dist', '--port', '0', '--once'], project);
+    expect(exit).toBe(0);
+    expect(logs.some((l) => l.includes('Previewing'))).toBe(true);
+
+    console.log = origLog;
   });
 });
