@@ -13,6 +13,48 @@ import { StateMachine } from '@ux3/fsm';
 import { ViewComponent, reconcileScriptRepeat } from '@ux3/ui';
 import { effect } from '@ux3/state';
 
+// -----------------------------------------------------------------------------
+// style registry used by all views; keys correspond to `data-style` attributes
+// or to element tags / view identifiers.  All Tailwind utility lists live here so
+// that markup stays clean and declarative.
+// -----------------------------------------------------------------------------
+const styles: Record<string, string> = {
+  'login.view': 'max-w-md mx-auto p-6 bg-white rounded-lg shadow contents',
+  'todo.list.view': 'max-w-md mx-auto p-6 bg-white rounded-lg shadow contents',
+  'cdn.scripts.view': 'p-4 bg-white rounded shadow contents',
+  'form.base': 'space-y-4',
+  'input.base': 'w-full p-2 border rounded',
+  'button.base': 'px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50',
+  'app.container': 'grid grid-cols-2 gap-6 md:grid-cols-1',
+  'debug.info': 'bg-gray-100 border-l-4 border-blue-500 rounded p-4 mt-8 font-mono text-xs',
+  'todo.item': 'flex items-center justify-between p-3 border-b border-gray-200',
+  'heading': 'text-2xl font-bold',
+  'error-msg': 'text-red-600 mt-2',
+  'list': 'space-y-2',
+  'cdn.container': 'p-4 border rounded space-y-2',
+  'text-sm': 'text-sm',
+  'script-list': 'bg-gray-100 p-2 max-h-72 overflow-y-auto',
+  'remove.button': 'text-red-500 hover:underline',
+};
+
+function applyStyles(root: HTMLElement) {
+  // process elements annotated with either attribute
+  root.querySelectorAll('[data-style], [ux-style]').forEach((el) => {
+    const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
+    const cls = styles[key];
+    if (cls) (el as HTMLElement).className = cls;
+  });
+}
+
+// expose for host page scripts
+;(window as any).todoApplyStyles = applyStyles;
+
+// if the document is already available, decorate the body immediately
+if (document && document.body) {
+  applyStyles(document.body);
+}
+
+
 // ============================================================================
 // 1. Initialize FSMs
 // ============================================================================
@@ -69,23 +111,17 @@ export class LoginView extends ViewComponent<LoginViewContext> {
   protected _mountTemplate() {
     const tpl = document.createElement('template');
     tpl.innerHTML = `
-      <style>
-        :host { display: contents; }
-        form { max-width: 400px; margin: 0 auto; }
-        input { width: 100%; padding: 8px; margin: 8px 0; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .error { color: red; margin: 8px 0; }
-      </style>
-      <form id="loginForm">
-        <h1>Login</h1>
-        <input id="username" type="text" placeholder="Username" required />
-        <input id="password" type="password" placeholder="Password" required />
-        <button id="submitBtn" type="button" ux-event="LOGIN">Login</button>
-        <div id="errorMsg" class="error" hidden></div>
+      <form id="loginForm" data-style="form.base">
+        <h1 data-style="heading">Login</h1>
+        <input id="username" type="text" placeholder="Username" required data-style="input.base" />
+        <input id="password" type="password" placeholder="Password" required data-style="input.base" />
+        <button id="submitBtn" type="button" ux-event="LOGIN" data-style="button.base">Login</button>
+        <div id="errorMsg" data-style="error-msg" hidden></div>
       </form>
     `;
     this.shadowRoot!.appendChild(tpl.content.cloneNode(true));
+    applyStyles(this.shadowRoot!);
+    applyStyles(this);
     this._bindEvents();
   }
 
@@ -151,20 +187,15 @@ export class TodoListView extends ViewComponent<TodoListViewContext> {
   protected _mountTemplate() {
     const tpl = document.createElement('template');
     tpl.innerHTML = `
-      <style>
-        :host { display: contents; }
-        .todo-list { list-style: none; padding: 0; }
-        .todo-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; gap: 10px; }
-        .todo-item.completed { opacity: 0.6; text-decoration: line-through; }
-        .todo-item button { padding: 4px 8px; cursor: pointer; }
-      </style>
-      <div id="root">
-        <h2>My Todos</h2>
-        <ul id="todoList" class="todo-list"></ul>
-        <button id="addBtn" ux-event="ADD">Add Todo</button>
+      <div id="root" data-style="form.base">
+        <h2 data-style="heading">My Todos</h2>
+        <ul id="todoList" data-style="list"></ul>
+        <button id="addBtn" ux-event="ADD" data-style="button.base">Add Todo</button>
       </div>
     `;
     this.shadowRoot!.appendChild(tpl.content.cloneNode(true));
+    applyStyles(this.shadowRoot!);
+    applyStyles(this);
     this._bindEvents();
   }
 
@@ -182,11 +213,13 @@ export class TodoListView extends ViewComponent<TodoListViewContext> {
 
     (this.state.todos || []).forEach((todo) => {
       const li = document.createElement('li');
-      li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+      // apply base style and completed modifier
+      li.className = styles['todo.item'] + (todo.completed ? ' opacity-60 line-through' : '');
       li.innerHTML = `
         <span>${todo.title}</span>
-        <button data-todo-id="${todo.id}" ux-event="REMOVE">Remove</button>
+        <button data-todo-id="${todo.id}" ux-event="REMOVE" data-style="remove.button">Remove</button>
       `;
+      applyStyles(li as HTMLElement);
 
       li.querySelector('[data-todo-id]')?.addEventListener('click', () => {
         this.fsm?.send('REMOVE', { id: todo.id });
@@ -226,25 +259,21 @@ export class CDNScriptsView extends ViewComponent<CDNScriptsViewContext> {
   protected _mountTemplate() {
     const tpl = document.createElement('template');
     tpl.innerHTML = `
-      <style>
-        :host { display: contents; }
-        .cdn-container { padding: 20px; border: 1px solid #ccc; }
-        .cdn-info { margin: 10px 0; font-size: 14px; }
-        .script-list { background: #f5f5f5; padding: 10px; margin: 10px 0; max-height: 300px; overflow-y: auto; }
-        .script-item { padding: 8px; border-bottom: 1px solid #ddd; font-family: monospace; font-size: 12px; word-break: break-all; }
-      </style>
-      <div class="cdn-container">
-        <h2>CDN Scripts (ux-repeat Demo)</h2>
-        <div class="cdn-info">Loaded <span id="scriptCount">0</span> scripts</div>
-        <div class="script-list" id="scriptList">
+      <div data-style="cdn.container">
+        <h2 data-style="heading">CDN Scripts (ux-repeat Demo)</h2>
+        <div data-style="text-sm">Loaded <span id="scriptCount">0</span> scripts</div>
+        <div id="scriptList" data-style="script-list">
           <!-- Scripts will be injected here via reconcileScriptRepeat() -->
         </div>
-        <button id="loadBtn">Load CDN Scripts</button>
+        <button id="loadBtn" ux-style="button.base">Load CDN Scripts</button>
       </div>
       <!-- Actual script tags will be created here -->
-      <div id="cdnScriptsContainer" style="display: none;"></div>
+      <div id="cdnScriptsContainer" class="hidden"></div>
     `;
     this.shadowRoot!.appendChild(tpl.content.cloneNode(true));
+    applyStyles(this.shadowRoot!);
+    applyStyles(this);
+    applyStyles(this.shadowRoot!);
     this._bindEvents();
   }
 
@@ -268,7 +297,7 @@ export class CDNScriptsView extends ViewComponent<CDNScriptsViewContext> {
     scriptList.innerHTML = '';
     (this.state.cdnScripts || []).forEach((script) => {
       const item = document.createElement('div');
-      item.className = 'script-item';
+      item.className = 'py-2 border-b border-gray-300 text-xs font-mono break-words';
       item.textContent = script.src;
       scriptList.appendChild(item);
     });

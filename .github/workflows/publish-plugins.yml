@@ -1,0 +1,33 @@
+name: Publish Plugins
+
+on:
+  push:
+    tags:
+      - 'plugin-*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org/'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build all packages
+        run: |
+          for pkg in packages/@ux3/*; do
+            cd "$pkg" && npm run build && cd -;
+          done
+      - name: Publish packages
+        run: |
+          for pkg in packages/@ux3/*; do
+            cd "$pkg" && npm publish --access public || true && cd -;
+          done
+        env:
+          NODE_AUTH_TOKEN: 
+            
+time

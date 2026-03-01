@@ -1,0 +1,28 @@
+import { describe, it, expect } from 'vitest';
+import { PluginRegistry } from '../registry';
+
+describe('PluginRegistry', () => {
+  it('registers and retrieves plugins', () => {
+    const reg = new PluginRegistry();
+    const plugin = { name: 'foo', version: '1.0.0' };
+    reg.register(plugin as any);
+    expect(reg.has('foo')).toBe(true);
+    expect(reg.load('foo')).toBe(plugin);
+    expect(reg.list()).toEqual([plugin]);
+  });
+
+  it('throws when registering duplicate name', () => {
+    const reg = new PluginRegistry();
+    const plugin = { name: 'bar', version: '1.0.0' };
+    reg.register(plugin as any);
+    expect(() => reg.register(plugin as any)).toThrow(/already registered/);
+  });
+
+  it('clears registry', () => {
+    const reg = new PluginRegistry();
+    reg.register({ name: 'x', version: '0' } as any);
+    reg.clear();
+    expect(reg.has('x')).toBe(false);
+    expect(reg.list()).toHaveLength(0);
+  });
+});

@@ -10,10 +10,64 @@ import { setupNavigation } from '@ux3/ui/navigation-handler';
 import { config } from './generated/config.js';
 import type { AppContext } from '@ux3/ui/app';
 
+// built-in plugins
+import { SpaCore } from '../src/plugins/spa-core';
+import { SpaRouter } from '../src/plugins/spa-router';
+import { SpaForms } from '../src/plugins/spa-forms';
+import { SpaAuth } from '../src/plugins/spa-auth';
+
 /**
  * Global app instance
  */
 let appInstance: AppContext | null = null;
+
+
+// ---------------------------------------------------------------------------
+// Hydration helpers (for SPA entry point)
+// ---------------------------------------------------------------------------
+
+export interface HydrationOptions {
+  recoverState?: boolean;        // restore FSM state from `window.__INITIAL_STATE__`
+  reattachListeners?: boolean;   // wire up ux-event directives
+  reconnectServices?: boolean;   // resume HTTP/WS/RPC services
+  validateVersion?: boolean;     // check bundle/config version match
+}
+
+/**
+ * Hydrate an already-rendered server page into a live SPA.  This function is
+ * used by the browser entry point (examples/iam/index.ts) and may also be
+ * called manually in tests.
+ */
+export async function hydrate(
+  config: typeof import('./generated/config.js').config,
+  options: HydrationOptions = {}
+): Promise<AppContext> {
+  const app = await createAppContext(config);
+
+  // NOTE: early hook execution would occur here if a full hook system exists
+  if (options.recoverState && typeof window !== 'undefined') {
+    const initial = (window as any).__INITIAL_STATE__;
+    if (initial) {
+      // assume app.recoverState exists on context-builder
+      (app as any).recoverState?.(initial);
+    }
+  }
+
+  if (options.reattachListeners) {
+    (app as any).reattachListeners?.();
+  }
+
+  if (options.reconnectServices) {
+    try {
+      await (app as any).reconnectServices?.();
+    } catch (err) {
+      console.warn('[IAM] service reconnection failed', err);
+    }
+  }
+
+  // ready
+  return app;
+}
 
 /**
  * Initialize the IAM application
@@ -24,6 +78,35 @@ export async function initializeApp(): Promise<AppContext> {
     
     // Create the app context from generated config
     appInstance = await createAppContext(config);
+
+    // install built-in plugins so their hooks/services are available
+    const plugins = [SpaCore, SpaRouter, SpaForms, SpaAuth];
+    plugins.forEach(p => {
+      try {
+        appInstance.services = appInstance.services || {};
+        p.install?.(appInstance as any);
+      } catch (e) {
+        console.warn('[IAM] plugin install failed', p.name, e);
+      }
+    });
+
+    // auto-load project-specific plugins from `examples/iam/plugins` using
+    // Vite's glob import syntax (eager so that modules are included in bundle).
+    if (typeof import.meta !== 'undefined' && import.meta.glob) {
+      const mods = import.meta.glob('../plugins/*.{ts,js}', { eager: true });
+      for (const path in mods) {
+        // each module should export default Plugin
+        const mod: any = (mods as any)[path];
+        const pl = mod?.default;
+        if (pl && typeof pl.install === 'function') {
+          try {
+            pl.install(appInstance as any);
+          } catch (e) {
+            console.warn('[IAM] project plugin install failed', path, e);
+          }
+        }
+      }
+    }
     
     console.log('[IAM] ✓ Application initialized', {
       routes: config.routes.length,
