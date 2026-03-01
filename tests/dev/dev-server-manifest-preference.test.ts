@@ -20,7 +20,7 @@ describe('DevServer manifest preference', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">FS</div>`);
 
     // Start server and set manifest with compiled template containing app wrapper
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3620, 'localhost');
     await server.start();
 
@@ -49,7 +49,7 @@ describe('DevServer manifest preference', () => {
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">FS</div>`);
 
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3621, 'localhost');
     await server.start();
 

@@ -5,7 +5,7 @@
 
 import { describe, it } from 'vitest';
 import { expect } from 'vitest';
-import { reactive, effect, computed, batch } from '../reactive.js';
+import { reactive, effect, computed, batch } from '@ux3/state/reactive';
 
 describe('reactive()', () => {
   it('should create reactive object', () => {

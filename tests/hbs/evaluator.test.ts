@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '../lexer.js';
-import { Parser } from '../parser.js';
-import { Evaluator } from '../evaluator.js';
+import { Lexer } from '@ux3/hbs/lexer.js';
+import { Parser } from '@ux3/hbs/parser';
+import { Evaluator } from '@ux3/hbs/evaluator';
 
 function renderTemplate(template: string, context = {}): string {
   const lexer = new Lexer(template);

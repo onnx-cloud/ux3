@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { StateMachine } from '@ux3/fsm';
-import { config } from '../../generated/config.js';
+import { config } from '../../examples/iam/generated/config';
 
 // Mock service responses
 const mockAuthService = {

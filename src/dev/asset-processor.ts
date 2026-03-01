@@ -44,6 +44,38 @@ export function processAssets(manifest: any, projectDir: string) {
     }
   }
 
+  // runtime injection (bundle + styles + hydration) based on manifest/runtime
+  const runtime = (manifest as any)?.runtime;
+  const runtimeConfig = (manifest as any)?.config?.site?.runtime || {};
+  if (runtime && runtimeConfig?.bundleKey) {
+    // inject styles first
+    for (const style of runtime.styles || []) {
+      headInjections.push(`<link rel="stylesheet" href="${style}" data-ux3="styles">`);
+    }
+
+    // inject bundle script with metadata
+    const version = runtime.version || '';
+    const bundleUrl = runtime.bundle;
+    scriptInjections.push(
+      `<script src="${bundleUrl}" ` +
+      `data-ux3="app" ` +
+      `data-ux3-version="${version}" ` +
+      `defer></script>`
+    );
+
+    // hydration inline script
+    const hydrationFn = runtimeConfig.hydrationFn || 'initApp';
+    scriptInjections.push(
+      `<script data-ux3="hydration">` +
+      `document.addEventListener('DOMContentLoaded', () => { ` +
+      `  if (typeof window.${hydrationFn} === 'function') { ` +
+      `    window.${hydrationFn}().catch(e => console.error('[UX3]', e)); ` +
+      `  } ` +
+      `}); ` +
+      `</script>`
+    );
+  }
+
   return {
     ...rawSite,
     head: headInjections.join('\n    '),

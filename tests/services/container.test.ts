@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ServiceContainer, type ServiceCallResult } from '../container';
-import type { Service } from '../types';
+import { ServiceContainer, type ServiceCallResult } from '@ux3/services/container';
+import type { Service } from '@ux3/services/types';
 
 describe('ServiceContainer - Comprehensive Tests', () => {
   let container: ServiceContainer;

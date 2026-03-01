@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '../lexer.js';
-import { TokenType } from '../types.js';
+import { Lexer } from '@ux3/hbs/lexer';
+import { TokenType } from '@ux3/hbs/types';
 
 describe('Lexer', () => {
   it('tokenizes plain text', () => {

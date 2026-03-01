@@ -16,6 +16,12 @@ export interface ServerManifest {
   config: Record<string, any>;
   types: Record<string, any>;
   invokes: Record<string, any>;
+  runtime?: {
+    bundle: string;
+    styles: string[];
+    version: string;
+    minified: boolean;
+  };
   stats: {
     buildTime: number;
     configSize?: number;
@@ -40,7 +46,12 @@ async function getSiteConfig(projectDir: string, manifest: ServerManifest | null
     ...siteFromManifest,
     ...(ux3Config.site || {})
   };
-  return processAssets({ config: { ...manifest?.config, site: siteFields } }, projectDir);
+  // merge runtime info so processAssets can see it
+  const mergedManifest: any = {
+    ...(manifest || {}),
+    config: { ...manifest?.config, site: siteFields },
+  };
+  return processAssets(mergedManifest, projectDir);
 }
 
 /**

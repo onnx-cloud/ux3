@@ -23,7 +23,7 @@ describe('DevServer layout selection priority', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
     await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
 
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3630, 'localhost');
     await server.start();
 
@@ -46,7 +46,7 @@ describe('DevServer layout selection priority', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
     await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
 
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3631, 'localhost');
     await server.start();
 
@@ -68,7 +68,7 @@ describe('DevServer layout selection priority', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
     await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
 
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3632, 'localhost');
     await server.start();
 
@@ -89,7 +89,7 @@ describe('DevServer layout selection priority', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
     await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
 
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3633, 'localhost');
     await server.start();
 

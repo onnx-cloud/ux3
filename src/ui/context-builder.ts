@@ -26,6 +26,9 @@ export interface GeneratedConfig {
   widgets: Record<string, { path: string; lazy?: boolean }>;
   styles: Record<string, string>;
   templates: Record<string, Record<string, string>>;
+  // additional fields that may be added at build time
+  version?: string;
+  site?: Record<string, any>;
 }
 
 /**

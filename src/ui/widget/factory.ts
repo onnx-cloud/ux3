@@ -3,6 +3,7 @@
  */
 
 import type { Widget, WidgetConfig } from './widget.js';
+import { AsyncLocalStorage } from 'async_hooks';
 
 /**
  * Widget loader function
@@ -16,6 +17,8 @@ export class WidgetFactory {
   private loaders: Map<string, WidgetLoader> = new Map();
   private cache: Map<string, Widget | any> = new Map();
   private pendingLoads: Map<string, Promise<any>> = new Map();
+  // AsyncLocalStorage used to track current loader context and detect self-references
+  private context = new AsyncLocalStorage<string>();
 
   /**
    * Register a widget synchronously
@@ -43,22 +46,46 @@ export class WidgetFactory {
 
     // Wait for pending load if in progress
     if (this.pendingLoads.has(name)) {
-      return this.pendingLoads.get(name);
+      const current = this.context.getStore();
+      if (current === name) {
+        // loader attempted to get the same name while it was still running
+        throw new Error(`Circular widget dependency: ${name}`);
+      }
+      return this.pendingLoads.get(name)!;
     }
 
     // Load if lazy loader registered
     const loader = this.loaders.get(name);
     if (loader) {
-      const loadPromise = this.loadWidget(name, loader);
-      this.pendingLoads.set(name, loadPromise);
+      // create deferred promise so we can install pendingLoads before
+      // actually invoking the loader (which may synchronously call get())
+      const deferred: {
+        promise: Promise<any>;
+        resolve: (v: any) => void;
+        reject: (e: any) => void;
+      } = {} as any;
+      deferred.promise = new Promise((res, rej) => {
+        deferred.resolve = res;
+        deferred.reject = rej;
+      });
 
-      try {
-        const widget = await loadPromise;
-        this.cache.set(name, widget);
-        return widget;
-      } finally {
-        this.pendingLoads.delete(name);
-      }
+      // register as pending immediately so recursive get() calls can see it
+      this.pendingLoads.set(name, deferred.promise);
+
+      // run loader inside the async context to track origin
+      this.context.run(name, async () => {
+        try {
+          const widget = await this.loadWidget(name, loader);
+          this.cache.set(name, widget);
+          deferred.resolve(widget);
+        } catch (err) {
+          deferred.reject(err);
+        } finally {
+          this.pendingLoads.delete(name);
+        }
+      });
+
+      return deferred.promise;
     }
 
     throw new Error(`Widget not found: ${name}`);

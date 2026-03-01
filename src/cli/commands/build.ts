@@ -107,6 +107,7 @@ export const buildCommand = new Command()
 
       // Step 5: Bundle (optional)
       let bundleSize: number | undefined;
+      let bundleRel = '';
       if (!options.skipBundle) {
         console.log(`📦 Bundling application...`);
         const bundler = new Bundler({
@@ -120,8 +121,28 @@ export const buildCommand = new Command()
         const bundlePath = path.join(outputDir, 'bundle.js');
         if (fs.existsSync(bundlePath)) {
           bundleSize = fs.statSync(bundlePath).size;
+          bundleRel = path.relative(projectDir, bundlePath).replace(/\\/g, '/');
         }
       }
+
+      // runtime styles - look for any .css under outputDir
+      const styles: string[] = [];
+      if (fs.existsSync(outputDir)) {
+        const files = fs.readdirSync(outputDir);
+        for (const f of files) {
+          if (f.endsWith('.css')) {
+            styles.push(path.join(path.relative(projectDir, outputDir), f).replace(/\\/g, '/'));
+          }
+        }
+      }
+
+      // read project package.json version if available
+      let pkgVersion = '0.0.0';
+      try {
+        const pkgData = fs.readFileSync(path.join(projectDir, 'package.json'), 'utf-8');
+        const pkg = JSON.parse(pkgData);
+        if (pkg.version) pkgVersion = pkg.version;
+      } catch {}
 
       // Step 6: Generate manifest
       const buildTime = Date.now() - startTime;
@@ -133,7 +154,13 @@ export const buildCommand = new Command()
         configSize,
         typesSize,
         bundleSize,
-        buildTime
+        buildTime,
+        bundleRel ? {
+          bundle: bundleRel,
+          styles,
+          version: pkgVersion,
+          minified: !!options.minify,
+        } : undefined
       );
       ManifestGenerator.emit(manifest, generatedDir);
 

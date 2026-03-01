@@ -19,6 +19,20 @@ test.describe('UX3 Framework Core E2E Tests', () => {
     expect(typeof hasAppContext).toBe('boolean');
   });
 
+  test('should inject runtime bundle/styles/hydration tags', async ({ page }) => {
+    // navigate to a sample project (IAM example)
+    await page.goto('http://localhost:5173/examples/iam', { waitUntil: 'networkidle' });
+
+    const hasAppScript = await page.locator('script[data-ux3="app"]').count();
+    expect(hasAppScript).toBeGreaterThan(0);
+
+    const hasStyles = await page.locator('link[data-ux3="styles"]').count();
+    expect(hasStyles).toBeGreaterThan(0);
+
+    const hasHydration = await page.locator('script[data-ux3="hydration"]').count();
+    expect(hasHydration).toBeGreaterThan(0);
+  });
+
   test('should support custom element definitions', async ({ page }) => {
     await page.goto('http://localhost:5173/examples/iam', { waitUntil: 'networkidle' });
 

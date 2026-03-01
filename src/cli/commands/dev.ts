@@ -82,6 +82,24 @@ export const devCommand = new Command()
           const validation = await validator.validate();
 
           const buildTime = Date.now() - startTime;
+
+          // compute runtime bundle info similarly to build command (bundle may not exist when deving)
+          const bundleRel = ''; // dev server doesn't actually write bundle here
+          const styles: string[] = [];
+          let pkgVersion = '0.0.0';
+          try {
+            const pkgData = fs.readFileSync(path.join(projectDir, 'package.json'), 'utf-8');
+            const pkg = JSON.parse(pkgData);
+            if (pkg.version) pkgVersion = pkg.version;
+          } catch {}
+
+          const runtimeInfo = bundleRel ? {
+            bundle: bundleRel,
+            styles,
+            version: pkgVersion,
+            minified: false,
+          } : undefined;
+
           const manifest = ManifestGenerator.generate(
             config,
             invokes,
@@ -90,19 +108,31 @@ export const devCommand = new Command()
             configSize,
             typesSize,
             0,
-            buildTime
+            buildTime,
+            runtimeInfo
           );
-
+          
           // Notify dev server of new manifest
           devServer.setManifest({
             config: config,
             types: {},
             invokes: manifest.invokes,
             stats: manifest.stats,
+            runtime: manifest.runtime,
           });
 
-          // Broadcast hot reload
+          // Broadcast hot reload events
           devServer.broadcast({ type: 'rebuild', timestamp: Date.now() });
+          if (manifest.runtime) {
+            devServer.broadcast({
+              type: 'runtime-reload',
+              payload: {
+                bundleUrl: manifest.runtime.bundle,
+                styles: manifest.runtime.styles,
+                timestamp: Date.now(),
+              },
+            });
+          }
 
           console.log(`✅ Rebuilt in ${buildTime}ms`);
         } catch (error) {

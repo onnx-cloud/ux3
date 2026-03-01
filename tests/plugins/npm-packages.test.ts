@@ -4,7 +4,7 @@ import { join } from 'path';
 // test that the local npm-style package folders export plugins directly
 
 describe('npm plugin packages', () => {
-  const base = join(__dirname, '../../../packages/@ux3');
+  const base = join(process.cwd(), 'packages/@ux3');
 
   ['plugin-i18n', 'plugin-sentry', 'plugin-analytics', 'plugin-validation'].forEach((pkg) => {
     it(`can require ${pkg}`, () => {

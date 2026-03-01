@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { StateMachine } from '@ux3/fsm';
-import { config } from '../../generated/config.js';
+import { config } from '../../examples/iam/generated/config';
 
 describe('IAM FSMs', () => {
   describe('Auth FSM (login flow)', () => {

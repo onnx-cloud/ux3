@@ -24,7 +24,10 @@
     "resolveJsonModule": true,
     "outDir": "dist",
     "rootDir": "src",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@ux3/*": ["src/*", "packages/@ux3/*/src"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", ".ux3", "packages", "examples"]

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PluginRegistry } from '../registry';
+import { PluginRegistry } from '@ux3/plugin/registry';
 
 describe('PluginRegistry', () => {
   it('registers and retrieves plugins', () => {

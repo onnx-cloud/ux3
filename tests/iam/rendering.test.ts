@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ViewComponent } from '@ux3/ui';
 import { StateMachine } from '@ux3/fsm';
-import { config } from '../../generated/config.js';
+import { config } from '../../examples/iam/generated/config';
 
 // Mock AppContext for testing
 const mockAppContext = {

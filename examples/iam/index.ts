@@ -30,6 +30,11 @@ async function boot() {
   }
 }
 
+// expose a generic entrypoint so runtime injection can call it
+if (typeof window !== 'undefined') {
+  (window as any).initApp = boot;
+}
+
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);

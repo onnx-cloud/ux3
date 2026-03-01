@@ -12,7 +12,7 @@ describe('DevServer missing template behavior', () => {
     // create index.yaml referencing non-existent template
     await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\n`);
 
-    const { DevServer } = await import('../../dev/dev-server.js');
+    const { DevServer } = await import('@ux3/dev/dev-server.js');
     const server = new DevServer(temp, 3600, 'localhost');
     await server.start();
 

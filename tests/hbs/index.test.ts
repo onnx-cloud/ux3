@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { HandlebarsLite } from '../index.js';
+import { HandlebarsLite } from '@ux3/hbs';
 
 describe('HandlebarsLite', () => {
   it('creates instance', () => {

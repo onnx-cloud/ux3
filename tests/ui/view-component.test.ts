@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ViewComponent } from '../view-component';
-import type { TemplateBindings } from '../view-component';
+import { ViewComponent } from '@ux3/ui/view-component';
+import type { TemplateBindings } from '@ux3/ui/view-component';
 
 describe('ViewComponent - Configuration Tests', () => {
   describe('Bindings Structure', () => {

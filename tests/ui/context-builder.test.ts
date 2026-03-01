@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AppContextBuilder, type GeneratedConfig } from '../context-builder';
+import { AppContextBuilder, type GeneratedConfig } from '@ux3/ui/context-builder';
 
 describe('AppContextBuilder - Comprehensive Tests', () => {
   let config: GeneratedConfig;

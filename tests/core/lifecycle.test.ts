@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { HookRegistry, AppLifecyclePhase, ComponentLifecyclePhase, ServiceLifecyclePhase } from '../lifecycle';
+import { HookRegistry, AppLifecyclePhase, ComponentLifecyclePhase, ServiceLifecyclePhase } from '@ux3/core/lifecycle';
 
 describe('HookRegistry', () => {
   it('executes registered hooks in order', async () => {

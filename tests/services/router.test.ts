@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Router } from '../router.js';
+import { Router } from '@ux3/services/router.js';
 import type { RouteConfig } from '../router.js';
 
 describe('Router', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ViewComponent } from '../view-component.js';
-import { StateMachine } from '../../fsm/state-machine.js';
+import { ViewComponent } from '@ux3/ui/view-component.js';
+import { StateMachine } from '@ux3/fsm/state-machine';
 
 // Mocking AppContext
 const mockApp = {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { StructuredLogger } from '../logger';
-import { LogEntry } from '../types';
+import { StructuredLogger } from '@ux3/logger/logger';
+import { LogEntry } from '@ux3/logger/types';
 
 describe('StructuredLogger', () => {
   it('emits entries to subscribers and console', () => {

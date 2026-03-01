@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PluginLoader } from '../loader';
+import { PluginLoader } from '@ux3/plugin/loader';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
