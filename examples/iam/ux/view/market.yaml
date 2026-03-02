@@ -3,17 +3,19 @@ layout: default
 initial: loading
 states:
   loading:
-    template: 'view/market/loading.html'
+    template: 'market/loading.html'
     invoke:
-      src: loadMarketData
+      service: api
+      method: fetch
+      input: '/asset/eod/TSLA'  # fetch static JSON under public/api/asset/eod/TSLA.json
     on:
       SUCCESS: loaded
       ERROR: error
   loaded:
-    template: 'view/market/loaded.html'
+    template: 'market/loaded.html'
     on:
       REFRESH: loading
   error:
-    template: 'view/market/error.html'
+    template: 'market/error.html'
     on:
       RETRY: loading

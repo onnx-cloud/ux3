@@ -186,38 +186,6 @@
       }
     }
   },
-  "views/market": {
-    "invokes": {
-      "loadMarketData": {
-        "signature": {
-          "name": "loadMarketData",
-          "params": [
-            "payload",
-            "context"
-          ]
-        },
-        "validationResult": {
-          "valid": true
-        }
-      }
-    }
-  },
-  "views/news": {
-    "invokes": {
-      "loadNewsData": {
-        "signature": {
-          "name": "loadNewsData",
-          "params": [
-            "payload",
-            "context"
-          ]
-        },
-        "validationResult": {
-          "valid": true
-        }
-      }
-    }
-  },
   "views/sign-up": {
     "invokes": {
       "validateSignUp": {

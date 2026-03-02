@@ -3,17 +3,19 @@ layout: default
 initial: loading
 states:
   loading:
-    template: 'view/news/loading.html'
+    template: 'news/loading.html'
     invoke:
-      src: loadNewsData
+      service: api
+      method: fetch
+      input: '/news/today'   # dev server serves public/api/news/today.json
     on:
       LOADED: loaded
       ERROR: error
   loaded:
-    template: 'view/news/loaded.html'
+    template: 'news/loaded.html'
     on:
       RETRY: loading
   error:
-    template: 'view/news/error.html'
+    template: 'news/error.html'
     on:
       RETRY: loading

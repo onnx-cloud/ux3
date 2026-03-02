@@ -1040,16 +1040,8 @@ export const config = {
       "loaded": "<div ux-state=\"macro.loaded\">\n  <div ux-style=\"widget\">{{i18n.macro.loaded.label}}</div>\n</div>\n",
       "error": "<div ux-state=\"macro.error\">\n  <div ux-style=\"alert\">{{i18n.macro.error.label}}</div>\n</div>\n"
     },
-    "market": {
-      "loading": "<div ux-state=\"market.loading\">\n  <div ux-style=\"spinner\">{{i18n.market.loading.label}}</div>\n</div>\n",
-      "loaded": "<div ux-state=\"market.loaded\">\n  <div ux-style=\"widget\">{{i18n.market.loaded.label}}</div>\n  <!-- table of data -->\n  <table>\n    <tr><th>Time</th><th>Price</th></tr>\n    <tr ux-each=\"{{ctx.table}}\">\n      <td>{{this.time}}</td>\n      <td>{{this.price}}</td>\n    </tr>\n  </table>\n  <!-- chart placeholder -->\n  <canvas id=\"market-chart\"></canvas>\n  <script>\n    document.addEventListener('DOMContentLoaded', () => {\n      const app = (window as any).__ux3App;\n      if (app?.services?.chart) {\n        app.services.chart.create(document.getElementById('market-chart'), {\n          data: {{JSON.stringify(ctx.series)}}\n        }).catch(console.error);\n      }\n    });\n  </script>\n</div>\n",
-      "error": "<div ux-state=\"market.error\">\n  <div ux-style=\"alert\">{{i18n.market.error.label}}</div>\n</div>\n"
-    },
-    "news": {
-      "loading": "<div ux-state=\"news.loading\">\n  <div ux-style=\"spinner\">{{i18n.news.loading.label}}</div>\n</div>\n",
-      "loaded": "<div ux-state=\"news.loaded\">\n  <div ux-style=\"widget\">{{i18n.news.loaded.label}}</div>\n  <ul ux-each=\"{{ctx}}\"> <!-- assume ctx is array from loadNewsData -->\n    <li>\n      <h3>{{this.title}}</h3>\n      <p>{{this.body}}</p>\n    </li>\n  </ul>\n</div>\n",
-      "error": "<div ux-state=\"news.error\">\n  <div ux-style=\"alert\">{{i18n.news.error.label}}</div>\n</div>\n"
-    },
+    "market": {},
+    "news": {},
     "sign-up": {
       "idle": "<div ux-state=\"sign-up.idle\">\n  <div ux-style=\"widget\">{{i18n.sign-up.idle.label}}</div>\n</div>\n",
       "validating": "<div ux-state=\"sign-up.validating\">\n  <div ux-style=\"spinner\">{{i18n.sign-up.validating.label}}</div>\n</div>\n",
