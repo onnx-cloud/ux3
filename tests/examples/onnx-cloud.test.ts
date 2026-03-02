@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import path from 'path';
 import fs from 'fs-extra';
-import { ConfigGenerator } from '../src/build/config-generator.js';
+import { ConfigGenerator } from '../../src/build/config-generator.js';
 
 describe('ONNX.Cloud example integration', () => {
   it('generates config with content manifest and corresponding routes', async () => {
