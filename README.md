@@ -10,7 +10,7 @@ Whether you’re building an internal dashboard, a customer portal, or a full‑
 
 The core of UX3 is a small runtime coupled with a powerful compile‑time toolchain that generates strongly‑typed components, validators, and view logic — letting you catch errors before they reach the browser.
 
-![ONNX.cloud](./onnx.cloud.logo.png)
+[![ONNX.cloud](./onnx.cloud.logo.png)](https://onnx.cloud)
 
 ---
 
