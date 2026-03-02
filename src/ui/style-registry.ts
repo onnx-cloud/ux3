@@ -121,7 +121,7 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
       container = root as Queryable;
     }
 
-    (container as Queryable).querySelectorAll('[data-style], [ux-style]').forEach((el) => {
+    (container).querySelectorAll('[data-style], [ux-style]').forEach((el) => {
       const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
       const cls = resolveStyle(key);
       if (cls) {
@@ -154,7 +154,11 @@ export function initStyleRegistry(): void {
   if (!patched) {
     // Keep a direct reference; .bind() would lock `this` to the prototype, breaking
     // the subsequent orig.call(instance) invocation.
-    const orig = ViewComponent.prototype.mountLayout as () => void;
+    // capture the original method with explicit `this` signature so eslint
+    // doesn't warn about unbound methods
+    const orig: (this: ViewComponent & HTMLElement) => void =
+      ViewComponent.prototype.mountLayout;
+
     ViewComponent.prototype.mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
       try {

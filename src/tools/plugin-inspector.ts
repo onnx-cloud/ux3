@@ -17,7 +17,7 @@ export function installInspector(registry: PluginRegistry): void {
           const sub = (p.hooks as any)[domain];
           for (const ph of Object.keys(sub || {})) {
             map[ph] = map[ph] || [];
-            map[ph].push({ plugin: p.name, handlers: (sub as any)[ph] });
+            map[ph].push({ plugin: p.name, handlers: (sub)[ph] });
           }
         }
       }

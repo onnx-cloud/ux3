@@ -96,12 +96,12 @@ function render(context = {}) {
   private compileNode(node: ASTNode, ctx: CodeGenContext): string {
     switch (node.type) {
       case 'text': {
-        const text = (node as TextNode).value;
+        const text = (node).value;
         return escapeString(text);
       }
 
       case 'interpolation': {
-        const iNode = node as InterpolationNode;
+        const iNode = node;
         const path = iNode.path;
         const safe = iNode.safe;
 
@@ -113,7 +113,7 @@ function render(context = {}) {
       }
 
       case 'block': {
-        const bNode = node as BlockNode;
+        const bNode = node;
         return this.compileBlock(bNode, ctx);
       }
 

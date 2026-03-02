@@ -13,7 +13,7 @@ export const ContentPlugin: Plugin = {
       // service methods close over app.config so they always see up-to-date
       return {
         async load({ entry }: { entry?: string }) {
-          const manifest: any = (app.config as any).content;
+          const manifest: any = (app.config).content;
           if (!manifest || !Array.isArray(manifest.items)) {
             return null;
           }
@@ -35,7 +35,7 @@ export const ContentPlugin: Plugin = {
     });
 
     // if there is a content manifest in config, register routes automatically
-    const manifest: any = (app.config as any).content;
+    const manifest: any = (app.config).content;
     if (manifest && Array.isArray(manifest.items)) {
       for (const item of manifest.items) {
         const routePath = item.frontmatter.path || `/${item.slug}`;

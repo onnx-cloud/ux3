@@ -125,10 +125,10 @@ export class Evaluator {
   private evaluateNode(node: ASTNode, context: TemplateContext): string {
     switch (node.type) {
       case 'text':
-        return (node as TextNode).value;
+        return (node).value;
 
       case 'interpolation': {
-        const iNode = node as InterpolationNode;
+        const iNode = node;
         let value = this.evaluateInterpolation(iNode.path, iNode.args, context);
 
         // HTML escape unless safe (raw HTML)
@@ -140,7 +140,7 @@ export class Evaluator {
       }
 
       case 'block': {
-        const bNode = node as BlockNode;
+        const bNode = node;
         return this.evaluateBlock(bNode, context);
       }
 

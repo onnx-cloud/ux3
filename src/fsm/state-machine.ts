@@ -23,7 +23,7 @@ export class StateMachine<T extends Record<string, any>> {
     this.currentState = config.initial;
     this.context = typeof config.context === 'function' 
       ? config.context() 
-      : { ...(config.context || {} as T) } as T;
+      : { ...(config.context || {} as T) };
 
     // Call entry actions for initial state
     this.executeStateActions('entry', this.currentState);

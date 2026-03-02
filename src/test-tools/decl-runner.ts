@@ -193,7 +193,7 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         if (options.runner === 'playwright' && page) {
           await page.fill(step.selector, step.text);
         } else {
-          const el = document.querySelector(step.selector) as any;
+          const el = document.querySelector(step.selector);
           if (!el) throw new Error(`selector not found: ${step.selector}`);
           el.value = step.text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -264,9 +264,9 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         if (!machine) throw new Error(`FSM not found for fsmState: ${step.machine}`);
         const current = machine.getState();
         if (step.equals instanceof RegExp) {
-          assert(step.equals.test(current as string), `fsmState ${current} does not match ${step.equals}`);
+          assert(step.equals.test(current), `fsmState ${current} does not match ${step.equals}`);
         } else if (Array.isArray(step.equals)) {
-          assert(step.equals.includes(current as string), `fsmState ${current} not in [${step.equals.join(',')}]`);
+          assert(step.equals.includes(current), `fsmState ${current} not in [${step.equals.join(',')}]`);
         } else {
           assert(current === step.equals, `fsmState expected ${step.equals} got ${current}`);
         }

@@ -518,7 +518,7 @@ export async function createAppContext(
 
     if (config.development.logging) {
       defaultLogger.config.minLevel = config.development
-        .logging as LogLevel;
+        .logging;
     }
 
     if (

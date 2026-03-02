@@ -316,7 +316,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       }
 
       if (result && typeof result === 'object') {
-        this.fsm.setState(result as any);
+        this.fsm.setState(result);
       }
 
       this.fsm.send('SUCCESS');
@@ -487,7 +487,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * Helper: get FSM context with type safety
    */
   getContext(): Readonly<Context> {
-    return this.fsm.getContext() as Readonly<Context>;
+    return this.fsm.getContext();
   }
 
   /**

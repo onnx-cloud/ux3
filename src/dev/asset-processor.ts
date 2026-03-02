@@ -8,8 +8,8 @@ import { HandlebarsLite } from '../hbs/index.js';
  * Supports the declarative 'site.assets' pattern and legacy 'site.cdn'.
  */
 export function processAssets(manifest: any, projectDir: string) {
-  let siteAssets = (manifest?.config as any)?.site?.assets || [];
-  const rawSite = (manifest?.config as any)?.site || { title: path.basename(projectDir) };
+  let siteAssets = (manifest?.config)?.site?.assets || [];
+  const rawSite = (manifest?.config)?.site || { title: path.basename(projectDir) };
 
   // Fallback: If manifest has NO assets but we're in a project, check ux3.yaml directly
   if (!siteAssets || siteAssets.length === 0) {
@@ -45,8 +45,8 @@ export function processAssets(manifest: any, projectDir: string) {
   }
 
   // runtime injection (bundle + styles + hydration) based on manifest/runtime
-  const runtime = (manifest as any)?.runtime;
-  const runtimeConfig = (manifest as any)?.config?.site?.runtime || {};
+  const runtime = (manifest)?.runtime;
+  const runtimeConfig = (manifest)?.config?.site?.runtime || {};
   // Trigger injection as soon as a bundleKey is declared in config; runtime.bundle
   // is optional (may not exist yet if bundler hasn't run).
   if (runtimeConfig?.bundleKey) {

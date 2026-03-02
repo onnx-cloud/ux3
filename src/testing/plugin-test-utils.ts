@@ -28,7 +28,7 @@ export function createTestApp(plugins: Plugin[] = []): AppContext {
         for (const phase of Object.keys(phases)) {
           const handlers = phases[phase] || [];
           handlers.forEach((h: any) => {
-            (ctx.hooks as any).on(phase, h);
+            (ctx.hooks).on(phase, h);
           });
         }
       }

@@ -350,7 +350,7 @@ export class DevServer {
                 templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
               }
               // Build nav config
-              const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
+              const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
               const nav = buildNavConfig(pathname, routes, i18n);
               
               // Final fallback to project-specific index view logic
@@ -446,7 +446,7 @@ export class DevServer {
                 }
 
                 // Render the template into layout, resolving layoutName/title similar to other index path
-                const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
+                const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
                 const nav = buildNavConfig(pathname, routes, i18n);
                 const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
 
@@ -504,7 +504,7 @@ export class DevServer {
 
         // Try to resolve as a configured route -> view
         try {
-          const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
+          const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
           const match = routes.find(r => this.pathMatches(r.path, pathname));
           if (match) {
             const viewName = match.view;
@@ -563,7 +563,7 @@ export class DevServer {
                 (item: any) => item.frontmatter.path === pathname || `/${item.slug}` === pathname
               ) ?? null;
 
-              const routeList: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
+              const routeList: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
               const nav = buildNavConfig(pathname, routeList, i18n);
               const templateCtx: Record<string, any> = {
                 manifest: this.manifest ?? {},
