@@ -10,6 +10,13 @@
 
 import type { AppContext } from './app.js';
 
+// window is augmented by context-builder in runtime
+declare global {
+  interface Window {
+    __ux3Inspector?: AppContext;
+  }
+}
+
 export default class InspectorWidget extends HTMLElement {
   private container: HTMLDivElement | null = null;
   private ctx: AppContext | null = null;
@@ -20,8 +27,8 @@ export default class InspectorWidget extends HTMLElement {
   }
 
   connectedCallback(): void {
-    // grab context from window
-    this.ctx = (window as any).__ux3Inspector;
+    // grab context from window (typed via declaration above)
+    this.ctx = window.__ux3Inspector || null;
     if (!this.ctx) return;
 
     const root = document.createElement('div');
@@ -64,21 +71,25 @@ export default class InspectorWidget extends HTMLElement {
   private update(): void {
     if (!this.container || !this.ctx) return;
     try {
-      const snapshot: any = {
+      type MachineInfo = { getState?: () => unknown; subscribe?: (cb: () => void) => void };
+      const snapshot: { machines: Record<string, unknown>; services: string[] } = {
         machines: {},
         services: Object.keys(this.ctx.services),
       };
+
       // machines may be stored as a Map or object
       const machinesObj:
-        | Record<string, any>
-        | Map<string, any> = this.ctx.machines;
+        | Record<string, MachineInfo>
+        | Map<string, MachineInfo> = this.ctx.machines;
 
-      const iterate = (entries: Iterable<[string, any]>) => {
+      const iterate = (entries: Iterable<[string, MachineInfo]>) => {
         for (const [name, machine] of entries) {
           try {
-            snapshot.machines[name] = (machine as any).getState
-              ? (machine as any).getState()
-              : 'unknown';
+            if (machine && typeof machine.getState === 'function') {
+              snapshot.machines[name] = machine.getState();
+            } else {
+              snapshot.machines[name] = 'unknown';
+            }
           } catch {
             snapshot.machines[name] = '<error>';
           }
@@ -92,8 +103,8 @@ export default class InspectorWidget extends HTMLElement {
       }
 
       this.container.textContent = JSON.stringify(snapshot, null, 2);
-    } catch (e) {
-      this.container.textContent = `inspector error: ${e}`;
+    } catch (err) {
+      this.container.textContent = `inspector error: ${String(err)}`;
     }
   }
 }

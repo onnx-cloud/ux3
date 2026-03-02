@@ -5,6 +5,14 @@
 
 import { StateMachine } from '../fsm/state-machine.js';
 import type { AppContext } from './app.js';
+
+// expose global for runtime
+declare global {
+  interface Window {
+    __ux3App?: AppContext;
+    __ux3Telemetry?: (event: string, data: unknown) => void;
+  }
+}
 import { stampTemplate } from './template-stamp.js';
 import { observeSlot, getAssignedElements } from './slot-utils.js';
 
@@ -26,8 +34,8 @@ export interface TemplateBindings {
  * - Templates (HTML for each FSM state)
  * - Bindings (event listeners, reactive updates, etc.)
  */
-export abstract class ViewComponent<Context extends Record<string, any> = any> extends HTMLElement {
-  protected app!: AppContext;
+export abstract class ViewComponent<Context extends Record<string, unknown> = Record<string, unknown>> extends HTMLElement {
+  protected app!: AppContext<Context>;
   protected fsm!: StateMachine<Context>;
   protected layout: string = '';
   protected currentState: string = '';
@@ -47,8 +55,8 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
    */
   connectedCallback(): void {
     try {
-      // 1. Get app context from window or parent
-      this.app = (window as any).__ux3App;
+      // 1. Get app context from window (typed above)
+      this.app = window.__ux3App as AppContext<Context>;
       if (!this.app) {
         throw new Error('AppContext not initialized. Call createAppContext first.');
       }
@@ -126,9 +134,12 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
     const fsmName = this.getAttribute('ux-fsm')!;
     const machine = this.app.machines[fsmName];
     // support both older and newer machine APIs
-    const fsmConfig = 'getMachineConfig' in machine
-      ? (machine as any).getMachineConfig()
-      : machine.getStateConfig(undefined);
+    type MaybeConfigArg = { getMachineConfig?: () => any; getStateConfig?: (arg?: unknown) => any };
+    const cfgMachine = machine as MaybeConfigArg;
+    const fsmConfig =
+      typeof cfgMachine.getMachineConfig === 'function'
+        ? cfgMachine.getMachineConfig()
+        : cfgMachine.getStateConfig?.(undefined);
 
     if (!fsmConfig.states) {
       console.warn(`[ViewComponent] FSM has no states: ${fsmName}`);
@@ -354,7 +365,7 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
   private extractPayload(
     element: HTMLElement,
     event: Event
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     if (element instanceof HTMLFormElement) {
       return Object.fromEntries(new FormData(element));
     }
@@ -401,9 +412,9 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
   /**
    * Emit telemetry event
    */
-  protected emitTelemetry(eventType: string, data: any): void {
-    if ((window as any).__ux3Telemetry) {
-      (window as any).__ux3Telemetry(eventType, data);
+  protected emitTelemetry(eventType: string, data: unknown): void {
+    if (window.__ux3Telemetry) {
+      window.__ux3Telemetry(eventType, data);
     }
   }
 
@@ -417,7 +428,7 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
   /**
    * Helper: send FSM event
    */
-  sendFSMEvent(action: string, payload?: any): void {
+  sendFSMEvent(action: string, payload?: unknown): void {
     this.fsm.send({ type: action, payload });
   }
 
@@ -426,7 +437,7 @@ export abstract class ViewComponent<Context extends Record<string, any> = any> e
    * @param slotName The name of the slot containing the template
    * @param data The data context for interpolation
    */
-  protected stampSlotTemplate(slotName: string, data: any): DocumentFragment | null {
+  protected stampSlotTemplate(slotName: string, data: unknown): DocumentFragment | null {
     const template = this.querySelector(`template[slot="${slotName}"]`) as HTMLTemplateElement;
     if (!template) {
       console.warn(`[ViewComponent] No template found for slot: ${slotName}`);

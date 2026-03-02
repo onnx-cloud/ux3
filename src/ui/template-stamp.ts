@@ -9,7 +9,7 @@ import { HandlebarsLite } from '../hbs/index.js';
 /**
  * Interface for simple template context
  */
-export type TemplateContext = Record<string, any>;
+export type TemplateContext = Record<string, unknown>;
 
 /**
  * Stamps an HTMLTemplateElement with the provided context
@@ -81,7 +81,7 @@ export function renderTemplateString(html: string, context: TemplateContext): st
  * Escapes HTML by default for security
  */
 function replaceInterpolations(text: string, context: TemplateContext): string {
-  return text.replace(/\{\{(?:this\.)?([\w\.]+)\}\}/g, (_, path) => {
+  return text.replace(/\{\{(?:this\.)?([\w\.]+)\}\}/g, (_match, path) => {
     const value = getPathValue(context, path);
     return value !== undefined ? escapeHtml(String(value)) : '';
   });
@@ -90,8 +90,11 @@ function replaceInterpolations(text: string, context: TemplateContext): string {
 /**
  * Helper to resolve dot-notated paths in context objects
  */
-function getPathValue(obj: any, path: string): any {
-  return path.split('.').reduce((prev, curr) => {
-    return prev && prev[curr] !== undefined ? prev[curr] : undefined;
+function getPathValue(obj: unknown, path: string): unknown {
+  return path.split('.').reduce((prev: unknown, curr: string) => {
+    if (prev && typeof prev === 'object' && curr in prev) {
+      return (prev as Record<string, unknown>)[curr];
+    }
+    return undefined;
   }, obj);
 }

@@ -3,7 +3,7 @@
  * Implements the navigation model from NAV.md
  */
 
-import type { StateMachine } from '../fsm/state-machine.js';
+import type { StateMachine } from '../fsm/state-machine.ts';
 
 export interface RouteConfig {
   path: string;

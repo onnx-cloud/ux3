@@ -29,6 +29,10 @@
       "@ux3/*": ["src/*", "packages/@ux3/*/src"]
     }
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+  ],
   "exclude": ["node_modules", "dist", ".ux3", "packages", "examples"]
 }

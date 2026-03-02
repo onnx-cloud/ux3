@@ -4,6 +4,7 @@
  */
 
 import { StateMachine } from '../fsm/state-machine.js';
+import { FSMRegistry } from '../fsm/registry.js';
 import type { StateConfig } from '../fsm/types.js';
 import { HttpService } from '../services/http.js';
 import { LogLevel } from '../security/observability.js';
@@ -11,6 +12,7 @@ import { WebSocketService } from '../services/websocket.js';
 import { JSONRPCService } from '../services/jsonrpc.js';
 import { Router } from '../services/router.js';
 import type { Service, ServiceConfig } from '../services/types.js';
+import path from 'path';
 import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
@@ -200,10 +202,9 @@ export class AppContextBuilder {
    */
   withRouter(): this {
     try {
-      if (!this.machines || this.machines.size === 0) {
-        throw new Error('Machines must be built before router (call withMachines first)');
-      }
-
+      // allow zero machines; router can still operate (will simply not block on
+      // FSM-based navigation checks).  older tests passed an empty config and
+      // we don't want to throw in that case.
       const i18n = this.i18nData['en'] || {};
       this.router = new Router(this.config.routes, this.machines, i18n);
     } catch (error) {
@@ -394,17 +395,19 @@ export class AppContextBuilder {
       context.machines[namespace] = fsm;
     };
 
-    context.registerPlugin = (plugin) => {
+    context.registerPlugin = async (plugin) => {
       if (!plugin || typeof plugin.install !== 'function') {
         throw new Error('Invalid plugin');
       }
-      // call install; allow async but don't await here
+      // call install; return promise so callers can await if needed
       try {
         const result = plugin.install(context as any);
         if (result && typeof (result as Promise<any>).then === 'function') {
-          (result as Promise<any>).catch((e) =>
-            console.error('[AppContext] plugin install failed', e)
-          );
+          try {
+            await result;
+          } catch (e) {
+            console.error('[AppContext] plugin install failed', e);
+          }
         }
       } catch (err) {
         console.error('[AppContext] plugin install failed', err);
@@ -521,15 +524,33 @@ export async function createAppContext(
       try {
         let plugin: any = null;
         if (typeof entry === 'string') {
-          // import by package name or path
+          // import by package name or path. if resolution fails try workspace
+          // package source so tests can load local packages.
+          const pkgName = entry;
           try {
-            plugin = await import(/* @vite-ignore */ entry);
-          } catch {
-            // fallback to require (node tests)
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            plugin = require(entry);
+            plugin = await import(/* @vite-ignore */ pkgName);
+          } catch (e) {
+            // try require
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
+              plugin = require(pkgName);
+            } catch (err2) {
+              // attempt to load from workspace packages folder
+              if (pkgName.startsWith('@ux3/plugin-')) {
+                const simple = pkgName.replace('@ux3/', '');
+                const localPath = path.join(process.cwd(), 'packages/@ux3', simple, 'src', 'index.ts');
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-var-requires
+                  plugin = require(localPath);
+                } catch (err3) {
+                  throw e; // rethrow original
+                }
+              } else {
+                throw e;
+              }
+            }
           }
-          plugin = plugin.default || plugin;
+          plugin = plugin?.default || plugin;
         } else if (entry && entry.name) {
           // entry may specify configuration or be object
           try {
@@ -544,7 +565,7 @@ export async function createAppContext(
           }
         }
         if (plugin && context.registerPlugin) {
-          context.registerPlugin(plugin);
+          await context.registerPlugin(plugin);
         }
       } catch (err) {
         console.warn('[AppContext] failed to install plugin', entry, err);

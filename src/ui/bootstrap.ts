@@ -42,7 +42,11 @@ export function createBootstrap(
     (window as any).initApp = initApp;
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
+      // the listener doesn't receive our hydration options; wrap so the
+      // signature matches the DOM API and drop any event argument.
+      document.addEventListener('DOMContentLoaded', () => {
+        initApp().catch((e) => console.error('[UX3]', e));
+      });
     } else {
       // if DOM already loaded (e.g. script tag placed at end) run immediately
       initApp().catch((e) => console.error('[UX3]', e));

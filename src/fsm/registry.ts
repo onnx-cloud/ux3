@@ -16,7 +16,7 @@
  * ```
  */
 
-import { StateMachine } from './state-machine.js';
+import { StateMachine } from './state-machine.ts';
 import type { StateEvent } from './types.js';
 
 export interface FSMRegistryConfig {

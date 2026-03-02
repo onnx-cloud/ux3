@@ -16,14 +16,14 @@ export interface AssetDescriptor {
   defer?: boolean;
 }
 
-export interface AppContext {
+export interface AppContext<C extends Record<string, unknown> = Record<string, unknown>> {
   styles: Record<string, string>; // normalized styles (named sets of classes)
-  machines: Record<string,StateMachine<any>>;  // running FSM instances 
+  machines: Record<string, StateMachine<C>>; // running FSM instances
   services: Record<string, Service>; // registered services (e.g., API clients)
-  widgets: WidgetFactory // widget factory
+  widgets: WidgetFactory; // widget factory
   ui: Record<string, Widget>; // global UI state
   template: (name: string) => string; // template registry function
-  i18n: (key: string, props?: Record<string,any>) => string; // i18n function
+  i18n: (key: string, props?: Record<string, unknown>) => string; // i18n function
   nav: NavConfig | null; // navigation config (routes, current path, canNavigate)
 
   // helpers for plugins or runtime code
@@ -32,7 +32,7 @@ export interface AppContext {
   registerComponent?: (name: string, factory: ComponentFactory) => void;
   registerView?: (name: string, template: string) => void;
   registerRoute?: (path: string, viewName: string) => void;
-  registerMachine?: (namespace: string, fsm: StateMachine<any>) => void;
+  registerMachine?: (namespace: string, fsm: StateMachine<C>) => void;
   /**
    * Convenience for programmatically installing another plugin at runtime.
    * The plugin's `install` method is invoked with this context.

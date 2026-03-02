@@ -37,7 +37,7 @@ describe('tailwind-plus plugin install', () => {
     const { createAppContext } = await import('../../src/ui/context-builder.js');
     const ctx: any = await createAppContext(cfg);
 
-    ctx.registerPlugin(plugin);
+    await ctx.registerPlugin(plugin);
 
     expect(ctx.machines.dropdown).toBeTruthy();
     expect(ctx.nav.routes.find((r:any)=>r.path==='/dropdown')).toBeTruthy();

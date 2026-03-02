@@ -62,13 +62,14 @@ export function clearStyles(): void {
  */
 export function applyStyles(root: Document | ShadowRoot | HTMLElement = document): void {
   try {
-    let container: Element | Document = root as any;
+    type Queryable = Document | Element | ShadowRoot;
+    let container: Queryable = root;
     // ShadowRoot does not inherit from Document but has querySelectorAll
-    if ((root as ShadowRoot).querySelectorAll) {
-      container = root as any;
+    if ('querySelectorAll' in root) {
+      container = root as Queryable;
     }
 
-    container.querySelectorAll('[data-style], [ux-style]').forEach((el) => {
+    (container as Queryable).querySelectorAll('[data-style], [ux-style]').forEach((el) => {
       const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
       const cls = styles[key];
       if (cls) {
@@ -89,12 +90,12 @@ let patched = false;
  */
 export function initStyleRegistry(): void {
   if (!patched) {
-    const orig = ViewComponent.prototype['mountLayout'];
-    ViewComponent.prototype['mountLayout'] = function (this: any) {
+    const orig = ViewComponent.prototype.mountLayout as () => void;
+    ViewComponent.prototype.mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
       try {
         if (this.shadowRoot) applyStyles(this.shadowRoot);
-        applyStyles(this as HTMLElement);
+        applyStyles(this);
       } catch (e) {
         console.warn('[UX3 style-registry] view style injection failed', e);
       }
