@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AppContextBuilder, type GeneratedConfig } from '@ux3/ui/context-builder';
 import { clearStyles, getRegisteredStyles } from '@ux3/ui/style-registry';
+import { FSMRegistry } from '@ux3/fsm/registry';
 
 describe('AppContextBuilder - Comprehensive Tests', () => {
   let config: GeneratedConfig;
@@ -142,6 +143,15 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       fsm.send({ type: 'SUBMIT' });
       expect(states).toContain('loading');
     });
+
+    it('BUG-3: should register FSMs in FSMRegistry so navigation can look them up', () => {
+      FSMRegistry.clear();
+      const builder = new AppContextBuilder(config);
+      builder.withMachines();
+
+      // After withMachines(), every machine must be in the global FSMRegistry
+      expect(FSMRegistry.get('loginFSM')).toBeDefined();
+    });
   });
 
   describe('withServices()', () => {
@@ -205,6 +215,28 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       expect(app.services['fileSvc']).toBeDefined();
       // underlying implementation should be HttpService
       expect(typeof app.services['fileSvc'].fetch).toBe('function');
+    });
+
+    it('BUG-4: should handle flat service spec (no nested config property)', () => {
+      // ConfigGenerator emits flat specs: { type, baseUrl, timeout } instead of
+      // { type, config: { baseUrl, timeout } }.  Both shapes must produce a service.
+      const flatConfig = {
+        ...config,
+        services: {
+          flatApi: {
+            type: 'http',
+            baseUrl: 'https://flat.example.com',
+            timeout: 3000,
+          },
+        },
+      } as any;
+
+      const builder = new AppContextBuilder(flatConfig);
+      builder.withServices();
+
+      const app = builder.build();
+      expect(app.services['flatApi']).toBeDefined();
+      expect(typeof app.services['flatApi'].fetch).toBe('function');
     });
   });
 

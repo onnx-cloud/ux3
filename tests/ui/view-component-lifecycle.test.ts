@@ -12,12 +12,19 @@ const mockApp = {
         idle: { on: { START: 'running' } },
         running: { on: { STOP: 'idle' } }
       }
-    } as any)
+    } as any),
+    // BUG-5: real app stores machines under the suffixed key '<name>FSM'
+    suffixedFSM: new StateMachine({
+      id: 'suffixed',
+      initial: 'idle',
+      states: { idle: {} }
+    } as any),
   },
   template: (name: string) => {
     if (name === 'default') return '<div id="layout"><div id="ux-content"></div></div>';
     if (name === 'test-idle') return '<div id="idle-content"><button ux-event="START">Start</button></div>';
     if (name === 'test-running') return '<div id="running-content"><button ux-event="STOP">Stop</button></div>';
+    if (name === 'suffixed-idle') return '<div id="suffixed-idle"></div>';
     return '';
   }
 };
@@ -38,6 +45,42 @@ class TestView extends ViewComponent {
 
 if (!customElements.get('ux-test')) {
   customElements.define('ux-test', TestView);
+}
+
+// BUG-5: a view whose ux-fsm attribute is 'suffixed' should fall back to 'suffixedFSM'
+class SuffixedView extends ViewComponent {
+  constructor() {
+    super();
+  }
+  // @ts-ignore
+  protected setupEventListeners() {}
+  // @ts-ignore
+  protected setupReactiveEffects() {}
+  // @ts-ignore
+  protected removeEventListeners() {}
+}
+
+if (!customElements.get('ux-suffixed')) {
+  customElements.define('ux-suffixed', SuffixedView);
+}
+
+// BUG-7: a subclass that pre-populates templates should not have them overwritten
+class PreloadedView extends ViewComponent {
+  constructor() {
+    super();
+    // pre-populate before connectedCallback
+    this['templates'] = new Map([['idle', '<div id="preloaded">preloaded</div>']]);
+  }
+  // @ts-ignore
+  protected setupEventListeners() {}
+  // @ts-ignore
+  protected setupReactiveEffects() {}
+  // @ts-ignore
+  protected removeEventListeners() {}
+}
+
+if (!customElements.get('ux-preloaded')) {
+  customElements.define('ux-preloaded', PreloadedView);
 }
 
 describe('ViewComponent - Lifecycle and Rendering', () => {
@@ -80,5 +123,29 @@ describe('ViewComponent - Lifecycle and Rendering', () => {
     
     document.body.removeChild(el);
     expect(el['unsubscribe']).toBeNull();
+  });
+
+  it('BUG-5: should find FSM by "nameFSM" suffix when bare name is absent', () => {
+    // machines['suffixed'] does not exist; machines['suffixedFSM'] does.
+    const suffixedEl = document.createElement('ux-suffixed') as SuffixedView;
+    suffixedEl.setAttribute('ux-fsm', 'suffixed');
+    suffixedEl.setAttribute('ux-view', 'suffixed');
+    suffixedEl.setAttribute('ux-layout', 'default');
+
+    // Should mount without throwing even though machines['suffixed'] is undefined
+    expect(() => document.body.appendChild(suffixedEl)).not.toThrow();
+    expect(suffixedEl['fsm']).toBeDefined();
+  });
+
+  it('BUG-7: pre-populated templates must NOT be overwritten by loadTemplates()', () => {
+    const preEl = document.createElement('ux-preloaded') as PreloadedView;
+    preEl.setAttribute('ux-fsm', 'test');
+    preEl.setAttribute('ux-view', 'test');
+    preEl.setAttribute('ux-layout', 'default');
+    document.body.appendChild(preEl);
+
+    // The 'idle' template should still be the pre-loaded one
+    const tpls = preEl['templates'] as Map<string, string>;
+    expect(tpls.get('idle')).toContain('preloaded');
   });
 });
