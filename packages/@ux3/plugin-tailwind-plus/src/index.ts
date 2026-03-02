@@ -1,13 +1,21 @@
 import type { Plugin } from '../../../src/plugin/registry';
 import type { AssetDescriptor } from '../../../src/ui/app';
-// StateMachine and FSMRegistry are imported lazily inside helpers
+// StateMachine is imported lazily to avoid resolution errors in non-bundled contexts.
+// We use a dynamic require that targets the compiled JS output rather than .ts source.
+
+function requireStateMachine(): any {
+  // Try the compiled JS path first; fall back to the TypeScript source for
+  // environments that transpile on-the-fly (e.g. ts-node / tsx).
+  try {
+    return require('../../../../src/fsm/state-machine.js');
+  } catch {
+    return require('../../../../src/fsm/state-machine');
+  }
+}
 
 // simple UI widget demonstrating FSM-driven dropdown
 export function createDropdownFSM(): any {
-  // lazy import to avoid module resolution errors during simple require()
-  // caller should await or handle returned promise if run asynchronously
-  // but our tests only call this in install() which can handle synchronous
-  const { StateMachine } = require('../../../../src/fsm/state-machine.ts');
+  const { StateMachine } = requireStateMachine();
   return new StateMachine({
     id: 'dropdown',
     initial: 'closed',
@@ -36,7 +44,7 @@ const dropdownTemplate = `<div class="p-2 border" ux-state="dropdown">
 // second example: modal dialog FSM & view
 type ModalCtx = { visible: boolean };
 export function createModalFSM(): any {
-  const { StateMachine } = require('../../../../src/fsm/state-machine.ts');
+  const { StateMachine } = requireStateMachine();
   return new StateMachine({
     id: 'modal',
     initial: 'hidden',
@@ -78,7 +86,12 @@ export const TailwindPlusPlugin: Plugin = {
 
     // dynamic import only StateMachine (registry not needed here since
     // we can use the helper provided by the app context)
-    const { StateMachine } = await import('../../../../src/fsm/state-machine.ts');
+    let StateMachine: any;
+    try {
+      ({ StateMachine } = await import('../../../../src/fsm/state-machine.js'));
+    } catch {
+      ({ StateMachine } = await import('../../../../src/fsm/state-machine'));
+    }
 
     // create dropdown FSM
     const fsm = new StateMachine({

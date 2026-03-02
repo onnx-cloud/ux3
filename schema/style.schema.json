@@ -1,20 +1,37 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Style schema",
+  "title": "Style composition schema",
   "type": "object",
-  "description": "Simple schema for ux/style files: style names map to either a string alias or an object of properties.",
+  "description": "Style names map to either a raw class string or a composition object with base/variants/props/defaults.",
   "patternProperties": {
-    "^.*$": {
-      "anyOf": [
-        { "type": "string" },
+    "^[a-z][a-z0-9._-]*$": {
+      "oneOf": [
+        { "type": "string", "description": "Alias to another key or raw class string" },
         {
           "type": "object",
           "properties": {
-            "class": { "type": "string" },
-            "tokens": { "type": "array", "items": { "type": "string" } },
-            "variants": { "type": "object" }
+            "base": { "type": "string", "description": "Default class string applied unconditionally" },
+            "props": {
+              "type": "object",
+              "description": "Descriptive prop metadata (not class strings)",
+              "additionalProperties": { "type": "string" }
+            },
+            "variants": {
+              "type": "object",
+              "description": "Named variant groups → value → class string",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              }
+            },
+            "defaults": {
+              "type": "object",
+              "description": "Default variant selections",
+              "additionalProperties": { "type": "string" }
+            }
           },
-          "additionalProperties": true
+          "required": ["base"],
+          "additionalProperties": false
         }
       ]
     }

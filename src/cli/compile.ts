@@ -7,10 +7,12 @@
  */
 
 import * as fs from 'fs/promises';
+import * as fss from 'fs';
 import * as path from 'path';
 import { Command } from 'commander';
 import YAML from 'yaml';
 import { compileAllViews } from '../build/view-compiler.js';
+import { mergeStyles } from '../build/style-utils.js';
 
 interface CompilerConfig {
   views: string;
@@ -64,34 +66,18 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
     }
   }
 
-  // TODO: Compile FSM configs
   // Compile styles if a path was provided
   if (config.styles) {
     const stylesDir = path.resolve(config.styles);
     const stylesMap: Record<string,string> = {};
-    const mergeStyles = (obj: any, prefix = '') => {
-      for (const key of Object.keys(obj)) {
-        if (key === 'base') continue;
-        const val = obj[key];
-        const name = prefix ? `${prefix}.${key}` : key;
-        if (typeof val === 'string') {
-          stylesMap[name] = val;
-        } else if (val && typeof val === 'object') {
-          if (typeof val.base === 'string') {
-            stylesMap[name] = val.base;
-          }
-          mergeStyles(val, name);
-        }
-      }
-    };
     const walk = (dir: string) => {
-      if (!fs.existsSync(dir)) return;
-      for (const entry of fs.readdirSync(dir)) {
+      if (!fss.existsSync(dir)) return;
+      for (const entry of fss.readdirSync(dir)) {
         const full = path.join(dir, entry);
-        if (fs.statSync(full).isDirectory()) walk(full);
+        if (fss.statSync(full).isDirectory()) walk(full);
         else if (full.endsWith('.yaml') || full.endsWith('.yml')) {
-          const cfg = YAML.parse(fs.readFileSync(full, 'utf-8')) || {};
-          mergeStyles(cfg);
+          const cfg = YAML.parse(fss.readFileSync(full, 'utf-8')) || {};
+          mergeStyles(stylesMap, cfg);
         }
       }
     };

@@ -39,6 +39,12 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
    */
   registerPlugin?: (plugin: import('../plugin/registry').Plugin) => void;
 
+  /** Structured logger attached by SpaCore or available to plugins. */
+  logger?: import('../logger/logger.js').StructuredLogger;
+
+  /** Arbitrary utils namespace used by plugins (e.g. tailwind-plus). */
+  utils?: Record<string, Function>;
+
   // full generated configuration (useful for plugins)
   config?: any;
 }

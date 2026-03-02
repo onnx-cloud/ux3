@@ -21,6 +21,12 @@ export interface DirectiveFactory {
 export interface Plugin {
   name: string;                          // Unique identifier
   version: string;                       // Semantic version
+  /** Human-readable description for CLI and inspector */
+  description?: string;
+  /** Semver range of @ux3/ux3 this plugin supports */
+  ux3PeerVersion?: string;
+  /** Names of other plugins that must be registered first */
+  dependencies?: string[];
   install?(app: AppContext): void | Promise<void>;
   uninstall?(app: AppContext): void | Promise<void>;
   hooks?: PluginHooks;
@@ -33,9 +39,25 @@ export interface Plugin {
 export class PluginRegistry {
   private plugins = new Map<string, Plugin>();
 
-  register(plugin: Plugin): void {
-    if (this.plugins.has(plugin.name)) {
+  /**
+   * Register a plugin.
+   * @param plugin  The plugin to register.
+   * @param force   When true, allow overwriting an already-registered plugin
+   *                (useful for hot-reload in dev mode).
+   */
+  register(plugin: Plugin, force = false): void {
+    if (this.plugins.has(plugin.name) && !force) {
       throw new Error(`plugin already registered: ${plugin.name}`);
+    }
+    // verify declared dependencies are already registered
+    if (plugin.dependencies) {
+      for (const dep of plugin.dependencies) {
+        if (!this.plugins.has(dep)) {
+          throw new Error(
+            `plugin '${plugin.name}' requires '${dep}' to be registered first`
+          );
+        }
+      }
     }
     this.plugins.set(plugin.name, plugin);
   }

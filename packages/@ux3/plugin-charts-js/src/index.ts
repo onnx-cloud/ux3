@@ -24,19 +24,13 @@ export const ChartsJsPlugin: Plugin = {
       };
     });
 
-    // register a simple demo view/route showing how to use the service
+    // register a simple demo view/route showing how to use the service.
+    // Inline <script> tags are forbidden by the framework's CSP policy; wire
+    // chart initialisation via ux-event instead.
     const chartTemplate = `<div class="p-4">
   <h2>Chart demo</h2>
-  <div id="chart"></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const app = (window as any).__ux3App;
-      if (app?.services?.chart) {
-        app.services.chart.create(document.getElementById('chart'))
-          .catch(console.error);
-      }
-    });
-  </script>
+  <div id="chart" ux-event="INIT_CHART"></div>
+  <button ux-event="INIT_CHART" class="px-4 py-2 bg-blue-500 text-white rounded">Render chart</button>
 </div>`;
     app.registerView('chart-demo', chartTemplate);
     app.registerRoute('/charts', 'chart-demo');

@@ -9,6 +9,8 @@ import { compileCommand } from './compile.js';
 import { configCommand } from './commands/config.js';
 import { previewCommand } from './commands/preview.js';
 import { contentCommand } from './commands/content.js';
+import { pluginCommand } from './commands/plugin.js';
+import { styleCommand } from './commands/style.js';
 
 const version = '0.1.0';
 
@@ -22,6 +24,8 @@ program.addCommand(compileCommand);
 program.addCommand(configCommand);
 program.addCommand(previewCommand);
 program.addCommand(contentCommand);
+program.addCommand(pluginCommand);
+program.addCommand(styleCommand);
 
 program.parse(process.argv);
 

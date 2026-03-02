@@ -16,8 +16,18 @@ import { ViewComponent } from './view-component.js';
 
 export type StyleMap = Record<string, string>;
 
+// Structured style object (full form with base/variants/props/defaults)
+export interface StyleEntry {
+  base?: string;
+  variants?: Record<string, Record<string, string>>;
+  props?: Record<string, string>;
+  defaults?: Record<string, string>;
+}
+
 // internal registry store
 const styles: StyleMap = {};
+// full style objects (including variant metadata)
+const styleObjects: Record<string, StyleEntry | string> = {};
 
 // exported for read/write in tests or helpers
 export function getRegisteredStyles(): StyleMap {
@@ -33,20 +43,74 @@ export function registerStyles(newStyles: StyleMap): void {
 }
 
 /**
+ * Register full style objects (including variant metadata).
+ */
+export function registerStyleObjects(entries: Record<string, StyleEntry | string>): void {
+  Object.assign(styleObjects, entries);
+}
+
+/**
  * Clear the registry (useful for tests).
  */
 export function clearStyles(): void {
   for (const k of Object.keys(styles)) {
     delete styles[k];
   }
+  for (const k of Object.keys(styleObjects)) {
+    delete styleObjects[k];
+  }
+}
+
+/**
+ * Resolve a style key to a final class string, optionally merging variants.
+ *
+ * Example:
+ *   resolveStyle('button', { variant: 'primary', size: 'md' })
+ *   → 'btn btn-primary btn-md'
+ *
+ * @param key        The style key registered in the style map.
+ * @param variants   Optional variant selections (e.g. { variant: 'primary' }).
+ * @returns          The merged class string, or empty string when key is unknown.
+ */
+export function resolveStyle(key: string, variants?: Record<string, string>): string {
+  const entry = styleObjects[key];
+  if (!entry) {
+    // fall back to flat registry
+    return styles[key] || '';
+  }
+
+  if (typeof entry === 'string') {
+    return entry;
+  }
+
+  const parts: string[] = [];
+  if (entry.base) parts.push(entry.base);
+
+  if (variants && entry.variants) {
+    for (const [groupName, value] of Object.entries(variants)) {
+      const group = entry.variants[groupName];
+      if (group) {
+        const cls = group[value];
+        if (cls) parts.push(cls);
+      }
+    }
+  } else if (!variants && entry.defaults && entry.variants) {
+    // apply defaults when no explicit variants given
+    for (const [groupName, defaultValue] of Object.entries(entry.defaults)) {
+      const group = entry.variants[groupName];
+      if (group && group[defaultValue]) parts.push(group[defaultValue]);
+    }
+  }
+
+  return parts.filter(Boolean).join(' ');
 }
 
 /**
  * Apply styles to all elements under the given root.  Looks for
  * `[data-style]` or `[ux-style]` attributes and sets `className` according to
- * the registry.  If a key is missing in the registry the element is left
- * untouched (the build step should_warn earlier).  Accepts Document,
- * ShadowRoot or HTMLElement.
+ * the registry.  Existing classes are preserved (merged).  If a key is missing
+ * in the registry a warning is emitted via the logger/console.  Accepts
+ * Document, ShadowRoot or HTMLElement.
  */
 export function applyStyles(root: Document | ShadowRoot | HTMLElement = document): void {
   try {
@@ -59,9 +123,17 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
 
     (container as Queryable).querySelectorAll('[data-style], [ux-style]').forEach((el) => {
       const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
-      const cls = styles[key];
+      const cls = resolveStyle(key);
       if (cls) {
-        (el as HTMLElement).className = cls;
+        const el2 = el as HTMLElement;
+        // P0-1: merge with existing classes rather than overwriting
+        const existing = el2.className.split(/\s+/).filter(Boolean);
+        const incoming = cls.split(/\s+/).filter(Boolean);
+        const merged = Array.from(new Set([...existing, ...incoming]));
+        el2.className = merged.join(' ');
+      } else {
+        // P3-2: warn on unknown key so developers notice missing style registrations
+        console.warn(`[UX3 style-registry] unknown ux-style key: '${key}'`);
       }
     });
   } catch (e) {
@@ -70,6 +142,8 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
 }
 
 let patched = false;
+// P0-2: separate flag so the DOMContentLoaded listener is only added once
+let domListenerAdded = false;
 
 /**
  * Patches ViewComponent.prototype.mountLayout so that styles are applied
@@ -93,9 +167,11 @@ export function initStyleRegistry(): void {
     patched = true;
   }
 
-  if (typeof document !== 'undefined') {
+  // P0-2: guard the DOMContentLoaded listener with its own flag
+  if (!domListenerAdded && typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
       applyStyles(document.body);
     });
+    domListenerAdded = true;
   }
 }
