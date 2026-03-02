@@ -9,7 +9,7 @@ states:
       method: fetch
       input: '/news/today'   # dev server serves public/api/news/today.json
     on:
-      LOADED: loaded
+      SUCCESS: loaded   # service.fetch returns SUCCESS event on success
       ERROR: error
   loaded:
     template: 'news/loaded.html'

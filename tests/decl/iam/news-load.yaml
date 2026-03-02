@@ -2,7 +2,7 @@ name: News load
 steps:
   - type: event
     machine: newsFSM
-    name: LOADED
+    name: SUCCESS
     payload:
       - id: 1
         title: "Headline"

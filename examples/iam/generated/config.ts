@@ -393,7 +393,7 @@ export const config = {
       "states": {
         "loading": {
           "on": {
-            "LOADED": "loaded",
+            "SUCCESS": "loaded",
             "ERROR": "error"
           }
         },
