@@ -4,17 +4,37 @@
   "description": "Schema for YAML frontmatter in Markdown files used by the content generator.",
   "type": "object",
   "properties": {
-    "title": { "type": "string" },
-    "date": { "type": "string", "format": "date-time" },
+    "title":       { "type": "string" },
+    "slug":        { "type": "string" },
+    "path":        { "type": "string" },
+    "route":       { "type": "string" },
+    "template":    { "type": "string" },
+    "layout":      { "type": "string" },
+    "date": {
+      "type": "string",
+      "oneOf": [
+        { "format": "date" },
+        { "format": "date-time" }
+      ]
+    },
     "tags": {
       "type": "array",
       "items": { "type": "string" }
     },
-    "path": { "type": "string" },
-    "route": { "type": "string" },
-    "slug": { "type": "string" },
-    "template": { "type": "string" },
-    "layout": { "type": "string" }
+    "author":      { "type": "string" },
+    "description": { "type": "string" },
+    "summary":     { "type": "string" },
+    "needs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "draft":  { "type": "boolean" },
+    "order":  { "type": "integer" },
+    "parent": { "type": "string" }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

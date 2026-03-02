@@ -120,7 +120,6 @@
     "esbuild": "^0.27.3",
     "gray-matter": "^4.0.3",
     "marked": "^5.1.1",
-    "@types/gray-matter": "^4.0.3",
     "@types/marked": "^5.0.0",
     "eslint": "^8.54.0",
     "fs-extra": "^11.3.3",

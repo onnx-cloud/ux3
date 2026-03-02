@@ -3,7 +3,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { runCommand } from './commands.test.js';
+import { runCommand } from './utils.js';
 
 // We'll create a minimal project and invoke `ux3 content` via Node CLI
 
@@ -23,7 +23,7 @@ describe('ux3 content CLI', () => {
     await fs.writeFile(contentDir + '/foo.md', '---\ntitle: Foo\nslug: foo\n---\nhello');
 
     const cli = path.resolve('src/cli/cli.ts');
-    const result = await runCommand(`node ${cli} content --project ${tmpDir}`);
+    const result = await runCommand(`npx tsx ${cli} content --project ${tmpDir}`);
     expect(result.code).toBe(0);
     const manifest = path.join(tmpDir, 'generated', 'content-manifest.json');
     expect(await fs.pathExists(manifest)).toBe(true);
