@@ -1,3 +1,23 @@
 <div ux-state="market.loaded">
   <div ux-style="widget">{{i18n.market.loaded.label}}</div>
+  <!-- table of data -->
+  <table>
+    <tr><th>Time</th><th>Price</th></tr>
+    <tr ux-each="{{ctx.table}}">
+      <td>{{this.time}}</td>
+      <td>{{this.price}}</td>
+    </tr>
+  </table>
+  <!-- chart placeholder -->
+  <canvas id="market-chart"></canvas>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const app = (window as any).__ux3App;
+      if (app?.services?.chart) {
+        app.services.chart.create(document.getElementById('market-chart'), {
+          data: {{JSON.stringify(ctx.series)}}
+        }).catch(console.error);
+      }
+    });
+  </script>
 </div>

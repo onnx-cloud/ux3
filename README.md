@@ -2,7 +2,9 @@
 
 UX3 is a tiny, zero‑dependency single‑page application framework designed for developers who value clarity, speed, and maintainability. 
 
-It brings a configuration‑first approach to UI development, enabling you to declare the structure of your app in YAML and HTML while the framework handles the wiring, state management, and type safety.
+At its core is a **configuration‑first philosophy**: you describe views, styles, validation rules, and even application logic in YAML/JSON rather than writing imperative code. The compiler does the heavy lifting, generating strongly‑typed components, validators and build artifacts so that most of your work happens before the browser even runs. 
+
+It allows you to declare the structure of your app in YAML and HTML while the framework handles the wiring, state management, and type safety, keeping the surface area of handwritten JavaScript/TypeScript to an absolute minimum.
 
 Whether you’re building an internal dashboard, a customer portal, or a full‑fledged public web app, UX3 gives you the tools to stay productive without sacrificing control. 
 
@@ -68,6 +70,20 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
    ```
 
 5. **Run tests** – Use `npm run test` for unit tests and `npm run test:e2e` for Playwright tests.
+
+---
+
+### ⚙️ CLI Command Reference
+
+The `ux3` CLI drives the core workflow. Run it via `npx ux3` or add it to your `package.json` scripts.
+
+* `ux3 build` – full pipeline (validate → compile → emit code). Equivalent to `npm run build`.
+* `ux3 compile` – compile sources only. Useful during development: `npx ux3 compile --views ./ux/view --output ./src/generated`.
+* `ux3 validate` – run the schema/logic validator without generating code.
+
+Each command accepts a `--config` flag pointing at a `ux3.config.json` file, or you can supply paths individually (`--views`, `--output`, etc.).
+
+> See the [documentation](docs/compilation.md#cli-commands) for complete options and examples.
 
 ---
 

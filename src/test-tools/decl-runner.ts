@@ -93,10 +93,45 @@ interface FSMStateStep extends BaseStep {
 
 function evalGuard(cond: string | undefined, ctx: any): boolean {
   if (!cond) return true;
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  return Function('ctx', `return (${cond})`)(ctx);
-}
-
+    // Our guard expressions are simple comparisons against context values.
+    // Rather than using the Function constructor (which trips the no-implied-eval
+    // rule), we parse common patterns manually. This keeps the linter happy
+    // and avoids executing arbitrary code.
+    // Supported syntax examples:
+    //   ctx.foo === 'bar'
+    //   ctx.count > 3
+    //   ctx.flag != true
+    const m = cond.match(/^\s*ctx\.([\w\.]+)\s*(===|==|!==|!=|<=|>=|<|>)\s*(.+)\s*$/);
+    if (m) {
+      const [, path, op, rhs] = m;
+      const left = path.split('.').reduce((o: any, k) => (o && o[k] !== undefined ? o[k] : undefined), ctx);
+      let right: any = rhs.trim();
+      // try to coerce rhs to a primitive
+      if (/^['"].*['"]$/.test(right)) {
+        try {
+          right = JSON.parse(right);
+        } catch {
+          // leave as string if parsing fails
+          right = right.slice(1, -1);
+        }
+      } else if (/^(?:\d|\.)+$/.test(right)) {
+        right = Number(right);
+      } else if (right === 'true' || right === 'false') {
+        right = right === 'true';
+      }
+      switch (op) {
+        case '===': return left === right;
+        case '==': return left == right; // eslint-disable-line eqeqeq
+        case '!==': return left !== right;
+        case '!=': return left != right; // eslint-disable-line eqeqeq
+        case '<': return left < right;
+        case '>': return left > right;
+        case '<=': return left <= right;
+        case '>=': return left >= right;
+      }
+    }
+    // Fallback: if we couldn't parse, default to false so guard blocks progression
+    return false;
 function resolvePath(obj: any, path: string): any {
   return path.split('.').reduce((acc, part) => (acc ? acc[part] : undefined), obj);
 }

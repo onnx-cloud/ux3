@@ -4,6 +4,8 @@ initial: loading
 states:
   loading:
     template: 'view/news/loading.html'
+    invoke:
+      src: loadNewsData
     on:
       LOADED: loaded
       ERROR: error

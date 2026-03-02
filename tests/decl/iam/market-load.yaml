@@ -1,0 +1,15 @@
+name: Market load
+steps:
+  - type: event
+    machine: marketFSM
+    name: SUCCESS
+    payload:
+      series:
+        - time: '09:30'
+          price: 150
+      table:
+        - time: '09:30'
+          price: 150
+  - type: fsmState
+    machine: marketFSM
+    equals: loaded
