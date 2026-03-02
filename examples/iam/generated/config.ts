@@ -1027,7 +1027,7 @@ export const config = {
       "error": "<div ux-state=\"for-you.error\">\n  <div ux-style=\"alert\">{{i18n.for-you.error.label}}</div>\n</div>\n"
     },
     "index": {
-      "index": "<div ux-state=\"home.loaded\">\n  <div ux-style=\"widget\" >{{i18n.home.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n</div>\n"
+      "index": "<div ux-state=\"home.loaded\">\n  <div ux-style=\"widget\" >{{i18n.home.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/dropdown\" ux-event=\"NAVIGATE\">Dropdown demo</a>\n  </div>\n</div>\n"
     },
     "login": {
       "idle": "<div ux-state=\"login.idle\">\n  <div ux-style=\"widget\">{{i18n.login.idle.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"SUBMIT\">{{i18n.actions.SUBMIT}}</button>\n  </div>\n</div>\n",

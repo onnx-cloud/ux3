@@ -33,6 +33,11 @@ export interface AppContext {
   registerView?: (name: string, template: string) => void;
   registerRoute?: (path: string, viewName: string) => void;
   registerMachine?: (namespace: string, fsm: StateMachine<any>) => void;
+  /**
+   * Convenience for programmatically installing another plugin at runtime.
+   * The plugin's `install` method is invoked with this context.
+   */
+  registerPlugin?: (plugin: import('../plugin/registry').Plugin) => void;
 }
 
 export interface AppContextLoader {

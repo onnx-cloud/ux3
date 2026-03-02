@@ -4,6 +4,9 @@ domain: 'investamerica.money'
 site:
   title: "Invest America"
   decription: "Your gateway to smart investments."
+plugins:
+  - '@ux3/plugin-tailwind-plus'
+
 secrets:
   LLM_API_KEY: "{{ env.GROQ_API_KEY }}"
 development:

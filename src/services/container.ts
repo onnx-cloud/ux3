@@ -94,7 +94,7 @@ export class ServiceContainer {
     options: ServiceCallOptions = {}
   ): Promise<ServiceCallResult<T>> {
     const startTime = Date.now();
-    let retryCount = 0;
+    const retryCount = 0; // not mutated at present
     const result: ServiceCallResult<T> = {
       success: false,
       metadata: {

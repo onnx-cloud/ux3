@@ -30,6 +30,32 @@ const dropdownTemplate = `<div class="p-2 border" ux-state="dropdown">
   {{/if}}
 </div>`;
 
+// second example: modal dialog FSM & view
+type ModalCtx = { visible: boolean };
+export function createModalFSM(): StateMachine<ModalCtx> {
+  return new StateMachine({
+    id: 'modal',
+    initial: 'hidden',
+    context: { visible: false },
+    states: {
+      hidden: { on: { SHOW: 'visible' } },
+      visible: {
+        on: { HIDE: 'hidden' },
+        entry: [(ctx) => (ctx.visible = true)],
+        exit: [(ctx) => (ctx.visible = false)]
+      }
+    }
+  });
+}
+
+const modalTemplate = `<div ux-state="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+  {{#if context.visible}}
+    <div class="bg-white p-4 rounded shadow">
+      <p>This is a modal. <button ux-on="click:HIDE" class="text-red-500">Close</button></p>
+    </div>
+  {{/if}}
+</div>`;
+
 export const TailwindPlusPlugin: Plugin = {
   name: '@ux3/plugin-tailwind-plus',
   version: '0.1.0',
@@ -52,6 +78,12 @@ export const TailwindPlusPlugin: Plugin = {
 
     app.registerView('dropdown-demo', dropdownTemplate);
     app.registerRoute('/dropdown', 'dropdown-demo');
+
+    // modal example
+    const modalFsm = createModalFSM();
+    FSMRegistry.register('modal', modalFsm);
+    app.registerView('modal-demo', modalTemplate);
+    app.registerRoute('/modal', 'modal-demo');
 
     // also register a widget for convenience
     app.registerComponent('dropdown-button', () => import('./widget/dropdown-button.js'));

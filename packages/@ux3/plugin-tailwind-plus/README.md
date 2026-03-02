@@ -18,6 +18,9 @@ using core framework features inside a plugin.
     `app.registerRoute`.
   * Supplies a simple `DropdownButton` widget in `src/widget` which interacts
     with the FSM (toggle open/closed).
+  * Also includes a `modal` FSM/view which mounts a full‑screen overlay on
+    `/modal` – demonstrates a second, independent UI block using the same
+    APIs.
 
 ### Declarative vs programmatic
 

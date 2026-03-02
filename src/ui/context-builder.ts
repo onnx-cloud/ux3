@@ -393,6 +393,23 @@ export class AppContextBuilder {
       context.machines[namespace] = fsm;
     };
 
+    context.registerPlugin = (plugin) => {
+      if (!plugin || typeof plugin.install !== 'function') {
+        throw new Error('Invalid plugin');
+      }
+      // call install; allow async but don't await here
+      try {
+        const result = plugin.install(context as any);
+        if (result && typeof (result as Promise<any>).then === 'function') {
+          (result as Promise<any>).catch((e) =>
+            console.error('[AppContext] plugin install failed', e)
+          );
+        }
+      } catch (err) {
+        console.error('[AppContext] plugin install failed', err);
+      }
+    };
+
     // keep a global style registry in sync so that runtime class injection works
     registerStyles(context.styles || {});
     initStyleRegistry();

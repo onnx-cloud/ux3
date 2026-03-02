@@ -108,4 +108,13 @@ describe('AppContext helper methods', () => {
     ctx.registerRoute('/foo', 'foo');
     expect(ctx.nav.routes.find((r:any)=>r.path==='/foo')).toBeTruthy();
   });
+
+  it('registerPlugin invokes install method on provided plugin', async () => {
+    const cfg: any = { ...baseConfig };
+    const ctx: any = await createAppContext(cfg);
+    let called = false;
+    const plg = { install(app: any) { called = !!app; } } as any;
+    ctx.registerPlugin!(plg);
+    expect(called).toBe(true);
+  });
 });
