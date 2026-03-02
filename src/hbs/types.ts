@@ -21,7 +21,7 @@ export type BlockHelperFunction = (
   context: unknown,
   options: { fn: (ctx?: unknown) => string | Promise<string>; inverse?: (ctx?: unknown) => string | Promise<string> },
   ...args: unknown[]
-) => unknown | Promise<unknown>;
+) => unknown;
 
 /**
  * HBS options

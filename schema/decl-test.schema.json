@@ -4,6 +4,10 @@
   "type": "object",
   "properties": {
     "name": { "type": "string" },
+    "macros": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/step" }
+    },
     "steps": {
       "type": "array",
       "minItems": 1,
@@ -26,7 +30,9 @@
         { "$ref": "#/definitions/waitStep" },
         { "$ref": "#/definitions/assertStep" },
         { "$ref": "#/definitions/assertStateStep" },
-        { "$ref": "#/definitions/fsmStateStep" }
+        { "$ref": "#/definitions/fsmStateStep" },
+        { "$ref": "#/definitions/macroStep" },
+        { "$ref": "#/definitions/fixtureStep" }
       ]
     },
     "eventStep": {
@@ -107,6 +113,27 @@
           }
         },
         "required": ["equals"]
+      }
+    },
+    "macroStep": {
+      "if": { "properties": { "type": { "const": "macro" } } },
+      "then": {
+        "properties": {
+          "type": { "const": "macro" },
+          "name": { "type": "string" }
+        },
+        "required": ["name"]
+      }
+    },
+    "fixtureStep": {
+      "if": { "properties": { "type": { "const": "fixture" } } },
+      "then": {
+        "properties": {
+          "type": { "const": "fixture" },
+          "module": { "type": "string" },
+          "function": { "type": "string" }
+        },
+        "required": ["module"]
       }
     }
   }

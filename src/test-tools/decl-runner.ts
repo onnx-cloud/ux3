@@ -26,7 +26,21 @@ type Step =
   | WaitStep
   | AssertStep
   | AssertStateStep
-  | FSMStateStep;
+  | FSMStateStep
+  | MacroStep
+  | FixtureStep;
+
+interface MacroStep extends BaseStep {
+  type: 'macro';
+  name: string;
+}
+
+interface FixtureStep extends BaseStep {
+  type: 'fixture';
+  module: string;
+  function?: string;
+  args?: any;
+}
 
 interface BaseStep {
   type: string;
@@ -79,7 +93,7 @@ interface FSMStateStep extends BaseStep {
 
 function evalGuard(cond: string | undefined, ctx: any): boolean {
   if (!cond) return true;
-  /* eslint-disable no-new-func */
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
   return Function('ctx', `return (${cond})`)(ctx);
 }
 
@@ -91,17 +105,46 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
   const raw = fs.readFileSync(filePath, 'utf8');
   const scenario = parse(raw) as Scenario;
   const page = options.page;
+  const baseDir = require('path').dirname(filePath);
 
   const primaryMachine = () => {
     const all = Array.from(FSMRegistry.getAll().values());
     return all.length ? all[0] : null;
   };
-  
-  for (const step of scenario.steps) {
-    // skip if guard fails
-    if (!evalGuard(step.when, primaryMachine()?.getContext())) continue;
 
-    switch (step.type) {
+  // helper to recursively execute steps (handles macros)
+  const execSteps = async (steps: Step[]) => {
+    for (const step of steps) {
+      // guards
+      if (!evalGuard(step.when, primaryMachine()?.getContext())) continue;
+
+      if (step.type === 'macro') {
+        if (!scenario.macros || !scenario.macros[step.name]) {
+          throw new Error(`macro not defined: ${step.name}`);
+        }
+        await execSteps(scenario.macros[step.name]);
+        continue;
+      }
+
+      if (step.type === 'fixture') {
+        // load module and call function
+        let modPath = step.module;
+        if (!modPath.startsWith('/') && !modPath.match(/^\./)) {
+          // allow bare package names
+        } else {
+          modPath = require('path').resolve(baseDir, modPath);
+        }
+        const mod = await import(modPath);
+        const fn = step.function ? mod[step.function] : mod.default || mod.setup;
+        if (typeof fn !== 'function') {
+          throw new Error(`fixture module ${modPath} has no callable export`);
+        }
+        const payload = { FSMRegistry, page, options, args: step.args };
+        await fn(payload);
+        continue;
+      }
+
+      switch (step.type) {
       case 'event': {
         const fsm = step.machine ? FSMRegistry.get(step.machine) : primaryMachine();
         if (!fsm) throw new Error(`FSM not found for event step: ${step.machine}`);
@@ -197,4 +240,7 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         throw new Error(`unknown step type ${(step as any).type}`);
     }
   }
+
+  // execute scenario steps after helpers defined above
+  await execSteps(scenario.steps);
 }

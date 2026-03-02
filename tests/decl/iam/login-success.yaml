@@ -1,0 +1,32 @@
+name: IAM login success
+macros:
+  login:
+    - type: event
+      machine: loginFSM
+      name: LOGIN
+      payload:
+        email: 'user@example.com'
+        password: 'secret'
+  succeed:
+    - type: event
+      machine: loginFSM
+      name: SUCCESS
+      payload:
+        token: 'jwt-token-123'
+        userId: 'user-1'
+steps:
+  # pre-populate token via fixture (example)
+  - type: fixture
+    module: './fixtures.ts'
+    function: 'setAuthToken'
+    args:
+      token: 'pre-token'
+      userId: 'user-1'
+
+  - type: macro
+    name: login
+  - type: macro
+    name: succeed
+  - type: fsmState
+    machine: loginFSM
+    equals: success
