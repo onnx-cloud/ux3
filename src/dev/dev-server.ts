@@ -198,6 +198,9 @@ export class DevServer {
   }
 
   async start(): Promise<void> {
+    if (!this.manifest) {
+      await this.build();
+    }
     void this.findRepoRoot(this.projectDir);
     this.server = http.createServer(async (req, res) => {
       // avoid MaxListenersExceeded when many clients connect during dev
@@ -514,7 +517,15 @@ export class DevServer {
               const i18n = (this.manifest?.config as any)?.i18n || {};
               const site = await getSiteConfig(this.projectDir, this.manifest);
 
-              const templateRel = view.template || '';
+              // Resolve template path from top-level field OR from the initial/first state
+              let templateRel = '';
+              if (view.template) {
+                templateRel = view.template;
+              } else if (view.states) {
+                const stateName = view.initial || Object.keys(view.states)[0];
+                const stateConfig = view.states?.[stateName];
+                templateRel = (typeof stateConfig === 'string' ? stateConfig : stateConfig?.template) || '';
+              }
               let templateHtml = '';
 
               // Try compiled manifest template for this view first
@@ -523,7 +534,7 @@ export class DevServer {
                   const tplMap = (this.manifest.config as any).templates || {};
                   const viewTpl = tplMap[viewName] || {};
                   // Use specific state template or first available
-                  const stateName = (view.initial || 'index');
+                  const stateName = (view.initial || Object.keys(view.states || {})[0] || 'index');
                   const candidate = viewTpl[stateName] || Object.values(viewTpl)[0];
                   if (candidate) {
                     templateHtml = String(candidate);
@@ -531,20 +542,40 @@ export class DevServer {
                 }
 
                 if (!templateHtml && templateRel) {
-                  let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//,''));
-                  if (!fsExtra.existsSync(templatePath)) {
-                    const alt = path.join(this.projectDir, templateRel.replace(/^\//,''));
-                    if (fsExtra.existsSync(alt)) templatePath = alt;
+                  // Try multiple resolution paths for bare filenames
+                  const tplCandidates = [
+                    path.join(this.projectDir, 'ux', templateRel.replace(/^\//,'')),
+                    path.join(this.projectDir, 'ux', 'view', templateRel.replace(/^\//,'')),
+                    path.join(this.projectDir, 'ux', 'view', viewName, templateRel.replace(/^\//,'')),
+                  ];
+                  for (const tp of tplCandidates) {
+                    if (fsExtra.existsSync(tp)) {
+                      templateHtml = await fsp.readFile(tp, 'utf-8');
+                      break;
+                    }
                   }
-                  templateHtml = await fsp.readFile(templatePath, 'utf-8');
                 }
               } catch (e) {}
 
-              const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
-              const nav = buildNavConfig(pathname, routes, i18n);
-              const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
+              // For content views, look up the matching content item and expose it as `this`
+              const contentManifest: any = (this.manifest?.config as any)?.content;
+              const contentItem = contentManifest?.items?.find(
+                (item: any) => item.frontmatter.path === pathname || `/${item.slug}` === pathname
+              ) ?? null;
 
-              const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
+              const routeList: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest!.config.routes)) ? this.manifest!.config.routes : [];
+              const nav = buildNavConfig(pathname, routeList, i18n);
+              const templateCtx: Record<string, any> = {
+                manifest: this.manifest ?? {},
+                projectName: path.basename(this.projectDir),
+                i18n,
+                site,
+                nav,
+                ...(contentItem ? { this: contentItem } : {}),
+              };
+              const renderedTemplate = renderTemplate(templateHtml, templateCtx);
+
+              const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, templateCtx, renderTemplate);
 
               res.writeHead(200, { 'Content-Type': 'text/html' });
               res.end(finalHtml);
@@ -604,6 +635,30 @@ export class DevServer {
 
   setManifest(manifest: ServerManifest): void {
     this.manifest = manifest;
+  }
+
+  /**
+   * Auto-build the manifest from the project directory using ConfigGenerator.
+   * Called by start() when no manifest has been set, so the server can serve
+   * routes (including content routes) without a prior compile step.
+   */
+  async build(): Promise<void> {
+    try {
+      const { ConfigGenerator } = await import('../build/config-generator.js');
+      const outDir = path.join(this.projectDir, 'generated');
+      const gen = new ConfigGenerator({ configDir: this.projectDir, outputDir: outDir });
+      const cfg = await gen.generate();
+      this.manifest = {
+        config: cfg as any,
+        types: {},
+        invokes: {},
+        stats: { buildTime: Date.now() },
+      };
+    } catch (e) {
+      if (this.options.verbose) {
+        console.warn('[DevServer] auto-build failed:', e);
+      }
+    }
   }
 
   broadcast(message: Record<string, any>): void {
