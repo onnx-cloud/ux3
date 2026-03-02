@@ -441,4 +441,5 @@ Builders validate configuration:
 
 - Source: [src/ui/context-builder.ts](src/ui/context-builder.ts)
 - Interface: [src/ui/app.ts](src/ui/app.ts)
-- Builder usage: [examples/iam/app.ts](examples/iam/app.ts)
+- Builder usage: `import createBootstrap from '@ux3/ui/bootstrap'` (see
+  example entrypoint)

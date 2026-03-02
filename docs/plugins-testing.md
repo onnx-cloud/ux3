@@ -28,22 +28,28 @@ describe('my-plugin', () => {
 ## Integration Tests
 
 For end‑to‑end verification, load plugins into the IAM example or another
-real app and exercise the UI or services.
-
-Example from Phase 3:
+real app and exercise the UI or services.  The current example exposes a
+minimal initializer from `examples/iam/index.ts` which simply uses the
+framework-provided bootstrap helper:
 
 ```ts
 import { describe, it, expect } from 'vitest';
-import { initializeApp } from '../examples/iam/app';
+import { initApp } from '../examples/iam/index';
+
+// shim for backwards compatibility
+const hydrate = initApp;
 
 describe('project plugin integration', () => {
   it('analytics plugin adds logger subscriber', async () => {
-    const app = await initializeApp();
+    const app = await initApp();
     const logger: any = app.logger;
     expect(logger.listeners && logger.listeners.length).toBeGreaterThan(0);
   });
 });
 ```
+
+The `examples/iam/__tests__` directory contains several integration tests that
+can serve as templates.
 
 The `examples/iam/__tests__` directory contains several integration tests that
 can serve as templates.

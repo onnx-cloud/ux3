@@ -22,8 +22,14 @@ Guidelines
 A small runtime helper is included as `@ux3/ui/style-registry`.  Projects should
 register their semantic-to-utility map during startup and invoke
 `initStyleRegistry()` once; this automatically applies classes on
-`DOMContentLoaded` and when `ViewComponent` layouts mount.  See the IAM example
-(`examples/iam/app.ts`) for a complete usage pattern.
+`DOMContentLoaded` and when `ViewComponent` layouts mount.  See the IAM example entrypoint (`examples/iam/index.ts`) or the
+`@ux3/ui/bootstrap` helper for a complete usage pattern.
+
+The build/dev pipeline also participates: the `ConfigGenerator` will scan
+`ux/style/` recursively at build time, flattening every YAML file it finds into
+the generated `config.styles` object.  This means you never need to manually
+touch code when adding or renaming style compositions – once the compiler has
+run the runtime registry already knows about the new keys.
 
 Examples
 ---

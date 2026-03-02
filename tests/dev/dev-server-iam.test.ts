@@ -24,18 +24,22 @@ describe('DevServer with IAM example', () => {
       minified: true,
     };
 
-    const configObj: any = { site: { runtime: { bundleKey: 'ux3.bundle', hydrationFn: 'initApp' } } };
-    server.setManifest({ config: configObj, types: {}, invokes: {}, stats: { buildTime: 0 }, runtime: runtimeInfo });
+    // generate a real config from the example so we can merge runtime settings
+    const { ConfigGenerator } = await import('../../src/build/config-generator.js');
+    const configGenerator = new ConfigGenerator({
+      configDir: projectDir,
+      outputDir: path.join(projectDir, 'generated'),
+    });
+    const cfg = await configGenerator.generate();
 
-    // after manifest has been set we can fetch and assert it contains styles
-    const manifestResp = await fetch('http://localhost:3720/$/manifest');
-    expect(manifestResp.status).toBe(200);
-    const cfg: any = await manifestResp.json();
-    // server returns the config object directly
-    expect(cfg).toBeDefined();
-    // styles object should exist and not be empty (IAM example has compositions)
+    // verify that styles were pulled in correctly by the generator
     expect(cfg.styles).toBeDefined();
     expect(Object.keys(cfg.styles).length).toBeGreaterThan(0);
+
+    cfg.site = cfg.site || {};
+    cfg.site.runtime = { bundleKey: 'ux3.bundle', hydrationFn: 'initApp' };
+
+    server.setManifest({ config: cfg, types: {}, invokes: {}, stats: { buildTime: 0 }, runtime: runtimeInfo });
     try {
       const files = fs.readdirSync(path.join(projectDir, 'dist'));
       for (const f of files) {

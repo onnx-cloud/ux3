@@ -20,31 +20,44 @@ export default class InspectorWidget extends HTMLElement {
   }
 
   connectedCallback(): void {
-    // grab the context that was stashed on window by createAppContext
+    // grab context from window
     this.ctx = (window as any).__ux3Inspector;
     if (!this.ctx) return;
 
-    // style and container
     const root = document.createElement('div');
     root.style.cssText =
-      'position:fixed;bottom:0;right:0;width:320px;height:240px;background:rgba(0,0,0,0.85);color:#fff;font-family:monospace;font-size:12px;overflow:auto;z-index:9999;padding:0.5rem;';
+      'position:fixed;bottom:0;right:0;width:320px;max-height:60vh;background:rgba(0,0,0,0.85);color:#fff;font-family:monospace;font-size:12px;overflow:auto;z-index:9999;box-shadow:0 0 8px rgba(0,0,0,0.5);';
+
+    // header with close button
+    const header = document.createElement('div');
+    header.style.cssText =
+      'display:flex;justify-content:space-between;align-items:center;padding:0.25rem 0.5rem;background:rgba(255,255,255,0.1);cursor:move;';
+    const title = document.createElement('span');
+    title.textContent = 'Inspector';
+    const close = document.createElement('button');
+    close.textContent = '✕';
+    close.style.cssText = 'background:none;border:none;color:#fff;cursor:pointer';
+    close.addEventListener('click', () => this.remove());
+    header.appendChild(title);
+    header.appendChild(close);
+    root.appendChild(header);
+
+    const body = document.createElement('div');
+    body.style.padding = '0.5rem';
     this.container = document.createElement('pre');
     this.container.style.margin = '0';
-    root.appendChild(this.container);
+    body.appendChild(this.container);
+    root.appendChild(body);
+
     this.shadowRoot!.appendChild(root);
 
     this.update();
 
-    // subscribe to each machine to refresh snapshot on transitions
+    // subscribe to machines to refresh snapshot
     Object.values(this.ctx.machines).forEach((m: any) => {
       if (m && typeof m.subscribe === 'function') {
         m.subscribe(() => this.update());
       }
-    });
-
-    // allow click to toggle visibility
-    root.addEventListener('click', () => {
-      root.style.display = root.style.display === 'none' ? 'block' : 'none';
     });
   }
 
@@ -55,9 +68,13 @@ export default class InspectorWidget extends HTMLElement {
         machines: {},
         services: Object.keys(this.ctx.services),
       };
-      // machines may be stored as a Map (builder) or plain object
-      if (this.ctx.machines instanceof Map) {
-        for (const [name, machine] of this.ctx.machines.entries()) {
+      // machines may be stored as a Map or object
+      const machinesObj:
+        | Record<string, any>
+        | Map<string, any> = this.ctx.machines;
+
+      const iterate = (entries: Iterable<[string, any]>) => {
+        for (const [name, machine] of entries) {
           try {
             snapshot.machines[name] = (machine as any).getState
               ? (machine as any).getState()
@@ -66,17 +83,14 @@ export default class InspectorWidget extends HTMLElement {
             snapshot.machines[name] = '<error>';
           }
         }
+      };
+
+      if (machinesObj instanceof Map) {
+        iterate(machinesObj.entries());
       } else {
-        for (const [name, machine] of Object.entries(this.ctx.machines)) {
-          try {
-            snapshot.machines[name] = (machine as any).getState
-              ? (machine as any).getState()
-              : 'unknown';
-          } catch {
-            snapshot.machines[name] = '<error>';
-          }
-        }
+        iterate(Object.entries(machinesObj));
       }
+
       this.container.textContent = JSON.stringify(snapshot, null, 2);
     } catch (e) {
       this.container.textContent = `inspector error: ${e}`;

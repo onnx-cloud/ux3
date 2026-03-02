@@ -16,9 +16,12 @@ extended if necessary.
 ## Installation
 
 Built-in plugins are installed automatically when the app context is created
-(see `examples/iam/app.ts`):
+(the default bootstrap helper wires this up for you):
 
 ```ts
+// context-builder.build() calls each plugin's install method
+// so you don't need to do this manually unless you're writing custom
+// initialization logic.
 const plugins = [SpaCore, SpaRouter, SpaForms, SpaAuth];
 plugins.forEach(p => p.install?.(appContext));
 ```

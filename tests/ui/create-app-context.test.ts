@@ -37,6 +37,14 @@ describe('createAppContext development logging', () => {
     await createAppContext(cfg as any);
     const el = document.body.querySelector('ux3-inspector');
     expect(el).toBeInstanceOf(HTMLElement);
+    // header and close button exist
+    const header = el!.shadowRoot?.querySelector('div');
+    expect(header).toBeTruthy();
+    const btn = el!.shadowRoot?.querySelector('button');
+    expect(btn).toBeInstanceOf(HTMLElement);
+    // clicking close removes element
+    btn?.dispatchEvent(new MouseEvent('click'));
+    expect(document.body.querySelector('ux3-inspector')).toBeNull();
   });
 
   it('inspector widget should update when machine state changes', async () => {

@@ -10,7 +10,6 @@ development:
   hot-reload: true # enable hot reloading for faster development iterations
   logging: "debug" # verbose logging for development
   inspector: true # enable client-side inspector for debugging
-## refactored from site section to be top-level for better merging and runtime access
 assets:
   - type: "script"
     src: "https://cdn.tailwindcss.com"

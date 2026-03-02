@@ -3,11 +3,11 @@ import { execSync } from 'child_process';
 
 // ensure bundle script generates file and that config assets updated
 
-let initializeApp: any;
+let initApp: any;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('../app');
-  initializeApp = mod.initializeApp;
+  const mod = require('../index');
+  initApp = mod.initApp || mod.hydrate;
 } catch (_e) {}
 
 describe('JS bundling and asset injection', () => {
@@ -18,8 +18,8 @@ describe('JS bundling and asset injection', () => {
     const fs = require('fs');
     expect(fs.existsSync('examples/iam/dist/app.bundle.js')).toBe(true);
 
-    if (typeof initializeApp === 'function') {
-      const app = await initializeApp();
+    if (typeof initApp === 'function') {
+      const app = await initApp();
       const assets = app.config.site?.assets;
       expect(Array.isArray(assets)).toBe(true);
       const script = assets.find((a: any) => a.type === 'script');

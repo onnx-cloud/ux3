@@ -4,8 +4,8 @@ let hydrate: any;
 let config: any;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('../app');
-  hydrate = mod.hydrate;
+  const mod = require('../index');
+  hydrate = mod.hydrate || mod.initApp;
   config = mod.config;
 } catch (err) {
   // if require fails, we cannot run the test; hydrate will remain undefined

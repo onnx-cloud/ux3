@@ -81,6 +81,25 @@ export const createCommand = new Command()
       );
     }
 
+    // create a minimal application entrypoint that uses the built-in
+    // bootstrap helper.  future versions of the CLI will generate this file
+    // automatically; for now it's safe for users to overwrite if they wish.
+    const entryPath = path.join(projectDir, 'src', 'index.ts');
+    if (!await fs.stat(entryPath).catch(() => null)) {
+      const entryContents = `// Minimal bootstrap entry – not required for the framework to
+// operate and safe to delete in a code‑free project.  Advanced apps
+// can customise or extend this file as needed; see \`@ux3/ui/bootstrap\`.
+
+import createBootstrap from '@ux3/ui/bootstrap';
+import { config } from './generated/config.js';
+
+// default initializer exposed for hydration scripts
+export const initApp = createBootstrap(config);
+export const hydrate = initApp;
+`
+      await fs.writeFile(entryPath, entryContents);
+    }
+
     console.log(`✅ Project created at ${projectDir}`);
     console.log(`\n📖 Next steps:\n`);
     console.log(`  cd ${name}`);

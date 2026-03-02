@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AppContextBuilder, type GeneratedConfig } from '@ux3/ui/context-builder';
+import { clearStyles, getRegisteredStyles } from '@ux3/ui/style-registry';
 
 describe('AppContextBuilder - Comprehensive Tests', () => {
   let config: GeneratedConfig;
@@ -294,15 +295,14 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
     });
 
     it('should propagate styles into the global registry', () => {
-      const registry = require('@ux3/ui/style-registry');
-      // clear before running builder to avoid leftover state
-      registry.clearStyles();
+      // clear registry before running builder
+      clearStyles();
 
       const builder = new AppContextBuilder(config);
       builder.withStyles();
       builder.build();
 
-      expect(registry.getRegisteredStyles()).toEqual(config.styles);
+      expect(getRegisteredStyles()).toEqual(config.styles);
     });
   });
 

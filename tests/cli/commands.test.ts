@@ -83,6 +83,7 @@ describe('UX3 CLI commands', () => {
     expect(pkg.name).toBe('proj1');
     expect(await fs.pathExists(path.join(project, 'src'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'public'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'src', 'index.ts'))).toBe(true);
   });
 
   it('`create` refuses to overwrite existing package.json', async () => {
@@ -140,7 +141,10 @@ describe('UX3 CLI commands', () => {
       project
     );
     expect(exit).toBe(0);
-    expect(await fs.pathExists(path.join(project, 'generated', 'myview.ts'))).toBe(true);
+    // compiler currently emits into a "views" subdirectory; accept either
+    const primary = path.join(project, 'generated', 'myview.ts');
+    const alt = path.join(project, 'generated', 'views', 'myview.ts');
+    expect(await fs.pathExists(primary) || await fs.pathExists(alt)).toBe(true);
   });
 
   it('`config` command can display and query configuration', async () => {

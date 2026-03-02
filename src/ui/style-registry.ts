@@ -6,8 +6,9 @@
  * name, and the registry is responsible for injecting the corresponding
  * class list when the page is hydrated or when views mount.
  *
- * The IAM example in `examples/iam/app.ts` originally implemented this logic
- * inline; the code below extracts the core behaviour into the library so that
+ * The IAM example in `examples/iam/app.deprecated.ts` originally
+ * implemented this logic inline; the code below extracts the core behaviour
+ * into the library so that every project can enable styling with a single
  * every project can enable styling with a single import + registration call.
  *
  * Usage:

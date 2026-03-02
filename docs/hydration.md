@@ -23,6 +23,16 @@ The CLI commands (`ux3 build` / `ux3 dev`) supply this information to the dev se
 
 Projects can influence injection via the optional `site.runtime` section:
 
+> **No entry file?**
+> You don’t actually need a `src/index.ts` or any bootstrap code for the
+> framework to work.  In absence of a custom initializer the dev server and
+> bundler will still emit a minimal runtime bundle that exports the generated
+> `config` and logs a message.  The hydration function can live anywhere or
+> be omitted entirely; the CLI-generated `src/index.ts` is merely a
+> convenience (and safe to delete) when you want to add application-specific
+> startup logic.
+
+
 ```yaml
 site:
   runtime:
@@ -46,22 +56,30 @@ Hot reload events will replace both style and script tags (see `DevServer` hot-r
 
 ## Entry Points and Hydration Code
 
-The framework no longer generates a hard‑coded IIFE entry. Instead projects supply their own bootstrap code (for example `examples/iam/index.ts`) which is bundled by esbuild. It is the responsibility of that code to export or expose a function matching the `hydrationFn` name. The helper below is typical:
+The framework no longer generates a hard‑coded IIFE entry. Instead projects supply their own bootstrap code; `ux3 create` will generate a minimal `src/index.ts` like the IAM example which simply imports a helper from the framework:
 
 ```ts
-async function boot() {
-  await hydrate(config, { recoverState: true, reattachListeners: true });
-}
+import { createBootstrap } from '@ux3/ui/bootstrap';
+import { config } from './generated/config.js';
 
-// expose for runtime script
-(window as any).initApp = boot;
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot);
-} else {
-  boot();
-}
+export const initApp = createBootstrap(config); // also exported as `hydrate`
 ```
+
+This `initApp` function is what the runtime script will call (the name can be
+customised via `site.runtime.hydrationFn`).  It handles all of the boilerplate
+shown previously — registering styles, wiring up service reconnection, and
+attaching itself to `window`/`DOMContentLoaded` when executed in a browser.
+
+For quick samples or tests you may also import the raw `hydrate` helper from
+`@ux3/ui/bootstrap` and call it directly:
+
+```ts
+import { hydrate } from '@ux3/ui/bootstrap';
+
+await hydrate(config, { recoverState: true, reattachListeners: true });
+```
+
+Either approach returns an `AppContext` which you can inspect or manipulate.
 
 You can also mount manually or execute tests by calling the exported function.
 

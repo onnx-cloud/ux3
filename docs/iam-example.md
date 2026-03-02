@@ -106,15 +106,18 @@ examples/iam/
 │  ├─ styles.ts
 │  └─ config.ts
 ├─ src/                    # Application code
-│  ├─ app.ts              # App initialization
+│  ├─ index.ts            # Minimal bootstrap entrypoint (uses @ux3/ui/bootstrap)
 │  ├─ services/           # Service implementations
 │  │  └─ index.mjs        # Stub implementations
 │  └─ utils/              # Utilities
 ├─ public/                 # Static assets
 │  └─ styles/
 ├─ index.html              # Entry HTML
-├─ app.ts                  # Main app file
 ├─ package.json
+
+> **Note:** `examples/iam/app.ts` is retained only for backwards compatibility
+> and emits a deprecation warning. New projects should use `src/index.ts`
+> which imports the built-in bootstrap helper.
 └─ README.md
 ```
 

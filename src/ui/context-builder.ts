@@ -370,6 +370,51 @@ export class AppContextBuilder {
   }
 }
 
+export interface HydrationOptions {
+  recoverState?: boolean;
+  reattachListeners?: boolean;
+  reconnectServices?: boolean;
+  validateVersion?: boolean;
+}
+
+/**
+ * Hydrate an already-rendered server page into a live SPA.
+ *
+ * This utility is used by the bootstrap helper and internal tests.  It is
+ * intentionally lightweight: the generated config is passed straight through to
+ * `createAppContext` and a few optional helpers are invoked based on the
+ * provided options.  Projects may call this directly but most consumers will
+ * prefer `@ux3/ui/bootstrap` which wraps it and handles window/DesktopLoaded
+ * logic.
+ */
+export async function hydrate(
+  config: GeneratedConfig,
+  options: HydrationOptions = {}
+): Promise<AppContext> {
+  const app = await createAppContext(config);
+
+  if (options.recoverState && typeof window !== 'undefined') {
+    const initial = (window as any).__INITIAL_STATE__;
+    if (initial && typeof (app as any).recoverState === 'function') {
+      (app as any).recoverState(initial);
+    }
+  }
+
+  if (options.reattachListeners && typeof (app as any).reattachListeners === 'function') {
+    (app as any).reattachListeners();
+  }
+
+  if (options.reconnectServices) {
+    try {
+      await (app as any).reconnectServices?.();
+    } catch (err) {
+      console.warn('[UX3] service reconnection failed', err);
+    }
+  }
+
+  return app;
+}
+
 /**
  * Quick helper to build AppContext from generated config
  */

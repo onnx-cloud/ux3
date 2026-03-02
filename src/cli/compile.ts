@@ -7,6 +7,7 @@
  */
 
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import { Command } from 'commander';
 import YAML from 'yaml';
 import { compileAllViews } from '../build/view-compiler.js';
@@ -27,18 +28,24 @@ async function loadConfig(configPath: string): Promise<CompilerConfig> {
 }
 
 async function runCompiler(config: CompilerConfig): Promise<void> {
+  // resolve directories relative to current working directory (useful for tests that override cwd)
+  const viewsDir = config.views ? path.resolve(process.cwd(), config.views) : '';
+  const outputDir = config.output ? path.resolve(process.cwd(), config.output) : '';
+
   console.log('[UX3 Compiler]');
-  console.log(`Views:  ${config.views}`);
-  console.log(`Output: ${config.output}`);
+  console.log(`Views:  ${viewsDir}`);
+  console.log(`Output: ${outputDir}`);
 
   // Create output directory
-  await fs.mkdir(config.output, { recursive: true });
+  if (outputDir) {
+    await fs.mkdir(outputDir, { recursive: true });
+  }
 
   // Compile views
-  if (config.views) {
+  if (viewsDir) {
     try {
       // `compileAllViews` currently only accepts src and dest directories
-      await compileAllViews(config.views, config.output);
+      await compileAllViews(viewsDir, outputDir);
     } catch (e) {
       console.error('✗ View compilation failed:', e);
       process.exit(1);
@@ -46,11 +53,11 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
 
     if (config.logicManifest) {
       // read manifest files and print summary
-      const items = await fs.readdir(config.output);
+      const items = await fs.readdir(outputDir);
       const manifests = items.filter((f) => f.endsWith('.logic.json'));
       console.log(`\nLogic manifests (${manifests.length}):`);
       for (const m of manifests) {
-        const txt = await fs.readFile(path.join(config.output, m), 'utf-8');
+        const txt = await fs.readFile(path.join(outputDir, m), 'utf-8');
         console.log(`--- ${m} ---`);
         console.log(txt);
       }
@@ -58,7 +65,42 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   }
 
   // TODO: Compile FSM configs
-  // TODO: Compile styles
+  // Compile styles if a path was provided
+  if (config.styles) {
+    const stylesDir = path.resolve(config.styles);
+    const stylesMap: Record<string,string> = {};
+    const mergeStyles = (obj: any, prefix = '') => {
+      for (const key of Object.keys(obj)) {
+        if (key === 'base') continue;
+        const val = obj[key];
+        const name = prefix ? `${prefix}.${key}` : key;
+        if (typeof val === 'string') {
+          stylesMap[name] = val;
+        } else if (val && typeof val === 'object') {
+          if (typeof val.base === 'string') {
+            stylesMap[name] = val.base;
+          }
+          mergeStyles(val, name);
+        }
+      }
+    };
+    const walk = (dir: string) => {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir)) {
+        const full = path.join(dir, entry);
+        if (fs.statSync(full).isDirectory()) walk(full);
+        else if (full.endsWith('.yaml') || full.endsWith('.yml')) {
+          const cfg = YAML.parse(fs.readFileSync(full, 'utf-8')) || {};
+          mergeStyles(cfg);
+        }
+      }
+    };
+    walk(stylesDir);
+    // emit mapping to output for consumption by other tooling/tests
+    const outPath = path.join(config.output, 'styles.json');
+    await fs.writeFile(outPath, JSON.stringify(stylesMap, null, 2));
+    console.log(`[UX3 Compiler] Generated styles map at ${outPath}`);
+  }
   // TODO: Generate index.ts exports
 
   console.log('\n✓ Compilation complete');
