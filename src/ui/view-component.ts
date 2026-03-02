@@ -88,6 +88,13 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       this.currentState = this.fsm.getState();
       this.renderState(this.currentState);
 
+      // run any side-effects for the starting state (e.g. service invokes)
+      // `onFSMStateChange` ignores duplicate state values, so call the invoke
+      // method directly to ensure initial actions are executed.
+      this.handleStateInvoke(this.currentState).catch(err => {
+        console.error('[ViewComponent] initial state invoke error', err);
+      });
+
       // 7. Subscribe to FSM state changes
       this.unsubscribe = this.fsm.subscribe((state) => {
         this.onFSMStateChange(state);
@@ -212,6 +219,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * FSM state changed - swap template and rebind
    */
   private onFSMStateChange(state: string): void {
+    console.debug('[ViewComponent] onFSMStateChange', state);
     try {
       if (this.currentState !== state) {
         this.currentState = state;
@@ -264,6 +272,54 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
     // Rebind reactive effects
     this.setupReactiveEffects();
+  }
+
+  /**
+   * Attempt to invoke configured action when entering a state.
+   * Supports service adapter invocations or local functions.
+   */
+  private async handleStateInvoke(state: string): Promise<void> {
+    console.debug('[ViewComponent] handleStateInvoke', state);
+    try {
+      // obtain raw FSM config
+      const cfgMachine: any = this.fsm;
+      const fsmConfig =
+        typeof cfgMachine.getMachineConfig === 'function'
+          ? cfgMachine.getMachineConfig()
+          : cfgMachine.getStateConfig?.(undefined);
+      const stateCfg = fsmConfig?.states?.[state];
+      if (!stateCfg || !stateCfg.invoke) return;
+
+      const inv: any = stateCfg.invoke;
+      let result: any;
+
+      if (inv.service) {
+        const svc = this.app.services[inv.service];
+        if (!svc) throw new Error(`Service not registered: ${inv.service}`);
+        const method = inv.method || 'fetch';
+        result = await svc[method](inv.input);
+      } else if (inv.src) {
+        if (typeof inv.src === 'function') {
+          result = await inv.src(inv.input, this.fsm.getContext());
+        } else if (typeof inv.src === 'string') {
+          const fn = (window as any)[inv.src];
+          if (typeof fn === 'function') {
+            result = await fn(inv.input, this.fsm.getContext());
+          } else {
+            throw new Error(`Invoke source not found: ${inv.src}`);
+          }
+        }
+      }
+
+      if (result && typeof result === 'object') {
+        this.fsm.setState(result as any);
+      }
+
+      this.fsm.send('SUCCESS');
+    } catch (err) {
+      this.fsm.send('ERROR');
+      throw err;
+    }
   }
 
   /**

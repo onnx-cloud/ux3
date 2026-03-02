@@ -186,6 +186,26 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
 
       expect(() => builder.build()).toThrow();
     });
+
+    it('should support adapter field when type is missing', () => {
+      const adConfig = {
+        ...config,
+        services: {
+          fileSvc: {
+            adapter: 'file',
+            config: { baseUrl: '/static/' },
+          },
+        },
+      } as any;
+
+      const builder = new AppContextBuilder(adConfig);
+      builder.withServices();
+
+      const app = builder.build();
+      expect(app.services['fileSvc']).toBeDefined();
+      // underlying implementation should be HttpService
+      expect(typeof app.services['fileSvc'].fetch).toBe('function');
+    });
   });
 
   describe('withWidgets()', () => {

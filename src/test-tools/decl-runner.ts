@@ -132,6 +132,8 @@ function evalGuard(cond: string | undefined, ctx: any): boolean {
     }
     // Fallback: if we couldn't parse, default to false so guard blocks progression
     return false;
+  }
+
 function resolvePath(obj: any, path: string): any {
   return path.split('.').reduce((acc, part) => (acc ? acc[part] : undefined), obj);
 }

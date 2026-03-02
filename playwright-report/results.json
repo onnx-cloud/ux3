@@ -162,31 +162,209 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 12020,
+                  "duration": 11109,
                   "error": {
                     "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n",
-                    "stack": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n\n    at /developer/ux3/tests/e2e/iam-content.spec.ts:9:14",
+                    "stack": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n\n    at /developer/ux3/tests/e2e/iam-content.spec.ts:11:14",
                     "location": {
                       "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
                       "column": 14,
-                      "line": 9
+                      "line": 11
                     },
-                    "snippet": "\u001b[0m \u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/news'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[90m// wait for UX3 to initialize and the FSM to reach loaded state\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"news.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[90m// now articles should be present\u001b[39m\n \u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'ul li h3'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m titles \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'ul li h3'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mmap(e \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mtextContent))\u001b[33m;\u001b[39m\u001b[0m"
+                    "snippet": "\u001b[0m \u001b[90m  9 |\u001b[39m   console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE HTML [news]'\u001b[39m\u001b[33m,\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mcontent())\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[90m// wait for UX3 to initialize and the FSM to reach loaded state\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"news.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[90m// now articles should be present\u001b[39m\n \u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'ul li h3'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m   \u001b[36mconst\u001b[39m titles \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'ul li h3'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mmap(e \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mtextContent))\u001b[33m;\u001b[39m\u001b[0m"
                   },
                   "errors": [
                     {
                       "location": {
                         "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
                         "column": 14,
-                        "line": 9
+                        "line": 11
                       },
-                      "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/news'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[90m// wait for UX3 to initialize and the FSM to reach loaded state\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"news.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[90m// now articles should be present\u001b[39m\n \u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'ul li h3'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m titles \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'ul li h3'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mmap(e \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mtextContent))\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /developer/ux3/tests/e2e/iam-content.spec.ts:9:14\u001b[22m"
+                      "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m  9 |\u001b[39m   console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE HTML [news]'\u001b[39m\u001b[33m,\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mcontent())\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[90m// wait for UX3 to initialize and the FSM to reach loaded state\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"news.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[90m// now articles should be present\u001b[39m\n \u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'ul li h3'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m   \u001b[36mconst\u001b[39m titles \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'ul li h3'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mmap(e \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mtextContent))\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /developer/ux3/tests/e2e/iam-content.spec.ts:11:14\u001b[22m"
                     }
                   ],
-                  "stdout": [],
+                  "stdout": [
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService api {adapter: http, baseUrl: http://localhost:1337/api, auth: Object} http\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService realtime {adapter: websocket, url: ws://localhost:1337/realtime, reconnectAttempts: 5, reconnectInterval: 2000} websocket\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService chat {adapter: jsonrpc, endpoint: http://localhost:1337/rpc/chat} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService chatbot {adapter: jsonrpc, endpoint: http://localhost:1337/api/chatbot} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService eod {adapter: file, baseUrl: public/api/asset/eod/{{this.symbol}}.json, caching: Object} file\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.632Z inspector enabled color: gray {} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: accountFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: assetFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: billingFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: blogFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: chatFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: dashboardFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: for-youFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: indexFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: loginFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: macroFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: marketFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: newsFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: sign-upFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z service.spec color: gray {name: api, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.635Z service.initialized color: gray {name: api, type: undefined, adapter: http} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: realtime, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: realtime, type: undefined, adapter: websocket} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: chat, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: chat, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: chatbot, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: chatbot, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: eod, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: eod, type: undefined, adapter: file} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService api {adapter: http, baseUrl: http://localhost:1337/api, auth: Object} http\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService realtime {adapter: websocket, url: ws://localhost:1337/realtime, reconnectAttempts: 5, reconnectInterval: 2000} websocket\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService chat {adapter: jsonrpc, endpoint: http://localhost:1337/rpc/chat} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService chatbot {adapter: jsonrpc, endpoint: http://localhost:1337/api/chatbot} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: [AppContextBuilder] createService eod {adapter: file, baseUrl: public/api/asset/eod/{{this.symbol}}.json, caching: Object} file\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.643Z inspector enabled color: gray {} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: accountFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: assetFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: billingFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: blogFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: chatFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: dashboardFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: for-youFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: indexFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: loginFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: macroFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: marketFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z machine.initialized color: gray {name: newsFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z machine.initialized color: gray {name: sign-upFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: api, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: api, type: undefined, adapter: http} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: realtime, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: realtime, type: undefined, adapter: websocket} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: chat, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: chat, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: chatbot, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: chatbot, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: eod, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [news]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: eod, type: undefined, adapter: file} undefined\n"
+                    },
+                    {
+                      "text": "PAGE HTML [news] <html><head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <meta name=\"title\" content=\"Invest America\">\n    <meta name=\"description\" content=\"\">\n    <title>Invest America</title>\n    \n</head>\n<body>\n    <header id=\"site-header\">\n  <nav ux-style=\"nav\">\n    \n      \n        <a href=\"/\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/home\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/login\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/dashboard\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/dashboard/:section\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/market\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/market/:exchange\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/asset/:symbol\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/for-you\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/chat\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/chat/:conversation\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/blog\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/blog/:slug\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/news\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/account\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/billing\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/macro\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/sign-up\" disabled=\"\">\n          \n        </a>\n      \n    \n  </nav>\n</header>\n\n<main id=\"ux-content\" role=\"main\">\n  \n</main>\n\n<footer id=\"site-footer\">\n  <small ux-style=\"small\"></small>\n</footer>\n\n    <script data-ux3=\"hydration\">document.addEventListener('DOMContentLoaded', async () => {   try {     const m = await import('/dist/bundle.js?ts=1772447571574');     if (m && typeof m.initApp === 'function') {       await m.initApp();     }   } catch(e) { console.error('[UX3 hydration]', e); } });</script>\n\n\n\n<ux3-inspector></ux3-inspector></body></html>\n"
+                    }
+                  ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-03-02T08:27:21.095Z",
+                  "startTime": "2026-03-02T10:32:51.118Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -208,7 +386,7 @@
                   "errorLocation": {
                     "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
                     "column": 14,
-                    "line": 9
+                    "line": 11
                   }
                 }
               ],
@@ -236,31 +414,209 @@
                   "workerIndex": 1,
                   "parallelIndex": 1,
                   "status": "failed",
-                  "duration": 12081,
+                  "duration": 11065,
                   "error": {
                     "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n",
-                    "stack": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n\n    at /developer/ux3/tests/e2e/iam-content.spec.ts:19:14",
+                    "stack": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n\n    at /developer/ux3/tests/e2e/iam-content.spec.ts:22:14",
                     "location": {
                       "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
                       "column": 14,
-                      "line": 19
+                      "line": 22
                     },
-                    "snippet": "\u001b[0m \u001b[90m 17 |\u001b[39m   page\u001b[33m.\u001b[39mon(\u001b[32m'console'\u001b[39m\u001b[33m,\u001b[39m msg \u001b[33m=>\u001b[39m console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE LOG [market]:'\u001b[39m\u001b[33m,\u001b[39m msg\u001b[33m.\u001b[39mtext()))\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/market'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"market.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'table tr'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m rows \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'table tr'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mlength)\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   expect(rows)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                    "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/market'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 21 |\u001b[39m   console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE HTML [market]'\u001b[39m\u001b[33m,\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mcontent())\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"market.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'table tr'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   \u001b[36mconst\u001b[39m rows \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'table tr'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mlength)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m   expect(rows)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
                   },
                   "errors": [
                     {
                       "location": {
                         "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
                         "column": 14,
-                        "line": 19
+                        "line": 22
                       },
-                      "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 17 |\u001b[39m   page\u001b[33m.\u001b[39mon(\u001b[32m'console'\u001b[39m\u001b[33m,\u001b[39m msg \u001b[33m=>\u001b[39m console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE LOG [market]:'\u001b[39m\u001b[33m,\u001b[39m msg\u001b[33m.\u001b[39mtext()))\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/market'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"market.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'table tr'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m rows \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'table tr'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mlength)\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   expect(rows)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /developer/ux3/tests/e2e/iam-content.spec.ts:19:14\u001b[22m"
+                      "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 20 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/market'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 21 |\u001b[39m   console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE HTML [market]'\u001b[39m\u001b[33m,\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mcontent())\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"market.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'table tr'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   \u001b[36mconst\u001b[39m rows \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'table tr'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mlength)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m   expect(rows)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /developer/ux3/tests/e2e/iam-content.spec.ts:22:14\u001b[22m"
                     }
                   ],
-                  "stdout": [],
+                  "stdout": [
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService api {adapter: http, baseUrl: http://localhost:1337/api, auth: Object} http\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService realtime {adapter: websocket, url: ws://localhost:1337/realtime, reconnectAttempts: 5, reconnectInterval: 2000} websocket\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService chat {adapter: jsonrpc, endpoint: http://localhost:1337/rpc/chat} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService chatbot {adapter: jsonrpc, endpoint: http://localhost:1337/api/chatbot} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService eod {adapter: file, baseUrl: public/api/asset/eod/{{this.symbol}}.json, caching: Object} file\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.632Z inspector enabled color: gray {} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: accountFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: assetFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: billingFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.634Z machine.initialized color: gray {name: blogFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: chatFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: dashboardFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: for-youFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: indexFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: loginFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: macroFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: marketFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: newsFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z machine.initialized color: gray {name: sign-upFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z service.spec color: gray {name: api, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.635Z service.initialized color: gray {name: api, type: undefined, adapter: http} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: realtime, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: realtime, type: undefined, adapter: websocket} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: chat, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: chat, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: chatbot, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: chatbot, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.spec color: gray {name: eod, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.636Z service.initialized color: gray {name: eod, type: undefined, adapter: file} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService api {adapter: http, baseUrl: http://localhost:1337/api, auth: Object} http\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService realtime {adapter: websocket, url: ws://localhost:1337/realtime, reconnectAttempts: 5, reconnectInterval: 2000} websocket\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService chat {adapter: jsonrpc, endpoint: http://localhost:1337/rpc/chat} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService chatbot {adapter: jsonrpc, endpoint: http://localhost:1337/api/chatbot} jsonrpc\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: [AppContextBuilder] createService eod {adapter: file, baseUrl: public/api/asset/eod/{{this.symbol}}.json, caching: Object} file\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.643Z inspector enabled color: gray {} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: accountFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: assetFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: billingFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: blogFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: chatFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: dashboardFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: for-youFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: indexFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.644Z machine.initialized color: gray {name: loginFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z machine.initialized color: gray {name: macroFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z machine.initialized color: gray {name: marketFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z machine.initialized color: gray {name: newsFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z machine.initialized color: gray {name: sign-upFSM} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: api, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: api, type: undefined, adapter: http} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: realtime, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: realtime, type: undefined, adapter: websocket} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: chat, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: chat, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: chatbot, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.initialized color: gray {name: chatbot, type: undefined, adapter: jsonrpc} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.645Z service.spec color: gray {name: eod, spec: Object} undefined\n"
+                    },
+                    {
+                      "text": "PAGE LOG [market]: %c[DEBUG] 2026-03-02T10:32:51.646Z service.initialized color: gray {name: eod, type: undefined, adapter: file} undefined\n"
+                    },
+                    {
+                      "text": "PAGE HTML [market] <html><head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <meta name=\"title\" content=\"Invest America\">\n    <meta name=\"description\" content=\"\">\n    <title>Invest America</title>\n    \n</head>\n<body>\n    <header id=\"site-header\">\n  <nav ux-style=\"nav\">\n    \n      \n        <a href=\"/\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/home\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/login\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/dashboard\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/dashboard/:section\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/market\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/market/:exchange\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/asset/:symbol\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/for-you\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/chat\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/chat/:conversation\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/blog\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/blog/:slug\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/news\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/account\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/billing\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/macro\" disabled=\"\">\n          \n        </a>\n      \n        <a href=\"/sign-up\" disabled=\"\">\n          \n        </a>\n      \n    \n  </nav>\n</header>\n\n<main id=\"ux-content\" role=\"main\">\n  \n</main>\n\n<footer id=\"site-footer\">\n  <small ux-style=\"small\"></small>\n</footer>\n\n    <script data-ux3=\"hydration\">document.addEventListener('DOMContentLoaded', async () => {   try {     const m = await import('/dist/bundle.js?ts=1772447571574');     if (m && typeof m.initApp === 'function') {       await m.initApp();     }   } catch(e) { console.error('[UX3 hydration]', e); } });</script>\n\n\n\n<ux3-inspector></ux3-inspector></body></html>\n"
+                    }
+                  ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-03-02T08:27:21.150Z",
+                  "startTime": "2026-03-02T10:32:51.137Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -282,7 +638,7 @@
                   "errorLocation": {
                     "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
                     "column": 14,
-                    "line": 19
+                    "line": 22
                   }
                 }
               ],
@@ -291,7 +647,7 @@
           ],
           "id": "5e7b65bb17981c0a7605-3a3c6cb4cde1a210746a",
           "file": "iam-content.spec.ts",
-          "line": 16,
+          "line": 18,
           "column": 1
         }
       ]
@@ -299,8 +655,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-03-02T08:27:14.588Z",
-    "duration": 19473.113,
+    "startTime": "2026-03-02T10:32:47.070Z",
+    "duration": 15489.641,
     "expected": 0,
     "skipped": 0,
     "unexpected": 2,
