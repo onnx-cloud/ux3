@@ -1,7 +1,5 @@
 # UX3 — A Lightweight Framework for Building Modern SPAs 🌟
 
-![ONNX.cloud](./onnx.cloud.logo.png)
-
 UX3 is a tiny, zero‑dependency single‑page application framework designed for developers who value clarity, speed, and maintainability. 
 
 At its core is a **configuration‑first philosophy**: you describe views, styles, validation rules, and even application logic in YAML/JSON rather than writing imperative code. The compiler does the heavy lifting, generating strongly‑typed components, validators and build artifacts so that most of your work happens before the browser even runs. 
@@ -11,6 +9,8 @@ It allows you to declare the structure of your app in YAML and HTML while the fr
 Whether you’re building an internal dashboard, a customer portal, or a full‑fledged public web app, UX3 gives you the tools to stay productive without sacrificing control. 
 
 The core of UX3 is a small runtime coupled with a powerful compile‑time toolchain that generates strongly‑typed components, validators, and view logic — letting you catch errors before they reach the browser.
+
+![ONNX.cloud](./onnx.cloud.logo.png)
 
 ---
 
