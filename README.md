@@ -38,11 +38,21 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 
 ## Getting Started
 
-1. **Install**
+1. **Install the CLI**
 
    ```bash
-   npm install ux3
+   # project‑local install (dev dependency)
+   npm install ux3 --save-dev
+   
+   # or install globally to get a permanent `ux3` command
+   npm install ux3 -g
    ```
+
+   Once installed you can run `ux3` directly in your shell (e.g. `ux3 compile`) or prefix with
+   `npx` when invoked from a local dependency (`npx ux3 compile`).
+
+   See [docs/example.md](./docs/example.md) for a worked end‑to‑end tutorial.
+
 
 2. **Create `ux/` folders**
 
@@ -77,15 +87,17 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 
 ### ⚙️ CLI Command Reference
 
-The `ux3` CLI drives the core workflow. Run it via `npx ux3` or add it to your `package.json` scripts.
+The `ux3` CLI drives the core workflow. After installing globally with `npm install ux3 -g` you
+go straight to `ux3` in any shell; otherwise prefix with `npx` from your project directory (e.g. `npx ux3 compile`).
 
 * `ux3 build` – full pipeline (validate → compile → emit code). Equivalent to `npm run build`.
-* `ux3 compile` – compile sources only. Useful during development: `npx ux3 compile --views ./ux/view --output ./src/generated`.
+* `ux3 compile` – compile sources only. Useful during development: `ux3 compile --views ./ux/view --output ./src/generated`.
 * `ux3 validate` – run the schema/logic validator without generating code.
 
 Each command accepts a `--config` flag pointing at a `ux3.config.json` file, or you can supply paths individually (`--views`, `--output`, etc.).
 
-> See the [documentation](docs/compilation.md#cli-commands) for complete options and examples.
+> A step‑by‑step walkthrough is available in [docs/example.md](./docs/example.md), and the full CLI reference lives in [docs/compilation.md#cli-commands](docs/compilation.md#cli-commands).
+
 
 ---
 
