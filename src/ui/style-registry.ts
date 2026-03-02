@@ -78,8 +78,9 @@ let patched = false;
  */
 export function initStyleRegistry(): void {
   if (!patched) {
-    // bind the original to its prototype to avoid unbound-method lint error
-    const orig = ViewComponent.prototype.mountLayout.bind(ViewComponent.prototype) as () => void;
+    // Keep a direct reference; .bind() would lock `this` to the prototype, breaking
+    // the subsequent orig.call(instance) invocation.
+    const orig = ViewComponent.prototype.mountLayout as () => void;
     ViewComponent.prototype.mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
       try {
