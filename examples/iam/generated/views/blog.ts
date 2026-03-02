@@ -51,10 +51,10 @@ export class BlogView extends ViewComponent {
   protected layout = ``;
 
   protected templates = new Map([
-    'loading': `<div ux-view="blog" ux-state="blog.loading">
+    ['loading', `<div ux-view="blog" ux-state="blog.loading">
   <div ux-style="spinner">{{i18n.blog.loading.label}}</div>
 </div>
-`,
+`],
   ]);
 
   protected bindings = {

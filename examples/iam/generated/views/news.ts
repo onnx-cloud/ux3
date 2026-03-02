@@ -52,11 +52,11 @@ export class NewsView extends ViewComponent {
   protected layout = ``;
 
   protected templates = new Map([
-    'loading': `<div ux-state="news.loading">
+    ['loading', `<div ux-state="news.loading">
   <div ux-style="spinner">{{i18n.news.loading.label}}</div>
 </div>
-`,
-    'loaded': `<div ux-state="news.loaded">
+`],
+    ['loaded', `<div ux-state="news.loaded">
   <div ux-style="widget">{{i18n.news.loaded.label}}</div>
   <ul ux-each="{{ctx}}"> <!-- assume ctx is array from loadNewsData -->
     <li>
@@ -65,11 +65,11 @@ export class NewsView extends ViewComponent {
     </li>
   </ul>
 </div>
-`,
-    'error': `<div ux-state="news.error">
+`],
+    ['error', `<div ux-state="news.error">
   <div ux-style="alert">{{i18n.news.error.label}}</div>
 </div>
-`,
+`],
   ]);
 
   protected bindings = {

@@ -67,9 +67,11 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const layoutName = this.getAttribute('ux-layout') || 'default';
 
       // 3. Load FSM and layout
-      this.fsm = this.app.machines[fsmName];
+      // Generated view names match the YAML key (e.g. 'news') but AppContextBuilder stores
+      // machines under the suffixed key 'newsFSM'.  Try both to be forward-compatible.
+      this.fsm = this.app.machines[fsmName] ?? this.app.machines[`${fsmName}FSM`];
       if (!this.fsm) {
-        throw new Error(`FSM not found: ${fsmName}`);
+        throw new Error(`FSM not found: '${fsmName}' or '${fsmName}FSM'. Available: ${Object.keys(this.app.machines).join(', ')}`);
       }
 
       this.layout = this.app.template(layoutName);
@@ -77,8 +79,10 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         throw new Error(`Layout not found: ${layoutName}`);
       }
 
-      // 4. Load templates for all FSM states
-      this.loadTemplates(viewName || fsmName);
+      // 4. Load templates for all FSM states (skip when subclass already provides them)
+      if (this.templates.size === 0) {
+        this.loadTemplates(viewName || fsmName);
+      }
 
       // 5. Mount layout to shadow DOM
       this.attachShadow({ mode: 'open' });
@@ -139,7 +143,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   private loadTemplates(viewName: string): void {
     const fsmName = this.getAttribute('ux-fsm')!;
-    const machine = this.app.machines[fsmName];
+    const machine = this.app.machines[fsmName] ?? this.app.machines[`${fsmName}FSM`];
     // support both older and newer machine APIs
     type MaybeConfigArg = { getMachineConfig?: () => any; getStateConfig?: (arg?: unknown) => any };
     const cfgMachine = machine as MaybeConfigArg;

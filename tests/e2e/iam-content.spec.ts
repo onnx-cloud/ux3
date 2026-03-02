@@ -3,7 +3,12 @@ import { test, expect } from './decl-fixtures';
 // tests for news and market pages in the IAM example
 
 test('news page shows articles', async ({ page }) => {
-  page.on('console', msg => console.log('PAGE LOG [news]:', msg.text()));
+  page.on('console', msg => {
+    console.log('PAGE LOG [news]', msg.type(), msg.text(), ...msg.args());
+  });
+  page.on('pageerror', e => {
+    console.log('PAGE ERROR [news]', e);
+  });
   await page.goto('/news');
   // dump HTML so we can inspect if view component is present
   console.log('PAGE HTML [news]', await page.content());
@@ -16,7 +21,12 @@ test('news page shows articles', async ({ page }) => {
 });
 
 test('market page displays table and chart element', async ({ page }) => {
-  page.on('console', msg => console.log('PAGE LOG [market]:', msg.text()));
+  page.on('console', msg => {
+    console.log('PAGE LOG [market]', msg.type(), msg.text(), ...msg.args());
+  });
+  page.on('pageerror', e => {
+    console.log('PAGE ERROR [market]', e);
+  });
   await page.goto('/market');
   console.log('PAGE HTML [market]', await page.content());
   await page.waitForSelector('div[ux-state="market.loaded"]', { timeout: 10000 });

@@ -1,14 +1,90 @@
 /**
  * Client-side navigation handler
- * Listens to URL changes, updates Router state, and dispatches FSM navigation events
+ * Listens to URL changes, resolves the matching view, and mounts it into #ux-content.
+ *
+ * Design contract:
+ *  - The host HTML must contain a <main id="ux-content"> placeholder.
+ *  - Generated views must have registered their custom element tag
+ *    (customElements.define('ux-<view>', ViewClass)) before initApp() is called.
+ *  - Route matching supports :param segments (e.g. /market/:exchange).
  */
 
 import type { AppContext } from './app.js';
-import { FSMRegistry } from '../fsm/registry.js';
+import type { NavRoute } from '../services/router.js';
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
 /**
- * Initialize client-side navigation
- * Call once on app startup to wire up URL → FSM navigation
+ * BUG-9 fix: Match a pathname against a route pattern that may contain :param
+ * segments.  Returns the extracted params on match, null otherwise.
+ */
+function matchPattern(
+  pattern: string,
+  pathname: string
+): Record<string, string> | null {
+  const regexStr =
+    '^' + pattern.replace(/:([^/]+)/g, '(?<$1>[^/]+)') + '$';
+  const m = pathname.match(new RegExp(regexStr));
+  if (!m) return null;
+  return (m.groups ?? {}) as Record<string, string>;
+}
+
+/**
+ * Resolve the view name (and any path params) for a given pathname.
+ * Returns null when no route matches.
+ */
+function findRouteForPath(
+  pathname: string,
+  routes: NavRoute[]
+): { view: string; params: Record<string, string> } | null {
+  for (const route of routes) {
+    const params = matchPattern(route.path, pathname);
+    if (params !== null) {
+      return { view: route.view, params };
+    }
+  }
+  return null;
+}
+
+/**
+ * BUG-2 fix: Insert a view custom element into #ux-content.
+ * Removes any currently-mounted view first (triggering its disconnectedCallback).
+ */
+function mountView(viewName: string): void {
+  const main = document.querySelector<HTMLElement>('#ux-content');
+  if (!main) {
+    console.warn('[Navigation] #ux-content element not found; cannot mount view');
+    return;
+  }
+
+  // Tear down existing view (fires disconnectedCallback → FSM cleanup)
+  while (main.firstChild) {
+    main.removeChild(main.firstChild);
+  }
+
+  const tagName = `ux-${viewName}`;
+  if (!customElements.get(tagName)) {
+    console.warn(
+      `[Navigation] Custom element <${tagName}> is not registered. ` +
+      `Ensure the view file is imported before initApp() is called.`
+    );
+    return;
+  }
+
+  const el = document.createElement(tagName);
+  main.appendChild(el);
+  console.log(`[Navigation] Mounted <${tagName}> into #ux-content`);
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Initialize client-side navigation.
+ * Call once on app startup to wire up URL → view-mount.
  */
 export function setupNavigation(appContext: AppContext): void {
   if (!appContext.nav) {
@@ -21,7 +97,7 @@ export function setupNavigation(appContext: AppContext): void {
     handleNavigationEvent(appContext);
   });
 
-  // Handle all anchor clicks
+  // Handle all anchor clicks (SPA link interception)
   document.addEventListener('click', (event: Event) => {
     const target = event.target as HTMLElement;
     const anchor = target.closest('a');
@@ -29,11 +105,11 @@ export function setupNavigation(appContext: AppContext): void {
     if (!anchor) return;
 
     const href = anchor.getAttribute('href');
-    if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('?')) {
-      return; // External or hash/query-only link
+    if (!href || href.startsWith('http') || href.startsWith('//') || href.startsWith('#') || href.startsWith('?')) {
+      return; // External, hash-only, or query-only link — let browser handle
     }
 
-    // Check if link is disabled
+    // Check if link is explicitly disabled
     if (anchor.hasAttribute('disabled') || anchor.classList.contains('disabled')) {
       event.preventDefault();
       return;
@@ -43,12 +119,12 @@ export function setupNavigation(appContext: AppContext): void {
     navigateTo(href, appContext);
   });
 
-  // Initialize current path on page load
+  // Mount the view that corresponds to the current URL on page load
   handleNavigationEvent(appContext);
 }
 
 /**
- * Navigate to a path programmatically
+ * Navigate to a path programmatically (updates history + mounts the view).
  */
 export function navigateTo(pathname: string, appContext: AppContext): void {
   if (!appContext.nav) {
@@ -56,71 +132,41 @@ export function navigateTo(pathname: string, appContext: AppContext): void {
     return;
   }
 
-  // Try to find the target view
-  let targetView: string | null = null;
-  for (const route of appContext.nav.routes) {
-    if (route.path === pathname) {
-      targetView = route.view;
-      break;
-    }
-  }
+  const match = findRouteForPath(pathname, appContext.nav.routes);
 
-  if (!targetView) {
+  if (!match) {
     console.warn(`[Navigation] No route found for path: ${pathname}`);
     return;
   }
 
-  // Check if target view is navigable
+  const { view: targetView } = match;
+
   if (!appContext.nav.canNavigate(targetView)) {
-    console.warn(`[Navigation] Cannot navigate to view: ${targetView} (FSM not registered or unreachable)`);
+    console.warn(`[Navigation] Cannot navigate to view: ${targetView}`);
     return;
   }
 
-  // Dispatch NAVIGATE event to the target view's FSM
-  const fsmName = `${targetView}FSM`;
-  const fsm = FSMRegistry.get(fsmName);
-
-  if (!fsm) {
-    console.warn(`[Navigation] FSM not found: ${fsmName}`);
-    return;
-  }
-
-  // Update browser history
+  // Update browser history before mounting so the view can read the correct URL
   window.history.pushState({ view: targetView, path: pathname }, '', pathname);
-
-  // Send NAVIGATE event to FSM
-  fsm.send('NAVIGATE');
-
+  mountView(targetView);
   console.log(`[Navigation] Navigated to ${pathname} (view: ${targetView})`);
 }
 
 /**
- * Handle navigation based on current window location
+ * Handle navigation based on current window.location.
+ * Called on popstate and on initial page load.
  */
 function handleNavigationEvent(appContext: AppContext): void {
   if (!appContext.nav) return;
 
   const pathname = window.location.pathname;
+  const match = findRouteForPath(pathname, appContext.nav.routes);
 
-  // Match current pathname to route
-  let targetView: string | null = null;
-  for (const route of appContext.nav.routes) {
-    if (route.path === pathname) {
-      targetView = route.view;
-      break;
-    }
+  const targetView = match?.view ?? 'home';
+
+  if (!match) {
+    console.warn(`[Navigation] No route for path: ${pathname}; mounting default view '${targetView}'`);
   }
 
-  if (!targetView) {
-    console.warn(`[Navigation] No route for current path: ${pathname}; defaulting to home`);
-    targetView = 'home';
-  }
-
-  // Send NAVIGATE event to target FSM
-  const fsmName = `${targetView}FSM`;
-  const fsm = FSMRegistry.get(fsmName);
-
-  if (fsm) {
-    fsm.send('NAVIGATE');
-  }
+  mountView(targetView);
 }

@@ -2,12 +2,8 @@
 
 All notable changes to UX3 will be documented in this file.
 
-## [0.1.0] - 2026-02-04
-
-### Added
-
 #### @ux3/core
-- Universal Widget primitive (~150 LOC base class)
+- Universal Widget primitive (base class)
 - Config-based widget system
 - Widget state management
 - Event system

@@ -19,13 +19,14 @@ import type { AppContext } from './app.js';
 import type { ContentManifest } from '../services/content.js';
 import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
+import { setupNavigation } from './navigation-handler.js';
 
 /**
  * Generated configuration structure
  */
 export interface GeneratedConfig {
   routes: Array<{ path: string; view: string }>;
-  services: Record<string, { type: string; config: ServiceConfig }>;
+  services: Record<string, { type?: string; adapter?: string; config?: ServiceConfig; [key: string]: any }>;
   machines: Record<string, StateConfig<any>>;
   i18n: Record<string, Record<string, string>>;
   widgets: Record<string, { path: string; lazy?: boolean }>;
@@ -85,6 +86,8 @@ export class AppContextBuilder {
       for (const [name, machineConfig] of Object.entries(this.config.machines)) {
         const machine = new StateMachine(machineConfig);
         this.machines.set(name, machine);
+        // Register in FSMRegistry so navigation handler can look up by name
+        FSMRegistry.register(name, machine);
 
         // debug log creation
         import('../security/observability.js').then(({ defaultLogger }) => {
@@ -138,25 +141,29 @@ export class AppContextBuilder {
    */
   private createService(
     name: string,
-    spec: { type?: string; adapter?: string; config: ServiceConfig }
+    spec: { type?: string; adapter?: string; config?: ServiceConfig; [key: string]: any }
   ): Service {
     // prior versions of the config used `type`; newer schema calls it `adapter`.
     const svcType = spec.type || spec.adapter;
+    // ConfigGenerator emits flat specs (fields directly on the object, no nested .config).
+    // Derive the effective config by stripping the discriminator keys.
+    const { type: _t, adapter: _a, config: nestedCfg, ...flatCfg } = spec;
+    const svcConfig: ServiceConfig = nestedCfg ?? (flatCfg as unknown as ServiceConfig);
     // log for troubleshooting
     if (typeof console !== 'undefined' && console.debug) {
-      console.debug('[AppContextBuilder] createService', name, spec, svcType);
+      console.debug('[AppContextBuilder] createService', name, { svcType, svcConfig });
     }
     switch (svcType) {
       case 'http':
-        return new HttpService(spec.config);
+        return new HttpService(svcConfig);
       case 'websocket':
         // config may not strictly match WebSocketConfig but is assumed to contain url
-        return new WebSocketService(spec.config as any);
+        return new WebSocketService(svcConfig as any);
       case 'jsonrpc':
-        return new JSONRPCService(spec.config);
+        return new JSONRPCService(svcConfig);
       case 'file':
         // file adapter simply performs GETs to static resources (using HTTP under the hood)
-        return new HttpService(spec.config);
+        return new HttpService(svcConfig);
       case 'mock':
         // Mock service returns predefined responses
         return {
@@ -622,6 +629,16 @@ export async function createAppContext(
       document.body.appendChild(el);
     } catch (err) {
       console.warn('[AppContextBuilder] failed to mount inspector element', err);
+    }
+  }
+
+  // Wire client-side routing: mounts the initial view and handles history events.
+  // Only runs in browser (guards against SSR / test environments without a real DOM).
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    try {
+      setupNavigation(context);
+    } catch (err) {
+      console.warn('[AppContext] setupNavigation failed', err);
     }
   }
 

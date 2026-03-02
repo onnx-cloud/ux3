@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createTestApp, mockLogger, executeHook } from '@ux3/testing/plugin-test-utils';
-import type { Plugin } from '../../plugin/registry';
+import type { Plugin } from '../../src/plugin/registry';
 
 // a simple dummy plugin for testing
 const dummy: Plugin = {

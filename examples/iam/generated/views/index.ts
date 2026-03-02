@@ -11,7 +11,7 @@ import { BlogView } from './blog.js';
 import { ChatView } from './chat.js';
 import { DashboardView } from './dashboard.js';
 import { ForYouView } from './for-you.js';
-import { IndexView } from './index.js';
+import { IndexView } from './index-view.js';
 import { LoginView } from './login.js';
 import { MacroView } from './macro.js';
 import { MarketView } from './market.js';

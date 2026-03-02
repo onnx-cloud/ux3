@@ -52,11 +52,11 @@ export class MarketView extends ViewComponent {
   protected layout = ``;
 
   protected templates = new Map([
-    'loading': `<div ux-state="market.loading">
+    ['loading', `<div ux-state="market.loading">
   <div ux-style="spinner">{{i18n.market.loading.label}}</div>
 </div>
-`,
-    'loaded': `<div ux-state="market.loaded">
+`],
+    ['loaded', `<div ux-state="market.loaded">
   <div ux-style="widget">{{i18n.market.loaded.label}}</div>
   <!-- table of data -->
   <table>
@@ -79,11 +79,11 @@ export class MarketView extends ViewComponent {
     });
   </script>
 </div>
-`,
-    'error': `<div ux-state="market.error">
+`],
+    ['error', `<div ux-state="market.error">
   <div ux-style="alert">{{i18n.market.error.label}}</div>
 </div>
-`,
+`],
   ]);
 
   protected bindings = {

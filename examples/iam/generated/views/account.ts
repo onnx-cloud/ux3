@@ -62,11 +62,11 @@ export class AccountView extends ViewComponent {
   protected layout = ``;
 
   protected templates = new Map([
-    'loading': `<div ux-state="account.loading">
+    ['loading', `<div ux-state="account.loading">
   <div ux-style="spinner">{{i18n.account.loading.label}}</div>
 </div>
-`,
-    'viewing': `<div ux-state="account.viewing">
+`],
+    ['viewing', `<div ux-state="account.viewing">
   <form ux-style="form" aria-labelledby="account-viewing-title">
     <h2 id="account-viewing-title" ux-style="heading">{{i18n.account.viewing.label}}</h2>
 
@@ -89,8 +89,8 @@ export class AccountView extends ViewComponent {
     </div>
   </form>
 </div>
-`,
-    'editing': `<div ux-state="account.editing">
+`],
+    ['editing', `<div ux-state="account.editing">
   <form id="account-form" ux-style="form">
     <div ux-style="field">
       <label for="account-name" ux-style="label">{{i18n.account.fields.name.label}}</label>
@@ -111,18 +111,18 @@ export class AccountView extends ViewComponent {
     </div>
   </form>
 </div>
-`,
-    'saving': `<div ux-state="account.saving">
+`],
+    ['saving', `<div ux-state="account.saving">
   <div ux-style="spinner">{{i18n.account.saving.label}}</div>
 </div>
-`,
-    'error': `<div ux-state="account.error">
+`],
+    ['error', `<div ux-state="account.error">
   <div ux-style="alert">{{i18n.account.error.label}}</div>
   <div ux-style="actions">
     <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
   </div>
 </div>
-`,
+`],
   ]);
 
   protected bindings = {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InputValidator, CSRFProtection, RateLimiter } from '../security/validator';
+import { InputValidator, CSRFProtection, RateLimiter } from '../../src/security/validator';
 
 describe('InputValidator', () => {
   describe('validate', () => {
