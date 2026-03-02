@@ -1,0 +1,32 @@
+name: full scenario
+steps:
+  - type: assertState
+    machine: test
+    path: 'count'
+    equals: 0
+
+  - type: event
+    machine: test
+    name: INCR
+
+  - type: wait
+    condition: "ctx.count === 1"
+    timeout: 500
+
+  - type: assertState
+    machine: test
+    path: 'count'
+    equals: 1
+
+  - type: event
+    machine: test
+    name: INCR
+
+  - type: fsmState
+    machine: test
+    equals: idle
+
+  - type: assert
+    selector: 'body'
+    exists: true
+    when: "ctx.count === 2"

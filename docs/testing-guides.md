@@ -16,6 +16,14 @@ Integration tests
 - `my-list`: verify template-stamping equals SSR output, correct counts for large arrays, and lazy rendering if implemented.
 - Form-field: verify `ElementInternals` participation or fallback behaviour.
 
+Declarative scenario tests
+---
+- Use YAML-based scenarios (`tests/decl/*.yaml`) to describe high‑level flows.
+- Runner (`src/test-tools/decl-runner.ts`) parses steps and drives either a unit FSM sandbox or a Playwright page.
+- Steps include `event`, `click`, `input`, `wait`, `assert`, `assertState`, and `fsmState`.
+- Allows cross‑layer reuse: the same file can power unit and E2E specs.
+- See `tests/decl/runner.test.ts` for a minimal example and `todo/DECL_TESTS.md` for DSL documentation.
+
 E2E & a11y
 ---
 - Use Playwright to run accessibility audits on key flows (home view, login flow) and ensure components are usable via keyboard and screen readers.

@@ -15,7 +15,7 @@ export type WidgetLoader = () => Promise<Widget | { default: Widget }>;
  */
 export class WidgetFactory {
   private loaders: Map<string, WidgetLoader> = new Map();
-  private cache: Map<string, Widget | unknown> = new Map();
+  private cache: Map<string, unknown> = new Map();
   private pendingLoads: Map<string, Promise<unknown>> = new Map();
   // AsyncLocalStorage used to track current loader context and detect self-references
   private context = new AsyncLocalStorage<string>();
@@ -23,7 +23,7 @@ export class WidgetFactory {
   /**
    * Register a widget synchronously
    */
-  register(name: string, widget: Widget | unknown): void {
+  register(name: string, widget: unknown): void {
     this.cache.set(name, widget);
   }
 
@@ -38,7 +38,7 @@ export class WidgetFactory {
   /**
    * Get a widget - loads lazily if needed, returns from cache if available
    */
-  async get(name: string): Promise<Widget | unknown> {
+  async get(name: string): Promise<unknown> {
     // Return from cache if available
     if (this.cache.has(name)) {
       return this.cache.get(name);
@@ -64,13 +64,13 @@ export class WidgetFactory {
         resolve: (v: T) => void;
         reject: (e: unknown) => void;
       };
-      let resolveFn!: (v: Widget | unknown) => void;
+      let resolveFn!: (v: unknown) => void;
       let rejectFn!: (e: unknown) => void;
-      const promise: Promise<Widget | unknown> = new Promise((res, rej) => {
+      const promise: Promise<unknown> = new Promise((res, rej) => {
         resolveFn = res;
         rejectFn = rej;
       });
-      const deferred: Deferred<Widget | unknown> = {
+      const deferred: Deferred<unknown> = {
         promise,
         resolve: resolveFn,
         reject: rejectFn,
@@ -101,7 +101,7 @@ export class WidgetFactory {
   /**
    * Load a widget and handle module format variations
    */
-  private async loadWidget(name: string, loader: WidgetLoader): Promise<Widget | unknown> {
+  private async loadWidget(name: string, loader: WidgetLoader): Promise<unknown> {
     const result = await loader();
 
     // Handle both default exports and named exports

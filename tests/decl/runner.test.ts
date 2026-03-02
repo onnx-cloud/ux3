@@ -7,8 +7,17 @@ import { runScenario } from '../../src/test-tools/decl-runner';
 function makeTestFsm() {
   return new StateMachine<any>({
     initial: 'idle',
+    context: { count: 0 },
     states: {
-      idle: { on: { START: 'running' } },
+      idle: {
+        on: {
+          START: 'running',
+          INCR: {
+            target: 'idle',
+            actions: [ctx => ({ ...ctx, count: ctx.count + 1 })]
+          }
+        }
+      },
       running: { on: { STOP: 'idle' } }
     }
   });
@@ -23,5 +32,11 @@ describe('declarative scenario runner', () => {
     const fsm = makeTestFsm();
     FSMRegistry.register('test', fsm);
     await runScenario('tests/decl/simple.yaml', { runner: 'unit' });
+  });
+
+  it('runs a more complex flow with assertions and wait', async () => {
+    const fsm = makeTestFsm();
+    FSMRegistry.register('test', fsm);
+    await runScenario('tests/decl/full.yaml', { runner: 'unit' });
   });
 });

@@ -1,0 +1,7 @@
+name: dom interaction
+steps:
+  - type: click
+    selector: '#btn'
+  - type: assert
+    selector: '#btn'
+    text: 'done'
