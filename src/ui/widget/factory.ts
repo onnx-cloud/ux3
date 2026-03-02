@@ -15,15 +15,15 @@ export type WidgetLoader = () => Promise<Widget | { default: Widget }>;
  */
 export class WidgetFactory {
   private loaders: Map<string, WidgetLoader> = new Map();
-  private cache: Map<string, Widget | any> = new Map();
-  private pendingLoads: Map<string, Promise<any>> = new Map();
+  private cache: Map<string, Widget | unknown> = new Map();
+  private pendingLoads: Map<string, Promise<unknown>> = new Map();
   // AsyncLocalStorage used to track current loader context and detect self-references
   private context = new AsyncLocalStorage<string>();
 
   /**
    * Register a widget synchronously
    */
-  register(name: string, widget: Widget | any): void {
+  register(name: string, widget: Widget | unknown): void {
     this.cache.set(name, widget);
   }
 
@@ -38,7 +38,7 @@ export class WidgetFactory {
   /**
    * Get a widget - loads lazily if needed, returns from cache if available
    */
-  async get(name: string): Promise<Widget | any> {
+  async get(name: string): Promise<Widget | unknown> {
     // Return from cache if available
     if (this.cache.has(name)) {
       return this.cache.get(name);
@@ -59,15 +59,22 @@ export class WidgetFactory {
     if (loader) {
       // create deferred promise so we can install pendingLoads before
       // actually invoking the loader (which may synchronously call get())
-      const deferred: {
-        promise: Promise<any>;
-        resolve: (v: any) => void;
-        reject: (e: any) => void;
-      } = {} as any;
-      deferred.promise = new Promise((res, rej) => {
-        deferred.resolve = res;
-        deferred.reject = rej;
+      type Deferred<T> = {
+        promise: Promise<T>;
+        resolve: (v: T) => void;
+        reject: (e: unknown) => void;
+      };
+      let resolveFn!: (v: Widget | unknown) => void;
+      let rejectFn!: (e: unknown) => void;
+      const promise: Promise<Widget | unknown> = new Promise((res, rej) => {
+        resolveFn = res;
+        rejectFn = rej;
       });
+      const deferred: Deferred<Widget | unknown> = {
+        promise,
+        resolve: resolveFn,
+        reject: rejectFn,
+      };
 
       // register as pending immediately so recursive get() calls can see it
       this.pendingLoads.set(name, deferred.promise);
@@ -94,7 +101,7 @@ export class WidgetFactory {
   /**
    * Load a widget and handle module format variations
    */
-  private async loadWidget(name: string, loader: WidgetLoader): Promise<Widget | any> {
+  private async loadWidget(name: string, loader: WidgetLoader): Promise<Widget | unknown> {
     const result = await loader();
 
     // Handle both default exports and named exports
@@ -110,19 +117,19 @@ export class WidgetFactory {
   /**
    * Create a widget instance
    */
-  async create(name: string, props?: any): Promise<HTMLElement> {
+  async create(name: string, props?: unknown): Promise<HTMLElement> {
     const widget = await this.get(name);
 
     if (typeof widget === 'function') {
       // Class-based widget
-      return new widget(props);
-    } else if (typeof widget === 'object' && widget.create) {
+      return new (widget as new (p?: unknown) => HTMLElement)(props);
+    } else if (typeof widget === 'object' && widget && 'create' in widget) {
       // Factory object
-      return widget.create(props);
+      return (widget as { create: (p?: unknown) => HTMLElement }).create(props);
     } else {
       // Assume it's a Web Component class
-      const element = new (widget as any)(props);
-      return element as HTMLElement;
+      const element = new (widget as new (p?: unknown) => HTMLElement)(props);
+      return element;
     }
   }
 

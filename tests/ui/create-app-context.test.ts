@@ -120,7 +120,8 @@ describe('AppContext helper methods', () => {
 
   it('loads and installs plugins declared in config.plugins', async () => {
     const chartsPath = require('path').join(process.cwd(), 'packages/@ux3/plugin-charts-js/src/index.ts');
-    const cfg: any = { ...baseConfig, plugins: [chartsPath] };
+    // config.site must exist so plugins can register assets without blowing up
+    const cfg: any = { ...baseConfig, plugins: [chartsPath], site: {} };
     const ctx: any = await createAppContext(cfg);
     // plugin loader runs automatically, but ensure any async installs finish
     if (ctx.registerPlugin && typeof ctx.registerPlugin === 'function') {

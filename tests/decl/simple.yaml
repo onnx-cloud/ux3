@@ -1,0 +1,8 @@
+name: simple test
+steps:
+  - type: event
+    machine: test
+    name: START
+  - type: fsmState
+    machine: test
+    equals: running

@@ -185,6 +185,20 @@ export function detectCapabilities(): BrowserCapabilities {
   };
 }
 
+
+// vendor-prefixed properties used by capability checks
+interface Window {
+  mozIndexedDB?: IDBFactory;
+  webkitIndexedDB?: IDBFactory;
+  msIndexedDB?: IDBFactory;
+}
+
+interface HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+  mozRequestFullScreen?: () => Promise<void> | void;
+  msRequestFullscreen?: () => Promise<void> | void;
+}
+
 /**
  * Check localStorage/sessionStorage support
  */
@@ -206,9 +220,9 @@ function hasStorage(type: 'localStorage' | 'sessionStorage'): boolean {
 function hasIndexedDB(): boolean {
   return !!(
     window.indexedDB ||
-    (window as any).mozIndexedDB ||
-    (window as any).webkitIndexedDB ||
-    (window as any).msIndexedDB
+    window.mozIndexedDB ||
+    window.webkitIndexedDB ||
+    window.msIndexedDB
   );
 }
 
@@ -373,12 +387,12 @@ function hasResizeObserver(): boolean {
  * Check Fullscreen API support
  */
 function hasFullscreen(): boolean {
-  const elem = document.documentElement;
+  const elem = document.documentElement as HTMLElement;
   return !!(
     elem.requestFullscreen ||
-    (elem as any).webkitRequestFullscreen ||
-    (elem as any).mozRequestFullScreen ||
-    (elem as any).msRequestFullscreen
+    elem.webkitRequestFullscreen ||
+    elem.mozRequestFullScreen ||
+    elem.msRequestFullscreen
   );
 }
 

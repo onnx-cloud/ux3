@@ -656,12 +656,6 @@ export const config = {
         "watchlist": "Watchlist",
         "market": "Market"
       },
-      "demo": {
-        "charts": "Chart demo",
-        "dropdown": "Dropdown demo",
-        "modal": "Modal demo",
-        "stripe": "Stripe demo"
-      },
       "login": {
         "idle": {
           "label": "Sign in"

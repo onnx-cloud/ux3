@@ -10,11 +10,5 @@
     },
     "footer": {
         "copyright": "© 2026 IAM. All rights reserved."
-    },
-    "demo": {
-        "charts": "Chart demo",
-        "dropdown": "Dropdown demo",
-        "modal": "Modal demo",
-        "stripe": "Stripe demo"
     }
 }

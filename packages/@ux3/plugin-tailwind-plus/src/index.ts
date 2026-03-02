@@ -94,7 +94,8 @@ export const TailwindPlusPlugin: Plugin = {
         }
       }
     });
-    // use helper so context.machines is updated
+
+    // register dropdown artifacts so tests can observe them
     app.registerMachine?.('dropdown', fsm);
     app.registerView('dropdown-demo', dropdownTemplate);
     app.registerRoute('/dropdown', 'dropdown-demo');
