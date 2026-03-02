@@ -41,6 +41,7 @@ export class Router {
   private routes: RouteConfig[];
   private machines: Map<string, StateMachine<any>>;
   private navConfig: NavConfig;
+  private i18n: Record<string, any>;
 
   constructor(
     routes: RouteConfig[],
@@ -49,6 +50,7 @@ export class Router {
   ) {
     this.routes = routes;
     this.machines = machines;
+    this.i18n = i18n;
     this.navConfig = this.buildNavConfig(i18n);
   }
 
@@ -166,6 +168,14 @@ export class Router {
    */
   getNavConfig(): NavConfig {
     return this.navConfig;
+  }
+
+  /**
+   * Dynamically add a route and refresh nav config
+   */
+  addRoute(path: string, view: string): void {
+    this.routes.push({ path, view });
+    this.navConfig = this.buildNavConfig(this.i18n);
   }
 
   /**

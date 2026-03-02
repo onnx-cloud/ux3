@@ -6,7 +6,7 @@ import { join } from 'path';
 describe('npm plugin packages', () => {
   const base = join(process.cwd(), 'packages/@ux3');
 
-  ['plugin-i18n', 'plugin-sentry', 'plugin-analytics', 'plugin-validation'].forEach((pkg) => {
+  ['plugin-i18n', 'plugin-sentry', 'plugin-analytics', 'plugin-validation', 'plugin-charts-js', 'plugin-stripe', 'plugin-tailwind-plus'].forEach((pkg) => {
     it(`can require ${pkg}`, () => {
       const pluginPath = join(base, pkg, 'src', 'index.ts');
       // eslint-disable-next-line @typescript-eslint/no-var-requires

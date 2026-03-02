@@ -68,3 +68,44 @@ describe('createAppContext development logging', () => {
     expect(pre?.textContent).toContain('"test": "b"');
   });
 });
+
+// helpers and plugin registration behaviour
+
+describe('AppContext helper methods', () => {
+  it('provides registerAsset and updates config.site.assets', async () => {
+    const cfg: any = { ...baseConfig, site: {} };
+    const ctx: any = await createAppContext(cfg);
+    expect(typeof ctx.registerAsset).toBe('function');
+    ctx.registerAsset({ type: 'script', src: '/foo.js' });
+    expect(cfg.site.assets).toEqual([{ type: 'script', src: '/foo.js' }]);
+  });
+
+  it('registerService adds service to context', async () => {
+    const cfg: any = { ...baseConfig };
+    const ctx: any = await createAppContext(cfg);
+    ctx.registerService('foo', () => ({ hello: 'world' }));
+    expect(ctx.services.foo.hello).toBe('world');
+  });
+
+  it('registerView makes template available via context.template', async () => {
+    const cfg: any = { ...baseConfig, templates: {} };
+    const ctx: any = await createAppContext(cfg);
+    ctx.registerView('test-view', '<div>hi</div>');
+    expect(ctx.template('test-view')).toBe('<div>hi</div>');
+  });
+
+  it('registerMachine and registerRoute interact with router', async () => {
+    const cfg: any = { ...baseConfig, routes: [] };
+    const ctx: any = await createAppContext(cfg);
+    // use simple FSM from registry
+    const fsm = new (await import('../../src/fsm/state-machine.js')).StateMachine({
+      id: 'foo',
+      initial: 'a',
+      states: { a: {} },
+    });
+    ctx.registerMachine('foo', fsm);
+    expect(ctx.machines.foo).toBe(fsm);
+    ctx.registerRoute('/foo', 'foo');
+    expect(ctx.nav.routes.find((r:any)=>r.path==='/foo')).toBeTruthy();
+  });
+});

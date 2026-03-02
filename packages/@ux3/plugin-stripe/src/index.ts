@@ -1,18 +1,23 @@
-// simple stripe plugin example
-module.exports = {
+import type { Plugin } from '../../../src/plugin/registry';
+import type { AssetDescriptor } from '../../../src/ui/app';
+
+export interface StripeConfig {
+  apiKey?: string;
+  cdn?: string;
+}
+
+export const StripePlugin: Plugin = {
   name: '@ux3/plugin-stripe',
   version: '0.1.0',
   install(app) {
-    const cfg = app.config.plugins?.stripe || {};
-    // read key/other options from config or env
-    app.config.site = app.config.site || {};
-    app.config.site.assets = app.config.site.assets || [];
+    const cfg: StripeConfig = app.config.plugins?.stripe || {};
+
     if (cfg.cdn) {
-      app.config.site.assets.push({ type: 'script', src: cfg.cdn });
+      app.registerAsset({ type: 'script', src: cfg.cdn });
     }
 
     app.registerService('stripe', () => {
-      let stripeLib;
+      let stripeLib: any;
       async function load() {
         if (!stripeLib) stripeLib = await import('stripe');
         return stripeLib;
@@ -26,3 +31,5 @@ module.exports = {
     });
   }
 };
+
+export default StripePlugin;

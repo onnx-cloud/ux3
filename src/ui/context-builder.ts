@@ -353,6 +353,46 @@ export class AppContextBuilder {
       nav: navConfig,
     };
 
+    // helper methods for plugin authors/runtime
+    context.registerAsset = (asset) => {
+      // will throw if config.site missing to catch mis-use
+      if (!this.config.site) {
+        throw new Error('app.config.site is not initialized');
+      }
+      this.config.site.assets = this.config.site.assets || [];
+      this.config.site.assets.push(asset);
+    };
+
+    context.registerService = (name, factory) => {
+      if (context.services[name]) {
+        console.warn(`[AppContext] service ${name} already exists, overwriting`);
+      }
+      context.services[name] = factory();
+    };
+
+    context.registerComponent = (name, factory) => {
+      context.widgets.register(name, factory);
+    };
+
+    context.registerView = (name, template) => {
+      // add to templates store so templateFn will find it
+      (this.templates as any)[name] = template;
+    };
+
+    context.registerRoute = (path, viewName) => {
+      if (!this.router) {
+        throw new Error('router not initialized; call withRouter before registering routes');
+      }
+      this.router.addRoute(path, viewName);
+      // refresh nav config
+      context.nav = this.router.getNavConfig();
+    };
+
+    context.registerMachine = (namespace, fsm) => {
+      FSMRegistry.register(namespace, fsm);
+      context.machines[namespace] = fsm;
+    };
+
     // keep a global style registry in sync so that runtime class injection works
     registerStyles(context.styles || {});
     initStyleRegistry();

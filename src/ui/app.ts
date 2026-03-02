@@ -8,6 +8,14 @@ import { WidgetFactory } from "./widget/factory";
  * App Context
  * Data about the app environment passed to widgets during rendering
  */
+export interface AssetDescriptor {
+  type: 'script' | 'style';
+  src?: string;
+  href?: string;
+  async?: boolean;
+  defer?: boolean;
+}
+
 export interface AppContext {
   styles: Record<string, string>; // normalized styles (named sets of classes)
   machines: Record<string,StateMachine<any>>;  // running FSM instances 
@@ -17,6 +25,14 @@ export interface AppContext {
   template: (name: string) => string; // template registry function
   i18n: (key: string, props?: Record<string,any>) => string; // i18n function
   nav: NavConfig | null; // navigation config (routes, current path, canNavigate)
+
+  // helpers for plugins or runtime code
+  registerAsset?: (asset: AssetDescriptor) => void;
+  registerService?: (name: string, factory: ServiceFactory) => void;
+  registerComponent?: (name: string, factory: ComponentFactory) => void;
+  registerView?: (name: string, template: string) => void;
+  registerRoute?: (path: string, viewName: string) => void;
+  registerMachine?: (namespace: string, fsm: StateMachine<any>) => void;
 }
 
 export interface AppContextLoader {
