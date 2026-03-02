@@ -38,6 +38,9 @@ export interface AppContext {
    * The plugin's `install` method is invoked with this context.
    */
   registerPlugin?: (plugin: import('../plugin/registry').Plugin) => void;
+
+  // full generated configuration (useful for plugins)
+  config?: any;
 }
 
 export interface AppContextLoader {

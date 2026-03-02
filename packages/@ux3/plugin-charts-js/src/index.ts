@@ -23,6 +23,23 @@ export const ChartsJsPlugin: Plugin = {
         }
       };
     });
+
+    // register a simple demo view/route showing how to use the service
+    const chartTemplate = `<div class="p-4">
+  <h2>Chart demo</h2>
+  <div id="chart"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const app = (window as any).__ux3App;
+      if (app?.services?.chart) {
+        app.services.chart.create(document.getElementById('chart'))
+          .catch(console.error);
+      }
+    });
+  </script>
+</div>`;
+    app.registerView('chart-demo', chartTemplate);
+    app.registerRoute('/charts', 'chart-demo');
   }
 };
 

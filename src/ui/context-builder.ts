@@ -351,6 +351,7 @@ export class AppContextBuilder {
       template: templateFn,
       i18n: i18nFn,
       nav: navConfig,
+      config: this.config,
     };
 
     // helper methods for plugin authors/runtime
@@ -513,6 +514,43 @@ export async function createAppContext(
     .withTemplates()
     .withStyles()
     .build();
+
+  // auto-install plugins listed in config
+  if (config.plugins && Array.isArray(config.plugins)) {
+    for (const entry of config.plugins) {
+      try {
+        let plugin: any = null;
+        if (typeof entry === 'string') {
+          // import by package name or path
+          try {
+            plugin = await import(/* @vite-ignore */ entry);
+          } catch {
+            // fallback to require (node tests)
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            plugin = require(entry);
+          }
+          plugin = plugin.default || plugin;
+        } else if (entry && entry.name) {
+          // entry may specify configuration or be object
+          try {
+            const mod = await import(/* @vite-ignore */ entry.name);
+            plugin = mod.default || mod;
+          } catch {
+            // ignore load failure
+          }
+          // merge config onto plugin if provided
+          if (plugin && entry.config) {
+            plugin.config = { ...(plugin.config || {}), ...entry.config };
+          }
+        }
+        if (plugin && context.registerPlugin) {
+          context.registerPlugin(plugin);
+        }
+      } catch (err) {
+        console.warn('[AppContext] failed to install plugin', entry, err);
+      }
+    }
+  }
 
   // inspector: attach context to window and log
   if (

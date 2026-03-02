@@ -25,5 +25,11 @@ describe('IAM built-in plugins', () => {
     expect(svc['ux3.service.forms']).toBeDefined();
     expect(svc['ux3.service.auth']).toBeDefined();
     expect(svc['ux3.service.state'] || svc['ux3.service.reconnect']).toBeDefined();
+
+    // plugin routes should be registered
+    const nav = app.nav;
+    expect(nav.routes.some((r:any)=>r.path==='/dropdown')).toBe(true);
+    expect(nav.routes.some((r:any)=>r.path==='/charts')).toBe(true);
+    expect(nav.routes.some((r:any)=>r.path==='/stripe')).toBe(true);
   });
 });

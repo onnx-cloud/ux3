@@ -117,4 +117,11 @@ describe('AppContext helper methods', () => {
     ctx.registerPlugin!(plg);
     expect(called).toBe(true);
   });
+
+  it('loads and installs plugins declared in config.plugins', async () => {
+    const cfg: any = { ...baseConfig, plugins: ['@ux3/plugin-charts-js'] };
+    const ctx: any = await createAppContext(cfg);
+    // charts plugin should have registered its demo route
+    expect(ctx.nav.routes.find((r:any)=>r.path==='/charts')).toBeTruthy();
+  });
 });
