@@ -1,0 +1,9 @@
+{
+  "name": "@ux3/plugin-tailwind-plus",
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "sideEffects": false,
+  "peerDependencies": {
+    "tailwindcss": "^3.0.0"
+  }
+}

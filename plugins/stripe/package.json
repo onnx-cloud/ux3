@@ -1,0 +1,9 @@
+{
+  "name": "@ux3/plugin-stripe",
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "sideEffects": false,
+  "peerDependencies": {
+    "stripe": "^3.0.0"
+  }
+}
