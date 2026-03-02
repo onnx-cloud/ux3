@@ -3,11 +3,11 @@ macros:
   login:
     - type: event
       machine: loginFSM
-      name: LOGIN
+      name: SUBMIT
   fail:
     - type: event
       machine: loginFSM
-      name: FAILURE
+      name: ERROR
       payload:
         error: 'Invalid credentials'
   retry:

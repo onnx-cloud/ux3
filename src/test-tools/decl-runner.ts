@@ -240,6 +240,7 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         throw new Error(`unknown step type ${(step as any).type}`);
     }
   }
+  }
 
   // execute scenario steps after helpers defined above
   await execSteps(scenario.steps);

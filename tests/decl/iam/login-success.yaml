@@ -3,7 +3,7 @@ macros:
   login:
     - type: event
       machine: loginFSM
-      name: LOGIN
+      name: SUBMIT
       payload:
         email: 'user@example.com'
         password: 'secret'

@@ -21,6 +21,9 @@ Declarative scenario tests
 - Use YAML-based scenarios (`tests/decl/*.yaml`) to describe high‑level flows.
 - Runner (`src/test-tools/decl-runner.ts`) parses steps and drives either a unit FSM sandbox or a Playwright page.
 - Steps include `event`, `click`, `input`, `wait`, `assert`, `assertState`, and `fsmState`.
+  - **macro**: invoke a named sequence defined in `macros:` at top of file.
+  - **fixture**: run arbitrary setup code via a module (unit runner) to prepare
+    context or register mocks. The fixture is called with `{FSMRegistry,page,options,args}`.
 - Allows cross‑layer reuse: the same file can power unit and E2E specs.
 - See `tests/decl/runner.test.ts` for a minimal example and `todo/DECL_TESTS.md` for DSL documentation.
 - A Playwright fixture (`tests/e2e/decl-fixtures.ts`) injects a `window.__test` helper so scenarios can emit events/get state in-browser; see `tests/e2e/decl.spec.ts` for usage.
