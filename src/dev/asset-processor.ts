@@ -53,28 +53,29 @@ export function processAssets(manifest: any, projectDir: string) {
       headInjections.push(`<link rel="stylesheet" href="${style}" data-ux3="styles">`);
     }
 
-    // inject bundle script with metadata
-    const version = runtime.version || '';
-    const bundleUrl = runtime.bundle;
-    scriptInjections.push(
-      `<script type="module" src="${bundleUrl}" ` +
-      `data-ux3="app" ` +
-      `data-ux3-version="${version}" ` +
-      `defer></script>`
-    );
-
-    // hydration inline script
+    // hydration inline script - dynamically import the bundle as a module and
+    // then invoke the exported hydration function.  Bundle URL is normalized
+    // to an absolute path to avoid relative resolution issues, and we append
+    // a timestamp query string to bust any browser cache.
+    let bundleUrl = runtime.bundle;
+    if (bundleUrl && !bundleUrl.startsWith('/')) {
+      bundleUrl = '/' + bundleUrl;
+    }
+    // add cache-busting parameter
+    const bundleUrlWithTs = bundleUrl + `?ts=${Date.now()}`;
     const hydrationFn = runtimeConfig.hydrationFn || 'initApp';
     scriptInjections.push(
       `<script data-ux3="hydration">` +
-      `document.addEventListener('DOMContentLoaded', () => { ` +
-      `  if (typeof window.${hydrationFn} === 'function') { ` +
-      `    window.${hydrationFn}().catch(e => console.error('[UX3]', e)); ` +
-      `  } ` +
-      `}); ` +
+      `document.addEventListener('DOMContentLoaded', async () => { ` +
+      `  try { ` +
+      `    const m = await import('${bundleUrlWithTs}'); ` +
+      `    if (m && typeof m.${hydrationFn} === 'function') { ` +
+      `      await m.${hydrationFn}(); ` +
+      `    } ` +
+      `  } catch(e) { console.error('[UX3 hydration]', e); } ` +
+      `});` +
       `</script>`
-    );
-  }
+    );  }
 
   return {
     ...rawSite,

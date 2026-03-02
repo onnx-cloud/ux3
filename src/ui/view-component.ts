@@ -221,6 +221,11 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         
         this.renderState(state);
 
+        // execute any configured invoke for this state (service call, logic function, etc)
+        this.handleStateInvoke(state).catch(err => {
+          console.error('[ViewComponent] state invoke error', err);
+        });
+
         this.emitTelemetry('fsm:state-change', {
           view: this.getAttribute('ux-view'),
           state,

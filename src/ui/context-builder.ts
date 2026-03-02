@@ -116,10 +116,14 @@ export class AppContextBuilder {
       for (const [name, serviceSpec] of Object.entries(
         this.config.services
       )) {
+        // log incoming spec for diagnostics
+        import('../security/observability.js').then(({ defaultLogger }) => {
+          defaultLogger.debug('service.spec', { name, spec: serviceSpec });
+        });
         const service = this.createService(name, serviceSpec);
         this.services.set(name, service);
         import('../security/observability.js').then(({ defaultLogger }) => {
-          defaultLogger.debug('service.initialized', { name, type: serviceSpec.type });
+          defaultLogger.debug('service.initialized', { name, type: serviceSpec.type, adapter: serviceSpec.adapter });
         });
       }
     } catch (error) {
@@ -134,9 +138,15 @@ export class AppContextBuilder {
    */
   private createService(
     name: string,
-    spec: { type: string; config: ServiceConfig }
+    spec: { type?: string; adapter?: string; config: ServiceConfig }
   ): Service {
-    switch (spec.type) {
+    // prior versions of the config used `type`; newer schema calls it `adapter`.
+    const svcType = spec.type || spec.adapter;
+    // log for troubleshooting
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug('[AppContextBuilder] createService', name, spec, svcType);
+    }
+    switch (svcType) {
       case 'http':
         return new HttpService(spec.config);
       case 'websocket':
@@ -144,6 +154,9 @@ export class AppContextBuilder {
         return new WebSocketService(spec.config as any);
       case 'jsonrpc':
         return new JSONRPCService(spec.config);
+      case 'file':
+        // file adapter simply performs GETs to static resources (using HTTP under the hood)
+        return new HttpService(spec.config);
       case 'mock':
         // Mock service returns predefined responses
         return {
@@ -155,7 +168,7 @@ export class AppContextBuilder {
           },
         };
       default:
-        throw new Error(`Unknown service type: ${spec.type}`);
+        throw new Error(`Unknown service type: ${svcType} for service ${name}`);
     }
   }
 
