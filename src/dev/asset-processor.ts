@@ -47,35 +47,51 @@ export function processAssets(manifest: any, projectDir: string) {
   // runtime injection (bundle + styles + hydration) based on manifest/runtime
   const runtime = (manifest as any)?.runtime;
   const runtimeConfig = (manifest as any)?.config?.site?.runtime || {};
-  if (runtime && runtimeConfig?.bundleKey) {
-    // inject styles first
-    for (const style of runtime.styles || []) {
+  // Trigger injection as soon as a bundleKey is declared in config; runtime.bundle
+  // is optional (may not exist yet if bundler hasn't run).
+  if (runtimeConfig?.bundleKey) {
+    // inject styles first (only available after bundler has run)
+    for (const style of (runtime?.styles || [])) {
       headInjections.push(`<link rel="stylesheet" href="${style}" data-ux3="styles">`);
     }
 
-    // hydration inline script - dynamically import the bundle as a module and
-    // then invoke the exported hydration function.  Bundle URL is normalized
-    // to an absolute path to avoid relative resolution issues, and we append
-    // a timestamp query string to bust any browser cache.
-    let bundleUrl = runtime.bundle;
+    // Normalise bundle URL to an absolute path (empty string when not yet built)
+    let bundleUrl = ((runtime?.bundle ?? '') as string);
     if (bundleUrl && !bundleUrl.startsWith('/')) {
       bundleUrl = '/' + bundleUrl;
     }
-    // add cache-busting parameter
-    const bundleUrlWithTs = bundleUrl + `?ts=${Date.now()}`;
-    const hydrationFn = runtimeConfig.hydrationFn || 'initApp';
+
+    // inject the bundle as a module script tag so the browser can preload it
+    const srcAttr = bundleUrl ? ` src="${bundleUrl}"` : '';
     scriptInjections.push(
-      `<script data-ux3="hydration">` +
-      `document.addEventListener('DOMContentLoaded', async () => { ` +
-      `  try { ` +
-      `    const m = await import('${bundleUrlWithTs}'); ` +
-      `    if (m && typeof m.${hydrationFn} === 'function') { ` +
-      `      await m.${hydrationFn}(); ` +
-      `    } ` +
-      `  } catch(e) { console.error('[UX3 hydration]', e); } ` +
-      `});` +
-      `</script>`
-    );  }
+      `<script type="module" data-ux3="app"${srcAttr}></script>`
+    );
+
+    // hydration inline script - dynamically import the bundle as a module and
+    // then invoke the exported hydration function.  A timestamp query string
+    // busts any browser cache.
+    const hydrationFn = runtimeConfig.hydrationFn || 'initApp';
+    if (bundleUrl) {
+      const bundleUrlWithTs = bundleUrl + `?ts=${Date.now()}`;
+      scriptInjections.push(
+        `<script data-ux3="hydration">` +
+        `document.addEventListener('DOMContentLoaded', async () => { ` +
+        `  try { ` +
+        `    const m = await import('${bundleUrlWithTs}'); ` +
+        `    if (m && typeof m.${hydrationFn} === 'function') { ` +
+        `      await m.${hydrationFn}(); ` +
+        `    } ` +
+        `  } catch(e) { console.error('[UX3 hydration]', e); } ` +
+        `});` +
+        `</script>`
+      );
+    } else {
+      // Bundle not yet built – inject a placeholder so the markup is identifiable
+      scriptInjections.push(
+        `<script data-ux3="hydration">/* ${hydrationFn} – bundle pending */</script>`
+      );
+    }
+  }
 
   return {
     ...rawSite,
