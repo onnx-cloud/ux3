@@ -6,27 +6,125 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * MarketView - market view component
  * FSM: market
  * Layout: default
- * States: 
+ * States: loading, loaded, error
  */
 export class MarketView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "Market",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "market/loading.html",
+      "invoke": {
+        "service": "api",
+        "method": "fetch",
+        "input": "/asset/eod/TSLA"
+      },
+      "on": {
+        "SUCCESS": "loaded",
+        "ERROR": "error"
+      }
+    },
+    "loaded": {
+      "template": "market/loaded.html",
+      "on": {
+        "REFRESH": "loading"
+      }
+    },
+    "error": {
+      "template": "market/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 
   protected templates = new Map([
-
+    'loading': `<div ux-state="market.loading">
+  <div ux-style="spinner">{{i18n.market.loading.label}}</div>
+</div>
+`,
+    'loaded': `<div ux-state="market.loaded">
+  <div ux-style="widget">{{i18n.market.loaded.label}}</div>
+  <!-- table of data -->
+  <table>
+    <tr><th>Time</th><th>Price</th></tr>
+    <tr ux-each="{{ctx.table}}">
+      <td>{{this.time}}</td>
+      <td>{{this.price}}</td>
+    </tr>
+  </table>
+  <!-- chart placeholder -->
+  <canvas id="market-chart"></canvas>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const app = (window as any).__ux3App;
+      if (app?.services?.chart) {
+        app.services.chart.create(document.getElementById('market-chart'), {
+          data: {{JSON.stringify(ctx.series)}}
+        }).catch(console.error);
+      }
+    });
+  </script>
+</div>
+`,
+    'error': `<div ux-state="market.error">
+  <div ux-style="alert">{{i18n.market.error.label}}</div>
+</div>
+`,
   ]);
 
   protected bindings = {
     events: [],
-    reactive: [],
-    i18n: [],
+    reactive: [
+    {
+        "element": "tr",
+        "property": "textContent",
+        "signal": "ctx.table",
+        "state": "loaded"
+    },
+    {
+        "element": "td",
+        "property": "textContent",
+        "signal": "this.time",
+        "state": "loaded"
+    },
+    {
+        "element": "td",
+        "property": "textContent",
+        "signal": "this.price",
+        "state": "loaded"
+    }
+],
+    i18n: [
+    {
+        "element": "div",
+        "key": "market.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "market.loaded.label",
+        "state": "loaded"
+    },
+    {
+        "element": "div",
+        "key": "market.error.label",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

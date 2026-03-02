@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * LoginView - login view component
@@ -14,8 +17,41 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class LoginView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "Login",
+  "layout": "auth",
+  "initial": "idle",
+  "states": {
+    "idle": {
+      "template": "view/login/idle.html",
+      "on": {
+        "SUBMIT": "submitting"
+      }
+    },
+    "submitting": {
+      "template": "view/login/submitting.html",
+      "invoke": {
+        "src": (logic.submitLogin || shared.submitLogin)
+      },
+      "on": {
+        "SUCCESS": "success",
+        "ERROR": "error"
+      }
+    },
+    "success": {
+      "template": "view/login/success.html",
+      "on": {
+        "NAVIGATE": "navigate"
+      }
+    },
+    "error": {
+      "template": "view/login/error.html",
+      "on": {
+        "RETRY": "idle"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

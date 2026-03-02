@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * MacroView - macro view component
@@ -14,8 +17,35 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class MacroView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "Macro",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "view/macro/loading.html",
+      "invoke": {
+        "src": (logic.loadMacro || shared.loadMacro)
+      },
+      "on": {
+        "SUCCESS": "loaded",
+        "ERROR": "error"
+      }
+    },
+    "loaded": {
+      "template": "view/macro/loaded.html",
+      "on": {
+        "REFRESH": "loading"
+      }
+    },
+    "error": {
+      "template": "view/macro/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

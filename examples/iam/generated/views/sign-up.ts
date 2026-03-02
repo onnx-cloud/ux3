@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * SignUpView - sign-up view component
@@ -14,8 +17,51 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class SignUpView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "SignUp",
+  "layout": "auth",
+  "initial": "idle",
+  "states": {
+    "idle": {
+      "template": "view/sign-up/idle.html",
+      "on": {
+        "SUBMIT": "validating"
+      }
+    },
+    "validating": {
+      "template": "view/sign-up/validating.html",
+      "invoke": {
+        "src": (logic.validateSignUp || shared.validateSignUp)
+      },
+      "on": {
+        "VALID": "submitting",
+        "INVALID": "error"
+      }
+    },
+    "submitting": {
+      "template": "view/sign-up/submitting.html",
+      "invoke": {
+        "src": (logic.submitSignUp || shared.submitSignUp)
+      },
+      "on": {
+        "SUCCESS": "success",
+        "ERROR": "error"
+      }
+    },
+    "success": {
+      "template": "view/sign-up/success.html",
+      "on": {
+
+      }
+    },
+    "error": {
+      "template": "view/sign-up/error.html",
+      "on": {
+        "RETRY": "idle"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

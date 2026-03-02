@@ -19,7 +19,7 @@ function loadSchemas() {
   const schemasDir = path.join(rootDir, 'schema');
   const schemas: Record<string, any> = {};
 
-  const schemaFiles = ['routes', 'services', 'i18n', 'style', 'tokens', 'validate', 'view'];
+  const schemaFiles = ['routes', 'services', 'i18n', 'style', 'tokens', 'validate', 'view', 'content'];
   for (const file of schemaFiles) {
     const schemaPath = path.join(schemasDir, `${file}.schema.json`);
     if (fs.existsSync(schemaPath)) {

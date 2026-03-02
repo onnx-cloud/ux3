@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * ChatView - chat view component
@@ -14,8 +17,42 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class ChatView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "Chat",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "view/chat/loading.html",
+      "invoke": {
+        "src": (logic.loadConversations || shared.loadConversations)
+      },
+      "on": {
+        "SUCCESS": "ready",
+        "ERROR": "error"
+      }
+    },
+    "ready": {
+      "template": "view/chat/ready.html",
+      "on": {
+        "SELECT_CONVERSATION": "chatting"
+      }
+    },
+    "chatting": {
+      "template": "view/chat/chatting.html",
+      "on": {
+        "SEND_MESSAGE": "chatting",
+        "BACK": "ready"
+      }
+    },
+    "error": {
+      "template": "view/chat/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

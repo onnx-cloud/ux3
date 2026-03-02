@@ -6,27 +6,67 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * BlogView - blog view component
  * FSM: blog
  * Layout: default
- * States: 
+ * States: loading
  */
 export class BlogView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "Blog",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "invoke": {
+        "src": (logic.loadBlog || shared.loadBlog)
+      },
+      "on": {
+        "SUCCESS": "loaded",
+        "ERROR": "error"
+      }
+    },
+    "loaded": {
+      "template": "view/blog/loaded.html",
+      "on": {
+        "NEXT_PAGE": "loading",
+        "PREV_PAGE": "loading",
+        "REFRESH": "loading"
+      }
+    },
+    "error": {
+      "template": "view/blog/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 
   protected templates = new Map([
-
+    'loading': `<div ux-view="blog" ux-state="blog.loading">
+  <div ux-style="spinner">{{i18n.blog.loading.label}}</div>
+</div>
+`,
   ]);
 
   protected bindings = {
     events: [],
     reactive: [],
-    i18n: [],
+    i18n: [
+    {
+        "element": "div",
+        "key": "blog.loading.label",
+        "state": "loading"
+    }
+],
     widgets: [],
   };
 }

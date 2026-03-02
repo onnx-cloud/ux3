@@ -6,27 +6,239 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * AccountView - account view component
  * FSM: account
  * Layout: default
- * States: 
+ * States: loading, viewing, editing, saving, error
  */
 export class AccountView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "account",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "invoke": {
+        "src": (logic.loadAccount || shared.loadAccount)
+      },
+      "on": {
+        "SUCCESS": "viewing",
+        "ERROR": "error"
+      }
+    },
+    "viewing": {
+      "on": {
+        "EDIT": "editing"
+      }
+    },
+    "editing": {
+      "on": {
+        "SAVE": "saving",
+        "CANCEL": "viewing"
+      }
+    },
+    "saving": {
+      "invoke": {
+        "src": (logic.saveAccount || shared.saveAccount)
+      },
+      "on": {
+        "SUCCESS": "viewing",
+        "ERROR": "editing"
+      }
+    },
+    "error": {
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 
   protected templates = new Map([
+    'loading': `<div ux-state="account.loading">
+  <div ux-style="spinner">{{i18n.account.loading.label}}</div>
+</div>
+`,
+    'viewing': `<div ux-state="account.viewing">
+  <form ux-style="form" aria-labelledby="account-viewing-title">
+    <h2 id="account-viewing-title" ux-style="heading">{{i18n.account.viewing.label}}</h2>
 
+    <div ux-style="field">
+      <label for="account-name" ux-style="label">{{i18n.account.fields.name.label}}</label>
+      <input id="account-name" name="account[name]" ux-style="input" value="{{this.account.name}}" disabled />
+    </div>
+    <div ux-style="field">
+      <label for="account-email" ux-style="label">{{i18n.account.fields.email.label}}</label>
+      <input id="account-email" name="account[email]" type="email" ux-style="input" value="{{this.account.email}}" disabled />
+    </div>
+    <div ux-style="field">
+      <label for="account-bio" ux-style="label">{{i18n.account.fields.bio.label}}</label>
+      <textarea id="account-bio" name="account[bio]" ux-style="textarea" disabled>{{this.account.bio}}</textarea>
+    </div>
+
+    <div ux-style="actions">
+      <button type="button" ux-event="EDIT" ux-style="button">{{i18n.actions.EDIT}}</button>
+      <button type="button" ux-event="REFRESH" ux-style="button">{{i18n.actions.REFRESH}}</button>
+    </div>
+  </form>
+</div>
+`,
+    'editing': `<div ux-state="account.editing">
+  <form id="account-form" ux-style="form">
+    <div ux-style="field">
+      <label for="account-name" ux-style="label">{{i18n.account.fields.name.label}}</label>
+      <input id="account-name" name="account[name]" ux-style="input" placeholder="{{i18n.account.fields.name.placeholder}}" />
+    </div>
+    <div ux-style="field">
+      <label for="account-email" ux-style="label">{{i18n.account.fields.email.label}}</label>
+      <input id="account-email" name="account[email]" type="email" ux-style="input" placeholder="{{i18n.account.fields.email.placeholder}}" />
+    </div>
+    <div ux-style="field">
+      <label for="account-bio" ux-style="label">{{i18n.account.fields.bio.label}}</label>
+      <textarea id="account-bio" name="account[bio]" ux-style="textarea" placeholder="{{i18n.account.fields.bio.placeholder}}"></textarea>
+    </div>
+
+    <div ux-style="actions">
+      <button type="submit" ux-event="SAVE" ux-style="button">{{i18n.actions.SAVE}}</button>
+      <button type="button" ux-event="CANCEL" ux-style="button">{{i18n.actions.CANCEL}}</button>
+    </div>
+  </form>
+</div>
+`,
+    'saving': `<div ux-state="account.saving">
+  <div ux-style="spinner">{{i18n.account.saving.label}}</div>
+</div>
+`,
+    'error': `<div ux-state="account.error">
+  <div ux-style="alert">{{i18n.account.error.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
+  </div>
+</div>
+`,
   ]);
 
   protected bindings = {
     events: [],
-    reactive: [],
-    i18n: [],
+    reactive: [
+    {
+        "element": "input",
+        "property": "textContent",
+        "signal": "this.account.name",
+        "state": "viewing"
+    },
+    {
+        "element": "input",
+        "property": "textContent",
+        "signal": "this.account.email",
+        "state": "viewing"
+    },
+    {
+        "element": "textarea",
+        "property": "textContent",
+        "signal": "this.account.bio",
+        "state": "viewing"
+    }
+],
+    i18n: [
+    {
+        "element": "div",
+        "key": "account.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "h2",
+        "key": "account.viewing.label",
+        "state": "viewing"
+    },
+    {
+        "element": "label",
+        "key": "account.fields.name.label",
+        "state": "viewing"
+    },
+    {
+        "element": "label",
+        "key": "account.fields.email.label",
+        "state": "viewing"
+    },
+    {
+        "element": "label",
+        "key": "account.fields.bio.label",
+        "state": "viewing"
+    },
+    {
+        "element": "button",
+        "key": "actions.EDIT",
+        "state": "viewing"
+    },
+    {
+        "element": "button",
+        "key": "actions.REFRESH",
+        "state": "viewing"
+    },
+    {
+        "element": "label",
+        "key": "account.fields.name.label",
+        "state": "editing"
+    },
+    {
+        "element": "input",
+        "key": "account.fields.name.placeholder",
+        "state": "editing"
+    },
+    {
+        "element": "label",
+        "key": "account.fields.email.label",
+        "state": "editing"
+    },
+    {
+        "element": "input",
+        "key": "account.fields.email.placeholder",
+        "state": "editing"
+    },
+    {
+        "element": "label",
+        "key": "account.fields.bio.label",
+        "state": "editing"
+    },
+    {
+        "element": "textarea",
+        "key": "account.fields.bio.placeholder",
+        "state": "editing"
+    },
+    {
+        "element": "button",
+        "key": "actions.SAVE",
+        "state": "editing"
+    },
+    {
+        "element": "button",
+        "key": "actions.CANCEL",
+        "state": "editing"
+    },
+    {
+        "element": "div",
+        "key": "account.saving.label",
+        "state": "saving"
+    },
+    {
+        "element": "div",
+        "key": "account.error.label",
+        "state": "error"
+    },
+    {
+        "element": "button",
+        "key": "actions.RETRY",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

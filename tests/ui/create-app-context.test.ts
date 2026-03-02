@@ -130,4 +130,15 @@ describe('AppContext helper methods', () => {
     // charts plugin should have registered its demo route
     expect(ctx.nav.routes.find((r:any)=>r.path==='/charts')).toBeTruthy();
   });
+
+  it('auto-installs content plugin when config.content exists', async () => {
+    const simpleItem = { slug: 'foo', frontmatter: { title: 'Foo' }, html: '<p>foo</p>' };
+    const cfg: any = { ...baseConfig, content: { items: [simpleItem] } };
+    const ctx: any = await createAppContext(cfg);
+    // content plugin should register a route for /foo
+    expect(ctx.nav.routes.some((r:any)=>r.path==='/foo')).toBe(true);
+    // service should be available and return expected data
+    const result = await ctx.services.content.load({ entry: 'foo' });
+    expect(result.html).toBe('<p>foo</p>');
+  });
 });

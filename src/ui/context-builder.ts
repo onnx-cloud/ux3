@@ -16,6 +16,7 @@ import path from 'path';
 import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
+import type { ContentManifest } from '../services/content.js';
 import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 
@@ -38,6 +39,7 @@ export interface GeneratedConfig {
     hotReload?: boolean;
     inspector?: boolean;
   };
+  content?: ContentManifest;
 }
 
 /**
@@ -517,6 +519,18 @@ export async function createAppContext(
     .withTemplates()
     .withStyles()
     .build();
+
+  // if content manifest was generated, install the built-in content plugin
+  if ((config as any).content) {
+    try {
+      const { ContentPlugin } = await import('../services/content-plugin.js');
+      if (context.registerPlugin) {
+        await context.registerPlugin(ContentPlugin);
+      }
+    } catch (e) {
+      // ignore if we can't load (e.g. plugin not available)
+    }
+  }
 
   // auto-install plugins listed in config
   if (config.plugins && Array.isArray(config.plugins)) {

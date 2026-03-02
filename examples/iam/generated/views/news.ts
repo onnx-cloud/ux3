@@ -6,27 +6,111 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * NewsView - news view component
  * FSM: news
  * Layout: default
- * States: 
+ * States: loading, loaded, error
  */
 export class NewsView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "News",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "news/loading.html",
+      "invoke": {
+        "service": "api",
+        "method": "fetch",
+        "input": "/news/today"
+      },
+      "on": {
+        "SUCCESS": "loaded",
+        "ERROR": "error"
+      }
+    },
+    "loaded": {
+      "template": "news/loaded.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    },
+    "error": {
+      "template": "news/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 
   protected templates = new Map([
-
+    'loading': `<div ux-state="news.loading">
+  <div ux-style="spinner">{{i18n.news.loading.label}}</div>
+</div>
+`,
+    'loaded': `<div ux-state="news.loaded">
+  <div ux-style="widget">{{i18n.news.loaded.label}}</div>
+  <ul ux-each="{{ctx}}"> <!-- assume ctx is array from loadNewsData -->
+    <li>
+      <h3>{{this.title}}</h3>
+      <p>{{this.body}}</p>
+    </li>
+  </ul>
+</div>
+`,
+    'error': `<div ux-state="news.error">
+  <div ux-style="alert">{{i18n.news.error.label}}</div>
+</div>
+`,
   ]);
 
   protected bindings = {
     events: [],
-    reactive: [],
-    i18n: [],
+    reactive: [
+    {
+        "element": "ul",
+        "property": "textContent",
+        "signal": "ctx",
+        "state": "loaded"
+    },
+    {
+        "element": "h3",
+        "property": "textContent",
+        "signal": "this.title",
+        "state": "loaded"
+    },
+    {
+        "element": "p",
+        "property": "textContent",
+        "signal": "this.body",
+        "state": "loaded"
+    }
+],
+    i18n: [
+    {
+        "element": "div",
+        "key": "news.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "news.loaded.label",
+        "state": "loaded"
+    },
+    {
+        "element": "div",
+        "key": "news.error.label",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

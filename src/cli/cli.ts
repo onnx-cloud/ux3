@@ -8,6 +8,7 @@ import { checkCommand } from './commands/check.js';
 import { compileCommand } from './compile.js';
 import { configCommand } from './commands/config.js';
 import { previewCommand } from './commands/preview.js';
+import { contentCommand } from './commands/content.js';
 
 const version = '0.1.0';
 
@@ -20,6 +21,7 @@ program.addCommand(checkCommand);
 program.addCommand(compileCommand);
 program.addCommand(configCommand);
 program.addCommand(previewCommand);
+program.addCommand(contentCommand);
 
 program.parse(process.argv);
 

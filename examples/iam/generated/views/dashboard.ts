@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * DashboardView - dashboard view component
@@ -14,8 +17,35 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class DashboardView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "Dashboard",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "view/dashboard/loading.html",
+      "invoke": {
+        "src": (logic.loadDashboard || shared.loadDashboard)
+      },
+      "on": {
+        "SUCCESS": "loaded",
+        "ERROR": "error"
+      }
+    },
+    "loaded": {
+      "template": "view/dashboard/loaded.html",
+      "on": {
+        "REFRESH": "loading"
+      }
+    },
+    "error": {
+      "template": "view/dashboard/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

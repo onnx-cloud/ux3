@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * ForYouView - for-you view component
@@ -14,8 +17,35 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class ForYouView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "for-you",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "view/for-you/loading.html",
+      "invoke": {
+        "src": (logic.loadForYou || shared.loadForYou)
+      },
+      "on": {
+        "SUCCESS": "loaded",
+        "ERROR": "error"
+      }
+    },
+    "loaded": {
+      "template": "view/for-you/loaded.html",
+      "on": {
+        "REFRESH": "loading"
+      }
+    },
+    "error": {
+      "template": "view/for-you/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

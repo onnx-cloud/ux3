@@ -1,0 +1,21 @@
+<header id="site-header">
+  <nav ux-style="nav">
+    {{#if nav}}
+      {{#each nav.routes}}
+        <a href="{{this.path}}"
+           {{#if (eq ../nav.current.path this.path)}}class="active"{{/if}}
+           {{#unless (../nav.canNavigate this.view)}}disabled{{/unless}}>
+          {{../nav.getLabel this}}
+        </a>
+      {{/each}}
+    {{/if}}
+  </nav>
+</header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer">
+  <small ux-style="small">&copy; ONNX.Cloud</small>
+</footer>

@@ -6,6 +6,9 @@
 
 import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
+// logic helpers (view-specific + shared)
+
+import * as shared from '../../../ux/logic/shared';
 
 /**
  * BillingView - billing view component
@@ -14,8 +17,53 @@ import type { StateConfig } from '../fsm/types.js';
  * States: 
  */
 export class BillingView extends ViewComponent {
-  // Generated FSM config (best-effort)
-  static FSM_CONFIG: StateConfig<any> = `{}`;
+  static FSM_CONFIG: StateConfig<any> = {
+  "name": "billing",
+  "layout": "default",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "template": "view/billing/loading.html",
+      "invoke": {
+        "src": (logic.loadBilling || shared.loadBilling)
+      },
+      "on": {
+        "SUCCESS": "viewing",
+        "ERROR": "error"
+      }
+    },
+    "viewing": {
+      "template": "view/billing/viewing.html",
+      "on": {
+        "SELECT": "viewing",
+        "UPGRADE": "upgrading",
+        "MANAGE_PAYMENT": "managing_payment"
+      }
+    },
+    "upgrading": {
+      "template": "view/billing/upgrading.html",
+      "on": {
+        "SUCCESS": "viewing",
+        "ERROR": "viewing",
+        "CANCEL": "viewing"
+      }
+    },
+    "managing_payment": {
+      "template": "view/billing/managing_payment.html",
+      "on": {
+        "SAVE.SUCCESS": "viewing",
+        "SAVE.ERROR": "viewing",
+        "CANCEL": "viewing"
+      }
+    },
+    "error": {
+      "template": "view/billing/error.html",
+      "on": {
+        "RETRY": "loading"
+      }
+    }
+  }
+};
 
   protected layout = ``;
 

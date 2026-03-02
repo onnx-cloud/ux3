@@ -5,6 +5,7 @@
  */
 
 import { AccountView } from './account.js';
+import { AssetView } from './asset.js';
 import { BillingView } from './billing.js';
 import { BlogView } from './blog.js';
 import { ChatView } from './chat.js';
@@ -23,6 +24,7 @@ import { SignUpView } from './sign-up.js';
  */
 export const Views = {
   'account': AccountView,
+  'asset': AssetView,
   'billing': BillingView,
   'blog': BlogView,
   'chat': ChatView,
