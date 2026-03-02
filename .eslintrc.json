@@ -34,6 +34,8 @@
     "@typescript-eslint/no-unnecessary-type-assertion": "warn",
     "@typescript-eslint/require-await": "warn",
     "@typescript-eslint/restrict-template-expressions": "warn",
-    "@typescript-eslint/await-thenable": "warn"
+    "@typescript-eslint/await-thenable": "warn",
+    "no-implied-eval": "warn",
+    "no-constant-condition": "warn"
   }
 }

@@ -23,6 +23,7 @@ Declarative scenario tests
 - Steps include `event`, `click`, `input`, `wait`, `assert`, `assertState`, and `fsmState`.
 - Allows cross‑layer reuse: the same file can power unit and E2E specs.
 - See `tests/decl/runner.test.ts` for a minimal example and `todo/DECL_TESTS.md` for DSL documentation.
+- A Playwright fixture (`tests/e2e/decl-fixtures.ts`) injects a `window.__test` helper so scenarios can emit events/get state in-browser; see `tests/e2e/decl.spec.ts` for usage.
 
 E2E & a11y
 ---

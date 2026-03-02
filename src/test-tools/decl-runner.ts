@@ -1,7 +1,11 @@
 import fs from 'fs';
 import { parse } from 'yaml';
 import { FSMRegistry } from '../fsm/registry';
-import { expect } from 'vitest';
+
+// simple internal assertion helper; tests can catch thrown Error
+function assert(cond: boolean, msg?: string) {
+  if (!cond) throw new Error(msg || 'assertion failed');
+}
 
 export type RunnerType = 'unit' | 'playwright';
 export interface RunnerOptions {
@@ -144,23 +148,23 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         if (options.runner === 'playwright' && page) {
           const el = await page.$(step.selector);
           if (step.exists === false) {
-            expect(el).toBeNull();
+            assert(el === null, `expected selector ${step.selector} to not exist`);
             break;
           }
-          expect(el).not.toBeNull();
+          assert(el !== null, `selector ${step.selector} not found`);
           if (step.text !== undefined) {
             const txt = await page.textContent(step.selector);
-            expect(txt).toContain(step.text);
+            assert(txt?.includes(step.text), `text mismatch for ${step.selector}`);
           }
         } else {
           const el = document.querySelector(step.selector);
           if (step.exists === false) {
-            expect(el).toBeNull();
+            assert(el === null, `expected selector ${step.selector} to not exist`);
             break;
           }
-          expect(el).not.toBeNull();
+          assert(el !== null, `selector ${step.selector} not found`);
           if (step.text !== undefined) {
-            expect(el!.textContent).toContain(step.text);
+            assert(el!.textContent?.includes(step.text), `text mismatch for ${step.selector}`);
           }
         }
         break;
@@ -171,7 +175,7 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         if (!machine) throw new Error(`FSM not found for assertState: ${step.machine}`);
         const ctx = machine.getContext();
         const actual = resolvePath(ctx, step.path);
-        expect(actual).toEqual(step.equals);
+        assert(actual === step.equals, `state assertion failed: ${step.path} expected ${step.equals} got ${actual}`);
         break;
       }
 
@@ -180,11 +184,11 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         if (!machine) throw new Error(`FSM not found for fsmState: ${step.machine}`);
         const current = machine.getState();
         if (step.equals instanceof RegExp) {
-          expect(current).toMatch(step.equals);
+          assert(step.equals.test(current as string), `fsmState ${current} does not match ${step.equals}`);
         } else if (Array.isArray(step.equals)) {
-          expect(step.equals).toContain(current);
+          assert(step.equals.includes(current as string), `fsmState ${current} not in [${step.equals.join(',')}]`);
         } else {
-          expect(current).toBe(step.equals);
+          assert(current === step.equals, `fsmState expected ${step.equals} got ${current}`);
         }
         break;
       }

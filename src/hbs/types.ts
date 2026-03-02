@@ -5,23 +5,23 @@
 /**
  * Context passed to templates
  */
-export type TemplateContext = Record<string, any>;
+export type TemplateContext = Record<string, unknown>;
 
 /**
  * Helper function signature
  */
 export type HelperFunction = (
-  ...args: any[]
-) => any | Promise<any>;
+  ...args: unknown[]
+) => unknown;
 
 /**
  * Block helper signature (receives context and block content)
  */
 export type BlockHelperFunction = (
-  context: any,
-  options: { fn: (ctx?: any) => string | Promise<string>; inverse?: (ctx?: any) => string | Promise<string> },
-  ...args: any[]
-) => any | Promise<any>;
+  context: unknown,
+  options: { fn: (ctx?: unknown) => string | Promise<string>; inverse?: (ctx?: unknown) => string | Promise<string> },
+  ...args: unknown[]
+) => unknown | Promise<unknown>;
 
 /**
  * HBS options
