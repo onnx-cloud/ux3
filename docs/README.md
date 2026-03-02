@@ -1,10 +1,17 @@
 # Documentation Index
 
-Welcome to UX3 documentation. This guide covers all aspects of the framework.
+Welcome to the UX3 documentation hub — a user‑centric collection of guides that walk you through every step of building, styling, testing, and deploying applications with the framework. 
+
+UX3 is built around **configuration over code**; the documentation mirrors that philosophy by focusing on how to declare behavior in YAML/JSON and then leverage the compiler and CLI to do the rest.
 
 ---
 
 ## Quick Navigation
+
+### CLI & Tooling
+
+- **`ux3` CLI reference** — build, compile, validate, and more. See [compilation.md](compilation.md#cli-commands)
+- **Configuration files** — `ux3.config.json` and schema directories define project defaults.
 
 ### Core Concepts
 
