@@ -156,8 +156,8 @@ export function initStyleRegistry(): void {
     // the subsequent orig.call(instance) invocation.
     // capture the original method with explicit `this` signature so eslint
     // doesn't warn about unbound methods
-    const orig: (this: ViewComponent & HTMLElement) => void =
-      ViewComponent.prototype.mountLayout;
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const orig: (this: ViewComponent & HTMLElement) => void = ViewComponent.prototype.mountLayout;
 
     ViewComponent.prototype.mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
