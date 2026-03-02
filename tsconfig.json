@@ -27,7 +27,8 @@
     "baseUrl": ".",
     "paths": {
       "@ux3/*": ["src/*", "packages/@ux3/*/src"]
-    }
+    },
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "src/**/*.ts",

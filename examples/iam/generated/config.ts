@@ -1051,7 +1051,11 @@ export const config = {
   },
   "site": {
     "title": "Invest America",
-    "decription": "Your gateway to smart investments."
+    "decription": "Your gateway to smart investments.",
+    "runtime": {
+      "bundleKey": "ux3.bundle",
+      "hydrationFn": "initApp"
+    }
   },
   "development": {
     "logging": "debug",

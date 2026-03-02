@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import path from 'path';
 import fs from 'fs';
-import { ContentGenerator } from '../../src/build/content-generator.js';
+import { ContentGenerator } from '../../build/content-generator.js';
 
 export const contentCommand = new Command()
   .name('content')

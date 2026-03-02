@@ -10,14 +10,18 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {},
+    "metadata": {
+      "actualWorkers": 2
+    },
     "preserveOutput": "always",
     "projects": [
       {
         "outputDir": "/developer/ux3/playwright-report",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 2
+        },
         "id": "chromium",
         "name": "chromium",
         "testDir": "/developer/ux3/tests/e2e",
@@ -31,7 +35,9 @@
         "outputDir": "/developer/ux3/playwright-report",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 2
+        },
         "id": "firefox",
         "name": "firefox",
         "testDir": "/developer/ux3/tests/e2e",
@@ -45,7 +51,9 @@
         "outputDir": "/developer/ux3/playwright-report",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 2
+        },
         "id": "webkit",
         "name": "webkit",
         "testDir": "/developer/ux3/tests/e2e",
@@ -59,7 +67,9 @@
         "outputDir": "/developer/ux3/playwright-report",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 2
+        },
         "id": "Mobile Chrome",
         "name": "Mobile Chrome",
         "testDir": "/developer/ux3/tests/e2e",
@@ -73,7 +83,9 @@
         "outputDir": "/developer/ux3/playwright-report",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 2
+        },
         "id": "Mobile Safari",
         "name": "Mobile Safari",
         "testDir": "/developer/ux3/tests/e2e",
@@ -127,19 +139,171 @@
       "timeout": 120000
     }
   },
-  "suites": [],
-  "errors": [
+  "suites": [
     {
-      "message": "Error: Process from config.webServer was not able to start. Exit code: 1",
-      "stack": "Error: Process from config.webServer was not able to start. Exit code: 1"
+      "title": "iam-content.spec.ts",
+      "file": "iam-content.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "news page shows articles",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 12020,
+                  "error": {
+                    "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n",
+                    "stack": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n\n    at /developer/ux3/tests/e2e/iam-content.spec.ts:9:14",
+                    "location": {
+                      "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
+                      "column": 14,
+                      "line": 9
+                    },
+                    "snippet": "\u001b[0m \u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/news'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[90m// wait for UX3 to initialize and the FSM to reach loaded state\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"news.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[90m// now articles should be present\u001b[39m\n \u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'ul li h3'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m titles \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'ul li h3'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mmap(e \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mtextContent))\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
+                        "column": 14,
+                        "line": 9
+                      },
+                      "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"news.loaded\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/news'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[90m// wait for UX3 to initialize and the FSM to reach loaded state\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"news.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[90m// now articles should be present\u001b[39m\n \u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'ul li h3'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m titles \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'ul li h3'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mmap(e \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mtextContent))\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /developer/ux3/tests/e2e/iam-content.spec.ts:9:14\u001b[22m"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-03-02T08:27:21.095Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/developer/ux3/playwright-report/iam-content-news-page-shows-articles-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/developer/ux3/playwright-report/iam-content-news-page-shows-articles-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/developer/ux3/playwright-report/iam-content-news-page-shows-articles-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
+                    "column": 14,
+                    "line": 9
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5e7b65bb17981c0a7605-cc2cd81e2f26c5aca7a0",
+          "file": "iam-content.spec.ts",
+          "line": 5,
+          "column": 1
+        },
+        {
+          "title": "market page displays table and chart element",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "failed",
+                  "duration": 12081,
+                  "error": {
+                    "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n",
+                    "stack": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n\n    at /developer/ux3/tests/e2e/iam-content.spec.ts:19:14",
+                    "location": {
+                      "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
+                      "column": 14,
+                      "line": 19
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 17 |\u001b[39m   page\u001b[33m.\u001b[39mon(\u001b[32m'console'\u001b[39m\u001b[33m,\u001b[39m msg \u001b[33m=>\u001b[39m console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE LOG [market]:'\u001b[39m\u001b[33m,\u001b[39m msg\u001b[33m.\u001b[39mtext()))\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/market'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"market.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'table tr'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m rows \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'table tr'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mlength)\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   expect(rows)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
+                        "column": 14,
+                        "line": 19
+                      },
+                      "message": "TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('div[ux-state=\"market.loaded\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 17 |\u001b[39m   page\u001b[33m.\u001b[39mon(\u001b[32m'console'\u001b[39m\u001b[33m,\u001b[39m msg \u001b[33m=>\u001b[39m console\u001b[33m.\u001b[39mlog(\u001b[32m'PAGE LOG [market]:'\u001b[39m\u001b[33m,\u001b[39m msg\u001b[33m.\u001b[39mtext()))\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/market'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'div[ux-state=\"market.loaded\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'table tr'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m rows \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39m$$eval(\u001b[32m'table tr'\u001b[39m\u001b[33m,\u001b[39m els \u001b[33m=>\u001b[39m els\u001b[33m.\u001b[39mlength)\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   expect(rows)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /developer/ux3/tests/e2e/iam-content.spec.ts:19:14\u001b[22m"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-03-02T08:27:21.150Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/developer/ux3/playwright-report/iam-content-market-page-displays-table-and-chart-element-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/developer/ux3/playwright-report/iam-content-market-page-displays-table-and-chart-element-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/developer/ux3/playwright-report/iam-content-market-page-displays-table-and-chart-element-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/developer/ux3/tests/e2e/iam-content.spec.ts",
+                    "column": 14,
+                    "line": 19
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5e7b65bb17981c0a7605-3a3c6cb4cde1a210746a",
+          "file": "iam-content.spec.ts",
+          "line": 16,
+          "column": 1
+        }
+      ]
     }
   ],
+  "errors": [],
   "stats": {
-    "startTime": "2026-03-02T08:24:28.046Z",
-    "duration": 1642.76,
+    "startTime": "2026-03-02T08:27:14.588Z",
+    "duration": 19473.113,
     "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 2,
     "flaky": 0
   }
 }
