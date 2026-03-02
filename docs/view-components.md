@@ -144,9 +144,21 @@ export class LoginView extends ViewComponent {
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `ux-fsm` | string | FSM namespace (e.g., "auth", "todos") |
+| `ux-fsm` | string | FSM namespace (e.g., `"news"` resolves `machines['news']` or `machines['newsFSM']`) |
 | `ux-view` | string | View name for template lookup |
-| `ux-layout` | string | Layout name (default: "default") |
+| `ux-layout` | string | Layout name (default: `"default"`) |
+
+### FSM name resolution
+
+`ViewComponent` tries `machines[fsmName]` first, then `machines[fsmName + 'FSM']` as
+a fallback.  This allows generated views (whose `ux-fsm` attribute is `"news"`) to
+bind to `AppContextBuilder` machines that are keyed under `"newsFSM"`.
+
+### Pre-populated templates
+
+Generated view subclasses declare `protected templates = new Map([...])` statically.
+`connectedCallback` skips `loadTemplates()` when `this.templates.size > 0`, so the
+compiler-provided templates are always respected.
 
 ### Runtime Attributes
 
