@@ -205,7 +205,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     layoutEl.id = 'ux-layout';
     
     // Render layout through app's render function to process Handlebars templates
-    const renderedLayout = this.app.render ? this.app.render(this.layout) : this.layout;
+    const renderedLayout = this.app?.render?.(this.layout) || this.layout;
     layoutEl.innerHTML = renderedLayout;
 
     // Inject styles
