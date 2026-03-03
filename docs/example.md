@@ -21,33 +21,42 @@ The dev server starts at `http://localhost:5173` by default. Open it and you'll 
 
 ## 2. Inspect the view structure
 
-Views live in `src/ux/view/**/*.yaml`. Open `src/ux/view/todo.yaml`:
+Views live in `ux/view/**/*.yaml`. Open `ux/view/login.yaml`:
 
 ```yaml
-# src/ux/view/todo.yaml
+# ux/view/login.yaml
+name: Login
+layout: default
 initial: idle
 states:
-  idle: |
-    <div>
-      <h1>My Todo App</h1>
-      <button ux-event="ADD">Add Item</button>
-    </div>
-  adding: 'todo/form.html'
-  added: 'todo/success.html'
+  idle:
+    template: 'view/login/idle.html'
+    on:
+      SUBMIT: validating
+  validating:
+    template: 'view/login/validating.html'
+    invoke:
+      service: auth
+      method: login
+    on:
+      SUCCESS: success
+      ERROR: error
+  success:
+    template: 'view/login/success.html'
+  error:
+    template: 'view/login/error.html'
+    on:
+      RETRY: idle
 ```
 
-Each FSM state can be:
-- An inline template string (using `|` or `|-`)
-- A file reference like `'todo/form.html'`
-
-Related templates live in adjacent folders: `src/ux/view/todo/form.html`, etc.
+Each state specifies a `template:` file path (relative to `ux/view/`) and optionally `on:` transitions and `invoke:` service calls. Templates live in `ux/view/login/` subdirectories:
 
 ```html
-<!-- src/ux/view/todo/form.html -->
-<div>
-  <h1>Add a new item</h1>
-  <input ux-event="SUBMIT" />
-</div>
+<!-- ux/view/login/idle.html -->
+<form ux-event="SUBMIT">
+  <input name="email" type="email" required />
+  <button type="submit">Login</button>
+</form>
 ```
 
 ---
