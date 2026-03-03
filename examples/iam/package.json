@@ -8,7 +8,7 @@
     "preview": "ux3 preview"
   },
   "dependencies": {
-    "@ux3/core": "workspace:*",
+    "@ux3/ux3": "workspace:*",
     "@ux3/stdlib": "workspace:*",
     "@ux3/router": "workspace:*",
     "@ux3/forms": "workspace:*",

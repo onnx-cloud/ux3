@@ -1,5 +1,5 @@
-import type { Plugin } from '../../../src/plugin/registry';
-import type { AssetDescriptor } from '../../../src/ui/app';
+import type { Plugin } from '@ux3/ux3';
+import type { AssetDescriptor } from '@ux3/ux3';
 
 // minimal charting plugin example
 export const ChartsJsPlugin: Plugin = {

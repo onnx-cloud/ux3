@@ -1,4 +1,8 @@
-import type { Plugin } from '../../../src/plugin/registry';
+// allow Node-style require if ever needed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const require: any;
+
+import type { Plugin } from '@ux3/ux3';
 
 // ============================================================================
 // COLOR PALETTES

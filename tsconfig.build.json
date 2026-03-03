@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "references": [
+    { "path": "." },
+    { "path": "packages/@ux3/plugin-store" },
+    { "path": "packages/@ux3/plugin-tailwind-css" },
+    { "path": "packages/@ux3/plugin-tailwind-plus" },
+    { "path": "packages/@ux3/plugin-charts-js" },
+    { "path": "packages/@ux3/plugin-validation" },
+    { "path": "packages/@ux3/plugin-i18n" },
+    { "path": "packages/@ux3/plugin-sentry" },
+    { "path": "packages/@ux3/plugin-analytics" },
+    { "path": "packages/@ux3/plugin-stripe" },
+    { "path": "packages/@ux3/test-harness" }
+  ]
+}

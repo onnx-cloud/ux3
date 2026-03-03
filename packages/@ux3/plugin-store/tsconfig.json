@@ -24,11 +24,11 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
-    "baseUrl": "../../../",
     "rootDir": "src",
-    "paths": {
-      "@ux3/*": ["../../../src/*", "../../../packages/@ux3/*/src"]
-    }
+    "composite": true
   },
+  "references": [
+    { "path": "../../../tsconfig.json" }
+  ],
   "include": ["src/**/*.ts"]
 }

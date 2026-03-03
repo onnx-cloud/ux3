@@ -82,7 +82,7 @@
     "dev:kanban": "npx tsx src/cli/cli.ts dev examples/kanban --port 1337",
     "validate": "npx tsx src/cli/validate.ts --projectDir ./examples/iam",
     "validate:strict": "npx tsx src/cli/validate.ts --projectDir ./examples/iam --strict",
-    "build": "npm run clean && tsc && npm run size-check",
+    "build": "npm run clean && tsc -b tsconfig.build.json && npm run size-check",
     "gold": "npm run clean && tsc && vitest run && npm run size-check && npm run minify",
     "minify": "esbuild dist/**/*.js --minify --outdir=dist",
     "test": "vitest run",

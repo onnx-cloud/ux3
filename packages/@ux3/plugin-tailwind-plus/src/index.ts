@@ -1,8 +1,8 @@
 // allow legacy require() calls in TypeScript
 declare const require: any;
 
-import type { Plugin } from '@ux3/plugin/registry';
-import type { AssetDescriptor } from '@ux3/ui/app';
+import type { Plugin } from '@ux3/ux3';
+import type { AssetDescriptor } from '@ux3/ux3';
 
 // Helper to safely require StateMachine from either the compiled or source context
 function tryRequireStateMachine(): any {
