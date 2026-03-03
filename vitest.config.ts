@@ -11,11 +11,6 @@ export default defineConfig({
   resolve: {
     extensions: ['.ts', '.mts', '.tsx', '.js', '.mjs', '.cjs'],
     alias: [
-      // Handle external peer dependencies as externals (don't try to resolve)
-      { find: /^charts\.js$/, replacement: 'charts.js' },
-      { find: /^stripe$/, replacement: 'stripe' },
-      { find: /^@sentry\/browser$/, replacement: '@sentry/browser' },
-
       // support plugin packages under /packages (most specific)
       {
         // only resolve packages whose name begins with "plugin-" in the workspace
@@ -66,14 +61,6 @@ export default defineConfig({
       // default to workspace src/ (without .js extension)
       { find: /^@ux3\//, replacement: path.resolve(__dirname, 'src') + '/' },
     ],
-  },
-  ssr: {
-    // Don't try to resolve external peer dependencies used by plugins
-    external: [
-      'charts.js',
-      '@sentry/browser',
-      'stripe'
-    ]
   },
   test: {
     environment: 'jsdom',
