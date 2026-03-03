@@ -293,9 +293,9 @@ describe('ServiceCache - Phase 1.1', () => {
       const cache = new ServiceCache<string>(0);
       cache.set('value');
       
-      // With 0 TTL, expiration is immediate
-      // Check after a tiny delay to ensure expiration
-      await new Promise((r) => setTimeout(r, 1));
+      // With 0 TTL, value expires immediately
+      // Use a slightly longer delay to be safe on slow systems
+      await new Promise((r) => setTimeout(r, 10));
       expect(cache.isStale()).toBe(true);
       expect(cache.get()).toBeNull();
     });

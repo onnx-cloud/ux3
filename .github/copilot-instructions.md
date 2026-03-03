@@ -13,7 +13,7 @@ UX3 is a compile‑first SPA framework: views, styles, validation, and i18n are 
 - i18n strings live under `ux/i18n/**` (no strings in code). Styles live in `ux/style/**` and are referenced by widget name via `ux-style` (no global CSS).
 - Avoid `innerHTML`; use sanitizers from `src/security/` when rendering external HTML.
 - Example apps in `examples/` show idiomatic usage; IAM has custom dev notes in [examples/iam/README.md](examples/iam/README.md).
-- Scripts, tests should be `./tmp` not `/tmp` for temporary/working files.
+- All temporary scripts, work files, adhoc tests, progress / summary reports MUST be in `./tmp/` (not `/tmp/` or `/`).
 
 ## Workflows (npm only)
 - `npm run dev` – TS watch + example server

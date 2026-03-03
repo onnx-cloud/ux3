@@ -304,6 +304,9 @@ export class InvokeRegistry {
       return { success: false, error, duration: Date.now() - startTime, retries: 0, timestamp: startTime };
     }
 
+    // Fire REGISTER phase on first service use
+    await this.fireRegisterPhase(invoke.service);
+
     let lastError: Error | undefined;
     let retryCount = 0;
 
@@ -342,6 +345,9 @@ export class InvokeRegistry {
           this.setCachedResult(cacheKey, result, ttl);
         }
 
+        // Fire READY phase on successful execution (Phase 1.4)
+        await this.fireReadyPhase(invoke.service, result);
+
         // Execute post-middleware
         try {
           return await this.executePostMiddleware(mwContext, result);
@@ -353,6 +359,9 @@ export class InvokeRegistry {
         lastError = err instanceof Error ? err : new Error(String(err));
 
         if (attempt < maxRetries) {
+          // Fire RECONNECT phase before retry (Phase 1.4)
+          await this.fireReconnectPhase(invoke.service, attempt + 1);
+
           retryCount++;
           const delay = this.calculateRetryDelay(invoke.retryDelay, attempt);
           
@@ -378,6 +387,9 @@ export class InvokeRegistry {
     }
 
     const finalError = lastError || new Error('Invoke failed');
+
+    // Fire ERROR phase on final failure (Phase 1.4)
+    await this.fireErrorPhase(invoke.service, finalError);
 
     // Execute error middleware
     try {
@@ -992,6 +1004,7 @@ export class InvokeRegistry {
     }
     this.registeredServices.clear();
   }
+}
 
 /**
  * Global InvokeRegistry singleton
