@@ -1,1 +1,19 @@
-<div>Task edit form</div>
+<form ux-event="SUBMIT" class="task-form">
+  {{#if ctx.error}}
+    <div class="alert alert-error">{{ctx.error}}</div>
+  {{/if}}
+  <label>{{i18n('tasks.titleLabel')}}<input name="title" :value="ctx.task.title" /></label>
+  <label>{{i18n('tasks.descriptionLabel')}}<textarea name="description">{{ctx.task.description}}</textarea></label>
+  <label>{{i18n('tasks.priority')}}
+    <select name="priority" :value="ctx.task.priority">
+      <option value="low">Low</option>
+      <option value="normal">Normal</option>
+      <option value="high">High</option>
+      <option value="urgent">Urgent</option>
+    </select>
+  </label>
+  <label>{{i18n('tasks.due')}}<input type="date" name="due" :value="ctx.task.due" /></label>
+  <label>{{i18n('tasks.points')}}<input type="number" name="points" min="0" max="100" :value="ctx.task.points" /></label>
+  <button type="submit">{{i18n('forms.submit')}}</button>
+  <button type="button" ux-event="CANCEL">{{i18n('forms.cancel')}}</button>
+</form>

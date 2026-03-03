@@ -21,5 +21,5 @@ export function checkCycles(task: any, dependencies: any[]) {
     const deps = dependencies.filter(d => d.dependentId === id);
     return deps.some(d => hasCycle(d.id));
   }
-  if (hasCycle(task.id)) throw new Error('Circular dependency detected');
+  if (hasCycle(task.id)) throw new Error(i18n('validation.circularDependency'));
 }

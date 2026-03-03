@@ -1,5 +1,7 @@
 <form ux-event="SUBMIT">
-  <textarea name="text"></textarea>
-  <button type="submit">Add comment</button>
-  <button type="button" ux-event="CANCEL">Cancel</button>
+  <label>{{i18n('tasks.descriptionLabel')}}
+    <textarea name="text"></textarea>
+  </label>
+  <button type="submit">{{i18n('forms.submit')}}</button>
+  <button type="button" ux-event="CANCEL">{{i18n('forms.cancel')}}</button>
 </form>

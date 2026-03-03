@@ -1,5 +1,7 @@
 <form ux-event="SUBMIT">
-  <input name="name" placeholder="Board name" />
-  <button type="submit">Create board</button>
-  <button type="button" ux-event="CANCEL">Cancel</button>
+  <label>{{i18n('boards.nameLabel')}}
+    <input name="name" placeholder="{{i18n('boards.nameLabel')}}" value="{{ctx.form.name || ''}}" />
+  </label>
+  <button type="submit">{{i18n('forms.submit')}}</button>
+  <button type="button" ux-event="CANCEL">{{i18n('forms.cancel')}}</button>
 </form>

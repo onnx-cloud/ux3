@@ -343,8 +343,9 @@ export function reloadTaskDetail(ctx: any) {
 }
 
 // Error Handling
+import { i18n } from '@ux3/i18n';
 export function setError(ctx: any, evt: any) {
-  ctx.error = evt.error?.message || 'An error occurred';
+  ctx.error = evt.error?.message || i18n('errors.failed');
 }
 
 // Hover & Interactive States

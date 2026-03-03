@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "echo 'no tests'"
+    "test": "vitest run"
   },
   "dependencies": {}
 }
