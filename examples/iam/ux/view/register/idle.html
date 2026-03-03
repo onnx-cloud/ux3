@@ -14,7 +14,6 @@
       >
         <input
           slot="control"
-          ux-event="CHANGE: { name: 'email', value: event.target.value }, BLUR: { name: 'email' }"
           value="{{ctx.form.email}}"
           placeholder="{{i18n.register.fields.email.placeholder}}"
         />
@@ -31,7 +30,6 @@
       >
         <input
           slot="control"
-          ux-event="CHANGE: { name: 'password', value: event.target.value }, BLUR: { name: 'password' }"
           value="{{ctx.form.password}}"
           placeholder="{{i18n.register.fields.password.placeholder}}"
         />
@@ -47,7 +45,6 @@
       >
         <input
           slot="control"
-          ux-event="CHANGE: { name: 'confirmPassword', value: event.target.value }, BLUR: { name: 'confirmPassword' }"
           value="{{ctx.form.confirmPassword}}"
           placeholder="{{i18n.register.fields.confirmPassword.placeholder}}"
         />
@@ -63,14 +60,13 @@
       >
         <input
           slot="control"
-          ux-event="CHANGE: { name: 'agreeToTerms', value: event.target.checked }"
           {{ctx.form.agreeToTerms ? 'checked' : ''}}
         />
       </ux-field>
 
       <!-- Submit Button -->
-      <button type="submit" disabled="{{ctx.isSubmitting}}">
-        {{ctx.isSubmitting ? i18n.register.submitting : i18n.register.submit}}
+      <button type="submit">
+        {{i18n.register.submit}}
       </button>
 
       <!-- Already have account? -->

@@ -32,11 +32,39 @@ export type Routes = RouteDefinition[];
 // ============================================================================
 
 export interface ServiceRegistry {
-  
+  api: any;
+  auth: any;
+  realtime: any;
+  chat: any;
+  chatbot: any;
+  eod: any;
 }
 
 export interface ServiceConfig {
-  
+  api: {
+    adapter: 'http';
+    [key: string]: any;
+  };
+  auth: {
+    adapter: 'http';
+    [key: string]: any;
+  };
+  realtime: {
+    adapter: 'websocket';
+    [key: string]: any;
+  };
+  chat: {
+    adapter: 'jsonrpc';
+    [key: string]: any;
+  };
+  chatbot: {
+    adapter: 'jsonrpc';
+    [key: string]: any;
+  };
+  eod: {
+    adapter: 'file';
+    [key: string]: any;
+  };
 }
 
 
@@ -59,9 +87,6 @@ export interface RegisterContext {
   form: Record<string, any>;
   errors: Record<string, any>;
   touched: Record<string, any>;
-  dirty: Record<string, any>;
-  isSubmitting: boolean;
-  submitError: any;
 }
 
 export interface AccountContext { [key: string]: any }

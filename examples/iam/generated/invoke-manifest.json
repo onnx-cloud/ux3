@@ -7,6 +7,31 @@
         "type": "bearer"
       }
     },
+    "auth": {
+      "adapter": "http",
+      "baseUrl": "http://localhost:1337/api/auth",
+      "auth": {
+        "type": "bearer"
+      },
+      "methods": {
+        "validateRegister": {
+          "path": "/register/validate",
+          "method": "POST"
+        },
+        "register": {
+          "path": "/register",
+          "method": "POST"
+        },
+        "authenticate": {
+          "path": "/login",
+          "method": "POST"
+        },
+        "validateLogin": {
+          "path": "/login/validate",
+          "method": "POST"
+        }
+      }
+    },
     "realtime": {
       "adapter": "websocket",
       "url": "ws://localhost:1337/realtime",

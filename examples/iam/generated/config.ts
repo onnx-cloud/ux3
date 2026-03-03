@@ -79,7 +79,62 @@ export const config = {
       "view": "sign-up"
     }
   ],
-  "services": {},
+  "services": {
+    "api": {
+      "adapter": "http",
+      "baseUrl": "http://localhost:1337/api",
+      "auth": {
+        "type": "bearer"
+      }
+    },
+    "auth": {
+      "adapter": "http",
+      "baseUrl": "http://localhost:1337/api/auth",
+      "auth": {
+        "type": "bearer"
+      },
+      "methods": {
+        "validateRegister": {
+          "path": "/register/validate",
+          "method": "POST"
+        },
+        "register": {
+          "path": "/register",
+          "method": "POST"
+        },
+        "authenticate": {
+          "path": "/login",
+          "method": "POST"
+        },
+        "validateLogin": {
+          "path": "/login/validate",
+          "method": "POST"
+        }
+      }
+    },
+    "realtime": {
+      "adapter": "websocket",
+      "url": "ws://localhost:1337/realtime",
+      "reconnectAttempts": 5,
+      "reconnectInterval": 2000
+    },
+    "chat": {
+      "adapter": "jsonrpc",
+      "endpoint": "http://localhost:1337/rpc/chat"
+    },
+    "chatbot": {
+      "adapter": "jsonrpc",
+      "endpoint": "http://localhost:1337/api/chatbot"
+    },
+    "eod": {
+      "adapter": "file",
+      "baseUrl": "public/api/asset/eod/{{this.symbol}}.json",
+      "caching": {
+        "enabled": true,
+        "ttl": 86400
+      }
+    }
+  },
   "machines": {
     "accountFSM": {
       "id": "account",
@@ -395,102 +450,34 @@ export const config = {
           "agreeToTerms": false
         },
         "errors": {},
-        "touched": {},
-        "dirty": {},
-        "isSubmitting": false,
-        "submitError": null
+        "touched": {}
       },
       "states": {
         "idle": {
           "on": {
-            "FIELD_CHANGE": {
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "const { name, value } = event.payload;\nctx.form[name] = value;\nctx.dirty[name] = true;\n"
-                }
-              ]
-            },
-            "FIELD_BLUR": {
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "const { name } = event.payload;\nif (!ctx.touched) ctx.touched = {};\nctx.touched[name] = true;\n"
-                }
-              ]
-            },
-            "SUBMIT": {
-              "guard": "return Object.keys(ctx.form).every(key => ctx.form[key]);\n",
-              "target": "validating",
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "if (!ctx.touched) ctx.touched = {};\nObject.keys(ctx.form).forEach(key => {\n  ctx.touched[key] = true;\n});\n"
-                }
-              ]
-            }
+            "SUBMIT": "validating"
           }
         },
         "validating": {
           "on": {
-            "SUCCESS": {
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "ctx.errors = {};\n"
-                }
-              ],
-              "target": "submitting"
-            },
-            "ERROR": {
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "ctx.errors = event.payload.errors || {};\n"
-                }
-              ],
-              "target": "idle"
-            }
+            "SUCCESS": "submitting",
+            "ERROR": "idle"
           }
         },
         "submitting": {
           "on": {
             "SUCCESS": "success",
-            "ERROR": {
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "ctx.submitError = event.payload.message || 'Registration failed';\n"
-                }
-              ],
-              "target": "error"
-            }
+            "ERROR": "error"
           }
         },
         "success": {
           "on": {
-            "NAVIGATE": {
-              "target": "idle",
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "ctx.form = {};\nctx.errors = {};\nctx.touched = {};\nctx.dirty = {};\nctx.submitError = null;\n"
-                }
-              ]
-            }
+            "NAVIGATE": "idle"
           }
         },
         "error": {
           "on": {
-            "RETRY": {
-              "target": "idle",
-              "actions": [
-                {
-                  "type": "custom",
-                  "handler": "ctx.submitError = null;\nctx.isSubmitting = false;\n"
-                }
-              ]
-            }
+            "RETRY": "idle"
           }
         }
       }
@@ -1120,7 +1107,7 @@ export const config = {
     "market": {},
     "news": {},
     "register": {
-      "idle": "<div ux-state=\"register.idle\" ux-style=\"page-auth\">\n  <div ux-style=\"card\">\n    <h1>{{i18n.register.title}}</h1>\n    <p>{{i18n.register.subtitle}}</p>\n\n    <form ux-event=\"SUBMIT\" ux-style=\"form-register\" data-context=\"register\">\n      <!-- Email Field -->\n      <ux-field\n        name=\"email\"\n        type=\"email\"\n        required\n        error=\"{{ctx.errors.email}}\"\n        touched=\"{{ctx.touched.email}}\"\n      >\n        <input\n          slot=\"control\"\n          ux-event=\"CHANGE: { name: 'email', value: event.target.value }, BLUR: { name: 'email' }\"\n          value=\"{{ctx.form.email}}\"\n          placeholder=\"{{i18n.register.fields.email.placeholder}}\"\n        />\n      </ux-field>\n\n      <!-- Password Field -->\n      <ux-field\n        name=\"password\"\n        type=\"password\"\n        required\n        error=\"{{ctx.errors.password}}\"\n        touched=\"{{ctx.touched.password}}\"\n        hint=\"{{i18n.register.fields.password.hint}}\"\n      >\n        <input\n          slot=\"control\"\n          ux-event=\"CHANGE: { name: 'password', value: event.target.value }, BLUR: { name: 'password' }\"\n          value=\"{{ctx.form.password}}\"\n          placeholder=\"{{i18n.register.fields.password.placeholder}}\"\n        />\n      </ux-field>\n\n      <!-- Confirm Password Field -->\n      <ux-field\n        name=\"confirmPassword\"\n        type=\"password\"\n        required\n        error=\"{{ctx.errors.confirmPassword}}\"\n        touched=\"{{ctx.touched.confirmPassword}}\"\n      >\n        <input\n          slot=\"control\"\n          ux-event=\"CHANGE: { name: 'confirmPassword', value: event.target.value }, BLUR: { name: 'confirmPassword' }\"\n          value=\"{{ctx.form.confirmPassword}}\"\n          placeholder=\"{{i18n.register.fields.confirmPassword.placeholder}}\"\n        />\n      </ux-field>\n\n      <!-- Terms Agreement -->\n      <ux-field\n        name=\"agreeToTerms\"\n        type=\"checkbox\"\n        error=\"{{ctx.errors.agreeToTerms}}\"\n        touched=\"{{ctx.touched.agreeToTerms}}\"\n        label=\"{{i18n.register.fields.agreeToTerms.label}}\"\n      >\n        <input\n          slot=\"control\"\n          ux-event=\"CHANGE: { name: 'agreeToTerms', value: event.target.checked }\"\n          {{ctx.form.agreeToTerms ? 'checked' : ''}}\n        />\n      </ux-field>\n\n      <!-- Submit Button -->\n      <button type=\"submit\" disabled=\"{{ctx.isSubmitting}}\">\n        {{ctx.isSubmitting ? i18n.register.submitting : i18n.register.submit}}\n      </button>\n\n      <!-- Already have account? -->\n      <p ux-style=\"login-link\">\n        {{i18n.register.haveAccount}}\n        <a href=\"/login\">{{i18n.register.loginLink}}</a>\n      </p>\n    </form>\n  </div>\n</div>\n",
+      "idle": "<div ux-state=\"register.idle\" ux-style=\"page-auth\">\n  <div ux-style=\"card\">\n    <h1>{{i18n.register.title}}</h1>\n    <p>{{i18n.register.subtitle}}</p>\n\n    <form ux-event=\"SUBMIT\" ux-style=\"form-register\" data-context=\"register\">\n      <!-- Email Field -->\n      <ux-field\n        name=\"email\"\n        type=\"email\"\n        required\n        error=\"{{ctx.errors.email}}\"\n        touched=\"{{ctx.touched.email}}\"\n      >\n        <input\n          slot=\"control\"\n          value=\"{{ctx.form.email}}\"\n          placeholder=\"{{i18n.register.fields.email.placeholder}}\"\n        />\n      </ux-field>\n\n      <!-- Password Field -->\n      <ux-field\n        name=\"password\"\n        type=\"password\"\n        required\n        error=\"{{ctx.errors.password}}\"\n        touched=\"{{ctx.touched.password}}\"\n        hint=\"{{i18n.register.fields.password.hint}}\"\n      >\n        <input\n          slot=\"control\"\n          value=\"{{ctx.form.password}}\"\n          placeholder=\"{{i18n.register.fields.password.placeholder}}\"\n        />\n      </ux-field>\n\n      <!-- Confirm Password Field -->\n      <ux-field\n        name=\"confirmPassword\"\n        type=\"password\"\n        required\n        error=\"{{ctx.errors.confirmPassword}}\"\n        touched=\"{{ctx.touched.confirmPassword}}\"\n      >\n        <input\n          slot=\"control\"\n          value=\"{{ctx.form.confirmPassword}}\"\n          placeholder=\"{{i18n.register.fields.confirmPassword.placeholder}}\"\n        />\n      </ux-field>\n\n      <!-- Terms Agreement -->\n      <ux-field\n        name=\"agreeToTerms\"\n        type=\"checkbox\"\n        error=\"{{ctx.errors.agreeToTerms}}\"\n        touched=\"{{ctx.touched.agreeToTerms}}\"\n        label=\"{{i18n.register.fields.agreeToTerms.label}}\"\n      >\n        <input\n          slot=\"control\"\n          {{ctx.form.agreeToTerms ? 'checked' : ''}}\n        />\n      </ux-field>\n\n      <!-- Submit Button -->\n      <button type=\"submit\">\n        {{i18n.register.submit}}\n      </button>\n\n      <!-- Already have account? -->\n      <p ux-style=\"login-link\">\n        {{i18n.register.haveAccount}}\n        <a href=\"/login\">{{i18n.register.loginLink}}</a>\n      </p>\n    </form>\n  </div>\n</div>\n",
       "validating": "<div ux-state=\"register.validating\" ux-style=\"page-auth\">\n  <div ux-style=\"card\">\n    <h1>{{i18n.register.title}}</h1>\n    <div ux-style=\"loading\">\n      <div class=\"spinner\"></div>\n      <p>{{i18n.register.validating}}</p>\n    </div>\n  </div>\n</div>\n",
       "submitting": "<div ux-state=\"register.submitting\" ux-style=\"page-auth\">\n  <div ux-style=\"card\">\n    <h1>{{i18n.register.title}}</h1>\n    <div ux-style=\"loading\">\n      <div class=\"spinner\"></div>\n      <p>{{i18n.register.submitting}}</p>\n    </div>\n  </div>\n</div>\n",
       "success": "<div ux-state=\"register.success\" ux-style=\"page-auth\">\n  <div ux-style=\"card\">\n    <div ux-style=\"success-message\">\n      <div class=\"icon\">✓</div>\n      <h1>{{i18n.register.successTitle}}</h1>\n      <p>{{i18n.register.successMessage}}</p>\n      <button ux-event=\"NAVIGATE\" ux-style=\"button-primary\">\n        {{i18n.register.continueButton}}\n      </button>\n    </div>\n  </div>\n</div>\n",

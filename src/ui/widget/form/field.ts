@@ -5,14 +5,19 @@
  * Integrates with ElementInternals for proper form association
  * Auto-infers label from i18n based on name and context
  *
- * Usage (auto-infer):
+ * Usage (simplified - slot inferred):
+ * <ux-field name="email" type="email" required error="{{ctx.errors.email}}">
+ *   <input />
+ * </ux-field>
+ *
+ * Usage (explicit slot):
  * <ux-field name="email" type="email" required error="{{ctx.errors.email}}">
  *   <input slot="control" />
  * </ux-field>
  *
- * Usage (explicit override):
+ * Usage (explicit label override):
  * <ux-field name="email" label="Custom Label" type="email" required>
- *   <input slot="control" />
+ *   <input />
  * </ux-field>
  */
 
@@ -34,6 +39,8 @@ export class UxField extends HTMLElement {
   connectedCallback() {
     this.render();
     this.setupSlotListener();
+    // Try direct children first (for implicit slot binding)
+    this.detectControlFromChildren();
     this.setupValidation();
     this.setupAccessibility();
   }
@@ -155,6 +162,7 @@ export class UxField extends HTMLElement {
         <label class="label" for="control"></label>
         <div class="control-wrapper">
           <slot name="control"></slot>
+          <slot></slot>
         </div>
         <div class="hint"></div>
         <div class="error" role="alert"></div>
@@ -164,6 +172,16 @@ export class UxField extends HTMLElement {
     this.labelEl = this.shadowRoot.querySelector('.label');
     this.errorEl = this.shadowRoot.querySelector('.error');
     this.controlSlot = this.shadowRoot.querySelector('slot[name="control"]');
+
+    // Also listen to default slot for unnamed controls
+    const defaultSlot = this.shadowRoot.querySelector('slot:not([name])') as HTMLSlotElement;
+    if (defaultSlot) {
+      defaultSlot.addEventListener('slotchange', () => {
+        if (!this.control) {
+          this.detectControlFromChildren();
+        }
+      });
+    }
 
     this.updateLabel();
     this.updateError();
@@ -190,6 +208,20 @@ export class UxField extends HTMLElement {
   }
 
   // ==================== Slot Management ====================
+
+  /**
+   * Auto-detect control from direct children (for implicit slot binding)
+   * Looks for input, textarea, or select elements
+   */
+  private detectControlFromChildren() {
+    if (!this.control) {
+      const control = this.querySelector('input, textarea, select');
+      if (control) {
+        this.control = control as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+        this.syncControlAttributes();
+      }
+    }
+  }
 
   private setupSlotListener() {
     if (!this.controlSlot) return;
