@@ -129,10 +129,6 @@ export interface TodayContext { [key: string]: any }
 
 export interface WatchlistContext { [key: string]: any }
 
-export interface ForYouContext { [key: string]: any }
-
-export interface SignUpContext { [key: string]: any }
-
 export interface ViewContextRegistry {
   RegisterContext: RegisterContext;
   AccountContext: AccountContext;
@@ -141,7 +137,7 @@ export interface ViewContextRegistry {
   BlogContext: BlogContext;
   ChatContext: ChatContext;
   DashboardContext: DashboardContext;
-  ForyouContext: ForyouContext;
+  ForYouContext: ForYouContext;
   HomeContext: HomeContext;
   LoginContext: LoginContext;
   MacroContext: MacroContext;
@@ -152,9 +148,7 @@ export interface ViewContextRegistry {
   ProductsContext: ProductsContext;
   SearchContext: SearchContext;
   SectorContext: SectorContext;
-  SignupContext: SignupContext;
+  SignUpContext: SignUpContext;
   TodayContext: TodayContext;
   WatchlistContext: WatchlistContext;
-  ForYouContext: ForYouContext;
-  SignUpContext: SignUpContext;
 }

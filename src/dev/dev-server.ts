@@ -245,25 +245,25 @@ export class DevServer {
           }
 
           if (pathname === '/$/config') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(JSON.stringify(this.manifest?.config ?? {}, null, 2));
             return;
           }
 
           if (pathname === '/$/types') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(JSON.stringify(this.manifest?.types ?? {}, null, 2));
             return;
           }
 
           if (pathname === '/$/manifest') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(JSON.stringify(this.manifest?.invokes ?? {}, null, 2));
             return;
           }
 
           if (pathname === '/$/stats') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(JSON.stringify(this.manifest?.stats ?? {}, null, 2));
             return;
           }
@@ -457,7 +457,7 @@ export class DevServer {
 
                 const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
 
-                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
                 res.end(finalHtml);
                 return;
               }
@@ -470,14 +470,14 @@ export class DevServer {
           const publicIndex = path.join(this.projectDir, 'public', 'index.html');
           if (fsExtra.existsSync(publicIndex)) {
             const indexContent = await fsp.readFile(publicIndex, 'utf-8');
-            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(indexContent);
             return;
           }
 
           // Final fallback: informational page pointing to dev dashboard
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(`<html><body><h1>No application index found</h1><p>Visit <a href="/$/">Dev Dashboard</a></p></body></html>`);
+          res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
+          res.end(`<html><body><h1>No application index found</h1><p>Visit <a href="/$">Dev Dashboard</a></p></body></html>`);
           return;
         }
 
@@ -486,7 +486,7 @@ export class DevServer {
         try {
           const content = await fsp.readFile(filePath);
           const contentType = this.getContentType(filePath);
-          res.writeHead(200, { 'Content-Type': contentType });
+          res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache, no-store, must-revalidate' });
           res.end(content);
           return;
         } catch (e) {
@@ -499,7 +499,7 @@ export class DevServer {
           try {
             const content = await fsp.readFile(filePath);
             const contentType = this.getContentType(filePath);
-            res.writeHead(200, { 'Content-Type': contentType });
+            res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(content);
             return;
           } catch (e) {
@@ -582,7 +582,7 @@ export class DevServer {
 
               const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, templateCtx, renderTemplate);
 
-              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
               res.end(finalHtml);
               return;
             }
