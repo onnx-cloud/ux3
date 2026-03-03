@@ -18,6 +18,19 @@ export type {
   SubscriptionHandler,
   SubscriptionUnsubscribe,
 } from './types.js';
+export {
+  loggingMiddleware,
+  timeoutWarningMiddleware,
+  requestMutationMiddleware,
+  cacheTrackingMiddleware,
+  headerAugmentationMiddleware,
+  retryMiddleware,
+  circuitBreakerMiddleware,
+  composeMiddleware,
+  productionMiddlewareStack,
+  developmentMiddlewareStack,
+} from './middleware.js';
+export type { LogContext } from './middleware.js';
 export type {
   NavRoute,
   NavConfig,

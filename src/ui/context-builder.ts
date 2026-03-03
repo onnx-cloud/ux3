@@ -20,7 +20,7 @@ import type { ContentManifest } from '../services/content.js';
 import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
-import { HookRegistry, AppLifecyclePhase } from '../core/lifecycle.js';
+import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/lifecycle.js';
 
 /**
  * Generated configuration structure
@@ -127,6 +127,13 @@ export class AppContextBuilder {
         });
         const service = this.createService(name, serviceSpec);
         this.services.set(name, service);
+        
+        // Emit REGISTER lifecycle phase for this service
+        void this.hooks.execute(ServiceLifecyclePhase.REGISTER, {
+          service: { name, instance: service },
+          meta: { serviceType: serviceSpec.type || serviceSpec.adapter }
+        });
+        
         import('../security/observability.js').then(({ defaultLogger }) => {
           defaultLogger.debug('service.initialized', { name, type: serviceSpec.type, adapter: serviceSpec.adapter });
         });
@@ -330,6 +337,13 @@ export class AppContextBuilder {
     const services: Record<string, Service> = {};
     for (const [name, service] of this.services) {
       services[name] = service;
+    }
+    
+    // Emit CONNECT lifecycle phase for all services
+    for (const [name, service] of this.services) {
+      void this.hooks.execute(ServiceLifecyclePhase.CONNECT, {
+        service: { name, instance: service }
+      });
     }
 
     const i18nFn = (key: string, props?: Record<string, any>): string => {
