@@ -4,7 +4,9 @@ import path from 'path';
 import os from 'os';
 
 async function makeTemp() {
-  const temp = path.join(os.tmpdir(), `ux3-devserver-${Date.now()}`);
+  const tmpRoot = path.join(process.cwd(), 'tmp');
+  await fs.ensureDir(tmpRoot);
+  const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
   await fs.ensureDir(temp);
   await fs.ensureDir(path.join(temp, 'ux', 'view'));
   await fs.ensureDir(path.join(temp, 'ux', 'layout'));

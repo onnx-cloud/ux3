@@ -13,7 +13,9 @@ import os from 'os';
 
 describe('DevServer runtime asset injection', () => {
   it('appends runtime tags into head and scripts', async () => {
-    const temp = path.join(os.tmpdir(), `ux3-devserver-${Date.now()}`);
+    const tmpRoot = path.join(process.cwd(), 'tmp');
+    await fs.ensureDir(tmpRoot);
+    const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
     await fs.ensureDir(path.join(temp, 'ux', 'view'));
 
@@ -95,10 +97,9 @@ describe('DevServer runtime asset injection', () => {
     if (runtimeInfo && runtimeInfo.styles && runtimeInfo.styles.length) {
       expect(html).toContain('data-ux3="styles"');
     }
-    // script tag should be module when we bundle as ESM
-    expect(html).toContain('data-ux3="app"');
-    expect(html).toContain('type="module"');
+    // script tag should use hydration pattern with DOMContentLoaded
     expect(html).toContain('data-ux3="hydration"');
+    expect(html).toContain('DOMContentLoaded');
     if (runtimeInfo && runtimeInfo.bundle) {
       expect(html).toContain(runtimeInfo.bundle.replace(/^\//, ''));
       const bundlePath = runtimeInfo.bundle.startsWith('/') ? runtimeInfo.bundle : '/' + runtimeInfo.bundle;

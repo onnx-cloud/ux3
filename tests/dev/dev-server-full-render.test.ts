@@ -5,7 +5,9 @@ import os from 'os';
 
 describe('DevServer full page rendering (layout + chrome + view tree)', () => {
   it('renders header, main chrome and the view widget tree from index.yaml', async () => {
-    const temp = path.join(os.tmpdir(), `ux3-devserver-${Date.now()}`);
+    const tmpRoot = path.join(process.cwd(), 'tmp');
+    await fs.ensureDir(tmpRoot);
+    const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
     await fs.ensureDir(path.join(temp, 'ux', 'view'));
     await fs.ensureDir(path.join(temp, 'ux', 'layout'));

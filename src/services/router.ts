@@ -18,7 +18,7 @@ export interface RouteMatch {
 
 export interface NavRoute {
   path: string;           // e.g., "/market"
-  view: string;          // FSM name without "FSM" suffix, e.g., "market"
+  view: string;          // FSM name, e.g., "market"
   label?: string;        // i18n key or label, e.g., "header.market"
   params?: string[];     // e.g., ["exchange"] for "/market/:exchange"
 }
@@ -88,7 +88,7 @@ export class Router {
       },
       canNavigate: (targetView: string) => {
         // Check if the target view exists and is registered
-        const fsmName = `${targetView}FSM`;
+        const fsmName = `${targetView}`;
         const machine = this.machines.get(fsmName);
         if (!machine) return false;
 

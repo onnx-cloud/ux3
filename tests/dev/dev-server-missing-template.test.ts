@@ -5,7 +5,9 @@ import os from 'os';
 
 describe('DevServer missing template behavior', () => {
   it('should instruct to run compile when template missing (no fs fallback)', async () => {
-    const temp = path.join(os.tmpdir(), `ux3-devserver-${Date.now()}`);
+    const tmpRoot = path.join(process.cwd(), 'tmp');
+    await fs.ensureDir(tmpRoot);
+    const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
     await fs.ensureDir(path.join(temp, 'ux', 'view'));
 

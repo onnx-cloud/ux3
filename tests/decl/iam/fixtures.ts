@@ -2,7 +2,7 @@ import { FSMRegistry } from '../../../src/fsm/registry';
 
 // simple fixture helpers for IAM scenarios
 export function setAuthToken({ token, userId }: { token: string; userId: string }) {
-  const fsm = FSMRegistry.get('authFSM');
+  const fsm = FSMRegistry.get('auth');
   if (fsm && typeof (fsm as any).updateContext === 'function') {
     (fsm as any).updateContext({ token, userId });
   } else if (fsm && typeof fsm.getContext === 'function') {
@@ -13,7 +13,7 @@ export function setAuthToken({ token, userId }: { token: string; userId: string 
 }
 
 export function clearAuth() {
-  const fsm = FSMRegistry.get('authFSM');
+  const fsm = FSMRegistry.get('auth');
   if (fsm && typeof (fsm as any).updateContext === 'function') {
     (fsm as any).updateContext({ token: null, userId: null });
   }

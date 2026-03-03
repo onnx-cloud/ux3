@@ -31,7 +31,6 @@ describe('processAssets helper', () => {
     expect(site.scripts).toContain('<script src="/foo.js"');
     // runtime injected
     expect(site.head).toContain('data-ux3="styles"');
-    expect(site.scripts).toContain('data-ux3="app"');
     expect(site.scripts).toContain('data-ux3="hydration"');
     expect(site.scripts).toContain('initApp');
   });
@@ -102,17 +101,17 @@ describe('processAssets: bundle-pending regression', () => {
     expect(site.scripts).toMatch(/import\('\/dist\/bundle\.js\?ts=\d+/);
   });
 
-  it('emits <script type="module" data-ux3="app"> tag regardless of bundleUrl', () => {
+  it('emits <script data-ux3="hydration"> tag regardless of bundleUrl', () => {
     const emptyBundle = processAssets(bundleKeyManifest('') as any, '/proj');
     const realBundle = processAssets(bundleKeyManifest('/dist/bundle.js') as any, '/proj');
 
-    // app tag always present when bundleKey is configured
-    expect(emptyBundle.scripts).toContain('data-ux3="app"');
-    expect(realBundle.scripts).toContain('data-ux3="app"');
-    // When bundle is real, the src attr is set
-    expect(realBundle.scripts).toContain('src="/dist/bundle.js"');
-    // When bundle is missing, no src attr
-    expect(emptyBundle.scripts).not.toContain('src=');
+    // hydration tag always present when bundleKey is configured
+    expect(emptyBundle.scripts).toContain('data-ux3="hydration"');
+    expect(realBundle.scripts).toContain('data-ux3="hydration"');
+    // When bundle is real, the src attr is part of the import
+    expect(realBundle.scripts).toContain('import(\'/dist/bundle.js');
+    // When bundle is missing, no import
+    expect(emptyBundle.scripts).not.toContain('import(');
   });
 
   it('emits no injection tags when bundleKey is absent', () => {

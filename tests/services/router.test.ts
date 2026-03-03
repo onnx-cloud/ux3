@@ -32,7 +32,7 @@ describe('Router', () => {
       { path: '/market', view: 'market' }
     ];
     const machines = new Map();
-    machines.set('marketFSM', { getState: () => 'idle' });
+    machines.set('market', { getState: () => 'idle' });
     
     const router = new Router(routes, machines);
     expect(router['navConfig'].canNavigate('market')).toBe(true);

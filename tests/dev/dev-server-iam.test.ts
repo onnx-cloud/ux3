@@ -50,8 +50,9 @@ describe('DevServer with IAM example', () => {
     // also request home page and ensure script tag present
     const home = await fetch('http://localhost:3720/');
     const html = await home.text();
-    expect(html).toContain('data-ux3="app"');
-    expect(html).toContain('type="module"');
+    expect(html).toContain('data-ux3="hydration"');
+    // Hydration pattern uses DOMContentLoaded dynamic import instead of module script
+    expect(html).toContain('DOMContentLoaded');
 
     // verify that every asset in cfg.site.assets produced a corresponding tag
     if (cfg.site && Array.isArray(cfg.site.assets)) {

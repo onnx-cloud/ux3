@@ -5,7 +5,9 @@ import os from 'os';
 
 describe('DevServer manifest preference', () => {
   it('serves manifest template for index even when source exists', async () => {
-    const temp = path.join(os.tmpdir(), `ux3-devserver-${Date.now()}`);
+    const tmpRoot = path.join(process.cwd(), 'tmp');
+    await fs.ensureDir(tmpRoot);
+    const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
     await fs.ensureDir(path.join(temp, 'ux', 'view'));
 
@@ -37,7 +39,9 @@ describe('DevServer manifest preference', () => {
   });
 
   it('serves manifest template for route when available', async () => {
-    const temp = path.join(os.tmpdir(), `ux3-devserver-${Date.now()}`);
+    const tmpRoot = path.join(process.cwd(), 'tmp');
+    await fs.ensureDir(tmpRoot);
+    const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
     await fs.ensureDir(path.join(temp, 'ux', 'view'));
 

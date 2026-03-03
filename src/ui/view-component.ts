@@ -13,7 +13,7 @@ declare global {
     __ux3Telemetry?: (event: string, data: unknown) => void;
   }
 }
-import { stampTemplate } from './template-stamp.js';
+import { stampTemplate, TemplateContext } from './template-stamp.js';
 import { observeSlot, getAssignedElements } from './slot-utils.js';
 
 /**
@@ -68,10 +68,18 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
       // 3. Load FSM and layout
       // Generated view names match the YAML key (e.g. 'news') but AppContextBuilder stores
-      // machines under the suffixed key 'newsFSM'.  Try both to be forward-compatible.
-      this.fsm = this.app.machines[fsmName] ?? this.app.machines[`${fsmName}FSM`];
+      // machines under the key 'news' or 'newsFSM' depending on older vs newer config.
+      // BUG-5: allow fallback to name + 'FSM' when the bare name is absent.
+      let machine = this.app.machines[fsmName];
+      if (!machine) {
+        machine = this.app.machines[`${fsmName}FSM`];
+        if (machine) {
+          console.warn(`[ViewComponent] fallback: using machine key '${fsmName}FSM' instead of '${fsmName}'`);
+        }
+      }
+      this.fsm = machine as any;
       if (!this.fsm) {
-        throw new Error(`FSM not found: '${fsmName}' or '${fsmName}FSM'. Available: ${Object.keys(this.app.machines).join(', ')}`);
+        throw new Error(`FSM not found: '${fsmName}'. Available: ${Object.keys(this.app.machines).join(', ')}`);
       }
 
       this.layout = this.app.template(layoutName);
@@ -143,7 +151,11 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   private loadTemplates(viewName: string): void {
     const fsmName = this.getAttribute('ux-fsm')!;
-    const machine = this.app.machines[fsmName] ?? this.app.machines[`${fsmName}FSM`];
+    // same fallback logic as connectedCallback
+    let machine = this.app.machines[fsmName];
+    if (!machine) {
+      machine = this.app.machines[`${fsmName}FSM`];
+    }
     // support both older and newer machine APIs
     type MaybeConfigArg = { getMachineConfig?: () => any; getStateConfig?: (arg?: unknown) => any };
     const cfgMachine = machine as MaybeConfigArg;
@@ -302,7 +314,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         const svc = this.app.services[inv.service];
         if (!svc) throw new Error(`Service not registered: ${inv.service}`);
         const method = inv.method || 'fetch';
-        result = await svc[method](inv.input);
+        result = await (svc as any)[method](inv.input);
       } else if (inv.src) {
         if (typeof inv.src === 'function') {
           result = await inv.src(inv.input, this.fsm.getContext());
@@ -516,7 +528,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   /**
    * Helper: send FSM event
    */
-  sendFSMEvent(action: string, payload?: unknown): void {
+  sendFSMEvent(action: string, payload?: any): void {
     this.fsm.send({ type: action, payload });
   }
 
@@ -525,7 +537,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * @param slotName The name of the slot containing the template
    * @param data The data context for interpolation
    */
-  protected stampSlotTemplate(slotName: string, data: unknown): DocumentFragment | null {
+  protected stampSlotTemplate(slotName: string, data: TemplateContext): DocumentFragment | null {
     const template = this.querySelector(`template[slot="${slotName}"]`) as HTMLTemplateElement;
     if (!template) {
       console.warn(`[ViewComponent] No template found for slot: ${slotName}`);

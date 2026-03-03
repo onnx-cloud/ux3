@@ -76,7 +76,7 @@ describe('IAM FSMs', () => {
     });
   });
 
-  describe('Account FSM', () => {
+  describe('Account ', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
@@ -143,7 +143,7 @@ describe('IAM FSMs', () => {
     });
   });
 
-  describe('Chat FSM', () => {
+  describe('Chat ', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
@@ -191,7 +191,7 @@ describe('IAM FSMs', () => {
     });
   });
 
-  describe('Dashboard FSM', () => {
+  describe('Dashboard ', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
@@ -230,7 +230,7 @@ describe('IAM FSMs', () => {
     });
   });
 
-  describe('Market FSM', () => {
+  describe('Market ', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {

@@ -12,7 +12,7 @@ import { config } from '../../examples/iam/generated/config';
 const mockAppContext = {
   machines: Object.fromEntries(
     Object.entries(config.machines).map(([key, machineConfig]) => [
-      key.replace('FSM', '').toLowerCase(),
+      key.replace('', '').toLowerCase(),
       new StateMachine(machineConfig as any)
     ])
   ),

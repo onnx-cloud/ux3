@@ -75,8 +75,8 @@ describe('IAM Event Binding', () => {
     });
   });
 
-  describe('Event dispatch to FSM', () => {
-    it('should dispatch LOGIN event to auth FSM', (done) => {
+  describe('Event dispatch to ', () => {
+    it('should dispatch LOGIN event to auth ', (done) => {
       expect(authFSM.getState()).toBe('idle');
 
       authFSM.subscribe((state) => {
@@ -90,7 +90,7 @@ describe('IAM Event Binding', () => {
       authFSM.send('LOGIN', { email: 'user@example.com', password: 'secret' });
     });
 
-    it('should dispatch EDIT event to account FSM', (done) => {
+    it('should dispatch EDIT event to account ', (done) => {
       accountFSM.send('SUCCESS'); // Transition to viewing state
 
       let transitionCount = 0;
@@ -123,7 +123,7 @@ describe('IAM Event Binding', () => {
       accountFSM.send('EDIT');
     });
 
-    it('should dispatch CONNECT event to chat FSM', (done) => {
+    it('should dispatch CONNECT event to chat ', (done) => {
       expect(chatFSM.getState()).toBe('idle');
 
       chatFSM.subscribe((state) => {

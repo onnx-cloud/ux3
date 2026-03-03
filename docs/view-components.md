@@ -144,7 +144,7 @@ export class LoginView extends ViewComponent {
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `ux-fsm` | string | FSM namespace (e.g., `"news"` resolves `machines['news']` or `machines['newsFSM']`) |
+| `ux-fsm` | string | FSM namespace (e.g., `"news"` resolves `machines['news']` or `machines['news']`) |
 | `ux-view` | string | View name for template lookup |
 | `ux-layout` | string | Layout name from view's FSM config (resolved from `config.templates` at runtime) |
 
@@ -172,7 +172,7 @@ if (!this.layout) {
 
 ### FSM name resolution
 
-`ViewComponent` tries `machines[fsmName]` first, then `machines[fsmName + 'FSM']` as
+`ViewComponent` tries `machines[fsmName]` first, then `machines[fsmName + '']` as
 a fallback.  This allows generated views (whose `ux-fsm` attribute is `"news"`) to
 bind to `AppContextBuilder` machines that are keyed under `"newsFSM"`.
 

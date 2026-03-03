@@ -343,7 +343,7 @@ loading:
 import { describe, it, expect } from 'vitest';
 import { LoginFSM } from './login.fsm';
 
-describe('Login FSM', () => {
+describe('Login ', () => {
   it('transitions to loading on SUBMIT', () => {
     const fsm = new LoginFSM();
     fsm.send('SUBMIT');
