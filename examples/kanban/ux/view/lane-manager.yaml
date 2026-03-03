@@ -1,0 +1,70 @@
+name: LaneManager
+description: Create, edit, reorder, and delete lanes
+initial: loading
+
+context:
+  boardId: null
+  lanes: []
+  draggedLaneId: null
+  dropPosition: null
+  error: null
+
+states:
+  loading:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [setLanes] }
+      ERROR: error
+
+  idle:
+    template: 'view/lane-manager/idle.html'
+    on:
+      CREATE_LANE: laneForm
+      BACK: { emit: navigateBack }
+
+  laneForm:
+    template: 'view/lane-manager/lane-form.html'
+    on:
+      SUBMIT: creating
+      CANCEL: idle
+
+  creating:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loading, actions: [clearForm] }
+      ERROR: { target: laneForm, actions: [setError] }
+
+  editing:
+    template: 'view/lane-manager/lane-form.html'
+    on:
+      SUBMIT: updating
+      CANCEL: idle
+
+  updating:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loading, actions: [clearForm] }
+      ERROR: { target: editing, actions: [setError] }
+
+  reordering:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loading, actions: [clearDrag] }
+      ERROR: idle
+
+  deleting:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loading, actions: [clearForm] }
+      ERROR: { target: idle, actions: [setError] }
+
+  error:
+    template: 'view/lane-manager/error.html'
+    on:
+      RETRY: loading
+      DISMISS: idle

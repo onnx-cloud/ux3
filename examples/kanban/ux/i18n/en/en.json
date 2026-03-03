@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "Kanban Pro",
+    "version": "1.0.0"
+  },
+  "projects": {
+    "title": "Projects",
+    "create": "+ New Project",
+    "search": "Search projects...",
+    "empty": "No projects yet. Create one to get started!"
+  },
+  "boards": {
+    "create": "+ Add Board",
+    "title": "Kanban Board"
+  },
+  "tasks": {
+    "create": "+ Add Task",
+    "title": "Task",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "due": "Due Date",
+    "points": "Points"
+  },
+  "lanes": {
+    "wip": "WIP Limit",
+    "tasks": "Tasks"
+  },
+  "forms": {
+    "cancel": "Cancel",
+    "submit": "Save",
+    "delete": "Delete"
+  },
+  "errors": {
+    "required": "This field is required",
+    "maxLength": "Must be {max} characters or less",
+    "failed": "An error occurred. Please try again."
+  },
+  "confirmation": {
+    "deleteProject": "Are you sure you want to delete this project?",
+    "deleteTask": "Are you sure you want to delete this task?"
+  }
+}

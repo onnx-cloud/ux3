@@ -1,0 +1,10 @@
+<main ux-style="kanban">
+  <header class="board-header">
+    <button class="btn-icon" @click="navigateTo('/')">← Back</button>
+    <h1>{{selectedBoard.name}}</h1>
+    <button ux-event="CREATE_TASK" class="btn-primary">+ Add Task</button>
+  </header>
+  <div class="kanban-grid">
+    <!-- lanes will render here -->
+  </div>
+</main>

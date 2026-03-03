@@ -1,5 +1,13 @@
 
 services:
+  store.local:
+    adapter: plugin
+    provider: store
+    backend: local
+    persistence:
+      driver: localStorage
+      keyPrefix: 'iam:'
+
   api:
     adapter: http
     baseUrl: http://localhost:1337/api

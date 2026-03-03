@@ -1,0 +1,6 @@
+name: NotFound
+initial: idle
+
+states:
+  idle:
+    template: 'view/not-found.html'

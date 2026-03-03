@@ -1,0 +1,25 @@
+routes:
+  # Home & Projects
+  - path: /
+    view: home
+  
+  - path: /project/:projectId/settings
+    view: project-settings
+
+  # Boards
+  - path: /project/:projectId
+    view: board-list
+
+  - path: /project/:projectId/board/:boardId
+    view: board
+
+  - path: /project/:projectId/board/:boardId/lanes
+    view: lane-manager
+
+  # Tasks
+  - path: /project/:projectId/board/:boardId/task/:taskId
+    view: task-detail
+
+  # Error pages
+  - path: /404
+    view: not-found

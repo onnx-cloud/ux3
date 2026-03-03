@@ -1,0 +1,87 @@
+name: Board
+description: Kanban board with lanes and tasks
+initial: idle
+
+context:
+  projectId: null  # From route param
+  boards: []
+  selectedBoardId: null
+  lanes: []
+  tasks: []
+  selectedTaskId: null
+  draggedTaskId: null
+  dropLaneId: null
+  filter:
+    assignee: null
+    priority: null
+    labels: []
+    hideArchived: true
+  error: null
+
+states:
+  idle:
+    template: 'view/board/idle.html'
+    on:
+      LOAD_BOARD: loadingBoard
+      TOGGLE_LANE: { actions: [toggleLaneCollapse] }
+    entry: [loadBoard, loadLanes, loadTasks]
+
+  loadingBoard:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [setBoards] }
+      ERROR: error
+
+  taskDetail:
+    template: 'view/board/task-detail.html'
+    on:
+      CLOSE: idle
+      DELETE: deletingTask
+    entry: [loadTaskDetail]
+
+  editTask:
+    template: 'view/board/task-edit.html'
+    on:
+      SUBMIT: updatingTask
+      CANCEL: taskDetail
+
+  updatingTask:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: taskDetail, actions: [reloadTaskDetail] }
+      ERROR: { target: editTask, actions: [setError] }
+
+  deletingTask:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [clearSelected, reloadTasks] }
+      ERROR: { target: taskDetail, actions: [setError] }
+
+  droppingTask:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [clearDrag, reloadTasks] }
+      ERROR: { target: idle, actions: [clearDrag] }
+
+  createTaskForm:
+    template: 'view/board/create-task.html'
+    on:
+      SUBMIT: creatingTask
+      CANCEL: idle
+
+  creatingTask:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [clearForm, reloadTasks] }
+      ERROR: { target: createTaskForm, actions: [setError] }
+
+  error:
+    template: 'view/board/error.html'
+    on:
+      RETRY: idle
+      DISMISS: idle

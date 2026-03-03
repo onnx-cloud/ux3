@@ -1,0 +1,42 @@
+version: 1
+
+models:
+  Project:
+    description: Top-level container for kanban boards
+    fields:
+      id:
+    indexes:
+      - [owner, created]
+      - [owner, deletedAt]
+    validate: validateProject
+
+  Board:
+    description: Kanban board within a project (one per board style)
+    fields:
+      id:
+    indexes:
+      - [projectId]
+      - [projectId, deletedAt]
+
+  Lane:
+    description: Column/column in a board (Status, Priority, Sprint, etc.)
+    fields:
+      id:
+    indexes:
+      - [boardId]
+
+  Task:
+    description: Individual task/card; is also an FSM
+    fields:
+      id:
+    indexes:
+      - [boardId, laneId]
+      - [due]
+    validate: validateTask
+
+  Comment:
+    description: Task comments and activity log
+    fields:
+      id:
+    indexes:
+      - [taskId, created]

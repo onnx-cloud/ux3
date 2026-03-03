@@ -1,0 +1,54 @@
+name: Home
+description: Projects list and create project form
+initial: idle
+
+context:
+  projects: []
+  filter: ''
+  searchQuery: ''
+  error: null
+  isLoading: false
+  sortBy: created  # created, name, updated
+  sortDir: desc
+
+states:
+  idle:
+    template: 'view/home/idle.html'
+    on:
+      LOAD: loading
+      RESTORE_PROJECT: restoring
+    entry: [loadProjects]
+
+  loading:
+    template: 'view/home/loading.html'
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [setProjects] }
+      ERROR: error
+      
+  createForm:
+    template: 'view/home/create-form.html'
+    on:
+      SUBMIT: creating
+      CANCEL: idle
+
+  creating:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [addProject, clearForm] }
+      ERROR: { target: createForm, actions: [setError] }
+
+  deleting:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: idle, actions: [removeProject, clearDelete] }
+      ERROR: { target: idle, actions: [setError] }
+
+  error:
+    template: 'view/home/error.html'
+    on:
+      RETRY: loading
+      DISMISS: idle

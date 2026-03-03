@@ -12,20 +12,7 @@ plugins:
   - name: '@ux3/plugin-stripe'
     config:
       apiKey: 'pk_test_12345'
-
-secrets:
-  LLM_API_KEY: "{{ env.GROQ_API_KEY }}"
-development:
-  hot-reload: true # enable hot reloading for faster development iterations
-  logging: "debug" # verbose logging for development
-  inspector: true # enable client-side inspector for debugging
-assets:
-  - type: "script"
-    src: "https://cdn.tailwindcss.com"
-  - type: "style"
-    href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-# runtime section is used by the build/dev servers to manage/inject the bundle
-runtime:
+  - name: '@ux3/plugin-store'
   bundleKey: "ux3.bundle"      # must match manifest.runtime.bundle
   hydrationFn: "initApp"       # exported from bundle entry
   # initialState: null          # optional initial state variable name

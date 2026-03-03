@@ -1,0 +1,84 @@
+name: TaskDetail
+description: Full task details with comments and actions
+initial: loading
+
+context:
+  taskId: null
+  task: null
+  comments: []
+  isEditing: false
+  newComment: ''
+  error: null
+
+states:
+  loading:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loadingComments, actions: [setTask] }
+      ERROR: error
+
+  loadingComments:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: viewing, actions: [setComments] }
+      ERROR: error
+
+  viewing:
+    template: 'view/task-detail/viewing.html'
+    on:
+      CLOSE: { emit: closeDetail }
+      REMOVE_LABEL: { actions: [removeLabel] }
+
+  editing:
+    template: 'view/task-detail/editing.html'
+    on:
+      SUBMIT: updating
+      CANCEL: viewing
+
+  updating:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loading, actions: [clearForm] }
+      ERROR: { target: editing, actions: [setError] }
+
+  commenting:
+    template: 'view/task-detail/comment-form.html'
+    on:
+      SUBMIT: addingComment
+      CANCEL: viewing
+
+  addingComment:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: loadingComments, actions: [clearForm] }
+      ERROR: { target: commenting, actions: [setError] }
+
+  completing:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: viewing, actions: [setTask] }
+      ERROR: viewing
+
+  confirming:
+    template: 'view/task-detail/confirm-delete.html'
+    on:
+      CONFIRM: deleting
+      CANCEL: viewing
+
+  deleting:
+    invoke:
+      service: store.local
+    on:
+      SUCCESS: { target: viewing, actions: [closeDetail] }
+      ERROR: { target: viewing, actions: [setError] }
+
+  error:
+    template: 'view/task-detail/error.html'
+    on:
+      RETRY: loading
+      DISMISS: viewing
