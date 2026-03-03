@@ -12,6 +12,7 @@ import { WebSocketService } from '../services/websocket.js';
 import { JSONRPCService } from '../services/jsonrpc.js';
 import { Router } from '../services/router.js';
 import type { Service, ServiceConfig } from '../services/types.js';
+import { InvokeRegistry } from '../services/invoke-registry.js';
 import path from 'path';
 import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';

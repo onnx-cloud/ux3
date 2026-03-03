@@ -1,124 +1,143 @@
-# Quick Worked Example 🚀
+# Quick Worked Example
 
-Let's walk through a minimal project that uses the `ux3` CLI. 
-
-It assumes you already have Node ≥16 installed.
-
-> **Tip**: you can use the CLI via `npx ux3` or install it globally with `npm install ux3 -g` if you prefer a shell command.
+Let's walk through creating and building a minimal UX3 application. This example assumes Node ≥16 is already installed.
 
 ---
 
-## 1. Install the CLI
+## 1. Clone an example
+
+The best way to get started is to copy an existing example. Clone this repository and navigate to an example:
 
 ```bash
-# install as a global system command
-npm install ux3 -g
+git clone https://github.com/onnx-cloud/ux3.git
+cd ux3/examples/todo
+npm install
+npm run dev
 ```
 
-With the global install you can run `ux3 compile`, `ux3 build`, `ux3 validate` from any directory. 
-
-If you use `npx`, prepend `npx` to the command: `npx ux3 compile`.
+The dev server starts at `http://localhost:5173` by default. Open it and you'll see a working FSM-driven app.
 
 ---
 
-## 2. Create a new project
+## 2. Inspect the view structure
 
-The CLI ships with a simple generator that bootstraps a starter application. Run:
-
-```bash
-ux3 create hello-world        # or `npx ux3 create hello-world`
-cd hello-world
-npm install                   # install the newly created dependencies
-```
-
-The generated project already contains a minimal `src/` layout, a
-`package.json` with helpful scripts, and a sample `ux/view/hello.yaml`
-view along with a basic `ux3.config.json`, so you can run
-`npm run dev` immediately.
-## 3. Inspect or edit the sample view
-
-The generator already added a simple view at `ux/view/hello.yaml`. You
-can keep it, modify it, or create new views as needed. The default
-content looks like this:
+Views live in `src/ux/view/**/*.yaml`. Open `src/ux/view/todo.yaml`:
 
 ```yaml
-# ux/view/hello.yaml
+# src/ux/view/todo.yaml
 initial: idle
 states:
   idle: |
     <div>
-      <h1>Hello, UX3!</h1>
-      <button ux-event="CLICK">Click me</button>
+      <h1>My Todo App</h1>
+      <button ux-event="ADD">Add Item</button>
     </div>
-  clicked: 'view/hello/clicked.html'
+  adding: 'todo/form.html'
+  added: 'todo/success.html'
 ```
 
-It also created the matching template at `ux/view/hello/clicked.html`:
+Each FSM state can be:
+- An inline template string (using `|` or `|-`)
+- A file reference like `'todo/form.html'`
+
+Related templates live in adjacent folders: `src/ux/view/todo/form.html`, etc.
 
 ```html
-<!-- ux/view/hello/clicked.html -->
-<div>Thanks for clicking!</div>
+<!-- src/ux/view/todo/form.html -->
+<div>
+  <h1>Add a new item</h1>
+  <input ux-event="SUBMIT" />
+</div>
 ```
-
-You already have a `ux3.config.json` file in the project root that
-points the CLI at `ux/view/**/*.yaml` and an output directory of
-`src/generated`; feel free to edit it if your layout changes.
 
 ---
 
-## 4. Compile and build
+## 3. Understand the build pipeline
 
-The `compile` command validates and generates TypeScript artifacts. Run it during development or as part of an npm script.
+The framework is compile-first: YAML views are validated, type-checked, and compiled into TypeScript artifacts before runtime. Use npm scripts to trigger this:
 
 ```bash
-# development (fast incremental)
-npx ux3 compile --config ux3.config.json
+# Development (watch mode + dev server)
+npm run dev
 
-# full build (same as `npm run build` if you add a script)
-ux3 build --config ux3.config.json
+# Full production build
+npm run build
+
+# Type-check and linting
+npm run type-check
+npm run lint
 ```
 
-**Inside `package.json`** you can add:
-
-```json
-"scripts": {
-  "compile": "ux3 compile --config ux3.config.json",
-  "build": "ux3 build --config ux3.config.json"
-}
-```
-
-> The `build` command runs the complete pipeline: validate → compile → emit. It also works with global installs.
+These scripts invoke the `@ux3/cli` package. The pipeline:
+1. **Validate** – Check YAML schema and i18n keys
+2. **Compile** – Generate TypeScript types in `src/generated/`
+3. **Type-check** – Ensure all references are sound
+4. **Emit** – Output optimized runtime code
 
 ---
 
-## 5. Run a quick test
+## 4. Add a test
 
-Add a tiny test file pointing at the generated types:
+Tests reference generated types to ensure type safety:
 
 ```ts
-// tests/hello.test.ts
-import { expect, test } from 'vitest';
-import { Hello } from '../src/generated/ux/view/hello';
+// tests/todo.test.ts
+import { describe, it, expect } from 'vitest';
+import { FSMRegistry } from '@ux3/core';
 
-test('view type', () => {
-  expect(Hello).toBeType(); // compile‑time check only
+describe('Todo FSM', () => {
+  it('should register the todo view', () => {
+    const fsm = FSMRegistry.get('todo');
+    expect(fsm).toBeDefined();
+    expect(fsm.initialState).toBe('idle');
+  });
+
+  afterEach(() => {
+    FSMRegistry.clear();
+  });
 });
 ```
 
-Then execute:
+Run tests with:
 
 ```bash
-npm run test
+npm run test              # run once
+npm run test:watch       # watch mode
+npm run test:e2e:debug   # Playwright e2e with browser
 ```
-
-> The example repository above is essentially this skeleton with a few more files; you can copy it verbatim to get started.
 
 ---
 
-## 6. Want more?
+## 5. Run the full example
 
-* Copy the `examples/iam` project in this repo for a real‑world app and follow the instructions in `examples/iam/README.md`.
-* See [docs/compilation.md](compilation.md#cli-commands) for the full CLI reference.
-* Open a terminal and type `ux3 --help` to list all available subcommands and flags.
+For a production-grade reference implementation, explore `examples/iam`:
 
-Happy building! 🛠️
+```bash
+cd examples/iam
+npm install
+npm run dev
+```
+
+This demonstrates:
+- Store for state management
+- Form validation and submission
+- Routing and navigation
+- Service declarations and HTTP calls
+- i18n integration
+- Declarative scenarios (`tests/decl/`) and e2e specs (`tests/e2e/`)
+
+See the [IAM example notes](../examples/iam/README.md) for more details.
+
+---
+
+## 6. Key reference docs
+
+- **Framework core**: [docs/fsm-core.md](fsm-core.md)
+- **Build pipeline**: [docs/compilation.md](compilation.md)
+- **View system**: [docs/views.md](views.md)
+- **Styling**: [docs/ux-style.md](ux-style.md)
+- **i18n**: [docs/i18n.md](i18n.md)
+- **Services & side-effects**: [docs/services.md](services.md)
+- **Testing**: [docs/testing-guides.md](testing-guides.md)
+
+Happy building!
