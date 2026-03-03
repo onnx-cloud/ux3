@@ -1,0 +1,2 @@
+lsof -i :1337 && fuser -k 1337/tcp || true
+

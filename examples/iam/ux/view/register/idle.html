@@ -12,11 +12,7 @@
         error="{{ctx.errors.email}}"
         touched="{{ctx.touched.email}}"
       >
-        <input
-          slot="control"
-          value="{{ctx.form.email}}"
-          placeholder="{{i18n.register.fields.email.placeholder}}"
-        />
+        <input value="{{ctx.form.email}}" placeholder="{{i18n.register.fields.email.placeholder}}" />
       </ux-field>
 
       <!-- Password Field -->
@@ -28,11 +24,7 @@
         touched="{{ctx.touched.password}}"
         hint="{{i18n.register.fields.password.hint}}"
       >
-        <input
-          slot="control"
-          value="{{ctx.form.password}}"
-          placeholder="{{i18n.register.fields.password.placeholder}}"
-        />
+        <input value="{{ctx.form.password}}" placeholder="{{i18n.register.fields.password.placeholder}}" />
       </ux-field>
 
       <!-- Confirm Password Field -->
@@ -43,11 +35,7 @@
         error="{{ctx.errors.confirmPassword}}"
         touched="{{ctx.touched.confirmPassword}}"
       >
-        <input
-          slot="control"
-          value="{{ctx.form.confirmPassword}}"
-          placeholder="{{i18n.register.fields.confirmPassword.placeholder}}"
-        />
+        <input value="{{ctx.form.confirmPassword}}" placeholder="{{i18n.register.fields.confirmPassword.placeholder}}" />
       </ux-field>
 
       <!-- Terms Agreement -->
@@ -58,10 +46,7 @@
         touched="{{ctx.touched.agreeToTerms}}"
         label="{{i18n.register.fields.agreeToTerms.label}}"
       >
-        <input
-          slot="control"
-          {{ctx.form.agreeToTerms ? 'checked' : ''}}
-        />
+        <input {{ctx.form.agreeToTerms ? 'checked' : ''}} />
       </ux-field>
 
       <!-- Submit Button -->

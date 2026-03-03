@@ -2,7 +2,7 @@
   "home": {
     "ready": { "label": "Welcome to Invest America" },
     "loading": { "label": "Loading home" },
-    "loaded": { "label": "Featured" },
+    "loaded": { "label": "home page loaded" },
     "error": { "label": "Unable to load home", "message": "We're having trouble loading the home page. Please try again." },
     "cta": { "start_investing": "Start Investing", "learn_more": "Learn More" }
   }

@@ -133,13 +133,6 @@ export class FSMRegistry {
   }
 
   /**
-   * Clear all FSMs (for testing)
-   */
-  static clear(): void {
-    this.instances.clear();
-  }
-
-  /**
    * Validate that all required namespaces are registered
    */
   static validate(required: string[]): string[] {
