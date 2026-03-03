@@ -6,13 +6,25 @@ services:
     auth:
       type: bearer
 
-  realtime:
-    adapter: websocket
-    url: ws://localhost:1337/realtime
-    reconnectAttempts: 5
-    reconnectInterval: 2000
+  auth:
+    adapter: http
+    baseUrl: http://localhost:1337/api/auth
+    auth:
+      type: bearer
+    methods:
+      validateRegister:
+        path: /register/validate
+        method: POST
+      register:
+        path: /register
+        method: POST
+      authenticate:
+        path: /login
+        method: POST
+      validateLogin:
+        path: /login/validate
+        method: POST
 
-  chat:
     adapter: jsonrpc
     endpoint: http://localhost:1337/rpc/chat
 

@@ -68,6 +68,25 @@
         "required": "Message is required",
         "minLength": "Message must be at least 10 characters"
       }
+    },
+    "register": {
+      "email": {
+        "required": "Email is required",
+        "pattern": "Invalid email format",
+        "emailUnique": "Email is already registered"
+      },
+      "password": {
+        "required": "Password is required",
+        "minLength": "Password must be at least 8 characters",
+        "pattern": "Password must contain uppercase letter and number"
+      },
+      "confirmPassword": {
+        "required": "Please confirm your password",
+        "matches": "Passwords do not match"
+      },
+      "agreeToTerms": {
+        "required": "You must agree to the terms and conditions"
+      }
     }
   }
 }

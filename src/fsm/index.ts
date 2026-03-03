@@ -5,5 +5,10 @@
 
 export { StateMachine } from './state-machine.js';
 export type { StateConfig, MachineConfig, StateEvent, TransitionConfig, GuardCondition, MachineContext } from './types.js';
-export { createMachine } from './create-machine.js';export { FSMRegistry, extractNamespace, extractState } from './registry.js';
+export { createMachine } from './create-machine.js';
+export { FSMRegistry, extractNamespace, extractState } from './registry.js';
 export type { FSMRegistryConfig } from './registry.js';
+
+// Form helpers
+export { formActions, formGuards } from './form-helpers.js';
+export type { FormContext } from './form-helpers.js';

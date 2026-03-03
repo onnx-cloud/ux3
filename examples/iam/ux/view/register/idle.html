@@ -1,0 +1,83 @@
+<div ux-state="register.idle" ux-style="page-auth">
+  <div ux-style="card">
+    <h1>{{i18n.register.title}}</h1>
+    <p>{{i18n.register.subtitle}}</p>
+
+    <form ux-event="SUBMIT" ux-style="form-register" data-context="register">
+      <!-- Email Field -->
+      <ux-field
+        name="email"
+        type="email"
+        required
+        error="{{ctx.errors.email}}"
+        touched="{{ctx.touched.email}}"
+      >
+        <input
+          slot="control"
+          ux-event="CHANGE: { name: 'email', value: event.target.value }, BLUR: { name: 'email' }"
+          value="{{ctx.form.email}}"
+          placeholder="{{i18n.register.fields.email.placeholder}}"
+        />
+      </ux-field>
+
+      <!-- Password Field -->
+      <ux-field
+        name="password"
+        type="password"
+        required
+        error="{{ctx.errors.password}}"
+        touched="{{ctx.touched.password}}"
+        hint="{{i18n.register.fields.password.hint}}"
+      >
+        <input
+          slot="control"
+          ux-event="CHANGE: { name: 'password', value: event.target.value }, BLUR: { name: 'password' }"
+          value="{{ctx.form.password}}"
+          placeholder="{{i18n.register.fields.password.placeholder}}"
+        />
+      </ux-field>
+
+      <!-- Confirm Password Field -->
+      <ux-field
+        name="confirmPassword"
+        type="password"
+        required
+        error="{{ctx.errors.confirmPassword}}"
+        touched="{{ctx.touched.confirmPassword}}"
+      >
+        <input
+          slot="control"
+          ux-event="CHANGE: { name: 'confirmPassword', value: event.target.value }, BLUR: { name: 'confirmPassword' }"
+          value="{{ctx.form.confirmPassword}}"
+          placeholder="{{i18n.register.fields.confirmPassword.placeholder}}"
+        />
+      </ux-field>
+
+      <!-- Terms Agreement -->
+      <ux-field
+        name="agreeToTerms"
+        type="checkbox"
+        error="{{ctx.errors.agreeToTerms}}"
+        touched="{{ctx.touched.agreeToTerms}}"
+        label="{{i18n.register.fields.agreeToTerms.label}}"
+      >
+        <input
+          slot="control"
+          ux-event="CHANGE: { name: 'agreeToTerms', value: event.target.checked }"
+          {{ctx.form.agreeToTerms ? 'checked' : ''}}
+        />
+      </ux-field>
+
+      <!-- Submit Button -->
+      <button type="submit" disabled="{{ctx.isSubmitting}}">
+        {{ctx.isSubmitting ? i18n.register.submitting : i18n.register.submit}}
+      </button>
+
+      <!-- Already have account? -->
+      <p ux-style="login-link">
+        {{i18n.register.haveAccount}}
+        <a href="/login">{{i18n.register.loginLink}}</a>
+      </p>
+    </form>
+  </div>
+</div>

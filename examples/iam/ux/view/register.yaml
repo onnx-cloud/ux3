@@ -1,0 +1,109 @@
+name: Register
+layout: auth
+
+initial: idle
+
+context:
+  form:
+    email: ''
+    password: ''
+    confirmPassword: ''
+    agreeToTerms: false
+
+  errors: {}
+  touched: {}
+  dirty: {}
+  isSubmitting: false
+  submitError: null
+
+states:
+  idle:
+    template: 'view/register/idle.html'
+    on:
+      FIELD_CHANGE:
+        actions:
+          - type: custom
+            handler: |
+              const { name, value } = event.payload;
+              ctx.form[name] = value;
+              ctx.dirty[name] = true;
+      FIELD_BLUR:
+        actions:
+          - type: custom
+            handler: |
+              const { name } = event.payload;
+              if (!ctx.touched) ctx.touched = {};
+              ctx.touched[name] = true;
+      SUBMIT:
+        guard: |
+          return Object.keys(ctx.form).every(key => ctx.form[key]);
+        target: validating
+        actions:
+          - type: custom
+            handler: |
+              if (!ctx.touched) ctx.touched = {};
+              Object.keys(ctx.form).forEach(key => {
+                ctx.touched[key] = true;
+              });
+
+  validating:
+    template: 'view/register/validating.html'
+    invoke:
+      service: auth
+      method: validateRegister
+      input:
+        form: ctx.form
+    on:
+      SUCCESS:
+        actions:
+          - type: custom
+            handler: |
+              ctx.errors = {};
+        target: submitting
+      ERROR:
+        actions:
+          - type: custom
+            handler: |
+              ctx.errors = event.payload.errors || {};
+        target: idle
+
+  submitting:
+    template: 'view/register/submitting.html'
+    invoke:
+      service: auth
+      method: register
+      input:
+        form: ctx.form
+    on:
+      SUCCESS: success
+      ERROR:
+        actions:
+          - type: custom
+            handler: |
+              ctx.submitError = event.payload.message || 'Registration failed';
+        target: error
+
+  success:
+    template: 'view/register/success.html'
+    on:
+      NAVIGATE:
+        target: idle
+        actions:
+          - type: custom
+            handler: |
+              ctx.form = {};
+              ctx.errors = {};
+              ctx.touched = {};
+              ctx.dirty = {};
+              ctx.submitError = null;
+
+  error:
+    template: 'view/register/error.html'
+    on:
+      RETRY:
+        target: idle
+        actions:
+          - type: custom
+            handler: |
+              ctx.submitError = null;
+              ctx.isSubmitting = false;

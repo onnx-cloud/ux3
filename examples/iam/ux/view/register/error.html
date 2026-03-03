@@ -1,0 +1,12 @@
+<div ux-state="register.error" ux-style="page-auth">
+  <div ux-style="card">
+    <div ux-style="error-message">
+      <div class="icon">⚠</div>
+      <h1>{{i18n.register.errorTitle}}</h1>
+      <p>{{ctx.submitError || i18n.register.errorMessage}}</p>
+      <button ux-event="RETRY" ux-style="button-primary">
+        {{i18n.register.retryButton}}
+      </button>
+    </div>
+  </div>
+</div>
