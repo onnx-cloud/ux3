@@ -25,7 +25,8 @@ export class DashboardView extends ViewComponent {
     "loading": {
       "template": "view/dashboard/loading.html",
       "invoke": {
-        "src": (logic.loadDashboard || shared.loadDashboard)
+        "service": "api",
+        "method": "getDashboard"
       },
       "on": {
         "SUCCESS": "loaded",
@@ -61,9 +62,12 @@ export class DashboardView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-dashboard', DashboardView);
+  const tag = 'ux-dashboard';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, DashboardView);
+  }
 }
 
 export default DashboardView;

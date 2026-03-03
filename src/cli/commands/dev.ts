@@ -9,22 +9,33 @@ import { Validator } from '../../build/validator.js';
 import { ManifestGenerator } from '../../build/manifest-generator.js';
 import { BuildWatcher } from '../../build/watch.js';
 import { Bundler } from '../../build/bundler.js';
+import { ViewCompiler } from '../../build/view-compiler.js';
 import { DevServer } from '../../dev/dev-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '../../../');
 
+interface DevCommandOptions {
+  port: string;
+  host: string;
+  open: boolean;
+}
+
+interface JsonSchema {
+  [key: string]: unknown;
+}
+
 // Load schemas
 function loadSchemas() {
   const schemasDir = path.join(rootDir, 'schema');
-  const schemas: Record<string, any> = {};
+  const schemas: Record<string, JsonSchema> = {};
 
   const schemaFiles = ['routes', 'services', 'i18n', 'style', 'tokens', 'validate', 'view', 'content'];
   for (const file of schemaFiles) {
     const schemaPath = path.join(schemasDir, `${file}.schema.json`);
     if (fs.existsSync(schemaPath)) {
       const content = fs.readFileSync(schemaPath, 'utf-8');
-      schemas[file] = JSON.parse(content);
+      schemas[file] = JSON.parse(content) as JsonSchema;
     }
   }
 
@@ -38,7 +49,7 @@ export const devCommand = new Command()
   .option('--port <port>', 'port to run on', '1337')
   .option('--host <host>', 'host to bind to', 'localhost')
   .option('--open', 'open browser on startup', false)
-  .action(async (project, options) => {
+  .action(async (project: string | undefined, options: DevCommandOptions) => {
     try {
       const projectDir = project ? path.resolve(project) : process.cwd();
       const generatedDir = path.join(projectDir, 'generated');
@@ -82,6 +93,18 @@ export const devCommand = new Command()
           });
           const validation = await validator.validate();
 
+          // Compile views from ux/view YAML → generated/views TS
+          const viewsDir = path.join(projectDir, 'ux', 'view');
+          const viewsOutputDir = path.join(generatedDir, 'views');
+          if (fs.existsSync(viewsDir)) {
+            try {
+              const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir);
+              await viewCompiler.compileAllViews();
+            } catch (e) {
+              console.warn(`[Dev] View compilation warning: ${e instanceof Error ? e.message : String(e)}`);
+            }
+          }
+
           const buildTime = Date.now() - startTime;
 
           // compute runtime info: bundle & styles may exist under dist path
@@ -90,7 +113,7 @@ export const devCommand = new Command()
           let pkgVersion = '0.0.0';
           try {
             const pkgData = fs.readFileSync(path.join(projectDir, 'package.json'), 'utf-8');
-            const pkg = JSON.parse(pkgData);
+            const pkg = JSON.parse(pkgData) as { version?: string };
             if (pkg.version) pkgVersion = pkg.version;
           } catch {}
 

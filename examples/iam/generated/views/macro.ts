@@ -25,7 +25,8 @@ export class MacroView extends ViewComponent {
     "loading": {
       "template": "view/macro/loading.html",
       "invoke": {
-        "src": (logic.loadMacro || shared.loadMacro)
+        "service": "api",
+        "method": "getMacro"
       },
       "on": {
         "SUCCESS": "loaded",
@@ -61,9 +62,12 @@ export class MacroView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-macro', MacroView);
+  const tag = 'ux-macro';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, MacroView);
+  }
 }
 
 export default MacroView;

@@ -18,7 +18,7 @@ export class StructuredLogger implements Logger {
     }
   }
 
-  log(key: string, meta: any = {}) {
+  log(key: string, meta: Record<string, unknown> = {}) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       level: 'log',
@@ -31,7 +31,7 @@ export class StructuredLogger implements Logger {
     console.log(key, meta);
   }
 
-  warn(key: string, meta: any = {}) {
+  warn(key: string, meta: Record<string, unknown> = {}) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       level: 'warn',
@@ -43,7 +43,7 @@ export class StructuredLogger implements Logger {
     console.warn(key, meta);
   }
 
-  error(key: string, meta: any = {}) {
+  error(key: string, meta: Record<string, unknown> = {}) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       level: 'error',
@@ -55,7 +55,7 @@ export class StructuredLogger implements Logger {
     console.error(key, meta);
   }
 
-  debug(key: string, meta: any = {}) {
+  debug(key: string, meta: Record<string, unknown> = {}) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       level: 'debug',

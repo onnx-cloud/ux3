@@ -9,14 +9,16 @@ states:
   validating:
     template: 'view/sign-up/validating.html'
     invoke:
-      src: validateSignUp
+      service: api
+      method: validateUser
     on:
-      VALID: submitting
-      INVALID: error
+      SUCCESS: submitting
+      ERROR: error
   submitting:
     template: 'view/sign-up/submitting.html'
     invoke:
-      src: submitSignUp
+      service: api
+      method: registerUser
     on:
       SUCCESS: success
       ERROR: error

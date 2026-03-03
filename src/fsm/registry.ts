@@ -41,7 +41,10 @@ export class FSMRegistry {
     this.globalContext = { ...this.globalContext, ...ctx };
     // Update existing machines if they support global injection
     for (const fsm of this.instances.values()) {
-      (fsm as any).updateGlobalContext?.(this.globalContext);
+      // Type-safe way to check and call method
+      if (typeof (fsm as Record<string, unknown>).updateGlobalContext === 'function') {
+        ((fsm as Record<string, unknown>).updateGlobalContext as (ctx: Record<string, any>) => void)(this.globalContext);
+      }
     }
   }
 

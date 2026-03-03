@@ -4,91 +4,96 @@
 
 /**
  * Built-in helper functions
+ * These intentionally accept `any` because they work with dynamic template context data
  */
+/* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 export const builtInHelpers = {
   // Logic helpers
-  eq: (a: any, b: any) => a === b,
-  ne: (a: any, b: any) => a !== b,
-  gt: (a: any, b: any) => a > b,
-  lt: (a: any, b: any) => a < b,
-  gte: (a: any, b: any) => a >= b,
-  lte: (a: any, b: any) => a <= b,
-  and: (a: any, b: any) => a && b,
-  or: (a: any, b: any) => a || b,
-  not: (a: any) => !a,
+  eq: (a: unknown, b: unknown) => a === b,
+  ne: (a: unknown, b: unknown) => a !== b,
+  gt: (a: unknown, b: unknown) => (a as any) > (b as any),
+  lt: (a: unknown, b: unknown) => (a as any) < (b as any),
+  gte: (a: unknown, b: unknown) => (a as any) >= (b as any),
+  lte: (a: unknown, b: unknown) => (a as any) <= (b as any),
+  and: (a: unknown, b: unknown) => a && b,
+  or: (a: unknown, b: unknown) => a || b,
+  not: (a: unknown) => !a,
 
   // Array helpers
-  length: (arr: any) => {
+  length: (arr: unknown) => {
     if (Array.isArray(arr)) return arr.length;
     if (typeof arr === 'string') return arr.length;
-    if (typeof arr === 'object' && arr !== null) return Object.keys(arr).length;
+    if (typeof arr === 'object' && arr !== null) return Object.keys(arr as Record<string, unknown>).length;
     return 0;
   },
 
-  join: (arr: any, separator = ', ') => {
+  join: (arr: unknown, separator = ', ') => {
     if (!Array.isArray(arr)) return String(arr);
-    return arr.map(item => String(item)).join(String(separator));
+    return arr.map((item: unknown) => String(item)).join(String(separator));
   },
 
-  first: (arr: any) => {
+  first: (arr: unknown) => {
     if (Array.isArray(arr)) return arr[0];
     return undefined;
   },
 
-  last: (arr: any) => {
-    if (Array.isArray(arr)) return arr[arr.length - 1];
+  last: (arr: unknown) => {
+    if (Array.isArray(arr)) return arr[(arr as unknown[]).length - 1];
     return undefined;
   },
 
-  slice: (arr: any, start: number, end?: number) => {
+  slice: (arr: unknown, start: number, end?: number) => {
     if (Array.isArray(arr)) return arr.slice(start, end);
     return arr;
   },
 
   // String helpers
-  uppercase: (str: any) => String(str || '').toUpperCase(),
-  lowercase: (str: any) => String(str || '').toLowerCase(),
-  capitalize: (str: any) => {
+  uppercase: (str: unknown) => String(str || '').toUpperCase(),
+  lowercase: (str: unknown) => String(str || '').toLowerCase(),
+  capitalize: (str: unknown) => {
     const s = String(str || '');
     return s.charAt(0).toUpperCase() + s.slice(1);
   },
-  trim: (str: any) => String(str || '').trim(),
+  trim: (str: unknown) => String(str || '').trim(),
 
-  truncate: (str: any, length: number, suffix = '...') => {
+  truncate: (str: unknown, length: number, suffix = '...') => {
     const s = String(str || '');
     if (s.length <= length) return s;
     return s.slice(0, length) + String(suffix);
   },
 
-  reverse: (str: any) => {
-    if (Array.isArray(str)) return [...str].reverse();
+  reverse: (str: unknown) => {
+    if (Array.isArray(str)) {
+      const arr = str.slice() as unknown[];
+      return arr.reverse();
+    }
     return String(str || '').split('').reverse().join('');
   },
 
   // Type helpers
-  type: (val: any) => {
+  type: (val: unknown) => {
     if (val === null) return 'null';
     if (val === undefined) return 'undefined';
     if (Array.isArray(val)) return 'array';
     return typeof val;
   },
 
-  truthy: (val: any) => {
+  truthy: (val: unknown) => {
     if (typeof val === 'boolean') return val;
     if (val == null) return false;
     if (typeof val === 'number') return val !== 0;
     if (typeof val === 'string') return val.length > 0;
     if (Array.isArray(val)) return val.length > 0;
-    if (typeof val === 'object') return Object.keys(val).length > 0;
+    if (typeof val === 'object') return Object.keys(val as Record<string, unknown>).length > 0;
     return Boolean(val);
   },
 
-  falsy: (val: any) => !builtInHelpers.truthy(val),
+  falsy: (val: unknown) => !builtInHelpers.truthy(val),
 
-  empty: (val: any) => {
+  empty: (val: unknown) => {
     if (Array.isArray(val)) return val.length === 0;
     if (typeof val === 'string') return val.length === 0;
-    if (typeof val === 'object' && val !== null) return Object.keys(val).length === 0;
+    if (typeof val === 'object' && val !== null) return Object.keys(val as Record<string, unknown>).length === 0;
     return !builtInHelpers.truthy(val);
   },
 
@@ -119,11 +124,21 @@ export const builtInHelpers = {
   },
 
   // Default filter (for missing helpers)
-  default: (val: any, defaultVal: any) => (val !== undefined && val !== null ? val : defaultVal),
+  default: (val: unknown, defaultVal: unknown) => (val !== undefined && val !== null ? val : defaultVal),
 
   // Include/partial-like behavior
-  get: (obj: any, path: string) => {
+  get: (obj: unknown, path: string) => {
     if (!path) return obj;
-    return path.split('.').reduce((v: any, key: string) => v?.[key], obj);
+    const parts = path.split('.');
+    let current: unknown = obj;
+    for (const key of parts) {
+      if (typeof current === 'object' && current !== null) {
+        current = (current as Record<string, unknown>)[key];
+      } else {
+        return undefined;
+      }
+    }
+    return current;
   },
+/* eslint-enable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 };

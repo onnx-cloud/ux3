@@ -8,11 +8,11 @@ export const config = {
   "routes": [
     {
       "path": "/",
-      "view": "home"
+      "view": "index"
     },
     {
       "path": "/home",
-      "view": "home"
+      "view": "index"
     },
     {
       "path": "/login",
@@ -152,7 +152,12 @@ export const config = {
       "context": {},
       "states": {
         "index": {},
-        "loading": {},
+        "loading": {
+          "on": {
+            "SUCCESS": "loaded",
+            "ERROR": "error"
+          }
+        },
         "loaded": {
           "on": {
             "REFRESH": "loading"
@@ -304,6 +309,14 @@ export const config = {
         }
       }
     },
+    "homeFSM": {
+      "id": "home",
+      "initial": "index",
+      "context": {},
+      "states": {
+        "index": {}
+      }
+    },
     "indexFSM": {
       "id": "index",
       "initial": "index",
@@ -421,8 +434,8 @@ export const config = {
         },
         "validating": {
           "on": {
-            "VALID": "submitting",
-            "INVALID": "error"
+            "SUCCESS": "submitting",
+            "ERROR": "error"
           }
         },
         "submitting": {
@@ -965,6 +978,9 @@ export const config = {
       "loaded": "<div ux-state=\"for-you.loaded\">\n  <div ux-style=\"widget\">{{i18n.for-you.loaded.label}}</div>\n</div>\n",
       "error": "<div ux-state=\"for-you.error\">\n  <div ux-style=\"alert\">{{i18n.for-you.error.label}}</div>\n</div>\n"
     },
+    "home": {
+      "index": "<div ux-state=\"home.loaded\">\n  <div ux-style=\"widget\" >{{i18n.home.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/charts\" ux-event=\"NAVIGATE\">{{i18n.demo.charts}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/dropdown\" ux-event=\"NAVIGATE\">{{i18n.demo.dropdown}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/modal\" ux-event=\"NAVIGATE\">{{i18n.demo.modal}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/stripe\" ux-event=\"NAVIGATE\">{{i18n.demo.stripe}}</a>\n  </div>\n</div>\n"
+    },
     "index": {
       "index": "<div ux-state=\"home.loaded\">\n  <div ux-style=\"widget\" >{{i18n.home.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/charts\" ux-event=\"NAVIGATE\">{{i18n.demo.charts}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/dropdown\" ux-event=\"NAVIGATE\">{{i18n.demo.dropdown}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/modal\" ux-event=\"NAVIGATE\">{{i18n.demo.modal}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/stripe\" ux-event=\"NAVIGATE\">{{i18n.demo.stripe}}</a>\n  </div>\n</div>\n"
     },
@@ -986,7 +1002,9 @@ export const config = {
       "validating": "<div ux-state=\"sign-up.validating\">\n  <div ux-style=\"spinner\">{{i18n.sign-up.validating.label}}</div>\n</div>\n",
       "submitting": "<div ux-state=\"sign-up.submitting\">\n  <div ux-style=\"spinner\">{{i18n.sign-up.submitting.label}}</div>\n</div>\n",
       "success": "<div ux-state=\"sign-up.success\">\n  <div ux-style=\"widget\">{{i18n.sign-up.success.label}}</div>\n</div>\n"
-    }
+    },
+    "auth": "<main id=\"ux-content\" ux-style=\"auth\" role=\"main\">\n  {{{content}}}\n</main>\n",
+    "default": "<header id=\"site-header\">\n  <nav ux-style=\"nav\">\n    {{#if nav}}\n      {{#each nav.routes}}\n        <a href=\"{{this.path}}\"\n           {{#if (eq ../nav.current.path this.path)}}class=\"active\"{{/if}}\n           {{#unless (../nav.canNavigate this.view)}}disabled{{/unless}}>\n          {{../nav.getLabel this}}\n        </a>\n      {{/each}}\n    {{/if}}\n  </nav>\n</header>\n\n<main id=\"ux-content\" role=\"main\">\n  {{{content}}}\n</main>\n\n<footer id=\"site-footer\">\n  <small ux-style=\"small\">{{i18n.footer.copyright}}</small>\n</footer>\n"
   },
   "site": {
     "title": "Invest America",

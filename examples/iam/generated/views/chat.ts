@@ -25,7 +25,8 @@ export class ChatView extends ViewComponent {
     "loading": {
       "template": "view/chat/loading.html",
       "invoke": {
-        "src": (logic.loadConversations || shared.loadConversations)
+        "service": "chat",
+        "method": "listConversations"
       },
       "on": {
         "SUCCESS": "ready",
@@ -68,9 +69,12 @@ export class ChatView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-chat', ChatView);
+  const tag = 'ux-chat';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, ChatView);
+  }
 }
 
 export default ChatView;

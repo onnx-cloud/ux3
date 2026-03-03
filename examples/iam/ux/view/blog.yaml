@@ -4,7 +4,8 @@ initial: loading
 states:
   loading:
     invoke:
-      src: loadBlog
+      service: api
+      method: getPosts
     on:
       SUCCESS: loaded
       ERROR: error

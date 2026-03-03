@@ -5,7 +5,8 @@ states:
   loading:
     template: 'view/for-you/loading.html'
     invoke:
-      src: loadForYou
+      service: api
+      method: getForYou
     on:
       SUCCESS: loaded
       ERROR: error

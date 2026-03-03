@@ -327,9 +327,9 @@ export class DevServer {
                   if (candidate) {
                     templateHtml = String(candidate);
                   }
-                }
+       }
 
-                // Fallback to filesystem when manifest doesn't provide template
+       // Fallback to filesystem when manifest doesn't provide template
                 if (!templateHtml) {
                   let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//, ''));
                   if (!fsExtra.existsSync(templatePath)) {
@@ -442,7 +442,7 @@ export class DevServer {
                   const msg = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
                   templateHtml = msg;
                   // Note: do not throw or attempt additional fs guessing — stay within architecture contract
-                  console.warn(`[DevServer] Missing template: ${templateRel}. Instructing developer to compile generated views.`);
+                  console.warn(`[DevServer] Missing template: ${templateRel}. compile generated views.`);
                 }
 
                 // Render the template into layout, resolving layoutName/title similar to other index path

@@ -31,17 +31,19 @@ export class SignUpView extends ViewComponent {
     "validating": {
       "template": "view/sign-up/validating.html",
       "invoke": {
-        "src": (logic.validateSignUp || shared.validateSignUp)
+        "service": "api",
+        "method": "validateUser"
       },
       "on": {
-        "VALID": "submitting",
-        "INVALID": "error"
+        "SUCCESS": "submitting",
+        "ERROR": "error"
       }
     },
     "submitting": {
       "template": "view/sign-up/submitting.html",
       "invoke": {
-        "src": (logic.submitSignUp || shared.submitSignUp)
+        "service": "api",
+        "method": "registerUser"
       },
       "on": {
         "SUCCESS": "success",
@@ -77,9 +79,12 @@ export class SignUpView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-sign-up', SignUpView);
+  const tag = 'ux-sign-up';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, SignUpView);
+  }
 }
 
 export default SignUpView;

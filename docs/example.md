@@ -1,6 +1,8 @@
 # Quick Worked Example 🚀
 
-This page walks you through a minimal project that uses the `ux3` CLI. It assumes you already have Node ≥16 installed.
+Let's walk through a minimal project that uses the `ux3` CLI. 
+
+It assumes you already have Node ≥16 installed.
 
 > **Tip**: you can use the CLI via `npx ux3` or install it globally with `npm install ux3 -g` if you prefer a shell command.
 
@@ -9,32 +11,35 @@ This page walks you through a minimal project that uses the `ux3` CLI. It assume
 ## 1. Install the CLI
 
 ```bash
-# local install for a single project
-npm install ux3 --save-dev
-
-# or global if you want a system command
+# install as a global system command
 npm install ux3 -g
 ```
 
-With the global install you can run `ux3 compile`, `ux3 build`, `ux3 validate` from any directory. If you use `npx`, prepend `npx` to the command: `npx ux3 compile`.
+With the global install you can run `ux3 compile`, `ux3 build`, `ux3 validate` from any directory. 
+
+If you use `npx`, prepend `npx` to the command: `npx ux3 compile`.
 
 ---
 
 ## 2. Create a new project
 
-```bash
-mkdir my-app && cd my-app
-npm init -y
-npm install ux3 --save-dev
-```
-
-Create the standard UX3 folders that the compiler expects:
+The CLI ships with a simple generator that bootstraps a starter application. Run:
 
 ```bash
-mkdir -p ux/view ux/style ux/validation ux/i18n ux/token
+ux3 create hello-world        # or `npx ux3 create hello-world`
+cd hello-world
+npm install                   # install the newly created dependencies
 ```
 
-## 3. Add a simple view
+The generated project already contains a minimal `src/` layout, a
+`package.json` with helpful scripts, and a sample `ux/view/hello.yaml`
+view along with a basic `ux3.config.json`, so you can run
+`npm run dev` immediately.
+## 3. Inspect or edit the sample view
+
+The generator already added a simple view at `ux/view/hello.yaml`. You
+can keep it, modify it, or create new views as needed. The default
+content looks like this:
 
 ```yaml
 # ux/view/hello.yaml
@@ -48,21 +53,16 @@ states:
   clicked: 'view/hello/clicked.html'
 ```
 
-Create the HTML template for the `clicked` state:
+It also created the matching template at `ux/view/hello/clicked.html`:
 
 ```html
 <!-- ux/view/hello/clicked.html -->
 <div>Thanks for clicking!</div>
 ```
 
-A minimal `ux3.config.json` file that tells the CLI where to look:
-
-```json
-{
-  "views": "ux/view/**/*.yaml",
-  "output": "src/generated"
-}
-```
+You already have a `ux3.config.json` file in the project root that
+points the CLI at `ux/view/**/*.yaml` and an output directory of
+`src/generated`; feel free to edit it if your layout changes.
 
 ---
 

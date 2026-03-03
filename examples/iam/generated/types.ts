@@ -14,7 +14,7 @@
 // Route Types
 // ============================================================================
 
-export type View = 'home' | 'login' | 'dashboard' | 'market' | 'asset' | 'for-you' | 'chat' | 'blog' | 'news' | 'account' | 'billing' | 'macro' | 'sign-up';
+export type View = 'index' | 'login' | 'dashboard' | 'market' | 'asset' | 'for-you' | 'chat' | 'blog' | 'news' | 'account' | 'billing' | 'macro' | 'sign-up';
 export type RoutePath = '/' | '/home' | '/login' | '/dashboard' | '/dashboard/:section' | '/market' | '/market/:exchange' | '/asset/:symbol' | '/for-you' | '/chat' | '/chat/:conversation' | '/blog' | '/blog/:slug' | '/news' | '/account' | '/billing' | '/macro' | '/sign-up';
 
 export interface RouteDefinition {

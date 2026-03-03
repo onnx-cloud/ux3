@@ -50,7 +50,7 @@ export class FormValidator {
     }
 
     // Min validation
-    if (rules.min && value && value.length < rules.min) {
+    if (rules.min && value && value?.length < rules.min) {
       this.setError(field, `Minimum ${rules.min} characters required`);
       return false;
     }

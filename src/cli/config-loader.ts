@@ -89,8 +89,8 @@ async function loadJson(filePath: string): Promise<Partial<AppConfig>> {
 async function loadJsConfig(filePath: string): Promise<Partial<AppConfig>> {
   try {
     // Use dynamic import for ESM modules
-    const module = await import(filePath);
-    return (module.default || module) as Partial<AppConfig>;
+    const module = await import(filePath) as { default?: unknown };
+    return ((module.default || module) as Partial<AppConfig>) || {};
   } catch (error) {
     console.error(`Failed to load JS config: ${filePath}`, error);
     throw error;
@@ -163,7 +163,7 @@ async function findConfigFiles(
     }
   } catch (error) {
     // configs/ directory may not exist, which is fine
-    if ((error as any).code !== 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code !== 'ENOENT') {
       throw error;
     }
   }
@@ -253,7 +253,7 @@ export async function loadConfig(
     }
 
     // Merge all configs deeply
-    const mergedConfig = deepMerge(...configs) as AppConfig;
+    const mergedConfig = deepMerge(...(configs as Record<string, unknown>[])) as AppConfig;
 
     // Validate mandatory keys
     if (validateMandatory) {
@@ -322,21 +322,26 @@ export function clearConfigCache(projectRoot?: string): void {
 export function getConfigValue(
   config: AppConfig,
   path: string,
-  defaultValue?: any
-): any {
+  defaultValue?: unknown
+): unknown {
   const keys = path.split('.');
-  let current: any = config;
+  let current: unknown = config;
 
   for (const key of keys) {
-    if (current == null) {
+    if (current == null || typeof current !== 'object') {
       return defaultValue;
     }
 
     // Handle array indices
     if (/^\d+$/.test(key)) {
-      current = current[parseInt(key, 10)];
+      const index = parseInt(key, 10);
+      if (Array.isArray(current)) {
+        current = current[index];
+      } else {
+        current = (current as Record<string, unknown>)[key];
+      }
     } else {
-      current = current[key];
+      current = (current as Record<string, unknown>)[key];
     }
   }
 
@@ -347,16 +352,16 @@ export function getConfigValue(
  * Set a config value by dot notation path
  * Creates nested objects as needed
  */
-export function setConfigValue(config: AppConfig, path: string, value: any): void {
+export function setConfigValue(config: AppConfig, path: string, value: unknown): void {
   const keys = path.split('.');
   const lastKey = keys.pop()!;
-  let current: any = config;
+  let current: Record<string, unknown> = config;
 
   for (const key of keys) {
     if (!(key in current) || typeof current[key] !== 'object') {
       current[key] = {};
     }
-    current = current[key];
+    current = current[key] as Record<string, unknown>;
   }
 
   current[lastKey] = value;

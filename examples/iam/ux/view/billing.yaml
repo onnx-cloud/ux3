@@ -5,7 +5,8 @@ states:
   loading:
     template: 'view/billing/loading.html'
     invoke:
-      src: loadBilling
+      service: api
+      method: getBilling
     on:
       SUCCESS: viewing
       ERROR: error

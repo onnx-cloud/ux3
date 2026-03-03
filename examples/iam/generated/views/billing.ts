@@ -25,7 +25,8 @@ export class BillingView extends ViewComponent {
     "loading": {
       "template": "view/billing/loading.html",
       "invoke": {
-        "src": (logic.loadBilling || shared.loadBilling)
+        "service": "api",
+        "method": "getBilling"
       },
       "on": {
         "SUCCESS": "viewing",
@@ -79,9 +80,12 @@ export class BillingView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-billing', BillingView);
+  const tag = 'ux-billing';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, BillingView);
+  }
 }
 
 export default BillingView;

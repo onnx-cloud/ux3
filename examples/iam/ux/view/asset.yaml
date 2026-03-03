@@ -17,12 +17,11 @@ states:
         target: loading
       - target: index
     invoke:
-      src: asset
-      method: GET
-      onDone:
-        target: loaded
-      onError:
-        target: error
+      service: eod
+      method: lookup
+    on:
+      SUCCESS: loaded
+      ERROR: error
   loaded:
     on:
       REFRESH: loading

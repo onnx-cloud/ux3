@@ -25,8 +25,8 @@ interface CompilerConfig {
 
 async function loadConfig(configPath: string): Promise<CompilerConfig> {
   const content = await fs.readFile(configPath, 'utf-8');
-  const parsed = YAML.parse(content);
-  return parsed.compile || parsed;
+  const parsed = YAML.parse(content) as Record<string, unknown>;
+  return (parsed.compile as CompilerConfig) || (parsed as CompilerConfig);
 }
 
 async function runCompiler(config: CompilerConfig): Promise<void> {
@@ -76,8 +76,8 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
         const full = path.join(dir, entry);
         if (fss.statSync(full).isDirectory()) walk(full);
         else if (full.endsWith('.yaml') || full.endsWith('.yml')) {
-          const cfg = YAML.parse(fss.readFileSync(full, 'utf-8')) || {};
-          mergeStyles(stylesMap, cfg);
+          const cfg = YAML.parse(fss.readFileSync(full, 'utf-8')) as Record<string, unknown> | null;
+          mergeStyles(stylesMap, cfg || {});
         }
       }
     };
@@ -100,15 +100,15 @@ export const compileCommand = new Command()
   .option('--views <path>', 'source views directory')
   .option('--output <path>', 'output directory')
   .option('--config <path>', 'path to config file')
-  .action(async (options) => {
+  .action(async (options: Record<string, unknown>) => {
     let config: CompilerConfig;
     if (options.config) {
-      config = await loadConfig(options.config);
+      config = await loadConfig(options.config as string);
     } else {
       config = {
-        views: options.views || '',
-        output: options.output || '',
-      } as CompilerConfig;
+        views: (options.views as string) || '',
+        output: (options.output as string) || '',
+      };
     }
 
     await runCompiler(config);

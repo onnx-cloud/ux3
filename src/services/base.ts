@@ -52,7 +52,8 @@ export abstract class BaseService<T = any, R = any> {
       }
 
       const middleware = this.middlewares[index++];
-      return middleware(req, next);
+      // Middleware is generic but typed to accept our T and return Promise<R>
+      return (middleware(req, next) as Promise<R>);
     };
 
     return next(request);
@@ -61,10 +62,12 @@ export abstract class BaseService<T = any, R = any> {
   /**
    * Execute error handlers with retry logic
    */
-  protected async executeErrorHandlers(error: Error): Promise<any> {
+  protected async executeErrorHandlers(error: Error): Promise<R> {
     for (const handler of this.errorHandlers) {
       try {
-        return await handler(error, () => this.fetch({} as T));
+        // Handler is typed to return Promise<any> but we expect R
+        const handlerResult = handler(error, () => this.fetch({} as T));
+        return (await handlerResult) as R;
       } catch (e) {
         continue;
       }

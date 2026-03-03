@@ -75,17 +75,23 @@ export async function resolveInvoke(
       for (const servicePath of servicePaths) {
         try {
           // dynamic import via file URL
-          const mod = await import(pathToFileURL(servicePath).href);
+          const mod = await import(pathToFileURL(servicePath).href) as Record<string, unknown>;
           if (name in mod && isFunction(mod[name])) {
             // wrap to always return a promise
-            return async (input?: any) => Promise.resolve(mod[name](input));
+            const fn = mod[name] as (input: unknown) => unknown;
+            return async (input?: unknown) => Promise.resolve(fn(input));
           }
         } catch (err) {
           // ignore missing file errors and try next path
           // but surface parse/runtime errors
-          const code = (err as any).code;
-          if (code && code !== 'ERR_MODULE_NOT_FOUND' && code !== 'ENOENT') {
-            // non-not-found error - rethrow
+          if (err instanceof Error) {
+            const code = (err as Error & { code?: string }).code;
+            if (code && code !== 'ERR_MODULE_NOT_FOUND' && code !== 'ENOENT') {
+              // non-not-found error - rethrow
+              throw err;
+            }
+          } else {
+            // re-throw unknown error types
             throw err;
           }
         }

@@ -100,6 +100,41 @@ export const hydrate = initApp;
       await fs.writeFile(entryPath, entryContents);
     }
 
+    // scaffold basic UX3 directories and a trivial example view/template
+    const uxDirs = ['ux/view', 'ux/style', 'ux/validation', 'ux/i18n', 'ux/token'];
+    for (const dir of uxDirs) {
+      await fs.mkdir(path.join(projectDir, dir), { recursive: true });
+    }
+
+    const exampleViewPath = path.join(projectDir, 'ux', 'view', 'hello.yaml');
+    if (!await fs.stat(exampleViewPath).catch(() => null)) {
+      const yamlContent = `initial: idle
+states:
+  idle: |
+    <div>
+      <h1>Welcome to ${name}</h1>
+      <button ux-event="CLICK">Click me</button>
+    </div>
+  clicked: 'view/hello/clicked.html'
+`;
+      await fs.writeFile(exampleViewPath, yamlContent);
+
+      const htmlDir = path.join(projectDir, 'ux', 'view', 'hello');
+      await fs.mkdir(htmlDir, { recursive: true });
+      const clickedHtml = path.join(htmlDir, 'clicked.html');
+      await fs.writeFile(clickedHtml, '<div>Thanks for clicking!</div>');
+    }
+
+    // write a basic ux3.config.json so the CLI can run without extra setup
+    const configPath = path.join(projectDir, 'ux3.config.json');
+    if (!await fs.stat(configPath).catch(() => null)) {
+      const configJson = {
+        views: 'ux/view/**/*.yaml',
+        output: 'src/generated',
+      };
+      await fs.writeFile(configPath, JSON.stringify(configJson, null, 2));
+    }
+
     console.log(`✅ Project created at ${projectDir}`);
     console.log(`\n📖 Next steps:\n`);
     console.log(`  cd ${name}`);

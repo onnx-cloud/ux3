@@ -418,7 +418,8 @@ export function getBrowserInfo(): BrowserInfo {
   const isOnline = navigator.onLine;
   const userAgent = navigator.userAgent;
   const platform = navigator.platform;
-  const language = navigator.language || (navigator as any).userLanguage;
+  // navigator.userLanguage is IE-only but TypeScript doesn't know about it
+  const navLanguage = navigator.language || (navigator as { userLanguage?: string }).userLanguage;
 
   return {
     browser,
@@ -433,7 +434,7 @@ export function getBrowserInfo(): BrowserInfo {
     capabilities,
     userAgent,
     platform,
-    language,
+    language: navLanguage,
   };
 }
 

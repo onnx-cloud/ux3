@@ -9,7 +9,8 @@ states:
   submitting:
     template: 'view/login/submitting.html'
     invoke:
-      src: submitLogin
+      service: api
+      method: authenticate
     on:
       SUCCESS: success
       ERROR: error

@@ -41,24 +41,37 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 1. **Install the CLI**
 
    ```bash
-   # project‑local install (dev dependency)
-   npm install ux3 --save-dev
-   
-   # or install globally to get a permanent `ux3` command
+   # install globally so you can run `ux3` anywhere
    npm install ux3 -g
+   
+   # or add it to a project as a dev dependency and use `npx`
+   npm install ux3 --save-dev
    ```
 
-   Once installed you can run `ux3` directly in your shell (e.g. `ux3 compile`) or prefix with
-   `npx` when invoked from a local dependency (`npx ux3 compile`).
+   After installation the `ux3` command is available in your shell; otherwise run it with
+   `npx ux3` from a project directory.
 
-   See [docs/example.md](./docs/example.md) for a worked end‑to‑end tutorial.
+2. **Scaffold a new project**
 
+   The CLI includes a project generator. Simply run:
 
-2. **Create `ux/` folders**
+   ```bash
+   ux3 create my-app          # or `npx ux3 create my-app`
+   cd my-app
+   npm install               # installs dependencies created by the generator
+   npm run dev               # start the development server
+   ```
 
-   Start with `ux/view`, `ux/style`, `ux/validation`, `ux/i18n`, and `ux/token`.
+   This creates a barebones SPA with `src/`, `public/`, `package.json`,
+   and pre‑populated scripts that invoke `ux3 dev`, `build`, `check`, etc.
+   The generator also drops an example view and configuration so you can
+   start editing immediately.
 
-3. **Write your first view**
+3. **Add or modify a view**
+
+   The project generator creates a sample view (`ux/view/hello.yaml`).
+   You can open that file, edit it, or add new YAML views. A simple
+   login view might look like this:
 
    ```yaml
    # ux/view/login.yaml

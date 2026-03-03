@@ -84,6 +84,12 @@ describe('UX3 CLI commands', () => {
     expect(await fs.pathExists(path.join(project, 'src'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'public'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'src', 'index.ts'))).toBe(true);
+
+    // new generators should create UX directories and an example view + config
+    expect(await fs.pathExists(path.join(project, 'ux', 'view', 'hello.yaml'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'view', 'hello', 'clicked.html'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux3.config.json'))).toBe(true);
+
   });
 
   it('`create` refuses to overwrite existing package.json', async () => {

@@ -52,11 +52,11 @@ export class NewsView extends ViewComponent {
   protected layout = ``;
 
   protected templates = new Map([
-    ['loading', `<div ux-state="news.loading">
+    ["loading", `<div ux-state="news.loading">
   <div ux-style="spinner">{{i18n.news.loading.label}}</div>
 </div>
 `],
-    ['loaded', `<div ux-state="news.loaded">
+    ["loaded", `<div ux-state="news.loaded">
   <div ux-style="widget">{{i18n.news.loaded.label}}</div>
   <ul ux-each="{{ctx}}"> <!-- assume ctx is array from loadNewsData -->
     <li>
@@ -66,7 +66,7 @@ export class NewsView extends ViewComponent {
   </ul>
 </div>
 `],
-    ['error', `<div ux-state="news.error">
+    ["error", `<div ux-state="news.error">
   <div ux-style="alert">{{i18n.news.error.label}}</div>
 </div>
 `],
@@ -115,9 +115,12 @@ export class NewsView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-news', NewsView);
+  const tag = 'ux-news';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, NewsView);
+  }
 }
 
 export default NewsView;

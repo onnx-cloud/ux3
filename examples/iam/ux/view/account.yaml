@@ -4,7 +4,8 @@ initial: loading
 states:
   loading:
     invoke:
-      src: loadAccount
+      service: api
+      method: getAccount
     on:
       SUCCESS: viewing
       ERROR: error
@@ -17,7 +18,8 @@ states:
       CANCEL: viewing
   saving:
     invoke:
-      src: saveAccount
+      service: api
+      method: updateAccount
     on:
       SUCCESS: viewing
       ERROR: editing

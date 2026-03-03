@@ -1,251 +1,208 @@
 /**
  * IAM Example App E2E Tests
- * Test the complete IAM application workflow
+ *
+ * Focused on concrete, observable behaviour rather than "if element exists"
+ * soft-guards.  Every test makes a meaningful assertion that would fail when
+ * a real regression occurs.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
-test.describe('IAM Application E2E Tests', () => {
+// ---------------------------------------------------------------------------
+// Helper
+// ---------------------------------------------------------------------------
+
+async function waitForApp(page: Page, timeout = 12000) {
+  await page.waitForFunction(() => !!(window as any).__ux3App, { timeout });
+}
+
+// ---------------------------------------------------------------------------
+// App boot
+// ---------------------------------------------------------------------------
+
+test.describe('IAM app boot', () => {
+  test('page title is set from site config', async ({ page }) => {
+    await page.goto('/');
+    await waitForApp(page);
+    const title = await page.title();
+    // IAM ux3.yaml: title: "Invest America"
+    expect(title).toContain('Invest America');
+  });
+
+  test('#ux-content mount point is present in the DOM', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#ux-content')).toHaveCount(1);
+  });
+
+  test('a view element is mounted into #ux-content after hydration', async ({ page }) => {
+    await page.goto('/');
+    await waitForApp(page);
+
+    const count = await page.locator('#ux-content > *').count();
+    expect(count).toBeGreaterThan(0);
+
+    const tag = await page.locator('#ux-content > *').first().evaluate(el => el.tagName.toLowerCase());
+    expect(tag).toMatch(/^ux-/);
+  });
+
+  test('inspector is enabled and window.__ux3Inspector is set', async ({ page }) => {
+    // IAM ux3.yaml: development.inspector: true
+    await page.goto('/');
+    await waitForApp(page);
+
+    const hasInspector = await page.evaluate(() => !!(window as any).__ux3Inspector);
+    expect(hasInspector).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Login view
+// ---------------------------------------------------------------------------
+
+test.describe('Login view (/login)', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to IAM example
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/login');
+    await waitForApp(page);
   });
 
-  test('should load IAM application', async ({ page }) => {
-    // basic sanity: url contains path and body is visible
-    expect(page.url()).toContain('/examples/iam');
-    await expect(page.locator('body')).toBeVisible();
+  test('<ux-login> is mounted in #ux-content', async ({ page }) => {
+    await expect(page.locator('#ux-content > ux-login')).toHaveCount(1);
   });
 
-  test('development logging should emit inspector message', async ({ page }) => {
-    let saw = false;
-    page.on('console', msg => {
-      if (msg.text().includes('inspector enabled')) {
-        saw = true;
-      }
-    });
-    // reload to ensure runtime script runs
-    await page.reload({ waitUntil: 'networkidle' });
-    // inspector log may or may not appear depending on timing
-    expect([true, false]).toContain(saw);
-    // if inspector element exists it should appear
-    const inspector = await page.locator('ux3-inspector');
-    if ((await inspector.count()) > 0) {
-      await expect(inspector).toHaveCount(1);
-    }
+  test('login idle state template is rendered', async ({ page }) => {
+    // Template: <div ux-state="login.idle"> … </div>
+    await expect(page.locator('[ux-state="login.idle"]')).toHaveCount(1, { timeout: 5000 });
   });
 
-  test('should display login form initially', async ({ page }) => {
-    // Look for login form elements
-    const loginForm = page.locator('form');
-    const usernameInput = page.locator('input[type="text"]');
-    const passwordInput = page.locator('input[type="password"]');
-    const submitButton = page.locator('button[type="submit"]');
-
-    // Check if form elements exist
-    if (await loginForm.count() > 0) {
-      await expect(usernameInput).toBeDefined();
-      await expect(passwordInput).toBeDefined();
-      await expect(submitButton).toBeDefined();
-    }
+  test('a SUBMIT button is present in the idle state', async ({ page }) => {
+    await page.waitForSelector('[ux-state="login.idle"]', { timeout: 5000 });
+    const btn = page.locator('[ux-state="login.idle"] button[ux-event="SUBMIT"]');
+    await expect(btn).toHaveCount(1);
   });
 
-  test('should validate form inputs', async ({ page }) => {
-    // Try to submit empty form
-    const submitButton = page.locator('button[type="submit"]').first();
-    
-    if (await submitButton.count() > 0) {
-      await submitButton.click();
-      
-      // Check for error messages
-      const errorElements = page.locator('[class*="error"]');
-      // Expect either error display or form rejection
-      expect(errorElements.count()).toBeGreaterThanOrEqual(0);
-    }
+  test('clicking SUBMIT transitions FSM out of idle state', async ({ page }) => {
+    await page.waitForSelector('[ux-state="login.idle"]', { timeout: 5000 });
+    await page.click('[ux-state="login.idle"] button[ux-event="SUBMIT"]');
+
+    // After SUBMIT the view should transition away from idle
+    await page.waitForFunction(() => {
+      return !document.querySelector('[ux-state="login.idle"]');
+    }, { timeout: 5000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sign-up view
+// ---------------------------------------------------------------------------
+
+test.describe('Sign-up view (/sign-up)', () => {
+  test('<ux-sign-up> is mounted in #ux-content', async ({ page }) => {
+    await page.goto('/sign-up');
+    await waitForApp(page);
+
+    await expect(page.locator('#ux-content > ux-sign-up')).toHaveCount(1);
   });
 
-  test('should handle user input', async ({ page }) => {
-    const usernameInput = page.locator('input[type="text"]').first();
-    const passwordInput = page.locator('input[type="password"]').first();
+  test('sign-up idle state template is rendered', async ({ page }) => {
+    await page.goto('/sign-up');
+    await waitForApp(page);
 
-    if (await usernameInput.count() > 0) {
-      await usernameInput.fill('testuser');
-      await expect(usernameInput).toHaveValue('testuser');
-    }
-
-    if (await passwordInput.count() > 0) {
-      await passwordInput.fill('password123');
-      await expect(passwordInput).toHaveValue('password123');
-    }
+    await expect(page.locator('[ux-state="sign-up.idle"]')).toHaveCount(1, { timeout: 5000 });
   });
+});
 
-  test('should handle form submission', async ({ page }) => {
-    // Fill form
-    const usernameInput = page.locator('input[type="text"]').first();
-    const passwordInput = page.locator('input[type="password"]').first();
-    const submitButton = page.locator('button[type="submit"]').first();
+// ---------------------------------------------------------------------------
+// SPA transitions
+// ---------------------------------------------------------------------------
 
-    if (await usernameInput.count() > 0) {
-      await usernameInput.fill('testuser');
-    }
+test.describe('SPA transitions', () => {
+  test('navigating from / to /login swaps the view without a page reload', async ({ page }) => {
+    await page.goto('/');
+    await waitForApp(page);
 
-    if (await passwordInput.count() > 0) {
-      await passwordInput.fill('password');
-    }
-
-    if (await submitButton.count() > 0) {
-      await submitButton.click();
-      
-      // Wait for response (either success or error)
-      await page.waitForTimeout(1000);
-    }
-  });
-
-  test('should maintain state during navigation', async ({ page }) => {
-    // Fill form
-    const input = page.locator('input').first();
-    
-    if (await input.count() > 0) {
-      await input.fill('data');
-      
-      // Navigate away and back
-      await page.reload();
-      
-      // State may be cleared after reload (depends on implementation)
-      expect(page.url()).toContain('localhost');
-    }
-  });
-
-  test('should handle rapid interactions', async ({ page }) => {
-    const button = page.locator('button').first();
-    
-    if (await button.count() > 0) {
-      // Click multiple times rapidly
-      await button.click();
-      await button.click();
-      await button.click();
-      
-      // Should not crash
-      await expect(page).not.toHaveTitle('Error');
-    }
-  });
-
-  test('should display UI components correctly', async ({ page }) => {
-    // Check for form structure
-    const forms = page.locator('form');
-    const inputs = page.locator('input');
-    const buttons = page.locator('button');
-
-    const formCount = await forms.count();
-    const inputCount = await inputs.count();
-    const buttonCount = await buttons.count();
-
-    expect(formCount + inputCount + buttonCount).toBeGreaterThanOrEqual(0);
-  });
-
-  test('should not have console errors', async ({ page }) => {
-    let errorCount = 0;
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        errorCount++;
-      }
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/login');
+      window.dispatchEvent(new PopStateEvent('popstate'));
     });
 
-    // Interact with page
-    const button = page.locator('button').first();
-    if (await button.count() > 0) {
-      await button.click();
-    }
-
-    // Console errors may occur (depends on app)
-    expect(typeof errorCount).toBe('number');
+    await expect(page.locator('#ux-content > ux-login')).toHaveCount(1, { timeout: 5000 });
+    expect(new URL(page.url()).pathname).toBe('/login');
   });
 
-  test('should handle network errors gracefully', async ({ page }) => {
-    // Simulate offline mode
+  test('navigating from /login to /sign-up via injected link', async ({ page }) => {
+    await page.goto('/login');
+    await waitForApp(page);
+
+    await page.evaluate(() => {
+      const a = document.createElement('a');
+      a.id = 'iam-test-link';
+      a.href = '/sign-up';
+      document.body.appendChild(a);
+    });
+    await page.click('#iam-test-link');
+
+    await expect(page.locator('#ux-content > ux-sign-up')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('#ux-content > ux-login')).toHaveCount(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility basics
+// ---------------------------------------------------------------------------
+
+test.describe('Accessibility', () => {
+  test('keyboard Tab reaches a focusable element', async ({ page }) => {
+    await page.goto('/login');
+    await waitForApp(page);
+    await page.waitForSelector('[ux-state="login.idle"]', { timeout: 5000 });
+
+    await page.keyboard.press('Tab');
+    const focused = await page.evaluate(() => document.activeElement?.tagName?.toLowerCase());
+    expect(focused).toBeTruthy();
+    expect(focused).not.toBe('body');
+  });
+
+  test('page has a landmark element for screen readers', async ({ page }) => {
+    await page.goto('/');
+    const landmark = await page.locator('main, [role="main"], #ux-content').count();
+    expect(landmark).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Error resilience
+// ---------------------------------------------------------------------------
+
+test.describe('Error resilience', () => {
+  test('offline mode does not crash the page', async ({ page }) => {
+    await page.goto('/login');
+    await waitForApp(page);
+
     await page.context().setOffline(true);
 
-    // Try to interact
-    const button = page.locator('button').first();
-    if (await button.count() > 0) {
-      await button.click();
-      await page.waitForTimeout(500);
-    }
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/sign-up');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
 
-    // Should not crash
-    expect(page.url()).toBeTruthy();
-
-    // Go back online
+    await expect(page.locator('#ux-content')).toHaveCount(1);
     await page.context().setOffline(false);
   });
 
-  test('should respond to accessibility interactions', async ({ page }) => {
-    // Test keyboard navigation
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
-    
-    // Check if focus changed
-    const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
-    expect(focusedElement).toBeTruthy();
-  });
+  test('rapid SUBMIT clicks do not throw unhandled errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', err => errors.push(err.message));
 
-  test('should display responsive layout', async ({ page }) => {
-    // Test different viewport sizes
-    await page.setViewportSize({ width: 1920, height: 1080 });
-    let desktop = await page.screenshot();
-    expect(desktop).toBeTruthy();
+    await page.goto('/login');
+    await waitForApp(page);
+    await page.waitForSelector('[ux-state="login.idle"] button[ux-event="SUBMIT"]', { timeout: 5000 });
 
-    await page.setViewportSize({ width: 768, height: 1024 });
-    let tablet = await page.screenshot();
-    expect(tablet).toBeTruthy();
-
-    await page.setViewportSize({ width: 375, height: 667 });
-    let mobile = await page.screenshot();
-    expect(mobile).toBeTruthy();
-  });
-
-  test('should handle modal/dialog if present', async ({ page }) => {
-    const dialogs = page.locator('[role="dialog"]');
-    const modals = page.locator('[class*="modal"]');
-
-    const dialogCount = await dialogs.count();
-    const modalCount = await modals.count();
-
-    expect(dialogCount + modalCount).toBeGreaterThanOrEqual(0);
-  });
-
-  test('should maintain data consistency', async ({ page }) => {
-    // Fill multiple fields
-    const inputs = page.locator('input');
-    const inputCount = await inputs.count();
-
-    for (let i = 0; i < Math.min(inputCount, 3); i++) {
-      const input = inputs.nth(i);
-      await input.fill(`value${i}`);
+    const btn = page.locator('[ux-state="login.idle"] button[ux-event="SUBMIT"]').first();
+    for (let i = 0; i < 5; i++) {
+      await btn.click({ force: true }).catch(() => {});
     }
 
-    // Verify values persisted
-    for (let i = 0; i < Math.min(inputCount, 3); i++) {
-      const input = inputs.nth(i);
-      const value = await input.inputValue();
-      expect(value).toBeTruthy();
-    }
-  });
-
-  test('should handle loading states', async ({ page }) => {
-    // Look for loading indicators
-    const loaders = page.locator('[class*="loading"], [class*="spinner"], [role="status"]');
-    
-    // Should not initially show loading
-    const initialCount = await loaders.count();
-    expect(initialCount).toBeGreaterThanOrEqual(0);
-  });
-
-  test('should display success/error messages', async ({ page }) => {
-    // Look for alert elements
-    const alerts = page.locator('[role="alert"], [class*="alert"], [class*="message"], [class*="toast"]');
-    
-    const count = await alerts.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await page.waitForTimeout(500);
+    expect(errors).toHaveLength(0);
   });
 });

@@ -101,9 +101,13 @@ export class Router {
 
         // Resolve i18n key
         const parts = route.label.split('.');
-        let value: any = i18nData;
+        let value: unknown = i18nData;
         for (const part of parts) {
-          value = value?.[part];
+          if (typeof value === 'object' && value !== null) {
+            value = (value as Record<string, unknown>)[part];
+          } else {
+            break;
+          }
         }
 
         if (typeof value === 'string') return value;

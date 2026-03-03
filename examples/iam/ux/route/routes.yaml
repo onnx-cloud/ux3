@@ -1,8 +1,8 @@
 routes:
   - path: /
-    view: home
+    view: index
   - path: /home
-    view: home
+    view: index
   - path: /login
     view: login
   - path: /dashboard

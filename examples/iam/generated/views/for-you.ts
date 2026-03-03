@@ -25,7 +25,8 @@ export class ForYouView extends ViewComponent {
     "loading": {
       "template": "view/for-you/loading.html",
       "invoke": {
-        "src": (logic.loadForYou || shared.loadForYou)
+        "service": "api",
+        "method": "getForYou"
       },
       "on": {
         "SUCCESS": "loaded",
@@ -61,9 +62,12 @@ export class ForYouView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-for-you', ForYouView);
+  const tag = 'ux-for-you';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, ForYouView);
+  }
 }
 
 export default ForYouView;

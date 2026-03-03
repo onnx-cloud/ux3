@@ -5,7 +5,8 @@ states:
   loading:
     template: 'view/macro/loading.html'
     invoke:
-      src: loadMacro
+      service: api
+      method: getMacro
     on:
       SUCCESS: loaded
       ERROR: error

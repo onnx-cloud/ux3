@@ -2,14 +2,18 @@ import { Plugin } from "./registry";
 import { promises as fs } from "fs";
 import { resolve, extname } from "path";
 
+interface PluginModule {
+  default?: unknown;
+}
+
 /**
  * Simple loader that can import plugins by package name or file path.
  * For security we only load from node_modules or explicit project paths.
  */
 export class PluginLoader {
-  async loadFromPackage(packageName: string): Promise<Plugin> {
+  loadFromPackage(packageName: string): Plugin {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pkg = require(packageName);
+    const pkg = require(packageName) as PluginModule;
     if (!pkg || !pkg.default) {
       throw new Error(`package ${packageName} does not export a default plugin`);
     }
@@ -21,13 +25,13 @@ export class PluginLoader {
     // Vite by default tries to transform dynamic imports which fails for
     // absolute file paths in temp directories (tests).  The `@vite-ignore`
     // comment tells Vite to leave it alone and let Node resolve it at runtime.
-    let mod;
+    let mod: PluginModule;
     try {
-      mod = await import(/* @vite-ignore */ abs);
+      mod = await import(/* @vite-ignore */ abs) as PluginModule;
     } catch (_err) {
       // fallback to require when import fails (common under Vitest)
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      mod = require(abs);
+      mod = require(abs) as PluginModule;
     }
     if (!mod || !mod.default) {
       throw new Error(`module ${filePath} does not export a default plugin`);
@@ -46,15 +50,15 @@ export class PluginLoader {
         } else if (entry.isFile() && ['.ts', '.js'].includes(extname(entry.name))) {
           try {
             // dynamic import requires relative or absolute path
-            let mod;
+            let mod: PluginModule;
             try {
-              mod = await import(/* @vite-ignore */ full);
+              mod = await import(/* @vite-ignore */ full) as PluginModule;
             } catch (_err) {
               // try require
               // eslint-disable-next-line @typescript-eslint/no-var-requires
-              mod = require(full);
+              mod = require(full) as PluginModule;
             }
-            if (mod && mod.default) {
+            if (mod && mod.default && typeof mod.default === 'object') {
               result.push(mod.default as Plugin);
             }
           } catch (err) {

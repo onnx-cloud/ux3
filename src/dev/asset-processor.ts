@@ -61,12 +61,6 @@ export function processAssets(manifest: any, projectDir: string) {
       bundleUrl = '/' + bundleUrl;
     }
 
-    // inject the bundle as a module script tag so the browser can preload it
-    const srcAttr = bundleUrl ? ` src="${bundleUrl}"` : '';
-    scriptInjections.push(
-      `<script type="module" data-ux3="app"${srcAttr}></script>`
-    );
-
     // hydration inline script - dynamically import the bundle as a module and
     // then invoke the exported hydration function.  A timestamp query string
     // busts any browser cache.

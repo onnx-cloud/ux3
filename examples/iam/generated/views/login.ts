@@ -31,7 +31,8 @@ export class LoginView extends ViewComponent {
     "submitting": {
       "template": "view/login/submitting.html",
       "invoke": {
-        "src": (logic.submitLogin || shared.submitLogin)
+        "service": "api",
+        "method": "authenticate"
       },
       "on": {
         "SUCCESS": "success",
@@ -67,9 +68,12 @@ export class LoginView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-login', LoginView);
+  const tag = 'ux-login';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, LoginView);
+  }
 }
 
 export default LoginView;

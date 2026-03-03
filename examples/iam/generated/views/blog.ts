@@ -24,7 +24,8 @@ export class BlogView extends ViewComponent {
   "states": {
     "loading": {
       "invoke": {
-        "src": (logic.loadBlog || shared.loadBlog)
+        "service": "api",
+        "method": "getPosts"
       },
       "on": {
         "SUCCESS": "loaded",
@@ -51,7 +52,7 @@ export class BlogView extends ViewComponent {
   protected layout = ``;
 
   protected templates = new Map([
-    ['loading', `<div ux-view="blog" ux-state="blog.loading">
+    ["loading", `<div ux-view="blog" ux-state="blog.loading">
   <div ux-style="spinner">{{i18n.blog.loading.label}}</div>
 </div>
 `],
@@ -71,9 +72,12 @@ export class BlogView extends ViewComponent {
   };
 }
 
-// Register component
+// Register component with guard to avoid duplicate-define errors
 if (typeof customElements !== 'undefined') {
-  customElements.define('ux-blog', BlogView);
+  const tag = 'ux-blog';
+  if (!customElements.get(tag)) {
+    customElements.define(tag, BlogView);
+  }
 }
 
 export default BlogView;

@@ -196,12 +196,13 @@ export function sanitizeJson(json: unknown): unknown {
   }
 
   if (Array.isArray(json)) {
-    return json.map(item => sanitizeJson(item));
+    return json.map((item) => sanitizeJson(item));
   }
 
-  const sanitized: Record<string, unknown> = Object.create(null);
+  const sanitized: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   
-  for (const [key, value] of Object.entries(json)) {
+  const entries = Object.entries(json as Record<string, unknown>);
+  for (const [key, value] of entries) {
     // Validate key to prevent prototype pollution
     if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
       continue;
