@@ -287,7 +287,8 @@ describe('@ux3/plugin-tailwind-css', () => {
   // ========== Plugin Installation ==========
   describe('Plugin Installation', () => {
     it('should have an async install method', async () => {
-      const mockApp = {
+      // use any for simplicity; we only care about shape mutated by plugin
+      const mockApp: any = {
         config: { plugins: { 'tailwind-css': { cdn: 'https://test.com/tailwind.css' } } },
         registerAsset: vi.fn(),
         utils: {}
@@ -301,7 +302,7 @@ describe('@ux3/plugin-tailwind-css', () => {
     });
 
     it('should register utility functions on app context', async () => {
-      const mockApp = {
+      const mockApp: any = {
         config: { plugins: { 'tailwind-css': {} } },
         registerAsset: vi.fn(),
         utils: {}
@@ -316,7 +317,7 @@ describe('@ux3/plugin-tailwind-css', () => {
     });
 
     it('should skip CDN registration when configured', async () => {
-      const mockApp = {
+      const mockApp: any = {
         config: { plugins: { 'tailwind-css': { cdn: false } } },
         registerAsset: vi.fn(),
         utils: {}

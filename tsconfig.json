@@ -24,6 +24,10 @@
     "resolveJsonModule": true,
     "outDir": "dist",
     "rootDir": "src",
+    // baseUrl is required for path mapping but deprecated in TypeScript 7.0;
+    // it will continue to work during our TS 4/5/6 cycle.  Before upgrading to
+    // TS 7 we should migrate to project references or remove aliases entirely
+    // so this warning disappears.
     "baseUrl": ".",
     "paths": {
       "@ux3/*": ["src/*", "packages/@ux3/*/src"]

@@ -1,0 +1,6 @@
+fsm: markdown-demo
+layout: markdown-demo-layout
+
+states:
+  ready:
+    template: markdown-demo.html

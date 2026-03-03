@@ -1,7 +1,7 @@
 <main ux-style="container">
   <header ux-style="board-header">
-    <button class="btn-icon text-2xl" @click="navigateTo('/')">←</button>
-    <h1 class="text-2xl font-semibold">{{selectedBoard.name}}</h1>
+    <button ux-style="btn-icon" @click="navigateTo('/')">←</button>
+    <h1 ux-style="header-title">{{selectedBoard.name}}</h1>
     <button ux-event="CREATE_TASK" ux-style="btn-primary">{{i18n('tasks.create')}}</button>
   </header>
   <div ux-style="filter-bar">
@@ -17,7 +17,7 @@
       <option value="urgent">Urgent</option>
     </select>
   </div>
-  <div class="kanban-grid">
+  <div ux-style="kanban-grid">
     <!-- lanes will render here -->
   </div>
 </main>

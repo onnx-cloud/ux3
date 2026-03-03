@@ -3,7 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    // include Node and Vitest globals so tests can use require(), NodeJS types,
+    // and the built‑in `vi`/`describe` helpers without errors.
+    "types": ["node", "vitest/globals"]
   },
   "include": [
     "tests/**/*.ts",
