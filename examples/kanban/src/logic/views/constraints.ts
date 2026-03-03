@@ -1,6 +1,8 @@
+import { i18n } from '@ux3/i18n';
+
 export function checkWIPLimit(lane: any, taskCount: number) {
   if (lane.maxTasks && taskCount > lane.maxTasks) {
-    throw new Error(`WIP limit exceeded: max ${lane.maxTasks} tasks`);
+    throw new Error(i18n('validation.wipExceeded', { max: lane.maxTasks }));
   }
 }
 
@@ -8,7 +10,7 @@ export function checkDependencies(task: any, allTasks: any[]) {
   if (!task.dependencies?.length) return true;
   const depTasks = task.dependencies.map(id => allTasks.find(t => t.id === id));
   const notDone = depTasks.some(t => t?.state !== 'completed');
-  if (notDone) throw new Error('Cannot start: incomplete dependencies');
+  if (notDone) throw new Error(i18n('validation.incompleteDependencies'));
 }
 
 export function checkCycles(task: any, dependencies: any[]) {
