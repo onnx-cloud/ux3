@@ -844,6 +844,39 @@ export const config = {
           "label": "Unable to load products"
         }
       },
+      "register": {
+        "title": "Create Account",
+        "subtitle": "Join us today and start exploring",
+        "fields": {
+          "email": {
+            "label": "Email Address",
+            "placeholder": "Enter your email"
+          },
+          "password": {
+            "label": "Password",
+            "placeholder": "Create a strong password",
+            "hint": "At least 8 characters, 1 uppercase letter, and 1 number"
+          },
+          "confirmPassword": {
+            "label": "Confirm Password",
+            "placeholder": "Re-enter your password"
+          },
+          "agreeToTerms": {
+            "label": "I agree to the Terms of Service and Privacy Policy"
+          }
+        },
+        "submit": "Sign Up",
+        "submitting": "Creating your account...",
+        "validating": "Validating your information...",
+        "successTitle": "Account Created!",
+        "successMessage": "Your account has been successfully created. You can now log in.",
+        "continueButton": "Continue to Dashboard",
+        "errorTitle": "Registration Failed",
+        "errorMessage": "An error occurred during registration. Please try again.",
+        "retryButton": "Try Again",
+        "haveAccount": "Already have an account?",
+        "loginLink": "Sign in instead"
+      },
       "search": {
         "results": {
           "label": "Search results"
@@ -959,6 +992,25 @@ export const config = {
           "message": {
             "required": "Message is required",
             "minLength": "Message must be at least 10 characters"
+          }
+        },
+        "register": {
+          "email": {
+            "required": "Email is required",
+            "pattern": "Invalid email format",
+            "emailUnique": "Email is already registered"
+          },
+          "password": {
+            "required": "Password is required",
+            "minLength": "Password must be at least 8 characters",
+            "pattern": "Password must contain uppercase letter and number"
+          },
+          "confirmPassword": {
+            "required": "Please confirm your password",
+            "matches": "Passwords do not match"
+          },
+          "agreeToTerms": {
+            "required": "You must agree to the terms and conditions"
           }
         }
       },

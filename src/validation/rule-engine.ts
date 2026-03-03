@@ -155,7 +155,8 @@ export class RuleEngine {
    * Clear all debounce timers (useful for cleanup)
    */
   clearDebounceTimers(): void {
-    for (const timer of this.debounceTimers.values()) {
+    const timers = Array.from(this.debounceTimers.values());
+    for (const timer of timers) {
       clearTimeout(timer);
     }
     this.debounceTimers.clear();

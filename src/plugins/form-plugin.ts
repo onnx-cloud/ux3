@@ -47,11 +47,11 @@ export const FormPlugin = {
         const engine = new RuleEngine();
         return {
           engine,
-          validate: (data: any) => engine.validateForm(data, schema),
-          validateField: (name: string, value: any) =>
-            engine.validateField(name, value, schema[name] || [], data),
-          validateFieldDebounced: (name: string, value: any, context?: any) =>
-            engine.validateFieldDebounced(name, value, schema[name] || [], context),
+          validate: (data: any) => engine.validateForm(data, schema, data),
+          validateField: (name: string, value: any, formData?: any) =>
+            engine.validateField(name, value, schema[name] || [], formData),
+          validateFieldDebounced: (name: string, value: any, formData?: any) =>
+            engine.validateFieldDebounced(name, value, schema[name] || [], formData),
         };
       },
     };

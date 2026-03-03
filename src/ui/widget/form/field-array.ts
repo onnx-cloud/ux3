@@ -101,7 +101,7 @@ export class UxFieldArray extends HTMLElement {
       const fieldValues: Record<string, any> = {};
 
       // Collect values from ux-field components
-      const fields = item.querySelectorAll('ux-field');
+      const fields = Array.from(item.querySelectorAll('ux-field'));
       for (const field of fields) {
         const fieldName = field.getAttribute('name');
         const control = field.querySelector('input, textarea, select') as HTMLInputElement;

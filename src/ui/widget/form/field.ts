@@ -178,7 +178,7 @@ export class UxField extends HTMLElement {
 
   private updateHint() {
     if (!this.shadowRoot) return;
-    const hintEl = this.shadowRoot.querySelector('.hint');
+    const hintEl = this.shadowRoot.querySelector('.hint') as HTMLDivElement | null;
     if (hintEl) {
       if (this.hint) {
         hintEl.textContent = this.hint;
