@@ -11,8 +11,7 @@ The best way to get started is to copy an existing example. Clone this repositor
 ```bash
 git clone https://github.com/onnx-cloud/ux3.git
 cd ux3/examples/todo
-npm install
-npm run dev
+ux3 dev
 ```
 
 The dev server starts at `http://localhost:5173` by default. Open it and you'll see a working FSM-driven app.
@@ -63,21 +62,21 @@ Each state specifies a `template:` file path (relative to `ux/view/`) and option
 
 ## 3. Understand the build pipeline
 
-The framework is compile-first: YAML views are validated, type-checked, and compiled into TypeScript artifacts before runtime. Use npm scripts to trigger this:
+The framework is compile-first: YAML views are validated, type-checked, and compiled into TypeScript artifacts before runtime. Invoke the pipeline directly using `ux3`:
 
 ```bash
 # Development (watch mode + dev server)
-npm run dev
+ux3 dev
 
 # Full production build
-npm run build
+ux3 build
 
 # Type-check and linting
-npm run type-check
-npm run lint
+ux3 type-check
+ux3 lint
 ```
 
-These scripts invoke the `@ux3/cli` package. The pipeline:
+The pipeline:
 1. **Validate** – Check YAML schema and i18n keys
 2. **Compile** – Generate TypeScript types in `src/generated/`
 3. **Type-check** – Ensure all references are sound
@@ -110,9 +109,9 @@ describe('Todo FSM', () => {
 Run tests with:
 
 ```bash
-npm run test              # run once
-npm run test:watch       # watch mode
-npm run test:e2e:debug   # Playwright e2e with browser
+ux3 test              # run once
+ux3 test --watch      # watch mode
+ux3 test:e2e --debug  # Playwright e2e with browser
 ```
 
 ---
@@ -123,8 +122,7 @@ For a production-grade reference implementation, explore `examples/iam`:
 
 ```bash
 cd examples/iam
-npm install
-npm run dev
+ux3 dev
 ```
 
 This demonstrates:

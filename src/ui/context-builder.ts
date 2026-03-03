@@ -412,6 +412,21 @@ export class AppContextBuilder {
       hooks: this.hooks,
     };
 
+    // Initialize InvokeRegistry after context is created (needs circular reference resolved)
+    // Use a proxy to delay initialization until all properties are set
+    Object.defineProperty(context, 'invokeRegistry', {
+      configurable: true,
+      get: () => {
+        if (!context._invokeRegistry) {
+          context._invokeRegistry = new InvokeRegistry(context as any);
+        }
+        return context._invokeRegistry;
+      },
+      set: (value) => {
+        context._invokeRegistry = value;
+      }
+    });
+
     // helper methods for plugin authors/runtime
     context.registerAsset = (asset) => {
       // will throw if config.site missing to catch mis-use

@@ -29,6 +29,8 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   i18n: (key: string, props?: Record<string, unknown>) => string; // i18n function
   nav: NavConfig | null; // navigation config (routes, current path, canNavigate)
   hooks?: HookRegistry; // lifecycle hooks for plugins
+  invokeRegistry?: import('../services/invoke-registry.js').InvokeRegistry; // service invocation registry
+  _invokeRegistry?: import('../services/invoke-registry.js').InvokeRegistry; // internal lazy-loaded registry
 
   // helpers for plugins or runtime code
   registerAsset?: (asset: AssetDescriptor) => void;
