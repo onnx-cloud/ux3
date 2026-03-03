@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * ChatView - chat view component
  * FSM: chat
  * Layout: default
- * States: 
+ * States: loading, ready, chatting, error
  */
 export class ChatView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -55,16 +55,91 @@ export class ChatView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
-
+    ["loading", `<div ux-state="chat.loading">
+  <div ux-style="spinner">{{i18n.chat.loading.label}}</div>
+</div>
+`],
+    ["ready", `<div ux-state="chat.ready">
+  <div ux-style="widget">{{i18n.chat.ready.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="SELECT_CONVERSATION">{{i18n.actions.SELECT_CONVERSATION}}</button>
+  </div>
+</div>
+`],
+    ["chatting", `<div ux-state="chat.chatting">
+  <div ux-style="widget">{{i18n.chat.chatting.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="SEND_MESSAGE">{{i18n.actions.SEND_MESSAGE}}</button>
+    <button type="button" ux-event="BACK">{{i18n.actions.BACK}}</button>
+  </div>
+</div>
+`],
+    ["error", `<div ux-state="chat.error">
+  <div ux-style="alert">{{i18n.chat.error.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
+  </div>
+</div>
+`],
   ]);
 
   protected bindings = {
     events: [],
     reactive: [],
-    i18n: [],
+    i18n: [
+    {
+        "element": "div",
+        "key": "chat.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "chat.ready.label",
+        "state": "ready"
+    },
+    {
+        "element": "button",
+        "key": "actions.SELECT_CONVERSATION",
+        "state": "ready"
+    },
+    {
+        "element": "div",
+        "key": "chat.chatting.label",
+        "state": "chatting"
+    },
+    {
+        "element": "button",
+        "key": "actions.SEND_MESSAGE",
+        "state": "chatting"
+    },
+    {
+        "element": "button",
+        "key": "actions.BACK",
+        "state": "chatting"
+    },
+    {
+        "element": "div",
+        "key": "chat.error.label",
+        "state": "error"
+    },
+    {
+        "element": "button",
+        "key": "actions.RETRY",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

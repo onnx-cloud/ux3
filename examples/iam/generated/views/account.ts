@@ -61,7 +61,16 @@ export class AccountView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
     ["loading", `<div ux-state="account.loading">

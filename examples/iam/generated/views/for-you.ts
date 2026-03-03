@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * ForYouView - for-you view component
  * FSM: for-you
  * Layout: default
- * States: 
+ * States: loading, loaded, error
  */
 export class ForYouView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -48,10 +48,30 @@ export class ForYouView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
-
+    ["loading", `<div ux-state="for-you.loading">
+  <div ux-style="spinner">{{i18n.for-you.loading.label}}</div>
+</div>
+`],
+    ["loaded", `<div ux-state="for-you.loaded">
+  <div ux-style="widget">{{i18n.for-you.loaded.label}}</div>
+</div>
+`],
+    ["error", `<div ux-state="for-you.error">
+  <div ux-style="alert">{{i18n.for-you.error.label}}</div>
+</div>
+`],
   ]);
 
   protected bindings = {

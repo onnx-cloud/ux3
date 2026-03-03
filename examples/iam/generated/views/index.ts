@@ -11,7 +11,6 @@ import { BlogView } from './blog.js';
 import { ChatView } from './chat.js';
 import { DashboardView } from './dashboard.js';
 import { ForYouView } from './for-you.js';
-import { HomeView } from './home.js';
 import { IndexView } from './index-view.js';
 import { LoginView } from './login.js';
 import { ActionBarView } from './action-bar.js';
@@ -33,7 +32,6 @@ export const Views = {
   'chat': ChatView,
   'dashboard': DashboardView,
   'for-you': ForYouView,
-  'home': HomeView,
   'index': IndexView,
   'login': LoginView,
   'action-bar': ActionBarView,

@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * DashboardView - dashboard view component
  * FSM: dashboard
  * Layout: default
- * States: 
+ * States: loading, loaded, error
  */
 export class DashboardView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -48,16 +48,68 @@ export class DashboardView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
-
+    ["loading", `<div ux-state="dashboard.loading">
+  <div ux-style="spinner">{{i18n.dashboard.loading.label}}</div>
+</div>
+`],
+    ["loaded", `<div ux-state="dashboard.loaded">
+  <div ux-style="widget">{{i18n.dashboard.loaded.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="REFRESH">{{i18n.actions.REFRESH}}</button>
+  </div>
+</div>
+`],
+    ["error", `<div ux-view="dashboard" ux-state="dashboard.error">
+  <div ux-style="alert">{{i18n.dashboard.error.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
+  </div>
+</div>
+`],
   ]);
 
   protected bindings = {
     events: [],
     reactive: [],
-    i18n: [],
+    i18n: [
+    {
+        "element": "div",
+        "key": "dashboard.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "dashboard.loaded.label",
+        "state": "loaded"
+    },
+    {
+        "element": "button",
+        "key": "actions.REFRESH",
+        "state": "loaded"
+    },
+    {
+        "element": "div",
+        "key": "dashboard.error.label",
+        "state": "error"
+    },
+    {
+        "element": "button",
+        "key": "actions.RETRY",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

@@ -157,9 +157,9 @@ export function initStyleRegistry(): void {
     // capture the original method with explicit `this` signature so eslint
     // doesn't warn about unbound methods
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const orig: (this: ViewComponent & HTMLElement) => void = ViewComponent.prototype.mountLayout;
+    const orig: (this: ViewComponent & HTMLElement) => void = (ViewComponent.prototype as any).mountLayout;
 
-    ViewComponent.prototype.mountLayout = function (this: ViewComponent & HTMLElement) {
+    (ViewComponent.prototype as any).mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
       try {
         if (this.shadowRoot) applyStyles(this.shadowRoot);

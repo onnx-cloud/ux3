@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * SignUpView - sign-up view component
  * FSM: sign-up
  * Layout: auth
- * States: 
+ * States: idle, validating, submitting, success
  */
 export class SignUpView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -65,10 +65,28 @@ export class SignUpView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<main id="ux-content" ux-style="auth" role="main">
+  {{{content}}}
+</main>
+`;
 
   protected templates = new Map([
-
+    ["idle", `<div ux-state="sign-up.idle">
+  <div ux-style="widget">{{i18n.sign-up.idle.label}}</div>
+</div>
+`],
+    ["validating", `<div ux-state="sign-up.validating">
+  <div ux-style="spinner">{{i18n.sign-up.validating.label}}</div>
+</div>
+`],
+    ["submitting", `<div ux-state="sign-up.submitting">
+  <div ux-style="spinner">{{i18n.sign-up.submitting.label}}</div>
+</div>
+`],
+    ["success", `<div ux-state="sign-up.success">
+  <div ux-style="widget">{{i18n.sign-up.success.label}}</div>
+</div>
+`],
   ]);
 
   protected bindings = {

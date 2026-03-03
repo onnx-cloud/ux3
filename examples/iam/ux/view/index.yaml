@@ -1,6 +1,5 @@
-name: 'index'
 layout: default
 initial: index
 states:
   index:
-    template: 'home/index.html'
+    template: 'view/home/index.html'

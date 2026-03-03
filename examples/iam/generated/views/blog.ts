@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * BlogView - blog view component
  * FSM: blog
  * Layout: default
- * States: loading
+ * States: loading, loaded, error
  */
 export class BlogView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -49,11 +49,36 @@ export class BlogView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
     ["loading", `<div ux-view="blog" ux-state="blog.loading">
   <div ux-style="spinner">{{i18n.blog.loading.label}}</div>
+</div>
+`],
+    ["loaded", `<div ux-view="blog" ux-state="blog.loaded">
+  <div ux-style="widget">{{i18n.blog.loaded.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="PREV_PAGE">{{i18n.actions.PREV_PAGE}}</button>
+    <button type="button" ux-event="NEXT_PAGE">{{i18n.actions.NEXT_PAGE}}</button>
+    <button type="button" ux-event="REFRESH">{{i18n.actions.REFRESH}}</button>
+  </div>
+</div>
+`],
+    ["error", `<div ux-view="blog" ux-state="blog.error">
+  <div ux-style="alert">{{i18n.blog.error.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
+  </div>
 </div>
 `],
   ]);
@@ -66,6 +91,36 @@ export class BlogView extends ViewComponent {
         "element": "div",
         "key": "blog.loading.label",
         "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "blog.loaded.label",
+        "state": "loaded"
+    },
+    {
+        "element": "button",
+        "key": "actions.PREV_PAGE",
+        "state": "loaded"
+    },
+    {
+        "element": "button",
+        "key": "actions.NEXT_PAGE",
+        "state": "loaded"
+    },
+    {
+        "element": "button",
+        "key": "actions.REFRESH",
+        "state": "loaded"
+    },
+    {
+        "element": "div",
+        "key": "blog.error.label",
+        "state": "error"
+    },
+    {
+        "element": "button",
+        "key": "actions.RETRY",
+        "state": "error"
     }
 ],
     widgets: [],

@@ -1,5 +1,0 @@
-layout: default
-initial: index
-states:
-  index:
-    template: 'view/home/index.html'

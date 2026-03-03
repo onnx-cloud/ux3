@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * BillingView - billing view component
  * FSM: billing
  * Layout: default
- * States: 
+ * States: loading, viewing, upgrading, managing_payment, error
  */
 export class BillingView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -66,16 +66,126 @@ export class BillingView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
-
+    ["loading", `<div ux-view="billing" ux-state="billing.loading">
+  <div ux-style="spinner">{{i18n.billing.loading.label}}</div>
+</div>
+`],
+    ["viewing", `<div ux-view="billing" ux-state="billing.viewing">
+  <div ux-style="widget">{{i18n.billing.viewing.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="SELECT">{{i18n.actions.SELECT}}</button>
+    <button type="button" ux-event="UPGRADE">{{i18n.actions.UPGRADE}}</button>
+    <button type="button" ux-event="MANAGE_PAYMENT">{{i18n.actions.MANAGE_PAYMENT}}</button>
+  </div>
+</div>
+`],
+    ["upgrading", `<div ux-view="billing" ux-state="billing.upgrading">
+  <div ux-style="upgrade.modal">{{i18n.billing.upgrading.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="SUCCESS">{{i18n.actions.CONFIRM}}</button>
+    <button type="button" ux-event="CANCEL">{{i18n.actions.CANCEL}}</button>
+  </div>
+</div>
+`],
+    ["managing_payment", `<div ux-view="billing" ux-state="billing.managing_payment">
+  <div ux-style="payment.form">{{i18n.billing.managing_payment.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="SAVE.SUCCESS">{{i18n.actions.SAVE}}</button>
+    <button type="button" ux-event="CANCEL">{{i18n.actions.CANCEL}}</button>
+  </div>
+</div>
+`],
+    ["error", `<div ux-view="billing" ux-state="billing.error">
+  <div ux-style="alert">{{i18n.billing.error.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
+  </div>
+</div>
+`],
   ]);
 
   protected bindings = {
     events: [],
     reactive: [],
-    i18n: [],
+    i18n: [
+    {
+        "element": "div",
+        "key": "billing.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "billing.viewing.label",
+        "state": "viewing"
+    },
+    {
+        "element": "button",
+        "key": "actions.SELECT",
+        "state": "viewing"
+    },
+    {
+        "element": "button",
+        "key": "actions.UPGRADE",
+        "state": "viewing"
+    },
+    {
+        "element": "button",
+        "key": "actions.MANAGE_PAYMENT",
+        "state": "viewing"
+    },
+    {
+        "element": "div",
+        "key": "billing.upgrading.label",
+        "state": "upgrading"
+    },
+    {
+        "element": "button",
+        "key": "actions.CONFIRM",
+        "state": "upgrading"
+    },
+    {
+        "element": "button",
+        "key": "actions.CANCEL",
+        "state": "upgrading"
+    },
+    {
+        "element": "div",
+        "key": "billing.managing_payment.label",
+        "state": "managing_payment"
+    },
+    {
+        "element": "button",
+        "key": "actions.SAVE",
+        "state": "managing_payment"
+    },
+    {
+        "element": "button",
+        "key": "actions.CANCEL",
+        "state": "managing_payment"
+    },
+    {
+        "element": "div",
+        "key": "billing.error.label",
+        "state": "error"
+    },
+    {
+        "element": "button",
+        "key": "actions.RETRY",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

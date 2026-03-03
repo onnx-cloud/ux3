@@ -220,9 +220,9 @@ function hasStorage(type: 'localStorage' | 'sessionStorage'): boolean {
 function hasIndexedDB(): boolean {
   return !!(
     window.indexedDB ||
-    window.mozIndexedDB ||
-    window.webkitIndexedDB ||
-    window.msIndexedDB
+    (window as any).mozIndexedDB ||
+    (window as any).webkitIndexedDB ||
+    (window as any).msIndexedDB
   );
 }
 
@@ -387,7 +387,7 @@ function hasResizeObserver(): boolean {
  * Check Fullscreen API support
  */
 function hasFullscreen(): boolean {
-  const elem = document.documentElement as HTMLElement;
+  const elem = document.documentElement as any;
   return !!(
     elem.requestFullscreen ||
     elem.webkitRequestFullscreen ||
@@ -419,7 +419,7 @@ export function getBrowserInfo(): BrowserInfo {
   const userAgent = navigator.userAgent;
   const platform = navigator.platform;
   // navigator.userLanguage is IE-only but TypeScript doesn't know about it
-  const navLanguage = navigator.language || (navigator as { userLanguage?: string }).userLanguage;
+  const navLanguage = navigator.language || ((navigator as any).userLanguage as string) || '';
 
   return {
     browser,

@@ -34,6 +34,7 @@ export interface GeneratedConfig {
   widgets: Record<string, { path: string; lazy?: boolean }>;
   styles: Record<string, string>;
   templates: Record<string, Record<string, string>>;
+  plugins?: Array<string | any>;
   // additional fields that may be added at build time
   version?: string;
   site?: Record<string, any>;
@@ -707,7 +708,8 @@ export async function createAppContext(
       try {
         await context.hooks.execute(ServiceLifecyclePhase.AUTHENTICATE, {
           service: { name, instance: service },
-          app: context
+          app: context,
+          phase: ServiceLifecyclePhase.AUTHENTICATE
         });
       } catch (err) {
         console.warn(`[AppContext] AUTHENTICATE phase failed for service ${name}:`, err);
@@ -722,7 +724,8 @@ export async function createAppContext(
       try {
         await context.hooks.execute(ServiceLifecyclePhase.READY, {
           service: { name, instance: service },
-          app: context
+          app: context,
+          phase: ServiceLifecyclePhase.READY
         });
       } catch (err) {
         console.warn(`[AppContext] READY phase failed for service ${name}:`, err);

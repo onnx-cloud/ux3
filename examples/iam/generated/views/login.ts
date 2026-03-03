@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * LoginView - login view component
  * FSM: login
  * Layout: auth
- * States: 
+ * States: idle, submitting, success, error
  */
 export class LoginView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -54,16 +54,79 @@ export class LoginView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<main id="ux-content" ux-style="auth" role="main">
+  {{{content}}}
+</main>
+`;
 
   protected templates = new Map([
-
+    ["idle", `<div ux-state="login.idle">
+  <div ux-style="widget">{{i18n.login.idle.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="SUBMIT">{{i18n.actions.SUBMIT}}</button>
+  </div>
+</div>
+`],
+    ["submitting", `<div ux-state="login.submitting">
+  <div ux-style="spinner">{{i18n.login.submitting.label}}</div>
+</div>
+`],
+    ["success", `<div ux-state="login.success">
+  <div ux-style="widget">{{i18n.login.success.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="NAVIGATE">{{i18n.actions.NAVIGATE}}</button>
+  </div>
+</div>
+`],
+    ["error", `<div ux-state="login.error">
+  <div ux-style="alert">{{i18n.login.error.label}}</div>
+  <div ux-style="actions">
+    <button type="button" ux-event="RETRY">{{i18n.actions.RETRY}}</button>
+  </div>
+</div>
+`],
   ]);
 
   protected bindings = {
     events: [],
     reactive: [],
-    i18n: [],
+    i18n: [
+    {
+        "element": "div",
+        "key": "login.idle.label",
+        "state": "idle"
+    },
+    {
+        "element": "button",
+        "key": "actions.SUBMIT",
+        "state": "idle"
+    },
+    {
+        "element": "div",
+        "key": "login.submitting.label",
+        "state": "submitting"
+    },
+    {
+        "element": "div",
+        "key": "login.success.label",
+        "state": "success"
+    },
+    {
+        "element": "button",
+        "key": "actions.NAVIGATE",
+        "state": "success"
+    },
+    {
+        "element": "div",
+        "key": "login.error.label",
+        "state": "error"
+    },
+    {
+        "element": "button",
+        "key": "actions.RETRY",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

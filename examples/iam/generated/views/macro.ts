@@ -14,7 +14,7 @@ import * as shared from '../../../ux/logic/shared';
  * MacroView - macro view component
  * FSM: macro
  * Layout: default
- * States: 
+ * States: loading, loaded, error
  */
 export class MacroView extends ViewComponent {
   static FSM_CONFIG: StateConfig<any> = {
@@ -48,16 +48,52 @@ export class MacroView extends ViewComponent {
   }
 };
 
-  protected layout = ``;
+  protected layout = `<header id="site-header" ux-style="header"></header>
+
+<main id="ux-content" role="main">
+  {{{content}}}
+</main>
+
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
+</footer>
+`;
 
   protected templates = new Map([
-
+    ["loading", `<div ux-state="macro.loading">
+  <div ux-style="spinner">{{i18n.macro.loading.label}}</div>
+</div>
+`],
+    ["loaded", `<div ux-state="macro.loaded">
+  <div ux-style="widget">{{i18n.macro.loaded.label}}</div>
+</div>
+`],
+    ["error", `<div ux-state="macro.error">
+  <div ux-style="alert">{{i18n.macro.error.label}}</div>
+</div>
+`],
   ]);
 
   protected bindings = {
     events: [],
     reactive: [],
-    i18n: [],
+    i18n: [
+    {
+        "element": "div",
+        "key": "macro.loading.label",
+        "state": "loading"
+    },
+    {
+        "element": "div",
+        "key": "macro.loaded.label",
+        "state": "loaded"
+    },
+    {
+        "element": "div",
+        "key": "macro.error.label",
+        "state": "error"
+    }
+],
     widgets: [],
   };
 }

@@ -18,7 +18,7 @@ declare global {
 }
 
 export default class InspectorWidget extends HTMLElement {
-  private container: HTMLDivElement | null = null;
+  private container: HTMLPreElement | null = null;
   private ctx: AppContext | null = null;
 
   constructor() {
@@ -56,7 +56,10 @@ export default class InspectorWidget extends HTMLElement {
     body.appendChild(this.container);
     root.appendChild(body);
 
-    this.shadowRoot!.appendChild(root);
+    const shadowRoot = this.shadowRoot;
+    if (shadowRoot) {
+      shadowRoot.appendChild(root);
+    }
 
     this.update();
 
