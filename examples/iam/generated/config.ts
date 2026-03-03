@@ -703,7 +703,7 @@ export const config = {
           "label": "Loading home"
         },
         "loaded": {
-          "label": "Featured"
+          "label": "home page loaded"
         },
         "error": {
           "label": "Unable to load home",
