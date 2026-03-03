@@ -31,22 +31,36 @@ export type InvokerFn<T extends Record<string, any>, R = any> = (
 export interface InvokeSrc {
   src: string | ServiceFn;
   input?: any;
+  maxRetries?: number;
+  retryDelay?: number | ((attempt: number) => number);
 }
 
 export interface InvokeService {
   service: string;
   method?: string;
   input?: any;
+  maxRetries?: number;
+  retryDelay?: number | ((attempt: number) => number);
 }
 
+export interface InvokeConfig<T extends Record<string, any>> extends InvokeSrc, InvokeService {}
+
+/**
+ * Individual state configuration
+ */
 export interface StateConfig<T extends Record<string, any>> {
   on?: Record<string, TransitionConfig<T> | string>;
   entry?: Array<(context: T) => void>;
   exit?: Array<(context: T) => void>;
   invoke?: InvokeSrc | InvokeService;
+  errorTarget?: string;  // Auto-transition to this state on service invoke error
+  errorActions?: Array<(context: T, error: Error) => void>;  // Run before transitioning to error state
 }
 
-export interface StateConfig<T extends Record<string, any>> {
+/**
+ * Machine (root) configuration
+ */
+export interface MachineConfig<T extends Record<string, any>> {
   id: string;
   initial: string;
   context?: T | (() => T);

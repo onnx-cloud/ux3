@@ -3,7 +3,7 @@
  * ~300 LOC for core FSM engine
  */
 
-import type { StateEvent, StateConfig } from './types.js';
+import type { StateEvent, StateConfig, MachineConfig } from './types.js';
 
 type Listener<T> = (state: string, context: T) => void;
 
@@ -13,12 +13,12 @@ type Listener<T> = (state: string, context: T) => void;
 export class StateMachine<T extends Record<string, any>> {
   private currentState: string;
   private context: T;
-  private config: StateConfig<T>;
+  private config: MachineConfig<T>;
   private listeners: Set<Listener<T>> = new Set();
   private eventQueue: StateEvent[] = [];
   private processing = false;
 
-  constructor(config: StateConfig<T>) {
+  constructor(config: MachineConfig<T>) {
     this.config = config;
     this.currentState = config.initial;
     this.context = typeof config.context === 'function' 

@@ -3,6 +3,7 @@ import type { Service } from "src/services/types";
 import type { NavConfig } from "src/services/router";
 import type { Widget } from "./widget";
 import { WidgetFactory } from "./widget/factory";
+import type { HookRegistry } from "../core/lifecycle";
 
 /**
  * App Context
@@ -26,6 +27,7 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   render: (template: string, props?: Record<string, unknown>) => string; // template rendering function
   i18n: (key: string, props?: Record<string, unknown>) => string; // i18n function
   nav: NavConfig | null; // navigation config (routes, current path, canNavigate)
+  hooks?: HookRegistry; // lifecycle hooks for plugins
 
   // helpers for plugins or runtime code
   registerAsset?: (asset: AssetDescriptor) => void;

@@ -51,8 +51,9 @@ function findRouteForPath(
 /**
  * BUG-2 fix: Insert a view custom element into #ux-content.
  * Removes any currently-mounted view first (triggering its disconnectedCallback).
+ * Passes route params as data attributes for the view to consume.
  */
-function mountView(viewName: string): void {
+function mountView(viewName: string, params?: Record<string, string>): void {
   const main = document.querySelector<HTMLElement>('#ux-content');
   if (!main) {
     console.warn('[Navigation] #ux-content element not found; cannot mount view');
@@ -74,8 +75,16 @@ function mountView(viewName: string): void {
   }
 
   const el = document.createElement(tagName);
+  
+  // Pass route params as data attributes
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      el.setAttribute(`data-param-${key}`, value);
+    }
+  }
+  
   main.appendChild(el);
-  console.log(`[Navigation] Mounted <${tagName}> into #ux-content`);
+  console.log(`[Navigation] Mounted <${tagName}> into #ux-content`, params ? { params } : '');
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +148,7 @@ export function navigateTo(pathname: string, appContext: AppContext): void {
     return;
   }
 
-  const { view: targetView } = match;
+  const { view: targetView, params } = match;
 
   if (!appContext.nav.canNavigate(targetView)) {
     console.warn(`[Navigation] Cannot navigate to view: ${targetView}`);
@@ -148,7 +157,7 @@ export function navigateTo(pathname: string, appContext: AppContext): void {
 
   // Update browser history before mounting so the view can read the correct URL
   window.history.pushState({ view: targetView, path: pathname }, '', pathname);
-  mountView(targetView);
+  mountView(targetView, params);
   console.log(`[Navigation] Navigated to ${pathname} (view: ${targetView})`);
 }
 
@@ -163,10 +172,11 @@ function handleNavigationEvent(appContext: AppContext): void {
   const match = findRouteForPath(pathname, appContext.nav.routes);
 
   const targetView = match?.view ?? 'home';
+  const params = match?.params;
 
   if (!match) {
     console.warn(`[Navigation] No route for path: ${pathname}; mounting default view '${targetView}'`);
   }
 
-  mountView(targetView);
+  mountView(targetView, params);
 }

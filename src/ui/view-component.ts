@@ -96,6 +96,18 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       this.attachShadow({ mode: 'open' });
       this.mountLayout();
 
+      // Inject route params into FSM context (data-param-* attributes from navigation handler)
+      const routeParams: Record<string, string> = {};
+      for (const attr of this.attributes) {
+        if (attr.name.startsWith('data-param-')) {
+          const paramName = attr.name.replace('data-param-', '');
+          routeParams[paramName] = attr.value;
+        }
+      }
+      if (Object.keys(routeParams).length > 0) {
+        Object.assign(this.fsm.getContext(), { params: routeParams });
+      }
+
       // 6. Render initial state
       this.currentState = this.fsm.getState();
       this.renderState(this.currentState);

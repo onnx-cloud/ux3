@@ -20,6 +20,7 @@ import type { ContentManifest } from '../services/content.js';
 import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
+import { HookRegistry, AppLifecyclePhase } from '../core/lifecycle.js';
 
 /**
  * Generated configuration structure
@@ -58,6 +59,7 @@ export class AppContextBuilder {
   private router: Router | null = null;
   private errorHandlers: Array<(error: Error) => void> = [];
   private buildErrors: Error[] = [];
+  private hooks: HookRegistry = new HookRegistry();
   constructor(config: GeneratedConfig) {
     this.config = config;
     this.validateConfig();
@@ -392,6 +394,7 @@ export class AppContextBuilder {
       i18n: i18nFn,
       nav: navConfig,
       config: this.config,
+      hooks: this.hooks,
     };
 
     // helper methods for plugin authors/runtime
@@ -437,6 +440,14 @@ export class AppContextBuilder {
     context.registerPlugin = async (plugin) => {
       if (!plugin || typeof plugin.install !== 'function') {
         throw new Error('Invalid plugin');
+      }
+      // Register plugin hooks if present
+      if (plugin.hooks && context.hooks) {
+        for (const [phase, handlers] of Object.entries(plugin.hooks.app || {})) {
+          for (const handler of (handlers || [])) {
+            context.hooks.on(phase, handler);
+          }
+        }
       }
       // call install; return promise so callers can await if needed
       try {
@@ -656,6 +667,15 @@ export async function createAppContext(
       setupNavigation(context);
     } catch (err) {
       console.warn('[AppContext] setupNavigation failed', err);
+    }
+  }
+
+  // Emit READY phase to signal that app is fully initialized and interactive
+  if (context.hooks) {
+    try {
+      await context.hooks.execute(AppLifecyclePhase.READY, { app: context });
+    } catch (err) {
+      console.warn('[AppContext] READY phase hook execution failed', err);
     }
   }
 
