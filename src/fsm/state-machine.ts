@@ -3,9 +3,19 @@
  * ~300 LOC for core FSM engine
  */
 
-import type { StateEvent, StateConfig, MachineConfig } from './types.js';
+import type { StateEvent, StateConfig, MachineConfig, InvokeConfig } from './types.js';
 
 type Listener<T> = (state: string, context: T) => void;
+
+/**
+ * Helper to calculate retry delay (exponential backoff)
+ */
+function getRetryDelay(baseDelay: number | ((attempt: number) => number), attempt: number): number {
+  if (typeof baseDelay === 'function') {
+    return baseDelay(attempt);
+  }
+  return baseDelay * Math.pow(2, attempt);
+}
 
 /**
  * StateMachine - Core FSM engine
@@ -17,6 +27,7 @@ export class StateMachine<T extends Record<string, any>> {
   private listeners: Set<Listener<T>> = new Set();
   private eventQueue: StateEvent[] = [];
   private processing = false;
+  private invokeHandlers: Map<string, (...args: any[]) => Promise<any>> = new Map();
 
   constructor(config: MachineConfig<T>) {
     this.config = config;
@@ -27,6 +38,29 @@ export class StateMachine<T extends Record<string, any>> {
 
     // Call entry actions for initial state
     this.executeStateActions('entry', this.currentState);
+  }
+
+  /**
+   * Register an invoke handler (service function)
+   */
+  registerInvokeHandler(name: string, handler: (...args: any[]) => Promise<any>): void {
+    this.invokeHandlers.set(name, handler);
+  }
+
+  /**
+   * Resolve an invoke source to a handler function
+   */
+  private resolveInvokeHandler(src: string | ((...args: any[]) => Promise<any>)): (...args: any[]) => Promise<any> {
+    if (typeof src === 'function') {
+      return src;
+    }
+    
+    const handler = this.invokeHandlers.get(src);
+    if (!handler) {
+      throw new Error(`No invoke handler registered for: ${src}`);
+    }
+    
+    return handler;
   }
 
   /**
@@ -131,8 +165,103 @@ export class StateMachine<T extends Record<string, any>> {
       // Execute entry actions
       this.executeStateActions('entry', this.currentState);
 
+      // Start invoke for new state (if configured)
+      this.handleStateInvoke(this.currentState);
+
       // Notify listeners
       this.notifyListeners();
+    }
+  }
+
+  /**
+   * Handle state invoke with retry logic
+   */
+  private async handleStateInvoke(stateName: string): Promise<void> {
+    const stateConfig = this.config.states[stateName];
+    if (!stateConfig || !stateConfig.invoke) {
+      return;
+    }
+
+    const invokeConfig = stateConfig.invoke as any;
+    const maxRetries = invokeConfig.maxRetries ?? 0;
+    const baseRetryDelay = invokeConfig.retryDelay ?? 1000;
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        // Resolve the invoke source
+        const handler = this.resolveInvokeHandler(invokeConfig.src || invokeConfig.service);
+        
+        // Call the handler with input and context
+        const result = await handler(invokeConfig.input || invokeConfig.params, this.context);
+
+        // Handle result
+        if (result && typeof result === 'object') {
+          if (result.error) {
+            // Error object returned from service
+            throw new Error(result.error.message || 'Service error');
+          }
+          // Update context with result
+          this.setState(result as Partial<T>);
+        }
+
+        // Success - send SUCCESS event
+        this.send({ type: 'SUCCESS', payload: result });
+        return;
+      } catch (error) {
+        lastError = error as Error;
+
+        // If this is not the last attempt, wait and retry
+        if (attempt < maxRetries) {
+          const delay = getRetryDelay(baseRetryDelay, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+    }
+
+    // All retries exhausted - handle error
+    const errorContext: any = {
+      code: (lastError as any)?.code || 'UNKNOWN_ERROR',
+      message: lastError?.message || 'Unknown error',
+    };
+
+    // Execute errorActions if configured
+    const errorActions = stateConfig.errorActions;
+    if (errorActions) {
+      errorActions.forEach((action) => {
+        try {
+          action(this.context, lastError || new Error('Unknown error'));
+        } catch (e) {
+          console.error('[StateMachine] errorAction error', e);
+        }
+      });
+    }
+
+    // Transition to errorTarget if configured
+    if (stateConfig.errorTarget) {
+      const prevState = this.currentState;
+      
+      // Ensure we only transition if still in the same state
+      if (this.currentState === stateName) {
+        this.setState({ error: errorContext } as Partial<T>);
+        
+        // Execute exit actions
+        this.executeStateActions('exit', prevState);
+
+        // Update state
+        this.currentState = stateConfig.errorTarget;
+
+        // Execute entry actions
+        this.executeStateActions('entry', this.currentState);
+
+        // Notify listeners
+        this.notifyListeners();
+      }
+    } else {
+      // No errorTarget - send ERROR event to let views handle it
+      this.send({ type: 'ERROR', payload: { error: errorContext } });
     }
   }
 
@@ -198,6 +327,33 @@ export class StateMachine<T extends Record<string, any>> {
   matches(pattern: string | string[]): boolean {
     const patterns = Array.isArray(pattern) ? pattern : [pattern];
     return patterns.includes(this.currentState);
+  }
+
+  /**
+   * Check if an event can be handled in the current state
+   * @param event event to check (can be string or object)
+   * @returns true if the event has a handler in current state
+   */
+  can(event: StateEvent | string): boolean {
+    const stateConfig = this.config.states[this.currentState];
+    if (!stateConfig || !stateConfig.on) {
+      return false;
+    }
+
+    const eventType = typeof event === 'string' ? event : event.type;
+    const transition = stateConfig.on[eventType];
+    
+    if (!transition) {
+      return false;
+    }
+
+    // Check guard condition if present
+    const transitionConfig = typeof transition === 'string' ? {} : transition;
+    if (transitionConfig.guard && !transitionConfig.guard(this.context)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
