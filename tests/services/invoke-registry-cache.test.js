@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { InvokeRegistry } from '../../src/services/invoke-registry.js';
+import { InvokeRegistry } from '../../src/services/invoke-registry.ts';
 describe('InvokeRegistry - Caching (Phase 1.3.1)', () => {
     let registry;
     let mockApp;

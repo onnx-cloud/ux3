@@ -105,9 +105,9 @@ describe('IAM Example - View Compilation', () => {
     const content = await fs.readFile(indexFile, 'utf-8');
 
     // Check imports
-    expect(content).toContain("import { IndexView } from './index-view.js'");
-    expect(content).toContain("import { DashboardView } from './dashboard.js'");
-    expect(content).toContain("import { LoginView } from './login.js'");
+    expect(content).toContain("import { IndexView } from './index-view.ts'");
+    expect(content).toContain("import { DashboardView } from './dashboard.ts'");
+    expect(content).toContain("import { LoginView } from './login.ts'");
 
     // Check export mapping
     expect(content).toContain("'index': IndexView");

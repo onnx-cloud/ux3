@@ -10,8 +10,8 @@
  * - DISCONNECT: When clearing service cache
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { InvokeRegistry } from '../../src/services/invoke-registry.js';
-import { HookRegistry, ServiceLifecyclePhase } from '../../src/core/lifecycle.js';
+import { InvokeRegistry } from '../../src/services/invoke-registry.ts';
+import { HookRegistry, ServiceLifecyclePhase } from '../../src/core/lifecycle.ts';
 // Mock service implementations
 class MockUserService {
     async fetch(input) {

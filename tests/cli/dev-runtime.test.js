@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
-import { Bundler } from '../../src/build/bundler.js';
+import { Bundler } from '../../src/build/bundler.ts';
 // ensure runtime info calculation logic produces nonempty values when bundle exists
 describe('dev command runtime info', () => {
     it('generates runtime bundle and style paths', async () => {

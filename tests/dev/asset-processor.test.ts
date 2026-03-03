@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { processAssets } from '../../src/dev/asset-processor.js';
+import { processAssets } from '../../src/dev/asset-processor.ts';
 
 // simple fake manifest with runtime data
 const fakeManifest: any = {
   config: {
     site: {
       assets: [
-        { type: 'script', src: '/foo.js', defer: true },
+        { type: 'script', src: '/foo.ts', defer: true },
         { type: 'style', href: '/bar.css' },
       ],
       runtime: {
@@ -16,7 +16,7 @@ const fakeManifest: any = {
     },
   },
   runtime: {
-    bundle: '/dist/ux3.bundle.js',
+    bundle: '/dist/ux3.bundle.ts',
     styles: ['/dist/ux3.tokens.css'],
     version: '0.0.1',
     minified: false,
@@ -28,7 +28,7 @@ describe('processAssets helper', () => {
     const site = processAssets(fakeManifest, '/fake');
 
     expect(site.head).toContain('<link rel="stylesheet" href="/bar.css"');
-    expect(site.scripts).toContain('<script src="/foo.js"');
+    expect(site.scripts).toContain('<script src="/foo.ts"');
     // runtime injected
     expect(site.head).toContain('data-ux3="styles"');
     expect(site.scripts).toContain('data-ux3="hydration"');
@@ -74,42 +74,42 @@ describe('processAssets: bundle-pending regression', () => {
   });
 
   it('emits real dynamic import() when bundleUrl is non-empty', () => {
-    const site = processAssets(bundleKeyManifest('/dist/bundle.js') as any, '/proj');
+    const site = processAssets(bundleKeyManifest('/dist/bundle.ts') as any, '/proj');
     expect(site.scripts).not.toContain('bundle pending');
-    expect(site.scripts).toContain("import('/dist/bundle.js");
+    expect(site.scripts).toContain("import('/dist/bundle.ts");
     expect(site.scripts).toContain('initApp');
     // Hydration wraps in DOMContentLoaded listener
     expect(site.scripts).toContain('DOMContentLoaded');
   });
 
   it('prepends "/" to bundleUrl that lacks a leading slash', () => {
-    // Dev command stores bundleRel as a relative path like "dist/bundle.js"
-    const site = processAssets(bundleKeyManifest('dist/bundle.js') as any, '/proj');
-    expect(site.scripts).toContain("import('/dist/bundle.js");
+    // Dev command stores bundleRel as a relative path like "dist/bundle.ts"
+    const site = processAssets(bundleKeyManifest('dist/bundle.ts') as any, '/proj');
+    expect(site.scripts).toContain("import('/dist/bundle.ts");
     // Should not double-slash
     expect(site.scripts).not.toContain("import('//dist");
   });
 
   it('does not double-slash a bundleUrl that already starts with "/"', () => {
-    const site = processAssets(bundleKeyManifest('/dist/bundle.js') as any, '/proj');
+    const site = processAssets(bundleKeyManifest('/dist/bundle.ts') as any, '/proj');
     expect(site.scripts).not.toContain("import('//dist");
-    expect(site.scripts).toContain("import('/dist/bundle.js");
+    expect(site.scripts).toContain("import('/dist/bundle.ts");
   });
 
   it('appends a cache-busting ?ts= query to the hydration import URL', () => {
-    const site = processAssets(bundleKeyManifest('/dist/bundle.js') as any, '/proj');
+    const site = processAssets(bundleKeyManifest('/dist/bundle.ts') as any, '/proj');
     expect(site.scripts).toMatch(/import\('\/dist\/bundle\.js\?ts=\d+/);
   });
 
   it('emits <script data-ux3="hydration"> tag regardless of bundleUrl', () => {
     const emptyBundle = processAssets(bundleKeyManifest('') as any, '/proj');
-    const realBundle = processAssets(bundleKeyManifest('/dist/bundle.js') as any, '/proj');
+    const realBundle = processAssets(bundleKeyManifest('/dist/bundle.ts') as any, '/proj');
 
     // hydration tag always present when bundleKey is configured
     expect(emptyBundle.scripts).toContain('data-ux3="hydration"');
     expect(realBundle.scripts).toContain('data-ux3="hydration"');
     // When bundle is real, the src attr is part of the import
-    expect(realBundle.scripts).toContain('import(\'/dist/bundle.js');
+    expect(realBundle.scripts).toContain('import(\'/dist/bundle.ts');
     // When bundle is missing, no import
     expect(emptyBundle.scripts).not.toContain('import(');
   });
@@ -135,7 +135,7 @@ describe('processAssets: bundle-pending regression', () => {
     const emptyBundle = processAssets(customFnManifest, '/proj');
     expect(emptyBundle.scripts).toContain('/* bootMyApp – bundle pending */');
 
-    customFnManifest.runtime = { bundle: '/dist/b.js', styles: [], version: '1', minified: false };
+    customFnManifest.runtime = { bundle: '/dist/b.ts', styles: [], version: '1', minified: false };
     const realBundle = processAssets(customFnManifest, '/proj');
     expect(realBundle.scripts).toContain('m.bootMyApp');
   });

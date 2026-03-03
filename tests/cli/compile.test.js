@@ -2,8 +2,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { analyzeTemplate } from '../..//src/build/view-compiler.js';
-import { runCompiler, loadConfig } from '../../src/cli/compile.js';
+import { analyzeTemplate } from '../..//src/build/view-compiler.ts';
+import { runCompiler, loadConfig } from '../../src/cli/compile.ts';
 // simple tests for view compiler utilities and compile CLI
 describe('View compiler helpers', () => {
     it('analyzeTemplate picks up fields and events', () => {

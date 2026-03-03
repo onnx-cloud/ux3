@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { AppContextBuilder } from '../../src/ui/context-builder.js';
-import { ServiceLifecyclePhase } from '../../src/core/lifecycle.js';
-import type { GeneratedConfig } from '../../src/build/types.js';
+import { AppContextBuilder } from '../../src/ui/context-builder.ts';
+import { ServiceLifecyclePhase } from '../../src/core/lifecycle.ts';
+import type { GeneratedConfig } from '../../src/build/types.ts';
 
 describe('Service Lifecycle Phases', () => {
   const baseConfig: GeneratedConfig = {

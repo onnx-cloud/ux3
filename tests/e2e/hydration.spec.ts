@@ -39,7 +39,7 @@ test.describe('Hydration-only pattern', () => {
     
     const importMatch = scriptText.match(/import\('([^']+)'\)/);
     expect(importMatch).toBeTruthy();
-    expect(importMatch![1]).toContain('bundle.js');
+    expect(importMatch![1]).toContain('bundle.ts');
   });
 
   test('bundle file is actually served and reachable',async ({ page }) => {

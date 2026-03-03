@@ -3,7 +3,7 @@
  * Comprehensive middleware architecture testing
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { loggingMiddleware, timeoutWarningMiddleware, requestMutationMiddleware, headerAugmentationMiddleware, retryMiddleware, circuitBreakerMiddleware, composeMiddleware, productionMiddlewareStack, developmentMiddlewareStack, } from '../../src/services/middleware.js';
+import { loggingMiddleware, timeoutWarningMiddleware, requestMutationMiddleware, headerAugmentationMiddleware, retryMiddleware, circuitBreakerMiddleware, composeMiddleware, productionMiddlewareStack, developmentMiddlewareStack, } from '../../src/services/middleware.ts';
 describe('Service Middleware System', () => {
     let consoleSpy;
     beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { InvokeRegistry, type InvokeResult, type InvokeOptions } from '../../src/services/invoke-registry.js';
-import type { AppContext } from '../../src/ui/app.js';
+import { InvokeRegistry, type InvokeResult, type InvokeOptions } from '../../src/services/invoke-registry.ts';
+import type { AppContext } from '../../src/ui/app.ts';
 
 describe('InvokeRegistry - Caching (Phase 1.3.1)', () => {
   let registry: InvokeRegistry;

@@ -4,11 +4,11 @@ import path from 'path';
 describe('DevServer with ONNX.Cloud example', () => {
     it('should render a content page based on markdown', async () => {
         const projectDir = path.resolve('examples/onnx.cloud');
-        const { DevServer } = await import('@ux3/dev/dev-server.js');
+        const { DevServer } = await import('@ux3/dev/dev-server.ts');
         const server = new DevServer(projectDir, 3740, 'localhost');
         await server.start();
         // generate a fresh config so we know what routes exist
-        const { ConfigGenerator } = await import('../../src/build/config-generator.js');
+        const { ConfigGenerator } = await import('../../src/build/config-generator.ts');
         const cfgGen = new ConfigGenerator({
             configDir: projectDir,
             outputDir: path.join(projectDir, 'generated'),

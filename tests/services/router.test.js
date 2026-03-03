@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Router } from '@ux3/services/router.js';
+import { Router } from '@ux3/services/router.ts';
 describe('Router', () => {
     it('should initialize with provided routes', () => {
         const routes = [

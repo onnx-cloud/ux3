@@ -5,12 +5,12 @@ import * as path from 'path';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // import commands directly (use .js extension for runtime)
-import { createCommand } from '../../src/cli/commands/create.js';
-import { checkCommand } from '../../src/cli/commands/check.js';
-import { buildCommand } from '../../src/cli/commands/build.js';
-import { compileCommand } from '../../src/cli/compile.js';
-import { configCommand } from '../../src/cli/commands/config.js';
-import { previewCommand } from '../../src/cli/commands/preview.js';
+import { createCommand } from '../../src/cli/commands/create.ts';
+import { checkCommand } from '../../src/cli/commands/check.ts';
+import { buildCommand } from '../../src/cli/commands/build.ts';
+import { compileCommand } from '../../src/cli/compile.ts';
+import { configCommand } from '../../src/cli/commands/config.ts';
+import { previewCommand } from '../../src/cli/commands/preview.ts';
 
 // helper to run a command and capture exit code
 async function runCommand(cmd: any, args: string[], cwd: string) {
@@ -55,7 +55,7 @@ describe('UX3 CLI commands', () => {
   const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'cli-commands');
 
   it('index module exports all expected commands', async () => {
-    const idx = await import('../../src/cli/index.js');
+    const idx = await import('../../src/cli/index.ts');
     expect(idx.createCommand).toBeDefined();
     expect(idx.devCommand).toBeDefined();
     expect(idx.buildCommand).toBeDefined();

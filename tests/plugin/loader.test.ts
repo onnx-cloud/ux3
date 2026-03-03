@@ -10,7 +10,7 @@ describe('PluginLoader', () => {
   it('loadFromPath imports a plugin module', async () => {
     // create temporary file
     const tempDir = await fs.mkdtemp(join(tmpdir(), 'ux3-plugin-'));
-    const file = join(tempDir, 'test-plugin.js');
+    const file = join(tempDir, 'test-plugin.ts');
     const code = `exports.default = { name: 'temp', version: '0.0.1' };`;
     await fs.writeFile(file, code);
 
@@ -21,7 +21,7 @@ describe('PluginLoader', () => {
 
   it('loadProjectPlugins returns plugins from directory', async () => {
     const tempDir = await fs.mkdtemp(join(tmpdir(), 'ux3-plugins-'));
-    const file1 = join(tempDir, 'a.js');
+    const file1 = join(tempDir, 'a.ts');
     const file2 = join(tempDir, 'sub', 'b.ts');
     await fs.mkdir(join(tempDir, 'sub'));
     await fs.writeFile(file1, `exports.default={name:'a',version:'1'};`);

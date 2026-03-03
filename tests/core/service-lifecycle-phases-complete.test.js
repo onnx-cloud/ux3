@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { HookRegistry, ServiceLifecyclePhase } from '../../src/core/lifecycle.js';
-import { InvokeRegistry } from '../../src/services/invoke-registry.js';
+import { HookRegistry, ServiceLifecyclePhase } from '../../src/core/lifecycle.ts';
+import { InvokeRegistry } from '../../src/services/invoke-registry.ts';
 describe('ServiceLifecyclePhase - ERROR/RECONNECT/DISCONNECT (Phase 1.3.3)', () => {
     let hookRegistry;
     let mockApp;

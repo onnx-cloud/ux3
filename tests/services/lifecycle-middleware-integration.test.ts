@@ -11,10 +11,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { InvokeRegistry } from '../../src/services/invoke-registry.js';
-import { HookRegistry, ServiceLifecyclePhase, type HookContext } from '../../src/core/lifecycle.js';
-import type { AppContext } from '../../src/services/app.js';
-import type { Service } from '../../src/services/types.js';
+import { InvokeRegistry } from '../../src/services/invoke-registry.ts';
+import { HookRegistry, ServiceLifecyclePhase, type HookContext } from '../../src/core/lifecycle.ts';
+import type { AppContext } from '../../src/services/app.ts';
+import type { Service } from '../../src/services/types.ts';
 
 // Mock service implementations
 class MockUserService implements Service {

@@ -18,8 +18,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Import the internal helpers via the module's own exports
 // We test them indirectly through setupNavigation / navigateTo.
-import { setupNavigation, navigateTo } from '@ux3/ui/navigation-handler.js';
-import type { AppContext } from '@ux3/ui/app.js';
+import { setupNavigation, navigateTo } from '@ux3/ui/navigation-handler.ts';
+import type { AppContext } from '@ux3/ui/app.ts';
 
 // ---------------------------------------------------------------------------
 // Minimal AppContext stub

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createAppContext } from '../../src/ui/context-builder.js';
-import { defaultLogger } from '../../src/security/observability.js';
+import { createAppContext } from '../../src/ui/context-builder.ts';
+import { defaultLogger } from '../../src/security/observability.ts';
 // simple generated config stub
 const baseConfig = {
     routes: [],
@@ -68,8 +68,8 @@ describe('AppContext helper methods', () => {
         const cfg = { ...baseConfig, site: {} };
         const ctx = await createAppContext(cfg);
         expect(typeof ctx.registerAsset).toBe('function');
-        ctx.registerAsset({ type: 'script', src: '/foo.js' });
-        expect(cfg.site.assets).toEqual([{ type: 'script', src: '/foo.js' }]);
+        ctx.registerAsset({ type: 'script', src: '/foo.ts' });
+        expect(cfg.site.assets).toEqual([{ type: 'script', src: '/foo.ts' }]);
     });
     it('registerService adds service to context', async () => {
         const cfg = { ...baseConfig };
@@ -87,7 +87,7 @@ describe('AppContext helper methods', () => {
         const cfg = { ...baseConfig, routes: [] };
         const ctx = await createAppContext(cfg);
         // use simple FSM from registry
-        const fsm = new (await import('../../src/fsm/state-machine.js')).StateMachine({
+        const fsm = new (await import('../../src/fsm/state-machine.ts')).StateMachine({
             id: 'foo',
             initial: 'a',
             states: { a: {} },

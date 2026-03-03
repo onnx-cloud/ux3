@@ -5,9 +5,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { InvokeRegistry, clearGlobalInvokeRegistry } from '../../src/services/invoke-registry.js';
-import type { AppContext } from '../../src/ui/app.js';
-import type { InvokeService, InvokeSrc } from '../../src/fsm/types.js';
+import { InvokeRegistry, clearGlobalInvokeRegistry } from '../../src/services/invoke-registry.ts';
+import type { AppContext } from '../../src/ui/app.ts';
+import type { InvokeService, InvokeSrc } from '../../src/fsm/types.ts';
 
 /**
  * Create a mock AppContext for testing

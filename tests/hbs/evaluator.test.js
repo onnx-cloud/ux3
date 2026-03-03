@@ -2,7 +2,7 @@
  * HBS Evaluator Tests
  */
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '@ux3/hbs/lexer.js';
+import { Lexer } from '@ux3/hbs/lexer.ts';
 import { Parser } from '@ux3/hbs/parser';
 import { Evaluator } from '@ux3/hbs/evaluator';
 function renderTemplate(template, context = {}) {

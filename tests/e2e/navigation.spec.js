@@ -58,7 +58,7 @@ test.describe('Bundle injection', () => {
         const importMatch = scriptText.match(/import\('([^']+)'\)/);
         expect(importMatch).toBeTruthy();
         const bundleUrl = importMatch[1];
-        expect(bundleUrl).toContain('bundle.js');
+        expect(bundleUrl).toContain('bundle.ts');
         // Verify the bundle URL points to a real file
         const resp = await page.request.get(bundleUrl);
         expect(resp.status()).toBe(200);

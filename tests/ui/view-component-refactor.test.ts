@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { StateMachine } from '../../src/fsm/state-machine.js';
-import type { AppContext } from '../../src/ui/app.js';
+import { StateMachine } from '../../src/fsm/state-machine.ts';
+import type { AppContext } from '../../src/ui/app.ts';
 
 describe('ViewComponent - Invoke Refactor Architecture', () => {
   describe('Remove handleStateInvoke from ViewComponent', () => {

@@ -4,7 +4,7 @@
  * Tests for the centralized service invocation registry
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { InvokeRegistry, clearGlobalInvokeRegistry } from '../../src/services/invoke-registry.js';
+import { InvokeRegistry, clearGlobalInvokeRegistry } from '../../src/services/invoke-registry.ts';
 /**
  * Create a mock AppContext for testing
  */

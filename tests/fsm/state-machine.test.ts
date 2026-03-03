@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { StateMachine } from '../../src/fsm/state-machine';
 import { FSMRegistry } from '../../src/fsm/registry';
-import type { StateConfig } from '../types.js';
+import type { StateConfig } from '../types.ts';
 
 describe('StateMachine', () => {
   it('should initialize with initial state and context', () => {

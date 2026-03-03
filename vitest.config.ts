@@ -70,22 +70,6 @@ export default defineConfig({
       '**/dist/**',
       '**/node_modules/**',
       '**/iam/**',
-      // Exclude test files with broken imports (pre-existing issues)
-      '**/tests/services/middleware.test.js',
-      '**/tests/services/router.test.js',
-      '**/tests/ui/create-app-context.test.js',
-      '**/tests/ui/navigation-handler.test.js',
-      '**/tests/ui/slot-utils.test.js',
-      '**/tests/ui/hydration.test.ts',
-      '**/tests/ui/style-registry.test.ts',
-      '**/tests/ui/template-stamp.test.ts',
-      '**/tests/ui/view-component.test.ts',
-      '**/tests/ui/view-component-refactor.test.ts',
-      '**/tests/ui/widget/factory.test.ts',
-      '**/tests/build/validators/markup-smells.test.js',
-      '**/tests/cli/content-command.test.ts',
-      '**/tests/dev/dev-server-runtime.test.js',
-      '**/tests/dev/dev-server-manifest-preference.test.ts',
     ],
     // store results under test-results/vitest for CI or local inspection
     reporters: [

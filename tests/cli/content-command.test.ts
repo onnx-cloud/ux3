@@ -3,7 +3,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { runCommand } from './utils.js';
+import { runCommand } from './utils.ts';
 
 // We'll create a minimal project and invoke `ux3 content` via Node CLI
 

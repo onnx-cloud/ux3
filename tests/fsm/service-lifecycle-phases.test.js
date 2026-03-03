@@ -3,8 +3,8 @@
  * Tests for Phase 1.1.1: Service lifecycle hook integration
  */
 import { describe, it, expect } from 'vitest';
-import { AppContextBuilder } from '../../src/ui/context-builder.js';
-import { ServiceLifecyclePhase } from '../../src/core/lifecycle.js';
+import { AppContextBuilder } from '../../src/ui/context-builder.ts';
+import { ServiceLifecyclePhase } from '../../src/core/lifecycle.ts';
 describe('Service Lifecycle Phases', () => {
     const baseConfig = {
         routes: [{ path: '/', view: 'home' }],

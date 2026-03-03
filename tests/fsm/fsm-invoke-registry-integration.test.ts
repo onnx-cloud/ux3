@@ -5,10 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { StateMachine } from '../../src/fsm/state-machine.js';
-import { InvokeRegistry } from '../../src/services/invoke-registry.js';
-import type { AppContext } from '../../src/ui/app.js';
-import type { MachineConfig, InvokeService } from '../../src/fsm/types.js';
+import { StateMachine } from '../../src/fsm/state-machine.ts';
+import { InvokeRegistry } from '../../src/services/invoke-registry.ts';
+import type { AppContext } from '../../src/ui/app.ts';
+import type { MachineConfig, InvokeService } from '../../src/fsm/types.ts';
 
 /**
  * Create a mock AppContext for testing

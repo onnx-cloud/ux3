@@ -1,7 +1,7 @@
 // @vitest-environment node
 import fs from 'fs-extra';
 import path from 'path';
-import { deepMerge, getConfigValue, setConfigValue, loadConfig, loadConfigCached, clearConfigCache, } from '../../src/cli/config-loader.js';
+import { deepMerge, getConfigValue, setConfigValue, loadConfig, loadConfigCached, clearConfigCache, } from '../../src/cli/config-loader.ts';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'config-loader');
 describe('config-loader utilities', () => {
@@ -45,7 +45,7 @@ tokens: {}
 `);
         await fs.writeJson(path.join(cfgDir, '02.json'), { services: [{ type: 'json' }] });
         // js config
-        const jsCfg = path.join(tmpRoot, 'ux3.config.js');
+        const jsCfg = path.join(tmpRoot, 'ux3.config.ts');
         await fs.writeFile(jsCfg, 'export default { services: [{ type: "js" }], tokens: { foo: "bar" } };');
         const cfg = await loadConfig(tmpRoot, { validateMandatory: true });
         expect(cfg.routes).toBeDefined();

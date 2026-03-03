@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { lintLogicModules, gatherReferencedNames, parseExports } from '../../src/cli/logic-lint.js';
+import { lintLogicModules, gatherReferencedNames, parseExports } from '../../src/cli/logic-lint.ts';
 describe('Logic Lint Utility', () => {
     const tmpDir = path.join(__dirname, '..', 'tmp', 'logic-lint');
     beforeEach(() => {

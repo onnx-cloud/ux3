@@ -5,8 +5,8 @@
  * during app initialization and service setup.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AppContextBuilder, createAppContext } from '../../src/ui/context-builder.js';
-import { ServiceLifecyclePhase } from '../../src/core/lifecycle.js';
+import { AppContextBuilder, createAppContext } from '../../src/ui/context-builder.ts';
+import { ServiceLifecyclePhase } from '../../src/core/lifecycle.ts';
 /**
  * Test configuration factory
  */

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Middleware, RequestConfig, ServiceResponse } from '../../src/services/types.js';
+import type { Middleware, RequestConfig, ServiceResponse } from '../../src/services/types.ts';
 import {
   loggingMiddleware,
   timeoutWarningMiddleware,
@@ -16,7 +16,7 @@ import {
   composeMiddleware,
   productionMiddlewareStack,
   developmentMiddlewareStack,
-} from '../../src/services/middleware.js';
+} from '../../src/services/middleware.ts';
 
 describe('Service Middleware System', () => {
   let consoleSpy: { log: any; warn: any; error: any; debug: any };

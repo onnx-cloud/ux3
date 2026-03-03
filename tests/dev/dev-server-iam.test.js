@@ -7,18 +7,18 @@ describe('DevServer with IAM example', () => {
         const projectDir = path.resolve('examples/iam');
         // skip bundling; runtime info will still point at /dist/app.bundle.js
         // previous attempts showed esbuild path resolution issues during tests
-        const { DevServer } = await import('@ux3/dev/dev-server.js');
+        const { DevServer } = await import('@ux3/dev/dev-server.ts');
         const server = new DevServer(projectDir, 3720, 'localhost');
         await server.start();
         // inform dev server about runtime bundle so it will inject tags
         const runtimeInfo = {
-            bundle: '/dist/app.bundle.js',
+            bundle: '/dist/app.bundle.ts',
             styles: [],
             version: require(path.join(projectDir, 'package.json')).version || '0.0.0',
             minified: true,
         };
         // generate a real config from the example so we can merge runtime settings
-        const { ConfigGenerator } = await import('../../src/build/config-generator.js');
+        const { ConfigGenerator } = await import('../../src/build/config-generator.ts');
         const configGenerator = new ConfigGenerator({
             configDir: projectDir,
             outputDir: path.join(projectDir, 'generated'),

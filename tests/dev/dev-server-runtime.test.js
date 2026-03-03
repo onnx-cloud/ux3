@@ -18,11 +18,11 @@ describe('DevServer runtime asset injection', () => {
         await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\n`);
         await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
         await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="app">HELLO</div>`);
-        const { DevServer } = await import('@ux3/dev/dev-server.js');
+        const { DevServer } = await import('@ux3/dev/dev-server.ts');
         const server = new DevServer(temp, 3700, 'localhost');
         await server.start();
         // compute runtime info using Bundler as dev command now does
-        const { Bundler } = await import('../../src/build/bundler.js');
+        const { Bundler } = await import('../../src/build/bundler.ts');
         const outputDir = path.join(temp, 'dist');
         await fs.ensureDir(outputDir);
         const generatedDir = path.join(temp, 'generated');

@@ -2,7 +2,7 @@
  * Unit tests for Slot Observation Utility
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { observeSlot, getAssignedElements } from '@ux3/ui/slot-utils.js';
+import { observeSlot, getAssignedElements } from '@ux3/ui/slot-utils.ts';
 describe('slot-utils', () => {
     let host;
     let shadow;

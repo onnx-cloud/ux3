@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PluginLoader } from '../../src/build/plugin-loader.js';
+import { PluginLoader } from '../../src/build/plugin-loader.ts';
 const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'plugin-loader');
 describe('PluginLoader', () => {
     beforeEach(async () => {
@@ -13,7 +13,7 @@ describe('PluginLoader', () => {
         await fs.remove(tmpRoot);
     });
     it('loadFromPath can import a simple plugin module', async () => {
-        const pluginPath = path.join(tmpRoot, 'myplugin.js');
+        const pluginPath = path.join(tmpRoot, 'myplugin.ts');
         const code = `export default { name: 'foo', version: '1.0.0' };`;
         await fs.writeFile(pluginPath, code);
         const loader = new PluginLoader();
@@ -28,7 +28,7 @@ describe('PluginLoader', () => {
         await fs.writeFile(plugin1, `export default { name: 'a', version: '0.1' };`);
         const sub = path.join(dir, 'sub');
         await fs.ensureDir(sub);
-        const plugin2 = path.join(sub, 'b.js');
+        const plugin2 = path.join(sub, 'b.ts');
         await fs.writeFile(plugin2, `export default { name: 'b', version: '0.2' };`);
         const loader = new PluginLoader();
         const list = await loader.loadProjectPlugins(dir);

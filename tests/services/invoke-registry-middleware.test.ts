@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { InvokeRegistry, type PreMiddleware, type PostMiddleware, type ErrorMiddleware } from '../../src/services/invoke-registry.js';
-import type { AppContext } from '../../src/ui/app.js';
+import { InvokeRegistry, type PreMiddleware, type PostMiddleware, type ErrorMiddleware } from '../../src/services/invoke-registry.ts';
+import type { AppContext } from '../../src/ui/app.ts';
 
 describe('InvokeRegistry - Middleware Pipeline (Phase 1.3.2)', () => {
   let registry: InvokeRegistry;

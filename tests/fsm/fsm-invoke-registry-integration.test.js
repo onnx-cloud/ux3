@@ -4,8 +4,8 @@
  * Tests for FSM integration with InvokeRegistry for centralized service invocation
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { StateMachine } from '../../src/fsm/state-machine.js';
-import { InvokeRegistry } from '../../src/services/invoke-registry.js';
+import { StateMachine } from '../../src/fsm/state-machine.ts';
+import { InvokeRegistry } from '../../src/services/invoke-registry.ts';
 /**
  * Create a mock AppContext for testing
  */
