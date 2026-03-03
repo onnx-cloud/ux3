@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { observeSlot, getAssignedElements } from '@ux3/ui/slot-utils.ts';
+import { observeSlot, getAssignedElements } from '../../src/ui/slot-utils.ts';
 
 describe('slot-utils', () => {
     let host: HTMLElement;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createBootstrap } from '@ux3/ui/bootstrap';
+import { createBootstrap } from '../../src/ui/bootstrap';
 
 // simple fake config for testing
 const fakeConfig = {

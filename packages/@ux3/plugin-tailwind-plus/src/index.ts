@@ -1,7 +1,10 @@
-import type { Plugin } from '../../../src/plugin/registry';
-import type { AssetDescriptor } from '../../../src/ui/app';
+// allow legacy require() calls in TypeScript
+declare const require: any;
 
-// Helper to safely require StateMachine from the compiled or source context
+import type { Plugin } from '@ux3/plugin/registry';
+import type { AssetDescriptor } from '@ux3/ui/app';
+
+// Helper to safely require StateMachine from either the compiled or source context
 function tryRequireStateMachine(): any {
   try {
     return require('../../../../src/fsm/state-machine.js').StateMachine;

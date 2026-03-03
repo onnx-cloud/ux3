@@ -98,7 +98,7 @@ export const devCommand = new Command()
           const viewsOutputDir = path.join(generatedDir, 'views');
           if (fs.existsSync(viewsDir)) {
             try {
-              const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir);
+              const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir, projectDir);
               await viewCompiler.compileAllViews();
             } catch (e) {
               console.warn(`[Dev] View compilation warning: ${e instanceof Error ? e.message : String(e)}`);

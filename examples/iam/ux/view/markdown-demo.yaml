@@ -1,6 +1,8 @@
-fsm: markdown-demo
-layout: markdown-demo-layout
-
+name: 'markdown-demo'
+layout: default
+initial: ready
 states:
   ready:
-    template: markdown-demo.html
+    template: 'view/markdown-demo/ready.html'
+
+

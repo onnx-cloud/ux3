@@ -16,6 +16,7 @@ import { LoginView } from './login.js';
 import { ActionBarView } from './action-bar.js';
 import { MyListView } from './my-list.js';
 import { MacroView } from './macro.js';
+import { MarkdownDemoView } from './markdown-demo.js';
 import { MarketView } from './market.js';
 import { NewsView } from './news.js';
 import { RegisterView } from './register.js';
@@ -38,6 +39,7 @@ export const Views = {
   'action-bar': ActionBarView,
   'my-list': MyListView,
   'macro': MacroView,
+  'markdown-demo': MarkdownDemoView,
   'market': MarketView,
   'news': NewsView,
   'register': RegisterView,

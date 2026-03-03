@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { StateMachine } from '@ux3/fsm';
+import { StateMachine } from '../../src/fsm';
 import { config } from '../../examples/iam/generated/config';
 
 describe('IAM FSMs', () => {

@@ -2,7 +2,7 @@
  * IAM Test Configuration & Utilities
  * Shared setup, fixtures, and helpers for IAM tests
  */
-import { StateMachine } from '@ux3/fsm';
+import { StateMachine } from '../../src/fsm';
 /**
  * Global test setup
  * Runs before all IAM tests

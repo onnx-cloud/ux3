@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { stampTemplate, renderTemplateString } from '@ux3/ui/template-stamp';
+import { stampTemplate, renderTemplateString } from '../../src/ui/template-stamp';
 
 describe('template-stamp', () => {
   const context = {

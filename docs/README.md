@@ -38,6 +38,7 @@ UX3 is built around **configuration over code**; the documentation mirrors that 
 - **[Routing](routing.md)** — View routing and navigation
 - **[Services](services.md)** — HTTP, WebSocket, JSON-RPC services
 - **[i18n](i18n.md)** — Internationalization and translations
+- **[Markdown in Views](markdown-in-views.md)** — Embedding markdown content in views
 - **[Security](security.md)** — XSS prevention and sanitization
 - **[Accessibility](accessibility.md)** — WCAG compliance and a11y practices
 

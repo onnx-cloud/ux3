@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AppContextBuilder, type GeneratedConfig } from '@ux3/ui/context-builder';
-import { clearStyles, getRegisteredStyles } from '@ux3/ui/style-registry';
-import { FSMRegistry } from '@ux3/fsm/registry';
+import { AppContextBuilder, type GeneratedConfig } from '../../src/ui/context-builder';
+import { clearStyles, getRegisteredStyles } from '../../src/ui/style-registry';
+import { FSMRegistry } from '../../src/fsm/registry';
 
 describe('AppContextBuilder - Comprehensive Tests', () => {
   let config: GeneratedConfig;

@@ -1,4 +1,4 @@
-import { i18n } from '@ux3/i18n';
+import { i18n } from '../../../src/i18n';
 
 export function validateProject(data: any) {
   if (!data.name?.trim()) {

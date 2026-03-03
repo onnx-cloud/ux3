@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { registerStyles, applyStyles, initStyleRegistry, clearStyles, getRegisteredStyles } from '@ux3/ui/style-registry';
-import { ViewComponent } from '@ux3/ui/view-component';
+import { registerStyles, applyStyles, initStyleRegistry, clearStyles, getRegisteredStyles } from '../../src/ui/style-registry';
+import { ViewComponent } from '../../src/ui/view-component';
 
 // ensure DOM APIs are available (jsdom is used by vitest)
 

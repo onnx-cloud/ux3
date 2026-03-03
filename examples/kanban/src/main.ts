@@ -1,4 +1,4 @@
-import createBootstrap from '@ux3/ui/bootstrap';
+import createBootstrap from '../../../src/ui/bootstrap';
 import { config } from './generated/config.js';
 // ensure views are defined
 import './generated/views/index.js';

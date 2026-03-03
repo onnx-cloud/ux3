@@ -33,10 +33,16 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   // resolve directories relative to current working directory (useful for tests that override cwd)
   const viewsDir = config.views ? path.resolve(process.cwd(), config.views) : '';
   const outputDir = config.output ? path.resolve(process.cwd(), config.output) : '';
+  // Project dir is typically 2 levels up from views dir (ux/view -> project root)
+  // but can be overridden with baseDir if needed
+  const projectDir = config.baseDir ? path.resolve(process.cwd(), config.baseDir) : path.dirname(path.dirname(viewsDir));
 
   console.log('[UX3 Compiler]');
-  console.log(`Views:  ${viewsDir}`);
-  console.log(`Output: ${outputDir}`);
+  console.log(`Views:   ${viewsDir}`);
+  console.log(`Output:  ${outputDir}`);
+  if (config.baseDir) {
+    console.log(`Project: ${projectDir}`);
+  }
 
   // Create output directory
   if (outputDir) {
@@ -46,8 +52,8 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   // Compile views
   if (viewsDir) {
     try {
-      // `compileAllViews` currently only accepts src and dest directories
-      await compileAllViews(viewsDir, outputDir);
+      // `compileAllViews` now accepts projectDir for markdown and resource resolution
+      await compileAllViews(viewsDir, outputDir, projectDir);
     } catch (e) {
       console.error('✗ View compilation failed:', e);
       process.exit(1);

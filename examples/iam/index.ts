@@ -1,4 +1,4 @@
-import createBootstrap from '@ux3/ui/bootstrap';
+import createBootstrap from '../../src/ui/bootstrap';
 import { config } from './generated/config.js';
 // Import generated views so that customElements.define() runs before initApp().
 // Without this the <ux-*> tags remain HTMLUnknownElement and never mount.

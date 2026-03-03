@@ -4,8 +4,8 @@
  */
 
 import { beforeEach, afterEach, vi } from 'vitest';
-import { StateMachine } from '@ux3/fsm';
-import { FSMRegistry } from '@ux3/fsm';
+import { StateMachine } from '../../src/fsm';
+import { FSMRegistry } from '../../src/fsm';
 
 /**
  * Global test setup
