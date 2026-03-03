@@ -16,6 +16,7 @@
 import type { InvokeSrc, InvokeService } from '../fsm/types.js';
 import type { Service } from './types.js';
 import type { AppContext } from './app.js';
+import { ServiceLifecyclePhase } from '../core/lifecycle.js';
 
 /**
  * Result of an invoke execution
@@ -143,9 +144,46 @@ export class InvokeRegistry {
   private invokeStats: Map<string, { count: number; totalTime: number }> = new Map();
   private cacheStats: Map<string, { hits: number; misses: number }> = new Map();
   private defaultCacheTTL: number = 5 * 60 * 1000; // 5 minutes default
+  private preMiddlewares: PreMiddleware[] = [];
+  private postMiddlewares: PostMiddleware[] = [];
+  private errorMiddlewares: ErrorMiddleware[] = [];
+  private registeredServices: Set<string> = new Set(); // Track services for REGISTER phase
 
   constructor(app: AppContext) {
     this.app = app;
+  }
+
+  /**
+   * Register pre-invoke middleware
+   * Executed before service invoke, can transform input or skip execution
+   */
+  usePreMiddleware(middleware: PreMiddleware): void {
+    this.preMiddlewares.push(middleware);
+  }
+
+  /**
+   * Register post-invoke middleware
+   * Executed after service invoke, can transform result
+   */
+  usePostMiddleware(middleware: PostMiddleware): void {
+    this.postMiddlewares.push(middleware);
+  }
+
+  /**
+   * Register error middleware
+   * Executed on invoke failure, can retry or recover
+   */
+  useErrorMiddleware(middleware: ErrorMiddleware): void {
+    this.errorMiddlewares.push(middleware);
+  }
+
+  /**
+   * Clear all registered middleware
+   */
+  clearMiddleware(): void {
+    this.preMiddlewares = [];
+    this.postMiddlewares = [];
+    this.errorMiddlewares = [];
   }
 
   /**
@@ -186,6 +224,35 @@ export class InvokeRegistry {
     context?: Record<string, any>,
     options?: InvokeOptions
   ): Promise<InvokeResult> {
+    const startTime = Date.now();
+    const mwContext: MiddlewareContext = {
+      type: 'service',
+      service: invoke.service,
+      method: invoke.method || 'fetch',
+      input: invoke.input,
+      timestamp: startTime
+    };
+
+    // Execute pre-middleware
+    try {
+      const preResult = await this.executePreMiddleware(mwContext, invoke);
+      if (preResult.skip) {
+        return preResult.result || {
+          success: false,
+          error: new Error('Pre-middleware skipped execution'),
+          duration: Date.now() - startTime,
+          retries: 0,
+          timestamp: startTime
+        };
+      }
+      if (preResult.input !== undefined) {
+        (invoke as any).input = preResult.input;
+      }
+    } catch (err) {
+      console.error('[InvokeRegistry] Pre-middleware error:', err);
+      // Continue to normal execution
+    }
+
     // Check cache if enabled
     const cacheEnabled = options?.cache?.enabled ?? false;
     if (cacheEnabled) {
@@ -193,12 +260,17 @@ export class InvokeRegistry {
       const cached = this.getCachedResult(cacheKey);
       if (cached) {
         this.recordCacheHit(cacheKey);
-        return cached;
+        // Apply post-middleware even to cached results
+        try {
+          return await this.executePostMiddleware(mwContext, cached);
+        } catch (err) {
+          console.error('[InvokeRegistry] Post-middleware error:', err);
+          return cached;
+        }
       }
       this.recordCacheMiss(cacheKey);
     }
 
-    const startTime = Date.now();
     const maxRetries = options?.maxRetries ?? invoke.maxRetries ?? 0;
     const service = this.app.services[invoke.service];
 
@@ -212,6 +284,23 @@ export class InvokeRegistry {
         duration: Date.now() - startTime,
         status: 'error'
       });
+      
+      // Execute error middleware
+      try {
+        const mwResult = await this.executeErrorMiddleware(mwContext, error, async () => ({
+          success: false,
+          error,
+          duration: Date.now() - startTime,
+          retries: 0,
+          timestamp: startTime
+        }));
+        if (mwResult) {
+          return mwResult;
+        }
+      } catch (err) {
+        console.error('[InvokeRegistry] Error middleware error:', err);
+      }
+
       return { success: false, error, duration: Date.now() - startTime, retries: 0, timestamp: startTime };
     }
 
@@ -253,7 +342,13 @@ export class InvokeRegistry {
           this.setCachedResult(cacheKey, result, ttl);
         }
 
-        return result;
+        // Execute post-middleware
+        try {
+          return await this.executePostMiddleware(mwContext, result);
+        } catch (err) {
+          console.error('[InvokeRegistry] Post-middleware error:', err);
+          return result;
+        }
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
 
@@ -282,9 +377,26 @@ export class InvokeRegistry {
       }
     }
 
+    const finalError = lastError || new Error('Invoke failed');
+
+    // Execute error middleware
+    try {
+      const retryFn = async () => {
+        // Retry the entire invoke
+        return this.executeServiceInvoke(invoke, context, options);
+      };
+
+      const mwResult = await this.executeErrorMiddleware(mwContext, finalError, retryFn);
+      if (mwResult) {
+        return mwResult;
+      }
+    } catch (err) {
+      console.error('[InvokeRegistry] Error middleware error:', err);
+    }
+
     return {
       success: false,
-      error: lastError || new Error('Invoke failed'),
+      error: finalError,
       duration: Date.now() - startTime,
       retries: retryCount,
       timestamp: startTime
@@ -299,20 +411,51 @@ export class InvokeRegistry {
     context?: Record<string, any>,
     options?: InvokeOptions
   ): Promise<InvokeResult> {
+    const startTime = Date.now();
+    const srcStr = typeof invoke.src === 'string' ? invoke.src : '<function>';
+    const mwContext: MiddlewareContext = {
+      type: 'src',
+      src: srcStr,
+      input: invoke.input,
+      timestamp: startTime
+    };
+
+    // Execute pre-middleware
+    try {
+      const preResult = await this.executePreMiddleware(mwContext, invoke);
+      if (preResult.skip) {
+        return preResult.result || {
+          success: false,
+          error: new Error('Pre-middleware skipped execution'),
+          duration: Date.now() - startTime,
+          retries: 0,
+          timestamp: startTime
+        };
+      }
+      if (preResult.input !== undefined) {
+        (invoke as any).input = preResult.input;
+      }
+    } catch (err) {
+      console.error('[InvokeRegistry] Pre-middleware error:', err);
+    }
+
     // Check cache if enabled
     const cacheEnabled = options?.cache?.enabled ?? false;
     if (cacheEnabled) {
-      const srcStr = typeof invoke.src === 'string' ? invoke.src : '<function>';
       const cacheKey = options?.cache?.key || this.generateCacheKey('src', srcStr);
       const cached = this.getCachedResult(cacheKey);
       if (cached) {
         this.recordCacheHit(cacheKey);
-        return cached;
+        try {
+          return await this.executePostMiddleware(mwContext, cached);
+        } catch (err) {
+          console.error('[InvokeRegistry] Post-middleware error:', err);
+          return cached;
+        }
       }
       this.recordCacheMiss(cacheKey);
     }
 
-    const startTime = Date.now();
     const maxRetries = options?.maxRetries ?? invoke.maxRetries ?? 0;
     let lastError: Error | undefined;
     let retryCount = 0;
@@ -324,7 +467,6 @@ export class InvokeRegistry {
         if (typeof invoke.src === 'function') {
           fn = invoke.src;
         } else if (typeof invoke.src === 'string') {
-          // Look up function by name in window or context
           fn = (globalThis as any)[invoke.src] || (context as any)?.[invoke.src];
         }
 
@@ -335,7 +477,7 @@ export class InvokeRegistry {
         this.notifyListeners('start', {
           service: undefined,
           method: undefined,
-          src: typeof invoke.src === 'string' ? invoke.src : '<function>',
+          src: srcStr,
           status: 'start'
         });
 
@@ -344,7 +486,7 @@ export class InvokeRegistry {
         this.notifyListeners('success', {
           service: undefined,
           method: undefined,
-          src: typeof invoke.src === 'string' ? invoke.src : '<function>',
+          src: srcStr,
           status: 'success',
           duration: Date.now() - startTime
         });
@@ -359,13 +501,18 @@ export class InvokeRegistry {
 
         // Cache successful result if caching enabled
         if (cacheEnabled) {
-          const srcStr = typeof invoke.src === 'string' ? invoke.src : '<function>';
           const cacheKey = options?.cache?.key || this.generateCacheKey('src', srcStr);
           const ttl = options?.cache?.ttl ?? this.defaultCacheTTL;
           this.setCachedResult(cacheKey, result, ttl);
         }
 
-        return result;
+        // Execute post-middleware
+        try {
+          return await this.executePostMiddleware(mwContext, result);
+        } catch (err) {
+          console.error('[InvokeRegistry] Post-middleware error:', err);
+          return result;
+        }
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
 
@@ -376,7 +523,7 @@ export class InvokeRegistry {
           this.notifyListeners('retry', {
             service: undefined,
             method: undefined,
-            src: typeof invoke.src === 'string' ? invoke.src : '<function>',
+            src: srcStr,
             error: lastError,
             duration: Date.now() - startTime,
             status: 'retry'
@@ -387,7 +534,7 @@ export class InvokeRegistry {
           this.notifyListeners('error', {
             service: undefined,
             method: undefined,
-            src: typeof invoke.src === 'string' ? invoke.src : '<function>',
+            src: srcStr,
             error: lastError,
             duration: Date.now() - startTime,
             status: 'error'
@@ -396,9 +543,25 @@ export class InvokeRegistry {
       }
     }
 
+    const finalError = lastError || new Error('Invoke failed');
+
+    // Execute error middleware
+    try {
+      const retryFn = async () => {
+        return this.executeSrcInvoke(invoke, context, options);
+      };
+
+      const mwResult = await this.executeErrorMiddleware(mwContext, finalError, retryFn);
+      if (mwResult) {
+        return mwResult;
+      }
+    } catch (err) {
+      console.error('[InvokeRegistry] Error middleware error:', err);
+    }
+
     return {
       success: false,
-      error: lastError || new Error('Invoke failed'),
+      error: finalError,
       duration: Date.now() - startTime,
       retries: retryCount,
       timestamp: startTime
@@ -565,6 +728,76 @@ export class InvokeRegistry {
   }
 
   /**
+   * Execute pre-middleware pipeline
+   */
+  private async executePreMiddleware(
+    context: MiddlewareContext,
+    invoke: InvokeService | InvokeSrc
+  ): Promise<{ skip: boolean; input: any; result?: InvokeResult }> {
+    let input = (invoke as any).input;
+    let skip = false;
+    let result: InvokeResult | undefined;
+
+    for (const middleware of this.preMiddlewares) {
+      const mwResult = await middleware(context, invoke);
+      if (mwResult.skip) {
+        skip = true;
+        result = mwResult.result;
+        break;
+      }
+      if (mwResult.input !== undefined) {
+        input = mwResult.input;
+      }
+      if (mwResult.result) {
+        result = mwResult.result;
+        break;
+      }
+    }
+
+    return { skip, input, result };
+  }
+
+  /**
+   * Execute post-middleware pipeline
+   */
+  private async executePostMiddleware(
+    context: MiddlewareContext,
+    result: InvokeResult
+  ): Promise<InvokeResult> {
+    let processed = result;
+
+    for (const middleware of this.postMiddlewares) {
+      processed = await middleware(context, processed);
+    }
+
+    return processed;
+  }
+
+  /**
+   * Execute error middleware pipeline
+   */
+  private async executeErrorMiddleware(
+    context: MiddlewareContext,
+    error: Error,
+    retryFn: () => Promise<InvokeResult>
+  ): Promise<InvokeResult | undefined> {
+    if (this.errorMiddlewares.length === 0) {
+      return undefined;
+    }
+
+    let result: InvokeResult | undefined;
+
+    for (const middleware of this.errorMiddlewares) {
+      result = await middleware(context, error, retryFn);
+      if (result.success) {
+        return result;
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Clear all cached results and statistics
    */
   clear(): void {
@@ -630,7 +863,135 @@ export class InvokeRegistry {
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-}
+
+  /**
+   * Fire REGISTER phase when a service is first registered/used
+   * Phase 1.4: Lifecycle integration
+   */
+  private async fireRegisterPhase(serviceName: string): Promise<void> {
+    if (this.registeredServices.has(serviceName)) return; // Already registered
+
+    this.registeredServices.add(serviceName);
+
+    if (this.app.hooks) {
+      try {
+        await this.app.hooks.execute(ServiceLifecyclePhase.REGISTER, {
+          app: this.app,
+          service: this.app.services[serviceName],
+          phase: ServiceLifecyclePhase.REGISTER,
+          meta: { serviceName }
+        });
+      } catch (err) {
+        console.error(`[InvokeRegistry] REGISTER hook error for ${serviceName}:`, err);
+      }
+    }
+  }
+
+  /**
+   * Fire AUTHENTICATE phase for authentication services
+   * Phase 1.4: Lifecycle integration
+   */
+  private async fireAuthenticatePhase(serviceName: string): Promise<void> {
+    if (this.app.hooks) {
+      try {
+        await this.app.hooks.execute(ServiceLifecyclePhase.AUTHENTICATE, {
+          app: this.app,
+          service: this.app.services[serviceName],
+          phase: ServiceLifecyclePhase.AUTHENTICATE,
+          meta: { serviceName }
+        });
+      } catch (err) {
+        console.error(`[InvokeRegistry] AUTHENTICATE hook error for ${serviceName}:`, err);
+      }
+    }
+  }
+
+  /**
+   * Fire READY phase when service call succeeds
+   * Phase 1.4: Lifecycle integration
+   */
+  private async fireReadyPhase(serviceName: string, result: InvokeResult): Promise<void> {
+    if (this.app.hooks) {
+      try {
+        await this.app.hooks.execute(ServiceLifecyclePhase.READY, {
+          app: this.app,
+          service: this.app.services[serviceName],
+          phase: ServiceLifecyclePhase.READY,
+          meta: { serviceName, result }
+        });
+      } catch (err) {
+        console.error(`[InvokeRegistry] READY hook error for ${serviceName}:`, err);
+      }
+    }
+  }
+
+  /**
+   * Fire ERROR phase when service call fails
+   * Phase 1.4: Lifecycle integration
+   */
+  private async fireErrorPhase(serviceName: string, error: Error): Promise<void> {
+    if (this.app.hooks) {
+      try {
+        await this.app.hooks.execute(ServiceLifecyclePhase.ERROR, {
+          app: this.app,
+          service: this.app.services[serviceName],
+          phase: ServiceLifecyclePhase.ERROR,
+          meta: { serviceName, error }
+        });
+      } catch (err) {
+        console.error(`[InvokeRegistry] ERROR hook error for ${serviceName}:`, err);
+      }
+    }
+  }
+
+  /**
+   * Fire RECONNECT phase when retrying after failure
+   * Phase 1.4: Lifecycle integration
+   */
+  private async fireReconnectPhase(serviceName: string, attempt: number): Promise<void> {
+    if (this.app.hooks) {
+      try {
+        await this.app.hooks.execute(ServiceLifecyclePhase.RECONNECT, {
+          app: this.app,
+          service: this.app.services[serviceName],
+          phase: ServiceLifecyclePhase.RECONNECT,
+          meta: { serviceName, attempt }
+        });
+      } catch (err) {
+        console.error(`[InvokeRegistry] RECONNECT hook error for ${serviceName}:`, err);
+      }
+    }
+  }
+
+  /**
+   * Fire DISCONNECT phase when service is disconnected/cleared
+   * Phase 1.4: Lifecycle integration
+   */
+  private async fireDisconnectPhase(serviceName: string): Promise<void> {
+    if (this.app.hooks) {
+      try {
+        await this.app.hooks.execute(ServiceLifecyclePhase.DISCONNECT, {
+          app: this.app,
+          service: this.app.services[serviceName],
+          phase: ServiceLifecyclePhase.DISCONNECT,
+          meta: { serviceName }
+        });
+      } catch (err) {
+        console.error(`[InvokeRegistry] DISCONNECT hook error for ${serviceName}:`, err);
+      }
+    }
+  }
+
+  /**
+   * Clear registered services and fire DISCONNECT for each
+   * Phase 1.4: Lifecycle integration
+   */
+  async clearRegisteredServices(): Promise<void> {
+    for (const serviceName of this.registeredServices) {
+      await this.fireDisconnectPhase(serviceName);
+    }
+    this.registeredServices.clear();
+  }
 
 /**
  * Global InvokeRegistry singleton

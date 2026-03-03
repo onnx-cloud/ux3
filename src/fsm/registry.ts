@@ -18,6 +18,7 @@
 
 import { StateMachine } from './state-machine.ts';
 import type { StateEvent } from './types.js';
+import { ServiceCache } from '../core/service-cache.ts';
 
 export interface FSMRegistryConfig {
   namespace: string;
@@ -33,6 +34,7 @@ export class FSMRegistry {
   private static globalContext: Record<string, any> = {};
   private static globalServices: Record<string, any> = {};
   private static globalSubscribers: Array<(event: StateEvent) => void> = [];
+  private static caches = new Map<string, ServiceCache<any>>();
 
   /**
    * Set global context shared across all FSMs
@@ -166,6 +168,56 @@ export class FSMRegistry {
         // swallow
       }
     });
+  }
+
+  /**
+   * Get or create a service cache for a given service name
+   * Each service gets its own cache with default 60-second TTL
+   *
+   * @param serviceName - Name of the service
+   * @param ttlMs - Custom TTL in milliseconds (default: 60000)
+   * @returns ServiceCache instance for the service
+   */
+  static getServiceCache(serviceName: string, ttlMs: number = 60000): ServiceCache<any> {
+    if (!serviceName || typeof serviceName !== 'string') {
+      throw new Error('[UX3] Service name must be a non-empty string');
+    }
+    if (!this.caches.has(serviceName)) {
+      this.caches.set(serviceName, new ServiceCache(ttlMs));
+    }
+    return this.caches.get(serviceName)!;
+  }
+
+  /**
+   * Clear a specific service cache
+   *
+   * @param serviceName - Name of the service cache to clear
+   */
+  static clearServiceCache(serviceName: string): void {
+    const cache = this.caches.get(serviceName);
+    if (cache) {
+      cache.clear();
+    }
+  }
+
+  /**
+   * Clear all service caches
+   */
+  static clearAllServiceCaches(): void {
+    for (const cache of this.caches.values()) {
+      cache.clear();
+    }
+  }
+
+  /**
+   * Clear FSM instances and all caches for testing
+   */
+  static clear(): void {
+    this.instances.clear();
+    this.globalContext = {};
+    this.globalServices = {};
+    this.globalSubscribers = [];
+    this.clearAllServiceCaches();
   }
 }
 
