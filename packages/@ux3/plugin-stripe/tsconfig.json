@@ -23,8 +23,7 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
-    "baseUrl": "../../../",
-    "paths": {
+    "baseUrl": "../../../",    "rootDir": "src",    "paths": {
       "@ux3/*": ["../../../src/*", "../../../packages/@ux3/*/src"]
     }
   },

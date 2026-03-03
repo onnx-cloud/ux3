@@ -1,0 +1,32 @@
+{
+  "name": "@ux3/plugin-tailwind-css",
+  "version": "0.1.0",
+  "description": "Lightweight Tailwind CSS integration plugin for UX3",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "keywords": [
+    "ux3",
+    "plugin",
+    "tailwind",
+    "css",
+    "utilities"
+  ],
+  "author": "UX3 Team",
+  "license": "MIT",
+  "peerDependencies": {},
+  "devDependencies": {}
+}

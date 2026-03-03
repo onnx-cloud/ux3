@@ -1,0 +1,56 @@
+container:
+  base: 'container mx-auto p-4'
+
+project-header:
+  base: 'flex justify-between items-center mb-4'
+
+search-bar:
+  base: 'mb-4'
+
+search-input:
+  base: 'w-full border rounded p-2'
+
+empty-state:
+  base: 'text-center text-gray-500'
+
+project-grid:
+  base: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+
+btn-primary:
+  base: 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+
+btn-secondary:
+  base: 'px-4 py-2 bg-gray-300 rounded hover:bg-gray-400'
+
+board-header:
+  base: 'flex justify-between items-center mb-4'
+
+btn-add:
+  base: 'px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700'
+
+filter-bar:
+  base: 'flex gap-2 mb-4'
+
+filter-select:
+  base: 'border rounded p-1'
+
+task-form:
+  base: 'space-y-4'
+
+alert-error:
+  base: 'text-red-600'
+
+form-label:
+  base: 'block'
+
+form-input:
+  base: 'w-full border rounded p-2'
+
+form-button-group:
+  base: 'flex gap-2'
+
+header-app:
+  base: 'bg-white shadow mb-4'
+
+nav-container:
+  base: 'container mx-auto p-4 flex justify-between items-center'

@@ -1,6 +1,6 @@
 <form ux-event="SUBMIT">
-  <label>{{i18n('lanes.nameLabel')}}
-    <input name="name" placeholder="{{i18n('lanes.nameLabel')}}" value="{{ctx.form.name || ''}}" />
+  <label ux-style="form-label">{{i18n('lanes.nameLabel')}}
+    <input name="name" placeholder="{{i18n('lanes.nameLabel')}}" value="{{ctx.form.name || ''}}" ux-style="form-input" />
   </label>
   <button type="submit">{{i18n('forms.submit')}}</button>
   <button type="button" ux-event="CANCEL">{{i18n('forms.cancel')}}</button>

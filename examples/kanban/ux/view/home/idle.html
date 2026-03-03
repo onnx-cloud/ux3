@@ -1,19 +1,19 @@
-<main ux-style="kanban" class="container mx-auto p-4">
-  <header class="project-header flex justify-between items-center mb-4">
+<main ux-style="container">
+  <header ux-style="project-header">
     <h1 class="text-2xl font-bold">{{i18n('projects.title')}}</h1>
-    <button ux-event="CREATE_PROJECT" class="btn-primary px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{{i18n('projects.create')}}</button>
+    <button ux-event="CREATE_PROJECT" ux-style="btn-primary">{{i18n('projects.create')}}</button>
   </header>
 
-  <div class="search-bar mb-4">
-    <input type="text" class="w-full border rounded p-2" placeholder="{{i18n('projects.search')}}" :query="event.target.value" />
+  <div ux-style="search-bar">
+    <input type="text" ux-style="search-input" placeholder="{{i18n('projects.search')}}" :query="event.target.value" />
   </div>
 
   {{#if ctx.projects.length === 0}}
-    <div class="empty-state text-center text-gray-500">
+    <div ux-style="empty-state">
       <p>{{i18n('projects.empty')}}</p>
     </div>
   {{else}}
-    <div class="project-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div ux-style="project-grid">
       <!-- project cards go here -->
     </div>
   {{/if}}
