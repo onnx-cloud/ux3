@@ -40,11 +40,20 @@
         - /url: /macro
       - link:
         - /url: /sign-up
-  - main
-  - contentinfo
-  - generic [ref=e2]:
+  - main [ref=e2]:
     - generic [ref=e3]:
-      - generic [ref=e4]: Inspector
-      - button "✕" [ref=e5] [cursor=pointer]
-    - generic [ref=e7]: "{ \"machines\": { \"accountFSM\": \"loading\", \"assetFSM\": \"index\", \"billingFSM\": \"loading\", \"blogFSM\": \"loading\", \"chatFSM\": \"loading\", \"dashboardFSM\": \"loading\", \"for-youFSM\": \"loading\", \"indexFSM\": \"index\", \"loginFSM\": \"idle\", \"macroFSM\": \"loading\", \"marketFSM\": \"loading\", \"newsFSM\": \"loading\", \"sign-upFSM\": \"idle\" }, \"services\": [ \"api\", \"realtime\", \"chat\", \"chatbot\", \"eod\" ] }"
+      - navigation [ref=e5]:
+        - text: "{{#if nav}} {{#each nav.routes}}"
+        - 'link "{{../nav.getLabel this}}" [ref=e6] [cursor=pointer]':
+          - /url: "{{this.path}}"
+        - text: "{{/each}} {{/if}}"
+      - main [ref=e7]:
+        - generic [ref=e9]: Loading market data
+      - generic [ref=e10]: "{{i18n.footer.copyright}}"
+  - contentinfo
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]: Inspector
+      - button "✕" [ref=e14] [cursor=pointer]
+    - generic [ref=e16]: "{ \"machines\": { \"accountFSM\": \"loading\", \"assetFSM\": \"index\", \"billingFSM\": \"loading\", \"blogFSM\": \"loading\", \"chatFSM\": \"loading\", \"dashboardFSM\": \"loading\", \"for-youFSM\": \"loading\", \"homeFSM\": \"index\", \"indexFSM\": \"index\", \"loginFSM\": \"idle\", \"macroFSM\": \"loading\", \"marketFSM\": \"loading\", \"newsFSM\": \"loading\", \"sign-upFSM\": \"idle\" }, \"services\": [ \"api\", \"realtime\", \"chat\", \"chatbot\", \"eod\" ] }"
 ```

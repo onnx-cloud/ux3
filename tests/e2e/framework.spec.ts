@@ -24,11 +24,12 @@ test.describe('UX3 Framework Core E2E Tests', () => {
     // navigate to a sample project (IAM example)
     await page.goto('/examples/iam', { waitUntil: 'networkidle' });
 
-    const hasAppScript = await page.locator('script[data-ux3="app"]').count();
     const hasStyles = await page.locator('link[data-ux3="styles"]').count();
     const hasHydration = await page.locator('script[data-ux3="hydration"]').count();
-    // at least one of the assets should exist; don't fail if none
-    expect(hasAppScript + hasStyles + hasHydration).toBeGreaterThanOrEqual(0);
+    // hydration script should exist (bundle injected via dynamic import in hydration script)
+    expect(hasHydration).toBeGreaterThanOrEqual(1);
+    // styles may or may not exist depending on build
+    expect(hasStyles + hasHydration).toBeGreaterThanOrEqual(1);
   });
 
   test('should support custom element definitions', async ({ page }) => {

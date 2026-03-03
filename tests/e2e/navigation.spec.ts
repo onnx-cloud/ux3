@@ -58,25 +58,36 @@ test.describe('Bundle injection', () => {
     expect(scriptText).toContain('DOMContentLoaded');
   });
 
-  test('<script data-ux3="app"> has a src attribute pointing at the bundle', async ({ page }) => {
+  test('hydration script imports the bundle via dynamic import()', async ({ page }) => {
     await page.goto('/');
 
-    const appScript = page.locator('script[data-ux3="app"]');
-    await expect(appScript).toHaveCount(1);
+    const hydrationEl = page.locator('script[data-ux3="hydration"]');
+    await expect(hydrationEl).toHaveCount(1);
 
-    const src = await appScript.getAttribute('src');
-    expect(src).toBeTruthy();
-    expect(src).toContain('bundle.js');
-    expect(src).not.toBeNull();
+    const scriptText = await hydrationEl.textContent() ?? '';
+    // Extract bundle URL from import() call
+    const importMatch = scriptText.match(/import\('([^']+)'\)/);
+    expect(importMatch).toBeTruthy();
+    const bundleUrl = importMatch![1];
+    expect(bundleUrl).toContain('bundle.js');
+    
+    // Verify the bundle URL points to a real file
+    const resp = await page.request.get(bundleUrl);
+    expect(resp.status()).toBe(200);
   });
 
   test('bundle.js is reachable (HTTP 200)', async ({ page }) => {
     await page.goto('/');
 
-    const src = await page.locator('script[data-ux3="app"]').getAttribute('src');
-    expect(src).toBeTruthy();
-
-    const resp = await page.request.get(src!);
+    const hydrationEl = page.locator('script[data-ux3="hydration"]');
+    const scriptText = await hydrationEl.textContent() ?? '';
+    
+    // Extract bundle URL from dynamic import() in hydration script
+    const importMatch = scriptText.match(/import\('([^']+)'\)/);
+    expect(importMatch).toBeTruthy();
+    const bundleUrl = importMatch![1];
+    
+    const resp = await page.request.get(bundleUrl);
     expect(resp.status()).toBe(200);
     const body = await resp.text();
     expect(body.length).toBeGreaterThan(1000);
