@@ -419,11 +419,21 @@ export class AppContextBuilder {
       get: () => {
         if (!context._invokeRegistry) {
           context._invokeRegistry = new InvokeRegistry(context as any);
+          
+          // Phase 1.2.3: Register InvokeRegistry with all FSMs for centralized invoke handling
+          for (const [, fsm] of this.machines) {
+            (fsm as any).setInvokeRegistry(context._invokeRegistry);
+          }
         }
         return context._invokeRegistry;
       },
       set: (value) => {
         context._invokeRegistry = value;
+        
+        // When InvokeRegistry is set externally, register with all FSMs
+        for (const [, fsm] of this.machines) {
+          (fsm as any).setInvokeRegistry(value);
+        }
       }
     });
 

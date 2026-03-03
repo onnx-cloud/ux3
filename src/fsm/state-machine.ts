@@ -28,6 +28,7 @@ export class StateMachine<T extends Record<string, any>> {
   private eventQueue: StateEvent[] = [];
   private processing = false;
   private invokeHandlers: Map<string, (...args: any[]) => Promise<any>> = new Map();
+  private invokeRegistry?: any; // InvokeRegistry - weak ref to avoid circular deps
 
   constructor(config: MachineConfig<T>) {
     this.config = config;
@@ -45,6 +46,14 @@ export class StateMachine<T extends Record<string, any>> {
    */
   registerInvokeHandler(name: string, handler: (...args: any[]) => Promise<any>): void {
     this.invokeHandlers.set(name, handler);
+  }
+
+  /**
+   * Set the InvokeRegistry for centralized service invocation (Phase 1.2.3)
+   * When set, service invokes will use the registry for retry/monitoring/stats
+   */
+  setInvokeRegistry(registry: any): void {
+    this.invokeRegistry = registry;
   }
 
   /**
@@ -75,6 +84,34 @@ export class StateMachine<T extends Record<string, any>> {
    */
   getContext(): Readonly<T> {
     return Object.freeze({ ...this.context });
+  }
+
+  /**
+   * Direct state transition (used for errorTarget, etc)
+   * Performs exit/entry actions and invokes new state
+   */
+  private transitionTo(targetState: string): void {
+    if (!this.config.states[targetState]) {
+      console.error(`[FSM] Target state "${targetState}" not found`);
+      return;
+    }
+
+    const prevState = this.currentState;
+
+    // Execute exit actions
+    this.executeStateActions('exit', prevState);
+
+    // Update state
+    this.currentState = targetState;
+
+    // Execute entry actions
+    this.executeStateActions('entry', this.currentState);
+
+    // Start invoke for new state (if configured)
+    this.handleStateInvoke(this.currentState);
+
+    // Notify listeners
+    this.notifyListeners();
   }
 
   /**
@@ -175,6 +212,9 @@ export class StateMachine<T extends Record<string, any>> {
 
   /**
    * Handle state invoke with retry logic
+   * 
+   * Phase 1.2.3: Uses InvokeRegistry if available for centralized handling,
+   * otherwise falls back to local handler-based logic for backwards compatibility.
    */
   private async handleStateInvoke(stateName: string): Promise<void> {
     const stateConfig = this.config.states[stateName];
@@ -183,6 +223,66 @@ export class StateMachine<T extends Record<string, any>> {
     }
 
     const invokeConfig = stateConfig.invoke as any;
+
+    // Phase 1.2.3: Try to use InvokeRegistry for service invokes
+    if (this.invokeRegistry && invokeConfig.service) {
+      try {
+        const result = await this.invokeRegistry.executeServiceInvoke(
+          { 
+            service: invokeConfig.service,
+            method: invokeConfig.method || 'fetch',
+            input: invokeConfig.input,
+            maxRetries: invokeConfig.maxRetries,
+            retryDelay: invokeConfig.retryDelay
+          },
+          this.context
+        );
+
+        if (result.success) {
+          // Handle result
+          if (result.data && typeof result.data === 'object') {
+            this.setState(result.data as Partial<T>);
+          }
+          // Success - send SUCCESS event
+          this.send({ type: 'SUCCESS', payload: result.data });
+        } else {
+          // Invoke failed
+          throw result.error || new Error('Service invoke failed');
+        }
+        return;
+      } catch (error) {
+        // Fall through to error handling below
+        const lastError = error as Error;
+        const errorContext: any = {
+          code: (lastError as any)?.code || 'UNKNOWN_ERROR',
+          message: lastError?.message || 'Unknown error',
+        };
+
+        // Execute errorActions if configured
+        const errorActions = stateConfig.errorActions;
+        if (errorActions) {
+          errorActions.forEach((action) => {
+            try {
+              action(this.context, lastError);
+            } catch (e) {
+              console.error('[FSM] errorAction threw:', e);
+            }
+          });
+        }
+
+        // Transition to error state if configured
+        if (stateConfig.errorTarget) {
+          // Direct state transition to errorTarget (not via event)
+          this.transitionTo(stateConfig.errorTarget);
+        } else {
+          // Send generic ERROR event
+          this.send({ type: 'ERROR', payload: errorContext });
+        }
+        return;
+      }
+    }
+
+    // Fallback: Use local handler-based logic (Phase 1.1 behavior)
     const maxRetries = invokeConfig.maxRetries ?? 0;
     const baseRetryDelay = invokeConfig.retryDelay ?? 1000;
 

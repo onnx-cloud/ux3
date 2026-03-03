@@ -37,7 +37,66 @@ export interface InvokeOptions {
   maxRetries?: number;
   retryDelay?: number | ((attempt: number) => number);
   context?: Record<string, any>;
+  cache?: {
+    enabled?: boolean;
+    ttl?: number; // Time to live in milliseconds
+    key?: string; // Custom cache key
+  };
 }
+
+/**
+ * Cache entry for invoke results
+ */
+export interface CacheEntry<T = any> {
+  value: InvokeResult<T>;
+  expiresAt: number; // Timestamp when cache expires
+  createdAt: number;
+}
+
+/**
+ * Middleware context for pre/post processing
+ */
+export interface MiddlewareContext {
+  type: 'service' | 'src';
+  service?: string;
+  method?: string;
+  src?: string;
+  input?: any;
+  timestamp: number;
+}
+
+/**
+ * Pre-invoke middleware (before execution)
+ * Can transform input or skip execution
+ */
+export type PreMiddleware = (
+  context: MiddlewareContext,
+  invoke: InvokeService | InvokeSrc
+) => Promise<{
+  skip?: boolean; // Skip execution and return default result
+  input?: any; // Transformed input
+  result?: InvokeResult; // Override result entirely
+}>;
+
+/**
+ * Post-invoke middleware (after execution)
+ * Can transform result or handle errors
+ */
+export type PostMiddleware = (
+  context: MiddlewareContext,
+  result: InvokeResult,
+  error?: Error
+) => Promise<InvokeResult>;
+
+/**
+ * Error middleware (on invoke failure)
+ * Can retry, transform error, or recover
+ */
+export type ErrorMiddleware = (
+  context: MiddlewareContext,
+  error: Error,
+  retry: () => Promise<InvokeResult>
+) => Promise<InvokeResult>;
 
 /**
  * Invoke listener for monitoring
@@ -80,11 +139,28 @@ export type InvokeListener = (invoke: {
 export class InvokeRegistry {
   private app: AppContext;
   private listeners: InvokeListener[] = [];
-  private invokeCache: Map<string, InvokeResult> = new Map();
+  private cache: Map<string, CacheEntry> = new Map();
   private invokeStats: Map<string, { count: number; totalTime: number }> = new Map();
+  private cacheStats: Map<string, { hits: number; misses: number }> = new Map();
+  private defaultCacheTTL: number = 5 * 60 * 1000; // 5 minutes default
 
   constructor(app: AppContext) {
     this.app = app;
+  }
+
+  /**
+   * Set default cache TTL (time to live) for all invokes
+   * Default is 5 minutes (300,000ms)
+   */
+  setDefaultCacheTTL(ttl: number): void {
+    this.defaultCacheTTL = ttl;
+  }
+
+  /**
+   * Get default cache TTL
+   */
+  getDefaultCacheTTL(): number {
+    return this.defaultCacheTTL;
   }
 
   /**
@@ -110,6 +186,18 @@ export class InvokeRegistry {
     context?: Record<string, any>,
     options?: InvokeOptions
   ): Promise<InvokeResult> {
+    // Check cache if enabled
+    const cacheEnabled = options?.cache?.enabled ?? false;
+    if (cacheEnabled) {
+      const cacheKey = options?.cache?.key || this.generateCacheKey('service', invoke.service, invoke.method || 'fetch');
+      const cached = this.getCachedResult(cacheKey);
+      if (cached) {
+        this.recordCacheHit(cacheKey);
+        return cached;
+      }
+      this.recordCacheMiss(cacheKey);
+    }
+
     const startTime = Date.now();
     const maxRetries = options?.maxRetries ?? invoke.maxRetries ?? 0;
     const service = this.app.services[invoke.service];
@@ -150,13 +238,22 @@ export class InvokeRegistry {
 
         this.recordInvokeStats(invoke.service, method, Date.now() - startTime);
 
-        return {
+        const result: InvokeResult = {
           success: true,
           data,
           duration: Date.now() - startTime,
           retries: retryCount,
           timestamp: startTime
         };
+
+        // Cache successful result if caching enabled
+        if (cacheEnabled) {
+          const cacheKey = options?.cache?.key || this.generateCacheKey('service', invoke.service, invoke.method || 'fetch');
+          const ttl = options?.cache?.ttl ?? this.defaultCacheTTL;
+          this.setCachedResult(cacheKey, result, ttl);
+        }
+
+        return result;
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
 
@@ -202,6 +299,19 @@ export class InvokeRegistry {
     context?: Record<string, any>,
     options?: InvokeOptions
   ): Promise<InvokeResult> {
+    // Check cache if enabled
+    const cacheEnabled = options?.cache?.enabled ?? false;
+    if (cacheEnabled) {
+      const srcStr = typeof invoke.src === 'string' ? invoke.src : '<function>';
+      const cacheKey = options?.cache?.key || this.generateCacheKey('src', srcStr);
+      const cached = this.getCachedResult(cacheKey);
+      if (cached) {
+        this.recordCacheHit(cacheKey);
+        return cached;
+      }
+      this.recordCacheMiss(cacheKey);
+    }
+
     const startTime = Date.now();
     const maxRetries = options?.maxRetries ?? invoke.maxRetries ?? 0;
     let lastError: Error | undefined;
@@ -239,13 +349,23 @@ export class InvokeRegistry {
           duration: Date.now() - startTime
         });
 
-        return {
+        const result: InvokeResult = {
           success: true,
           data,
           duration: Date.now() - startTime,
           retries: retryCount,
           timestamp: startTime
         };
+
+        // Cache successful result if caching enabled
+        if (cacheEnabled) {
+          const srcStr = typeof invoke.src === 'string' ? invoke.src : '<function>';
+          const cacheKey = options?.cache?.key || this.generateCacheKey('src', srcStr);
+          const ttl = options?.cache?.ttl ?? this.defaultCacheTTL;
+          this.setCachedResult(cacheKey, result, ttl);
+        }
+
+        return result;
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
 
@@ -325,11 +445,132 @@ export class InvokeRegistry {
   }
 
   /**
+   * Get cache statistics for a specific invoke
+   */
+  getCacheStats(service: string, method: string): { hits: number; misses: number; hitRate: number } | undefined {
+    const key = `${service}.${method}`;
+    const stat = this.cacheStats.get(key);
+    if (!stat) return undefined;
+    const total = stat.hits + stat.misses;
+    return {
+      ...stat,
+      hitRate: total > 0 ? stat.hits / total : 0
+    };
+  }
+
+  /**
+   * Get cached result if it exists and hasn't expired
+   */
+  private getCachedResult(key: string): InvokeResult | undefined {
+    const entry = this.cache.get(key);
+    if (!entry) return undefined;
+
+    // Check if cache has expired
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key);
+      return undefined;
+    }
+
+    return entry.value;
+  }
+
+  /**
+   * Set a cached result with TTL
+   */
+  private setCachedResult(key: string, result: InvokeResult, ttl: number): void {
+    this.cache.set(key, {
+      value: result,
+      expiresAt: Date.now() + ttl,
+      createdAt: Date.now()
+    });
+  }
+
+  /**
+   * Generate cache key from invoke type and parameters
+   */
+  private generateCacheKey(type: 'service' | 'src', ...params: string[]): string {
+    // For service invokes: "api.getUser"
+    // For src invokes: "src:<funcName>"
+    if (type === 'service') {
+      return params.join('.');
+    }
+    return `src.${params.join('.')}`;
+  }
+
+  /**
+   * Record cache hit for statistics
+   */
+  private recordCacheHit(key: string): void {
+    // Extract service.method format for stats tracking
+    const statsKey = key.startsWith('src.') ? key : key;
+    const stat = this.cacheStats.get(statsKey) || { hits: 0, misses: 0 };
+    stat.hits++;
+    this.cacheStats.set(statsKey, stat);
+  }
+
+  /**
+   * Record cache miss for statistics
+   */
+  private recordCacheMiss(key: string): void {
+    // Extract service.method format for stats tracking
+    const statsKey = key.startsWith('src.') ? key : key;
+    const stat = this.cacheStats.get(statsKey) || { hits: 0, misses: 0 };
+    stat.misses++;
+    this.cacheStats.set(statsKey, stat);
+  }
+
+  /**
+   * Invalidate cache for specific invoke
+   */
+  invalidateCache(service: string, method: string): void {
+    const key = this.generateCacheKey('service', service, method);
+    this.cache.delete(key);
+  }
+
+  /**
+   * Invalidate cache for specific source function
+   */
+  invalidateSrcCache(src: string): void {
+    const key = this.generateCacheKey('src', src);
+    this.cache.delete(key);
+  }
+
+  /**
+   * Invalidate all cache entries for a service
+   */
+  invalidateServiceCache(service: string): void {
+    for (const key of this.cache.keys()) {
+      // Keys for service invokes are "service.method"
+      if (key.startsWith(`${service}.`)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Get all active cache entries
+   */
+  getCacheEntries(): Record<string, { value: InvokeResult; expiresAt: number; createdAt: number }> {
+    const entries: Record<string, { value: InvokeResult; expiresAt: number; createdAt: number }> = {};
+    const now = Date.now();
+
+    for (const [key, entry] of this.cache.entries()) {
+      // Only include non-expired entries
+      if (now <= entry.expiresAt) {
+        entries[key] = entry;
+      }
+    }
+
+    return entries;
+  }
+
+  /**
    * Clear all cached results and statistics
    */
   clear(): void {
-    this.invokeCache.clear();
+    this.cache.clear();
     this.invokeStats.clear();
+    this.cacheStats.clear();
   }
 
   /**
@@ -337,6 +578,7 @@ export class InvokeRegistry {
    */
   clearStats(service: string, method: string): void {
     this.invokeStats.delete(`${service}.${method}`);
+    this.cacheStats.delete(`${service}.${method}`);
   }
 
   /**
