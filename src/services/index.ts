@@ -36,4 +36,14 @@ export type {
   NavConfig,
   RouteConfig,
   RouteMatch,
-} from './router.js';
+} from './router.js';export {
+  InvokeRegistry,
+  initializeGlobalInvokeRegistry,
+  getGlobalInvokeRegistry,
+  clearGlobalInvokeRegistry,
+} from './invoke-registry.js';
+export type {
+  InvokeResult,
+  InvokeOptions,
+  InvokeListener,
+} from './invoke-registry.js';

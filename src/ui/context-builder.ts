@@ -674,6 +674,36 @@ export async function createAppContext(
     }
   }
 
+  // Emit AUTHENTICATE phase for each service
+  // This phase allows services to authenticate with their backends
+  if (context.hooks && context.services) {
+    for (const [name, service] of Object.entries(context.services)) {
+      try {
+        await context.hooks.execute(ServiceLifecyclePhase.AUTHENTICATE, {
+          service: { name, instance: service },
+          app: context
+        });
+      } catch (err) {
+        console.warn(`[AppContext] AUTHENTICATE phase failed for service ${name}:`, err);
+      }
+    }
+  }
+
+  // Emit READY phase for each service
+  // This phase signals that the service is fully initialized and ready for use
+  if (context.hooks && context.services) {
+    for (const [name, service] of Object.entries(context.services)) {
+      try {
+        await context.hooks.execute(ServiceLifecyclePhase.READY, {
+          service: { name, instance: service },
+          app: context
+        });
+      } catch (err) {
+        console.warn(`[AppContext] READY phase failed for service ${name}:`, err);
+      }
+    }
+  }
+
   // Wire client-side routing: mounts the initial view and handles history events.
   // Only runs in browser (guards against SSR / test environments without a real DOM).
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
