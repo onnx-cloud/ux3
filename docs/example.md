@@ -10,7 +10,7 @@ The best way to get started is to copy an existing example. Clone this repositor
 
 ```bash
 git clone https://github.com/onnx-cloud/ux3.git
-cd ux3/examples/todo
+cd ux3/examples/kanban
 ux3 dev
 ```
 

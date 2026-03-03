@@ -79,6 +79,7 @@
     "dev": "tsc -p tsconfig.dev.json --watch",
     "dev:bg": "sh -c \"tsc --watch & echo 'TypeScript watcher started'\"",
     "dev:iam": "npx tsx src/cli/cli.ts dev examples/iam --port 1337",
+    "dev:kanban": "npx tsx src/cli/cli.ts dev examples/kanban --port 1337",
     "validate": "npx tsx src/cli/validate.ts --projectDir ./examples/iam",
     "validate:strict": "npx tsx src/cli/validate.ts --projectDir ./examples/iam --strict",
     "build": "npm run clean && tsc && npm run size-check",

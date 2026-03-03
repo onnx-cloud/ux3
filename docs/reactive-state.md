@@ -325,4 +325,4 @@ effect(() => {
 ## Reference
 
 - Source: [src/state/reactive.ts](src/state/reactive.ts)
-- Examples: [examples/todo/app.ts](examples/todo/app.ts)
+- Examples: [examples/kanban/app.ts](examples/kanban/app.ts)

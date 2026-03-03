@@ -1,0 +1,6 @@
+cdn:
+  scripts:
+    view:
+      base: 'p-4 bg-white rounded shadow contents'
+      props:
+        color: 'text-gray-800'

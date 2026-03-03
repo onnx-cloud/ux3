@@ -1,0 +1,22 @@
+{
+  "name": "ux3-example-todo",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ux3 dev",
+    "build": "ux3 build",
+    "preview": "ux3 preview"
+  },
+  "dependencies": {
+    "@ux3/core": "workspace:*",
+    "@ux3/stdlib": "workspace:*",
+    "@ux3/router": "workspace:*",
+    "@ux3/forms": "workspace:*",
+    "@ux3/store": "workspace:*"
+  },
+  "devDependencies": {
+    "@ux3/cli": "workspace:*",
+    "typescript": "^5.3.3",
+    "yaml": "^2.2.1"
+  }
+}

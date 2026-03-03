@@ -1,0 +1,6 @@
+login:
+  view:
+    base: 'max-w-md mx-auto p-6 bg-white rounded-lg shadow contents'
+    props:
+      color: 'text-gray-800'
+    alternate: 'max-w-full'

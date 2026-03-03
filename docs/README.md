@@ -317,12 +317,12 @@ project/
 Simple todo list with FSM:
 
 ```bash
-cd examples/todo
+cd examples/kanban
 npm install
 npm run dev
 ```
 
-**See:** [examples/todo/](../examples/todo/)
+**See:** [examples/kanban/](../examples/kanban/)
 
 ### IAM App
 

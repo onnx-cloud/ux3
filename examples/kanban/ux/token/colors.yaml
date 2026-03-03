@@ -1,0 +1,9 @@
+colors:
+  primary: '#007bff'
+  secondary: '#6c757d'
+  danger: '#dc3545'
+  success: '#28a745'
+  warning: '#ffc107'
+  bg: '#ffffff'
+  surface: '#f8f9fa'
+  text: '#333333'
