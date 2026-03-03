@@ -3,13 +3,13 @@
  */
 
 import { StateMachine } from './state-machine.js';
-import type { StateConfig } from './types.js';
+import type { MachineConfig } from './types.js';
 
 /**
  * Create a state machine from configuration
  */
 export function createMachine<T extends Record<string, any>>(
-  config: StateConfig<T>
+  config: MachineConfig<T>
 ): StateMachine<T> {
   return new StateMachine(config);
 }

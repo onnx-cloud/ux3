@@ -6,8 +6,8 @@
  * - Support nesting and composition
  */
 
-import { StateMachine } from "src/fsm";
-import { Service } from "src/services";
+import { StateMachine } from "../../fsm/index.js";
+import { Service } from "../../services/index.js";
 import { AppContext } from "../app";
 
 /**

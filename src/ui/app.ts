@@ -1,9 +1,10 @@
-import { StateMachine } from "src/fsm";
-import type { Service } from "src/services/types";
-import type { NavConfig } from "src/services/router";
-import type { Widget } from "./widget";
-import { WidgetFactory } from "./widget/factory";
-import type { HookRegistry } from "../core/lifecycle";
+import { StateMachine } from "../fsm/index.js";
+import type { Service } from "../services/types.js";
+import type { NavConfig } from "../services/router.js";
+import type { Widget } from "./widget/index.js";
+import { WidgetFactory } from "./widget/factory.js";
+import type { HookRegistry } from "../core/lifecycle.js";
+import type { ServiceFactory, ComponentFactory } from "../plugin/registry.js";
 
 /**
  * App Context

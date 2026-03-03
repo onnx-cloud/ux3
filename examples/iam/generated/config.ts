@@ -1002,7 +1002,7 @@ export const config = {
       "success": "<div ux-state=\"sign-up.success\">\n  <div ux-style=\"widget\">{{i18n.sign-up.success.label}}</div>\n</div>\n"
     },
     "auth": "<main id=\"ux-content\" ux-style=\"auth\" role=\"main\">\n  {{{content}}}\n</main>\n",
-    "default": "<header id=\"site-header\">\n  <nav ux-style=\"nav\">\n    {{#if nav}}\n      {{#each nav.routes}}\n        <a href=\"{{this.path}}\"\n           {{#if (eq ../nav.current.path this.path)}}class=\"active\"{{/if}}\n           {{#unless (../nav.canNavigate this.view)}}disabled{{/unless}}>\n          {{../nav.getLabel this}}\n        </a>\n      {{/each}}\n    {{/if}}\n  </nav>\n</header>\n\n<main id=\"ux-content\" role=\"main\">\n  {{{content}}}\n</main>\n\n<footer id=\"site-footer\">\n  <small ux-style=\"small\">{{i18n.footer.copyright}}</small>\n</footer>\n"
+    "default": "<header id=\"site-header\" ux-style=\"header\"></header>\n\n<main id=\"ux-content\" role=\"main\">\n  {{{content}}}\n</main>\n\n<footer id=\"site-footer\" ux-style=\"footer\">\n  <small>{{i18n.footer.copyright}}</small>\n</footer>\n"
   },
   "site": {
     "title": "Invest America",

@@ -1,21 +1,9 @@
-<header id="site-header">
-  <nav ux-style="nav">
-    {{#if nav}}
-      {{#each nav.routes}}
-        <a href="{{this.path}}"
-           {{#if (eq ../nav.current.path this.path)}}class="active"{{/if}}
-           {{#unless (../nav.canNavigate this.view)}}disabled{{/unless}}>
-          {{../nav.getLabel this}}
-        </a>
-      {{/each}}
-    {{/if}}
-  </nav>
-</header>
+<header id="site-header" ux-style="header"></header>
 
 <main id="ux-content" role="main">
   {{{content}}}
 </main>
 
-<footer id="site-footer">
-  <small ux-style="small">{{i18n.footer.copyright}}</small>
+<footer id="site-footer" ux-style="footer">
+  <small>{{i18n.footer.copyright}}</small>
 </footer>

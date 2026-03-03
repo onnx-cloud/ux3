@@ -203,7 +203,10 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     // Create container with layout
     const layoutEl = document.createElement('div');
     layoutEl.id = 'ux-layout';
-    layoutEl.innerHTML = this.layout;
+    
+    // Render layout through app's render function to process Handlebars templates
+    const renderedLayout = this.app.render ? this.app.render(this.layout) : this.layout;
+    layoutEl.innerHTML = renderedLayout;
 
     // Inject styles
     const style = document.createElement('style');
