@@ -23,6 +23,7 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   widgets: WidgetFactory; // widget factory
   ui: Record<string, Widget>; // global UI state
   template: (name: string) => string; // template registry function
+  render: (template: string, props?: Record<string, unknown>) => string; // template rendering function
   i18n: (key: string, props?: Record<string, unknown>) => string; // i18n function
   nav: NavConfig | null; // navigation config (routes, current path, canNavigate)
 

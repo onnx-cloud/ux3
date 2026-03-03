@@ -981,9 +981,7 @@ export const config = {
     "home": {
       "index": "<div ux-state=\"home.loaded\">\n  <div ux-style=\"widget\" >{{i18n.home.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/charts\" ux-event=\"NAVIGATE\">{{i18n.demo.charts}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/dropdown\" ux-event=\"NAVIGATE\">{{i18n.demo.dropdown}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/modal\" ux-event=\"NAVIGATE\">{{i18n.demo.modal}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/stripe\" ux-event=\"NAVIGATE\">{{i18n.demo.stripe}}</a>\n  </div>\n</div>\n"
     },
-    "index": {
-      "index": "<div ux-state=\"home.loaded\">\n  <div ux-style=\"widget\" >{{i18n.home.loaded.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"RETRY\">{{i18n.actions.RETRY}}</button>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/charts\" ux-event=\"NAVIGATE\">{{i18n.demo.charts}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/dropdown\" ux-event=\"NAVIGATE\">{{i18n.demo.dropdown}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/modal\" ux-event=\"NAVIGATE\">{{i18n.demo.modal}}</a>\n  </div>\n  <div ux-style=\"link\">\n    <a href=\"/stripe\" ux-event=\"NAVIGATE\">{{i18n.demo.stripe}}</a>\n  </div>\n</div>\n"
-    },
+    "index": {},
     "login": {
       "idle": "<div ux-state=\"login.idle\">\n  <div ux-style=\"widget\">{{i18n.login.idle.label}}</div>\n  <div ux-style=\"actions\">\n    <button type=\"button\" ux-event=\"SUBMIT\">{{i18n.actions.SUBMIT}}</button>\n  </div>\n</div>\n",
       "submitting": "<div ux-state=\"login.submitting\">\n  <div ux-style=\"spinner\">{{i18n.login.submitting.label}}</div>\n</div>\n",

@@ -365,6 +365,22 @@ export class AppContextBuilder {
 
     const navConfig: NavConfig | null = this.router ? this.router.getNavConfig() : null;
 
+    const renderFn = (template: string, props?: Record<string, any>): string => {
+      // Render template through Handlebars with provided context
+      if (!template) return '';
+      
+      const hbs = new HandlebarsLite();
+      const lang = (typeof document !== 'undefined' && document.documentElement.lang) || 'en';
+      const context = {
+        ...props,
+        i18n: this.i18nData[lang] || this.i18nData['en'] || {},
+        nav: navConfig,
+        ...(this.config.site || {}),
+      };
+      
+      return hbs.render(template, context);
+    };
+
     const context: AppContext = {
       machines,
       services,
@@ -372,6 +388,7 @@ export class AppContextBuilder {
       styles: this.styles,
       ui: {},
       template: templateFn,
+      render: renderFn,
       i18n: i18nFn,
       nav: navConfig,
       config: this.config,

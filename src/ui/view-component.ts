@@ -268,8 +268,9 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     // Remove old event listeners
     this.removeEventListeners();
 
-    // Render new template
-    contentArea.innerHTML = template;
+    // Render template through app's render function to process Handlebars
+    const renderedHtml = this.app.render ? this.app.render(template) : template;
+    contentArea.innerHTML = renderedHtml;
 
     // Rebind event listeners
     this.setupEventListeners();
@@ -335,8 +336,30 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     if (!contentArea) return;
 
     // Find all elements with ux-on:* OR ux-event attributes
-    const elements = contentArea.querySelectorAll('[ux-on\\:*], [ux-event]');
-    elements.forEach((element) => {
+    // Note: CSS doesn't support wildcards in attribute selectors, so we query separately
+    // and combine the results manually
+    const allElements = new Set<Element>();
+    
+    // Get elements with ux-event attribute
+    contentArea.querySelectorAll('[ux-event]').forEach((el) => allElements.add(el));
+    
+    // Get elements with ux-on:* attributes by walking the tree
+    const walk = (node: Element) => {
+      if (node.attributes) {
+        for (const attr of node.attributes) {
+          if (attr.name.startsWith('ux-on:')) {
+            allElements.add(node);
+            break;
+          }
+        }
+      }
+      for (const child of node.children) {
+        walk(child);
+      }
+    };
+    walk(contentArea);
+    
+    allElements.forEach((element) => {
       // 1. Handle ux-event directive: "click:SUBMIT"
       const uxEvent = element.getAttribute('ux-event');
       if (uxEvent) {

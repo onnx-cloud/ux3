@@ -33,18 +33,18 @@ export interface LogHandler {
 class ConsoleLogHandler implements LogHandler {
   handle(entry: LogEntry): void {
     const styleMap = {
-      debug: 'color: gray',
-      info: 'color: blue',
+      debug: 'color: blue',
+      info: 'color: grey',
       warn: 'color: orange',
       error: 'color: red',
       fatal: 'color: darkred; font-weight: bold'
     };
 
     console.log(
-      `%c[${entry.level.toUpperCase()}] ${entry.timestamp} ${entry.message}`,
+      `%c ${entry.message}`,
       styleMap[entry.level],
       entry.context,
-      entry.error
+      entry.error || entry.timestamp
     );
   }
 }

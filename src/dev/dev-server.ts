@@ -305,7 +305,12 @@ export class DevServer {
 
               // Prefer compiled templates from in-memory manifest when available, otherwise read source file
               try {
-                const m = String(templateRel).match(/^view\/([^\/]+)(?:\/(.*))?$/);
+                // Support both 'view/home/index.html' and 'home/index.html' formats
+                let m = String(templateRel).match(/^view\/([^\/]+)(?:\/(.*))?$/);
+                if (!m) {
+                  // Try without the view/ prefix
+                  m = String(templateRel).match(/^([^\/]+)(?:\/(.*))?$/);
+                }
                 const viewName = m ? m[1] : null;
                 const stateName = m && m[2] ? m[2].replace(/\.html$/, '') : undefined;
 

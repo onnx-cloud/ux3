@@ -79,6 +79,24 @@ Checks:
 npx ux3 compile --views ./ux/view --output ./generated
 ```
 
+**ConfigGenerator generates `config.ts` with:**
+- Routes (from `ux/route/routes.yaml`)
+- Services (from `ux/service/*.yaml`)
+- Machines (from view FSM configs)
+- i18n bundles (from `ux/i18n/`)
+- Styles (from `ux/style/`)
+- **Templates** (view + layout templates)
+
+**Layout Loading:**
+HTML files in `ux/layout/` are automatically loaded and registered as templates:
+
+```
+ux/layout/default.html  → config.templates["default"]
+ux/layout/auth.html     → config.templates["auth"]
+```
+
+Views reference these layouts by name in their FSM configuration.
+
 Generates:
 - `generated/views/` - ViewComponent classes
 - `generated/fsm/` - FSM configurations
@@ -86,6 +104,78 @@ Generates:
 - `generated/i18n.ts` - i18n bundles
 - `generated/styles.ts` - Style mappings
 - `generated/config.ts` - Full app config
+
+---
+
+## Development Server
+
+The dev server provides hot reload and asset injection:
+
+```bash
+npm run dev
+# or for a specific example
+npm run dev:iam
+```
+
+**Features:**
+- Hot reload on YAML/template changes
+- View compilation on every build
+- Layout template loading (no manual config)
+- Asset injection (CSS, JS)
+- Dev dashboard at `http://localhost:3000/$`
+- Source map support
+- HMR (Hot Module Replacement)
+
+**Build Order in Dev Mode:**
+1. Generate config (including layout loading)
+2. Compile views (YAML → TypeScript)
+3. Validate configuration
+4. Resolve service invocations
+5. Bundle application
+6. Inject assets (hydration script only)
+
+---
+
+## Asset Injection
+
+The dev server and build system inject scripts and styles into the HTML page:
+
+### Styles
+
+Compiled styles are injected into `<head>`:
+
+```html
+<link rel="stylesheet" href="/dist/tokens.css" data-ux3="styles">
+<link rel="stylesheet" href="/dist/bundle.css" data-ux3="styles">
+```
+
+### Scripts - Hydration Pattern
+
+The recommended pattern uses a single hydration script that initializes the app when the DOM is ready:
+
+```html
+<script data-ux3="hydration">
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const m = await import('/dist/bundle.js?ts=1234567890');
+      if (m && typeof m.initApp === 'function') {
+        await m.initApp();
+      }
+    } catch(e) {
+      console.error('[UX3 hydration]', e);
+    }
+  });
+</script>
+```
+
+**Benefits:**
+- Single bundle import (no double-loading)
+- Waits for DOM to be ready
+- Clear initialization point
+- Works with dev-server hot reload
+- Cache-busting via timestamp query parameter
+
+---
 
 ### 3. TypeScript Compilation
 

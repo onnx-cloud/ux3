@@ -146,7 +146,29 @@ export class LoginView extends ViewComponent {
 |-----------|------|---------|
 | `ux-fsm` | string | FSM namespace (e.g., `"news"` resolves `machines['news']` or `machines['newsFSM']`) |
 | `ux-view` | string | View name for template lookup |
-| `ux-layout` | string | Layout name (default: `"default"`) |
+| `ux-layout` | string | Layout name from view's FSM config (resolved from `config.templates` at runtime) |
+
+### Layout Resolution
+
+Layout names are declared in view YAML and resolved at runtime:
+
+```yaml
+# ux/view/dashboard.yaml
+layout: default  # Resolved to config.templates["default"]
+initial: loading
+states:
+  loading: ...
+```
+
+At runtime, `ViewComponent.connectedCallback()` does:
+
+```typescript
+const layoutName = /* from FSM config */;  // "default"
+this.layout = this.app.template(layoutName);
+if (!this.layout) {
+  throw new Error(`Layout not found: ${layoutName}`);
+}
+```
 
 ### FSM name resolution
 

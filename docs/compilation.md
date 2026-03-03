@@ -47,6 +47,42 @@ The UX3 build system compiles declarative YAML configurations into generated Typ
 
 ---
 
+## Config Generator
+
+Aggregates all UX3 configuration files into a single `config.ts`:
+
+### Template Loading
+
+The ConfigGenerator loads **all template types** into a unified registry:
+
+```typescript
+// View templates (from YAML state definitions)
+templates: {
+  "login": {
+    "idle": "<form>...</form>",
+    "submitting": "<div>Loading...</div>"
+  },
+  // Layout templates (from ux/layout/ HTML files)
+  "default": "<header>...</header><main>{{{content}}}</main>",
+  "auth": "<main>{{{content}}}</main>"
+}
+```
+
+### Layout Template Loading
+
+HTML files in `ux/layout/` are automatically loaded as top-level template keys:
+
+```
+ux/layout/
+├── default.html  → templates["default"]
+├── auth.html     → templates["auth"]
+└── _.html        → fallback layout (not included)
+```
+
+This allows views to reference layouts by name in their FSM configuration.
+
+---
+
 ## View Compiler
 
 Converts `ux/view/*.yaml` + HTML templates into ViewComponent classes.
@@ -56,6 +92,7 @@ Converts `ux/view/*.yaml` + HTML templates into ViewComponent classes.
 ```yaml
 # ux/view/login.yaml
 initial: idle
+layout: auth  # Reference to layout template
 states:
   idle:
     template: 'view/login/idle.html'
@@ -64,7 +101,8 @@ states:
   submitting:
     template: 'view/login/submitting.html'
     invoke:
-      src: submitLogin
+      service: auth
+      method: submit
 ```
 
 ```html
@@ -82,11 +120,12 @@ states:
 export class LoginView extends ViewComponent {
   static FSM_CONFIG = {
     id: 'login',
+    layout: 'auth',  // Layout name (resolved from config.templates at runtime)
     initial: 'idle',
     states: { /* ... */ }
   };
 
-  protected layout = '...';
+  protected layout = '';  // Set by ViewComponent from app.template(layoutName)
   protected templates = new Map([
     ['idle', '<form>...</form>'],
     ['submitting', '<div>Loading...</div>']

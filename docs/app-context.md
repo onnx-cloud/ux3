@@ -313,23 +313,71 @@ const result = await appContext.services.mock.call('testMethod');
 
 ## Template Registry
 
-Templates are looked up by name:
+The template registry contains two types of templates:
+
+### 1. View Templates (Nested Structure)
+
+State-based templates for views:
 
 ```typescript
-// Get template for a view state
-const template = appContext.template('login-idle');
-
-// Layouts
-const layout = appContext.template('default');
-
-// Custom
-const custom = appContext.template('dashboard-header');
+templates: {
+  "login": {
+    "idle": "<form>...</form>",
+    "submitting": "<div>Loading...</div>"
+  },
+  "dashboard": {
+    "loading": "<div>...</div>",
+    "loaded": "<div>...</div>"
+  }
+}
 ```
 
-Template names follow convention:
-- View templates: `{viewName}-{stateName}`
-- Layouts: `{layoutName}`
-- Partials: `{featureName}-{component}`
+### 2. Layout Templates (Flat Structure)
+
+Page-level layout wrappers:
+
+```typescript
+templates: {
+  "default": "<header>...</header><main>{{{content}}}</main>",
+  "auth": "<main>{{{content}}}</main>"
+}
+```
+
+### Lookup
+
+Templates are looked up by name using a unified function:
+
+```typescript
+// Get layout template (flat lookup)
+const layout = appContext.template('default');
+// Returns: "<header>...</header><main>{{{content}}}</main>"
+
+// Get view state template (nested lookup)
+const template = appContext.template('login-idle');
+// Returns: "<form>...</form>"
+
+// Lookup checks both flat and nested patterns
+const result = appContext.template(name);
+// 1. Checks templates[name] (flat - layouts, partials)
+// 2. Checks templates[viewName][name] (nested - view states)
+// 3. Logs warning and returns '' if not found
+```
+
+### Template Organization
+
+```
+ux/
+├── view/
+│   ├── login.yaml        (defines states: idle, submitting)
+│   ├── login/
+│   │   ├── idle.html     → compiled as template "login-idle"
+│   │   └── submitting.html → compiled as template "login-submitting"
+│   └── dashboard.yaml    (layout: "default")
+└── layout/
+    ├── default.html      → compiled as template "default"
+    ├── auth.html         → compiled as template "auth"
+    └── _.html            → fallback (not auto-registered)
+```
 
 ---
 
