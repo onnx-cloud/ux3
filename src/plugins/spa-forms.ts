@@ -2,6 +2,9 @@ import type { Plugin } from "../plugin/registry";
 import { AppLifecyclePhase } from "../core/lifecycle";
 
 export class FormsService {
+  async fetch() {
+    return null;
+  }
   validate(form: HTMLFormElement): boolean {
     if (!form) return false;
     return form.checkValidity();

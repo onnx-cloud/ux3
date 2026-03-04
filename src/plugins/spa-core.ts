@@ -51,7 +51,7 @@ export const SpaCore: Plugin = {
     }
   },
   services: {
-    'ux3.service.state': StateRecoveryService,
-    'ux3.service.reconnect': ServiceReconnectService
+    'ux3.service.state': (app: any) => new StateRecoveryService(app),
+    'ux3.service.reconnect': (app: any) => new ServiceReconnectService(app)
   }
 };
