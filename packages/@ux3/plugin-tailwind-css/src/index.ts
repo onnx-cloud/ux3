@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const require: any;
 
-import type { Plugin } from '../../../src/plugin/registry';
+import type { Plugin } from '@ux3/plugin/registry.ts';
 
 // ============================================================================
 // COLOR PALETTES

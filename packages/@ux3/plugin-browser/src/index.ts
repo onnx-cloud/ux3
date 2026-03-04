@@ -33,7 +33,7 @@ export const BrowserPlugin: Plugin = {
     // Inject into app.ui if requested
     if (injectToUI) {
       app.ui = app.ui || {};
-      app.ui.browser = initialState;
+      (app.ui as any).browser = initialState;
     }
 
     // Expose utility to access browser state

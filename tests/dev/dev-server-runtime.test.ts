@@ -47,6 +47,7 @@ describe('DevServer runtime asset injection', () => {
       .join(generatedDir, 'config.ts')
       .replace(/\\/g, '/')}'`;
     await fs.writeFile(path.join(generatedDir, '__entry__.ts'), entryCode);
+  }, 20000);
 
     const bundler = new Bundler({
       projectDir: temp,

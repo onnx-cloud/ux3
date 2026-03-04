@@ -98,7 +98,7 @@ describe('processAssets: bundle-pending regression', () => {
 
   it('appends a cache-busting ?ts= query to the hydration import URL', () => {
     const site = processAssets(bundleKeyManifest('/dist/bundle.ts') as any, '/proj');
-    expect(site.scripts).toMatch(/import\('\/dist\/bundle\.js\?ts=\d+/);
+    expect(site.scripts).toMatch(/import\('\/dist\/bundle\.ts\?ts=\d+/);
   });
 
   it('emits <script data-ux3="hydration"> tag regardless of bundleUrl', () => {

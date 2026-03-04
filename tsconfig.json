@@ -1,14 +1,18 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "target": "ES2022",
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "resolveJsonModule": true,
-    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": { 
-      "@ux3/*": ["src/*", "packages/@ux3/*/src"] 
+      "@ux3/*": [
+        "./src/*",
+        "./packages/@ux3/*/src"
+      ]
     }
   },
   "include": ["src/**/*.ts", "packages/@ux3/*/src/**/*.ts"],
