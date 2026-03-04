@@ -21,10 +21,16 @@ export function detectBrowser(userAgent = typeof navigator !== 'undefined' ? nav
   let name: any = 'unknown';
   let version = 'unknown';
 
-  // Order matters - check more specific patterns first
-  if (/edge/i.test(userAgent)) {
+  // Order matters - check more specific patterns first (before their parent patterns)
+  if (/opr\//i.test(userAgent)) {
+    // Opera with OPR tag
+    name = 'opera';
+    const match = userAgent.match(/opr\/(\d+(\.\d+)*)/i);
+    version = match ? match[1] : 'unknown';
+  } else if (/edg\//i.test(userAgent)) {
+    // Edge with Edg tag (modern Edge)
     name = 'edge';
-    const match = userAgent.match(/edge\/(\d+(\.\d+)*)/i);
+    const match = userAgent.match(/edg\/(\d+(\.\d+)*)/i);
     version = match ? match[1] : 'unknown';
   } else if (/chrome/i.test(userAgent) && !/chromium/i.test(userAgent)) {
     name = 'chrome';
@@ -37,10 +43,6 @@ export function detectBrowser(userAgent = typeof navigator !== 'undefined' ? nav
   } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
     name = 'safari';
     const match = userAgent.match(/version\/(\d+(\.\d+)*)/i);
-    version = match ? match[1] : 'unknown';
-  } else if (/opr/i.test(userAgent) || /opera/i.test(userAgent)) {
-    name = 'opera';
-    const match = userAgent.match(/(?:opr|opera)\/(\d+(\.\d+)*)/i);
     version = match ? match[1] : 'unknown';
   } else if (/trident/i.test(userAgent)) {
     name = 'ie';
@@ -62,12 +64,24 @@ export function detectOS(userAgent = typeof navigator !== 'undefined' ? navigato
   let type: any = 'unknown';
   let version = 'unknown';
 
-  if (/windows|win32/i.test(userAgent)) {
+  // Order matters - check more specific patterns first (mobile OSes before desktop)
+  if (/iphone|ipad|ipod/i.test(userAgent)) {
+    type = 'ios';
+    const match = userAgent.match(/os ([\d_]+)/i);
+    version = match ? match[1].replace(/_/g, '.') : 'unknown';
+  } else if (/android/i.test(userAgent)) {
+    type = 'android';
+    const match = userAgent.match(/android ([\d.]+)/i);
+    version = match ? match[1] : 'unknown';
+  } else if (/windows|win32/i.test(userAgent)) {
     type = 'windows';
-    if (/windows nt 10\.0|win10/i.test(userAgent)) version = '10';
-    else if (/windows nt 6\.3|win8\.1/i.test(userAgent)) version = '8.1';
-    else if (/windows nt 6\.2|win8/i.test(userAgent)) version = '8';
-    else {
+    if (/windows nt 10\.0/i.test(userAgent)) {
+      version = '10.0';
+    } else if (/windows nt 6\.3|win8\.1/i.test(userAgent)) {
+      version = '8.1';
+    } else if (/windows nt 6\.2|win8/i.test(userAgent)) {
+      version = '8';
+    } else {
       const match = userAgent.match(/windows nt ([\d.]+)/i);
       version = match ? match[1] : 'unknown';
     }
@@ -82,14 +96,6 @@ export function detectOS(userAgent = typeof navigator !== 'undefined' ? navigato
   } else if (/linux/i.test(userAgent)) {
     type = 'linux';
     version = 'unknown';
-  } else if (/iphone|ipad|ipod/i.test(userAgent)) {
-    type = 'ios';
-    const match = userAgent.match(/os ([\d_]+)/i);
-    version = match ? match[1].replace(/_/g, '.') : 'unknown';
-  } else if (/android/i.test(userAgent)) {
-    type = 'android';
-    const match = userAgent.match(/android ([\d.]+)/i);
-    version = match ? match[1] : 'unknown';
   }
 
   return { type, version };

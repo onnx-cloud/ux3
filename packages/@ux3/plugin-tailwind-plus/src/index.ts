@@ -1,8 +1,8 @@
 // allow legacy require() calls in TypeScript
 declare const require: any;
 
-import type { Plugin } from '@ux3/ux3';
-import type { AssetDescriptor } from '@ux3/ux3';
+import type { Plugin } from '../../../src/plugin/registry';
+import type { AssetDescriptor, AppContext } from '../../../src/ui/app';
 
 // Helper to safely require StateMachine from either the compiled or source context
 function tryRequireStateMachine(): any {
@@ -267,7 +267,7 @@ export const TailwindPlusPlugin: Plugin = {
   name: '@ux3/plugin-tailwind-plus',
   version: '0.1.0',
   description: 'Tailwind CSS integration with FSM-driven UI components',
-  async install(app) {
+  async install(app: AppContext) {
     // Register stylesheet if configured
     const cssPath = app.config.plugins?.['tailwind-plus']?.css;
     if (cssPath) {

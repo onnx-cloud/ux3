@@ -5,7 +5,13 @@
  * into the app context for use in FSMs and templates.
  */
 
-import type { Plugin } from '../../../src/plugin/registry';
+// general type helper for Node-style require if necessary
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const require: any;
+
+import type { Plugin } from '@ux3/plugin/registry';
+import type { AppContext } from '@ux3/ui/app';
+
 import { gatherBrowserState } from './detector.js';
 import type { BrowserState, BrowserPluginConfig } from './types.js';
 
@@ -15,7 +21,7 @@ export const BrowserPlugin: Plugin = {
   description: 'Detects and injects browser state (locale, device, preferences, connectivity)',
   ux3PeerVersion: '>=1.0.0',
 
-  install(app) {
+  install(app: AppContext) {
     // Load config
     const cfg: BrowserPluginConfig = (app.config as any)?.plugins?.['@ux3/plugin-browser'] ?? {};
     const injectToUI = cfg.injectToUI !== false;

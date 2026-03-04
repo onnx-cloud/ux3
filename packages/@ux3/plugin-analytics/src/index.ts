@@ -1,4 +1,5 @@
-import type { Plugin } from '../../../src/plugin/registry';
+import type { Plugin } from '@ux3/plugin/registry';
+import type { AppContext } from '@ux3/ui/app';
 
 export interface AnalyticsConfig {
   /** URL to POST log entries to */
@@ -16,7 +17,7 @@ export const AnalyticsPlugin: Plugin = {
   name: '@ux3/plugin-analytics',
   version: '1.0.0',
   description: 'Forwards structured log entries to a configurable analytics endpoint with batching.',
-  install(app) {
+  install(app: AppContext) {
     const cfg: AnalyticsConfig = (app.config as any)?.plugins?.['@ux3/plugin-analytics'] ??
       (app.config as any)?.plugins?.analytics ?? {};
 
