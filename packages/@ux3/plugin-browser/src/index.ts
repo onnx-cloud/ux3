@@ -67,7 +67,7 @@ export const BrowserPlugin: Plugin = {
       const updateConnectivity = () => {
         if (injectToUI) {
           const newState = gatherBrowserState();
-          const oldOnline = (app.ui.browser as BrowserState).connectivity.isOnline;
+          const oldOnline = (app.ui.browser as any).connectivity.isOnline;
           const newOnline = newState.connectivity.isOnline;
 
           (app.ui as any).browser = newState;
@@ -90,7 +90,7 @@ export const BrowserPlugin: Plugin = {
     }
 
     // Log that plugin was installed
-    app.logger?.info?.('plugin.browser.install', {
+    (app.logger as any)?.log?.('plugin.browser.install', {
       browser: initialState.browser.name,
       device: initialState.device.type,
       locale: initialState.locale.locale,

@@ -237,7 +237,7 @@ export const TailwindCssPlugin: Plugin = {
 
     // Register utility functions on app context
     app.utils = app.utils || {};
-    app.utils.tailwind = {
+    (app.utils as any).tailwind = {
       mergeClasses,
       buttonClass,
       cardClass,
