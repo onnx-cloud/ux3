@@ -5,7 +5,9 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": { "@ux3/*": ["src/*", "packages/@ux3/*/src"] },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -29,7 +31,8 @@
 
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "packages/@ux3/*/src/**/*.ts"
   ],
-  "exclude": ["node_modules", "dist", ".ux3", "packages", "examples", "tests"]
+  "exclude": ["node_modules", "dist", ".ux3", "examples", "tests"]
 }

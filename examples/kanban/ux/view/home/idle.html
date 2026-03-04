@@ -1,7 +1,22 @@
 <main ux-style="container">
   <header ux-style="project-header">
     <h1 ux-style="header-title">{{i18n('projects.title')}}</h1>
-    <button ux-event="CREATE_PROJECT" ux-style="btn-primary">{{i18n('projects.create')}}</button>
+    <div style="display: flex; gap: 8px;">
+      <button ux-event="CREATE_PROJECT" ux-style="btn-primary">{{i18n('projects.create')}}</button>
+      <div class="help-wrapper">
+        <button class="help-button" type="button" title="Get help about projects">?</button>
+        <div class="help-popover" role="dialog" aria-label="Help content">
+          <div class="help-popover-header">
+            <h3>Home Help</h3>
+            <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+          </div>
+          <div class="help-popover-content">
+            <ux-markdown ux-src="ux/help/home.md" />
+          </div>
+        </div>
+        <div class="help-overlay"></div>
+      </div>
+    </div>
   </header>
 
   <div ux-style="search-bar">

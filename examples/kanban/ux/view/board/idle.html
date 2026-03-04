@@ -2,7 +2,22 @@
   <header ux-style="board-header">
     <button ux-style="btn-icon" @click="navigateTo('/')">←</button>
     <h1 ux-style="header-title">{{selectedBoard.name}}</h1>
-    <button ux-event="CREATE_TASK" ux-style="btn-primary">{{i18n('tasks.create')}}</button>
+    <div style="display: flex; gap: 8px;">
+      <button ux-event="CREATE_TASK" ux-style="btn-primary">{{i18n('tasks.create')}}</button>
+      <div class="help-wrapper">
+        <button class="help-button" type="button" title="Get help about the Kanban board">?</button>
+        <div class="help-popover" role="dialog" aria-label="Help content">
+          <div class="help-popover-header">
+            <h3>Kanban Board Help</h3>
+            <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+          </div>
+          <div class="help-popover-content">
+            <ux-markdown ux-src="ux/help/board.md" />
+          </div>
+        </div>
+        <div class="help-overlay"></div>
+      </div>
+    </div>
   </header>
   <div ux-style="filter-bar">
     <select ux-event="FILTER" name="assignee" ux-style="filter-select">

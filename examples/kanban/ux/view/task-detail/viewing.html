@@ -1,1 +1,31 @@
-<div>Task detail viewing</div>
+<div ux-style="task-detail-modal">
+  <div ux-style="task-detail-header">
+    <h2>{{ctx.task.title}}</h2>
+    <div style="display: flex; gap: 8px;">
+      <button @click="emit('EDIT')" ux-style="btn-secondary">{{i18n('tasks.edit')}}</button>
+      <div class="help-wrapper">
+        <button class="help-button" type="button" title="Get help about tasks">?</button>
+        <div class="help-popover" role="dialog" aria-label="Help content">
+          <div class="help-popover-header">
+            <h3>Task Detail Help</h3>
+            <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+          </div>
+          <div class="help-popover-content">
+            <ux-markdown ux-src="ux/help/task-detail.md" />
+          </div>
+        </div>
+        <div class="help-overlay"></div>
+      </div>
+      <button @click="emit('CLOSE')" ux-style="btn-icon">×</button>
+    </div>
+  </div>
+  <div ux-style="task-detail-content">
+    <div ux-style="task-info">
+      <p><strong>ID:</strong> {{ctx.task.id}}</p>
+      <p><strong>Status:</strong> {{ctx.task.lane}}</p>
+      <p><strong>Assigned:</strong> {{ctx.task.assignee}}</p>
+      <p><strong>Priority:</strong> {{ctx.task.priority}}</p>
+      <p><strong>Due Date:</strong> {{ctx.task.dueDate}}</p>
+    </div>
+  </div>
+</div>

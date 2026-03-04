@@ -1,1 +1,32 @@
-<div>Board list idle view</div>
+<main ux-style="container">
+  <header ux-style="board-header">
+    <button ux-style="btn-icon" @click="navigateTo('/')">←</button>
+    <h1 ux-style="header-title">{{i18n('boards.title')}}</h1>
+    <div style="display: flex; gap: 8px;">
+      <button ux-event="CREATE_BOARD" ux-style="btn-primary">{{i18n('boards.create')}}</button>
+      <div class="help-wrapper">
+        <button class="help-button" type="button" title="Get help about boards">?</button>
+        <div class="help-popover" role="dialog" aria-label="Help content">
+          <div class="help-popover-header">
+            <h3>Board List Help</h3>
+            <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+          </div>
+          <div class="help-popover-content">
+            <ux-markdown ux-src="ux/help/board-list.md" />
+          </div>
+        </div>
+        <div class="help-overlay"></div>
+      </div>
+    </div>
+  </header>
+
+  {{#if ctx.boards.length === 0}}
+    <div ux-style="empty-state">
+      <p>{{i18n('boards.empty')}}</p>
+    </div>
+  {{else}}
+    <div ux-style="board-grid">
+      <!-- board cards go here -->
+    </div>
+  {{/if}}
+</main>

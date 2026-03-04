@@ -1,0 +1,328 @@
+<!-- Help Button with Popover -->
+<!-- Usage: Include this component in any template and set data-help-file to the markdown file path -->
+
+<div class="help-wrapper">
+  <style>
+    .help-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--color-primary, #007bff);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      position: relative;
+      z-index: 10;
+    }
+
+    .help-button:hover {
+      background: var(--color-primary-dark, #0056b3);
+      transform: scale(1.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .help-button:active {
+      transform: scale(0.95);
+    }
+
+    .help-popover {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      width: 400px;
+      max-height: 500px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--color-border, #e0e0e0);
+      z-index: 1000;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .help-popover.show {
+      display: block;
+    }
+
+    .help-popover-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--color-primary, #007bff);
+      color: white;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .help-popover-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .help-close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .help-close-btn:hover {
+      opacity: 1;
+    }
+
+    .help-popover-content {
+      padding: 16px;
+      max-height: 420px;
+      overflow-y: auto;
+      background: white;
+    }
+
+    .help-popover-content h1 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-primary, #007bff);
+    }
+
+    .help-popover-content h2 {
+      margin-top: 16px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .help-popover-content h3 {
+      margin-top: 12px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .help-popover-content p {
+      margin: 8px 0;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .help-popover-content ul,
+    .help-popover-content ol {
+      margin: 8px 0;
+      padding-left: 20px;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .help-popover-content li {
+      margin: 4px 0;
+    }
+
+    .help-popover-content code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #d63384;
+    }
+
+    .help-popover-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0;
+      font-size: 12px;
+    }
+
+    .help-popover-content table th,
+    .help-popover-content table td {
+      padding: 6px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    .help-popover-content table th {
+      background: #f9f9f9;
+      font-weight: 600;
+    }
+
+    .help-popover-content hr {
+      margin: 12px 0;
+      border: none;
+      border-top: 1px solid #eee;
+    }
+
+    /* Scrollbar styling */
+    .help-popover-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .help-popover-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .help-popover-content::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .help-popover-content::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .help-popover {
+        width: calc(100vw - 24px);
+        max-width: 500px;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Close popover when clicking outside */
+    .help-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 999;
+    }
+
+    .help-overlay.show {
+      display: block;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .help-popover {
+        background: #222;
+        border-color: #444;
+        color: #e0e0e0;
+      }
+
+      .help-popover-content {
+        background: #222;
+        color: #e0e0e0;
+      }
+
+      .help-popover-content h1 {
+        color: #87ceeb;
+      }
+
+      .help-popover-content h2,
+      .help-popover-content h3 {
+        color: #e0e0e0;
+      }
+
+      .help-popover-content p,
+      .help-popover-content ul,
+      .help-popover-content ol {
+        color: #ccc;
+      }
+
+      .help-popover-content code {
+        background: #333;
+        color: #ffb6c1;
+      }
+
+      .help-popover-content table th {
+        background: #333;
+      }
+
+      .help-popover-content table th,
+      .help-popover-content table td {
+        border-color: #444;
+      }
+
+      .help-popover-content::-webkit-scrollbar-thumb {
+        background: #555;
+      }
+
+      .help-popover-content::-webkit-scrollbar-thumb:hover {
+        background: #777;
+      }
+    }
+  </style>
+
+  <button class="help-button" type="button" title="Get help" aria-label="Get help">?</button>
+  
+  <div class="help-popover" role="dialog" aria-label="Help content">
+    <div class="help-popover-header">
+      <h3>Help</h3>
+      <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+    </div>
+    <div class="help-popover-content">
+      <!-- Markdown content will be inserted here by ux-markdown -->
+      <ux-markdown data-help-ref></ux-markdown>
+    </div>
+  </div>
+
+  <div class="help-overlay"></div>
+
+  <script>
+    if (typeof window !== 'undefined') {
+      // Help functionality - will attach to specific instances
+      function initializeHelpButton(container) {
+        const button = container.querySelector('.help-button');
+        const popover = container.querySelector('.help-popover');
+        const closeBtn = container.querySelector('.help-close-btn');
+        const overlay = container.querySelector('.help-overlay');
+
+        if (!button || !popover) return;
+
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          popover.classList.toggle('show');
+          overlay.classList.toggle('show');
+        });
+
+        closeBtn.addEventListener('click', () => {
+          popover.classList.remove('show');
+          overlay.classList.remove('show');
+        });
+
+        overlay.addEventListener('click', () => {
+          popover.classList.remove('show');
+          overlay.classList.remove('show');
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && popover.classList.contains('show')) {
+            popover.classList.remove('show');
+            overlay.classList.remove('show');
+          }
+        });
+      }
+
+      // Initialize when DOM is ready
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.help-wrapper').forEach(initializeHelpButton);
+      });
+    }
+  </script>
+</div>

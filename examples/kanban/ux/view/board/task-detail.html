@@ -1,1 +1,43 @@
-<div>Task detail placeholder</div>
+<div ux-style="task-detail-inline">
+  <div ux-style="task-detail-header">
+    <h3>{{ctx.task.title}}</h3>
+    <div style="display: flex; gap: 8px;">
+      <button @click="emit('EDIT')" ux-style="btn-secondary">Edit</button>
+      <button @click="emit('DELETE')" ux-style="btn-danger">Delete</button>
+      <button @click="emit('CLOSE')" ux-style="btn-icon">×</button>
+    </div>
+  </div>
+  <div ux-style="task-detail-content">
+    <div ux-style="task-info-grid">
+      <div>
+        <label>ID</label>
+        <p>{{ctx.task.id}}</p>
+      </div>
+      <div>
+        <label>Priority</label>
+        <p>{{ctx.task.priority}}</p>
+      </div>
+      <div>
+        <label>Assigned To</label>
+        <p>{{ctx.task.assignee}}</p>
+      </div>
+      <div>
+        <label>Due Date</label>
+        <p>{{formatDate(ctx.task.dueDate)}}</p>
+      </div>
+      <div>
+        <label>Points</label>
+        <p>{{ctx.task.points}}</p>
+      </div>
+    </div>
+    {{#if ctx.task.description}}
+      <div ux-style="task-description">
+        <h4>Description</h4>
+        <p>{{ctx.task.description}}</p>
+      </div>
+    {{/if}}
+    {{#if ctx.error}}
+      <div ux-style="alert-error">{{ctx.error}}</div>
+    {{/if}}
+  </div>
+</div>

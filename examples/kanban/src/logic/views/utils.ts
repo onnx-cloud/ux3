@@ -31,7 +31,7 @@ export function calculateNewOrders(lanes: any[], draggedId: string, dropPosition
 
 // Lane & Task Helpers
 export function findDoneLane(lanes: any[]) {
-  return lanes.find(l => l.name.toLowerCase() === 'done')?.id || (lanes[lane.length - 1]?.id);
+  return lanes.find(l => l.name.toLowerCase() === 'done')?.id || lanes[lanes.length - 1]?.id;
 }
 
 export function filteredTasks(ctx: any, laneId: string) {
@@ -327,19 +327,30 @@ export function loadBoard(ctx: any) {
 }
 
 export function loadLanes(ctx: any) {
-  // Triggered after board load
+  // Entry action after board loads; actual data fetching via FSM invoke
+  if (!ctx.lanes) {
+    ctx.lanes = [];
+  }
 }
 
 export function loadTasks(ctx: any) {
-  // Triggered after lanes load
+  // Entry action after lanes load; actual data fetching via FSM invoke
+  if (!ctx.tasks) {
+    ctx.tasks = [];
+  }
 }
 
 export function loadTaskDetail(ctx: any) {
-  // Load full task data with comments
+  // Entry action for task detail loading; FSM invoke fetches full data
+  ctx.isLoadingDetail = true;
+  if (!ctx.comments) {
+    ctx.comments = [];
+  }
 }
 
 export function reloadTaskDetail(ctx: any) {
-  // Refresh task detail from store
+  // Refresh task detail trigger; FSM invoke handles refetch
+  ctx.isLoadingDetail = false;
 }
 
 // Error Handling
@@ -355,7 +366,14 @@ export function setHovering(ctx: any, value: boolean) {
 
 // Board Setup
 export function createDefaultLanes(ctx: any, evt: any) {
-  // Triggered after board creation
+  // Triggered after board creation; initializes default lanes
+  // Default lanes: To Do, In Progress, Done
+  const defaultLanes = [
+    { id: generateUUID(), name: 'To Do', order: 1, taskCount: 0 },
+    { id: generateUUID(), name: 'In Progress', order: 2, taskCount: 0 },
+    { id: generateUUID(), name: 'Done', order: 3, taskCount: 0 }
+  ];
+  ctx.lanes = defaultLanes;
 }
 
 // Board Cloning
@@ -395,7 +413,11 @@ export function calculateStats(ctx: any, evt: any) {
 
 // Navigation
 export function navigateHome(ctx: any) {
-  // Navigation handled by router
+  // Navigation action; router handles actual navigation
+  ctx.selectedProjectId = null;
+  ctx.selectedBoardId = null;
+  ctx.selectedTaskId = null;
+  ctx.selectedLaneId = null;
 }
 
 export function selectNewBoard(ctx: any, evt: any) {

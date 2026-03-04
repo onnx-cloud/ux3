@@ -1,1 +1,15 @@
-<div>Are you sure?<button ux-event="CONFIRM">Yes</button><button ux-event="CANCEL">No</button></div>
+<div ux-style="modal-overlay">
+  <div ux-style="modal-dialog">
+    <div ux-style="modal-header">
+      <h2>{{i18n('confirmation.deleteTask')}}</h2>
+    </div>
+    <div ux-style="modal-body">
+      <p><strong>{{ctx.task.title}}</strong></p>
+      <p>{{i18n('errors.failed')}}</p>
+    </div>
+    <div ux-style="modal-footer">
+      <button ux-event="CANCEL" ux-style="btn-secondary">{{i18n('forms.cancel')}}</button>
+      <button ux-event="CONFIRM" ux-style="btn-danger">{{i18n('forms.delete')}}</button>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,25 @@
-<div>Lane manager idle view</div>
+<div ux-style="lane-manager-modal">
+  <div ux-style="lane-manager-header">
+    <h2>{{i18n('lanes.manage')}}</h2>
+    <div style="display: flex; gap: 8px;">
+      <button ux-event="ADD_LANE" ux-style="btn-primary">{{i18n('lanes.add')}}</button>
+      <div class="help-wrapper">
+        <button class="help-button" type="button" title="Get help about lanes">?</button>
+        <div class="help-popover" role="dialog" aria-label="Help content">
+          <div class="help-popover-header">
+            <h3>Lane Manager Help</h3>
+            <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+          </div>
+          <div class="help-popover-content">
+            <ux-markdown ux-src="ux/help/lane-manager.md" />
+          </div>
+        </div>
+        <div class="help-overlay"></div>
+      </div>
+      <button @click="emit('CLOSE')" ux-style="btn-icon">×</button>
+    </div>
+  </div>
+  <div ux-style="lane-manager-content">
+    <!-- lane list goes here -->
+  </div>
+</div>
