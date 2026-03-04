@@ -3,7 +3,7 @@ index: view/index.yaml
 domain: 'investamerica.money'
 site:
   title: "Invest America"
-  decription: "Your gateway to smart investments."
+  description: "Your gateway to smart investments."
 plugins:
   - name: '@ux3/plugin-tailwind-plus'
     config:
@@ -13,6 +13,8 @@ plugins:
     config:
       apiKey: 'pk_test_12345'
   - name: '@ux3/plugin-store'
+
+runtime:
   bundleKey: "ux3.bundle"      # must match manifest.runtime.bundle
   hydrationFn: "initApp"       # exported from bundle entry
   # initialState: null          # optional initial state variable name
