@@ -614,7 +614,40 @@ export class DevServer {
 
     return new Promise((resolve) => {
       this.server!.listen(this.port, this.host, () => {
+        // Extract startup info
+        const templates = (this.manifest?.config as any)?.templates || {};
+        const views = Object.keys(templates).length > 0 
+          ? Object.keys(templates).join(', ')
+          : 'none';
+
+        const routes = (this.manifest?.config as any)?.routes || [];
+        const routeViews = routes.length > 0
+          ? [...new Set(routes.map((r: any) => r.view))].join(', ')
+          : 'none';
+
+        // Use templates if available, otherwise use routes
+        const viewsDisplay = views !== 'none' ? views : routeViews;
+
+        // Get plugins from config (can be array of objects or object)
+        const pluginsArray = (this.manifest?.config as any)?.plugins;
+        let pluginsDisplay = 'none';
+        if (Array.isArray(pluginsArray) && pluginsArray.length > 0) {
+          pluginsDisplay = pluginsArray.map((p: any) => p.name || p).join(', ');
+        } else if (pluginsArray && typeof pluginsArray === 'object') {
+          const pluginKeys = Object.keys(pluginsArray);
+          if (pluginKeys.length > 0) pluginsDisplay = pluginKeys.join(', ');
+        }
+
+        // Get FSMs from config.machines (populated at build time)
+        const machines = (this.manifest?.config as any)?.machines || {};
+        const fsmDisplay = Object.keys(machines).length > 0
+          ? Object.keys(machines).join(', ')
+          : 'none';
+
         console.log(`🌐 Dev server running on http://${this.host}:${this.port}`);
+        console.log(`   Views: ${viewsDisplay}`);
+        console.log(`   Plugins: ${pluginsDisplay}`);
+        console.log(`   FSMs: ${fsmDisplay}`);
         resolve();
       });
     });

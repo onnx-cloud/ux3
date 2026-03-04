@@ -1,0 +1,20 @@
+help-wrapper:
+  base: 'relative inline-block'
+
+help-button:
+  base: 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary'
+
+help-popover:
+  base: 'absolute top-full right-0 mt-2 w-96 max-h-[32rem] bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden text-sm'
+
+help-popover-header:
+  base: 'flex items-center justify-between p-4 bg-primary text-white'
+
+help-close-btn:
+  base: 'bg-transparent border-none text-white text-xl cursor-pointer p-0 focus:outline-none'
+
+help-popover-content:
+  base: 'p-4 max-h-[26rem] overflow-y-auto bg-white'
+
+help-overlay:
+  base: 'fixed inset-0 bg-black bg-opacity-50 hidden'

@@ -1,8 +1,7 @@
 <!-- Help Button with Popover -->
 <!-- Usage: Include this component in any template and set data-help-file to the markdown file path -->
 
-<div class="help-wrapper">
-  <style>
+<div ux-style="help-wrapper">
     .help-button {
       display: inline-flex;
       align-items: center;
@@ -266,31 +265,31 @@
         background: #777;
       }
     }
-  </style>
+  <!-- styles moved to ux/style/compositions/help.yaml or help.css -->
 
-  <button class="help-button" type="button" title="Get help" aria-label="Get help">?</button>
+  <button ux-style="help-button" type="button" title="Get help" aria-label="Get help">?</button>
   
-  <div class="help-popover" role="dialog" aria-label="Help content">
-    <div class="help-popover-header">
+  <div ux-style="help-popover" role="dialog" aria-label="Help content">
+    <div ux-style="help-popover-header">
       <h3>Help</h3>
-      <button class="help-close-btn" type="button" aria-label="Close help">×</button>
+      <button ux-style="help-close-btn" type="button" aria-label="Close help">×</button>
     </div>
-    <div class="help-popover-content">
+    <div ux-style="help-popover-content">
       <!-- Markdown content will be inserted here by ux-markdown -->
       <ux-markdown data-help-ref></ux-markdown>
     </div>
   </div>
 
-  <div class="help-overlay"></div>
+  <div ux-style="help-overlay"></div>
 
   <script>
     if (typeof window !== 'undefined') {
       // Help functionality - will attach to specific instances
       function initializeHelpButton(container) {
-        const button = container.querySelector('.help-button');
-        const popover = container.querySelector('.help-popover');
-        const closeBtn = container.querySelector('.help-close-btn');
-        const overlay = container.querySelector('.help-overlay');
+        const button = container.querySelector('[ux-style="help-button"]');
+        const popover = container.querySelector('[ux-style="help-popover"]');
+        const closeBtn = container.querySelector('[ux-style="help-close-btn"]');
+        const overlay = container.querySelector('[ux-style="help-overlay"]');
 
         if (!button || !popover) return;
 
@@ -321,7 +320,7 @@
 
       // Initialize when DOM is ready
       document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.help-wrapper').forEach(initializeHelpButton);
+        document.querySelectorAll('[ux-style="help-wrapper"]').forEach(initializeHelpButton);
       });
     }
   </script>

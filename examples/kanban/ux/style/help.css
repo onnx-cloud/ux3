@@ -1,7 +1,7 @@
 /* Help System Styles for Kanban Example */
 
 /* Help Button */
-.help-button {
+[ux-style="help-button"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -18,23 +18,23 @@
   position: relative;
 }
 
-.help-button:hover {
+[ux-style="help-button"]:hover {
   background: var(--color-primary-dark, #0056b3);
   transform: scale(1.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.help-button:active {
+[ux-style="help-button"]:active {
   transform: scale(0.95);
 }
 
-.help-button:focus {
+[ux-style="help-button"]:focus {
   outline: 2px solid var(--color-focus, #0056b3);
   outline-offset: 2px;
 }
 
 /* Help Popover */
-.help-popover {
+[ux-style="help-popover"] {
   display: none;
   position: absolute;
   top: 100%;
@@ -53,7 +53,7 @@
   animation: slideIn 0.2s ease;
 }
 
-.help-popover.show {
+[ux-style="help-popover"].show {
   display: block;
 }
 
@@ -68,7 +68,7 @@
   }
 }
 
-.help-popover-header {
+[ux-style="help-popover"]-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -78,13 +78,13 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.help-popover-header h3 {
+[ux-style="help-popover"]-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
 }
 
-.help-close-btn {
+[ux-style="help-close-btn"] {
   background: none;
   border: none;
   color: white;
@@ -100,16 +100,16 @@
   transition: opacity 0.2s;
 }
 
-.help-close-btn:hover {
+[ux-style="help-close-btn"]:hover {
   opacity: 1;
 }
 
-.help-close-btn:focus {
+[ux-style="help-close-btn"]:focus {
   outline: 2px solid white;
   outline-offset: 2px;
 }
 
-.help-popover-content {
+[ux-style="help-popover"]-content {
   padding: 16px;
   max-height: 420px;
   overflow-y: auto;
@@ -117,7 +117,7 @@
 }
 
 /* Help Content Typography */
-.help-popover-content h1 {
+[ux-style="help-popover"]-content h1 {
   margin-top: 0;
   margin-bottom: 12px;
   font-size: 18px;
@@ -125,7 +125,7 @@
   color: var(--color-primary, #007bff);
 }
 
-.help-popover-content h2 {
+[ux-style="help-popover"]-content h2 {
   margin-top: 16px;
   margin-bottom: 8px;
   font-size: 14px;
@@ -135,7 +135,7 @@
   padding-bottom: 4px;
 }
 
-.help-popover-content h3 {
+[ux-style="help-popover"]-content h3 {
   margin-top: 12px;
   margin-bottom: 6px;
   font-size: 13px;
@@ -143,26 +143,26 @@
   color: #555;
 }
 
-.help-popover-content p {
+[ux-style="help-popover"]-content p {
   margin: 8px 0;
   color: #555;
   font-size: 13px;
 }
 
-.help-popover-content ul,
-.help-popover-content ol {
+[ux-style="help-popover"]-content ul,
+[ux-style="help-popover"]-content ol {
   margin: 8px 0;
   padding-left: 20px;
   color: #555;
   font-size: 13px;
 }
 
-.help-popover-content li {
+[ux-style="help-popover"]-content li {
   margin: 4px 0;
 }
 
 /* Code and inline elements */
-.help-popover-content code {
+[ux-style="help-popover"]-content code {
   background: #f5f5f5;
   padding: 2px 6px;
   border-radius: 3px;
@@ -171,7 +171,7 @@
   color: #d63384;
 }
 
-.help-popover-content pre {
+[ux-style="help-popover"]-content pre {
   background: #f5f5f5;
   padding: 12px;
   border-radius: 4px;
@@ -181,65 +181,65 @@
 }
 
 /* Tables */
-.help-popover-content table {
+[ux-style="help-popover"]-content table {
   width: 100%;
   border-collapse: collapse;
   margin: 8px 0;
   font-size: 12px;
 }
 
-.help-popover-content table th,
-.help-popover-content table td {
+[ux-style="help-popover"]-content table th,
+[ux-style="help-popover"]-content table td {
   padding: 6px;
   border: 1px solid #ddd;
   text-align: left;
 }
 
-.help-popover-content table th {
+[ux-style="help-popover"]-content table th {
   background: #f9f9f9;
   font-weight: 600;
   color: #333;
 }
 
 /* Emphasis */
-.help-popover-content strong,
-.help-popover-content b {
+[ux-style="help-popover"]-content strong,
+[ux-style="help-popover"]-content b {
   font-weight: 600;
   color: #333;
 }
 
-.help-popover-content em,
-.help-popover-content i {
+[ux-style="help-popover"]-content em,
+[ux-style="help-popover"]-content i {
   font-style: italic;
   color: #666;
 }
 
 /* Links */
-.help-popover-content a {
+[ux-style="help-popover"]-content a {
   color: var(--color-primary, #007bff);
   text-decoration: none;
   border-bottom: 1px dotted var(--color-primary, #007bff);
 }
 
-.help-popover-content a:hover {
+[ux-style="help-popover"]-content a:hover {
   text-decoration: underline;
 }
 
 /* Horizontal rules */
-.help-popover-content hr {
+[ux-style="help-popover"]-content hr {
   margin: 12px 0;
   border: none;
   border-top: 1px solid #eee;
 }
 
 /* Emojis and icons */
-.help-popover-content .icon,
-.help-popover-content .emoji {
+[ux-style="help-popover"]-content .icon,
+[ux-style="help-popover"]-content .emoji {
   margin-right: 4px;
 }
 
 /* Blockquotes */
-.help-popover-content blockquote {
+[ux-style="help-popover"]-content blockquote {
   margin: 8px 0;
   padding: 0 12px;
   border-left: 3px solid var(--color-primary, #007bff);
@@ -248,25 +248,25 @@
 }
 
 /* Scrollbar styling */
-.help-popover-content::-webkit-scrollbar {
+[ux-style="help-popover"]-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.help-popover-content::-webkit-scrollbar-track {
+[ux-style="help-popover"]-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.help-popover-content::-webkit-scrollbar-thumb {
+[ux-style="help-popover"]-content::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 3px;
 }
 
-.help-popover-content::-webkit-scrollbar-thumb:hover {
+[ux-style="help-popover"]-content::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
 
 /* Overlay for closing popover */
-.help-overlay {
+[ux-style="help-overlay"] {
   display: none;
   position: fixed;
   top: 0;
@@ -276,19 +276,19 @@
   z-index: 999;
 }
 
-.help-overlay.show {
+[ux-style="help-overlay"].show {
   display: block;
 }
 
 /* Help wrapper positioning */
-.help-wrapper {
+[ux-style="help-wrapper"] {
   position: relative;
   display: inline-block;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .help-popover {
+  [ux-style="help-popover"] {
     width: calc(100vw - 24px);
     max-width: 500px;
     right: auto;
@@ -296,102 +296,102 @@
     transform: translateX(-50%);
   }
 
-  .help-popover-content {
+  [ux-style="help-popover"]-content {
     max-height: calc(100vh - 150px);
   }
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .help-popover {
+  [ux-style="help-popover"] {
     background: #222;
     border-color: #444;
     color: #e0e0e0;
   }
 
-  .help-popover-content {
+  [ux-style="help-popover"]-content {
     background: #222;
     color: #e0e0e0;
   }
 
-  .help-popover-content h1 {
+  [ux-style="help-popover"]-content h1 {
     color: #87ceeb;
   }
 
-  .help-popover-content h2,
-  .help-popover-content h3 {
+  [ux-style="help-popover"]-content h2,
+  [ux-style="help-popover"]-content h3 {
     color: #e0e0e0;
     border-bottom-color: #444;
   }
 
-  .help-popover-content p,
-  .help-popover-content ul,
-  .help-popover-content ol {
+  [ux-style="help-popover"]-content p,
+  [ux-style="help-popover"]-content ul,
+  [ux-style="help-popover"]-content ol {
     color: #ccc;
   }
 
-  .help-popover-content code {
+  [ux-style="help-popover"]-content code {
     background: #333;
     color: #ffb6c1;
   }
 
-  .help-popover-content pre {
+  [ux-style="help-popover"]-content pre {
     background: #333;
     color: #e0e0e0;
   }
 
-  .help-popover-content table th {
+  [ux-style="help-popover"]-content table th {
     background: #333;
     color: #e0e0e0;
   }
 
-  .help-popover-content table th,
-  .help-popover-content table td {
+  [ux-style="help-popover"]-content table th,
+  [ux-style="help-popover"]-content table td {
     border-color: #444;
   }
 
-  .help-popover-content strong,
-  .help-popover-content b {
+  [ux-style="help-popover"]-content strong,
+  [ux-style="help-popover"]-content b {
     color: #e0e0e0;
   }
 
-  .help-popover-content a {
+  [ux-style="help-popover"]-content a {
     color: #87ceeb;
     border-bottom-color: #87ceeb;
   }
 
-  .help-popover-content blockquote {
+  [ux-style="help-popover"]-content blockquote {
     border-left-color: #87ceeb;
     color: #aaa;
   }
 
-  .help-popover-content::-webkit-scrollbar-thumb {
+  [ux-style="help-popover"]-content::-webkit-scrollbar-thumb {
     background: #555;
   }
 
-  .help-popover-content::-webkit-scrollbar-thumb:hover {
+  [ux-style="help-popover"]-content::-webkit-scrollbar-thumb:hover {
     background: #777;
   }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .help-button,
-  .help-popover {
+  [ux-style="help-button"],
+  [ux-style="help-popover"] {
     transition: none;
   }
 
-  .help-popover {
+  [ux-style="help-popover"] {
     animation: none;
   }
 }
 
 /* Print styles */
 @media print {
-  .help-button,
-  .help-popover,
-  .help-overlay,
-  .help-wrapper {
+  [ux-style="help-button"],
+  [ux-style="help-popover"],
+  [ux-style="help-overlay"],
+  [ux-style="help-wrapper"] {
     display: none;
   }
 }
