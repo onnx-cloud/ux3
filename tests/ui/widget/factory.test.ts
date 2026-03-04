@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { WidgetFactory, type WidgetLoader } from '../../src/ui/widget/factory';
+import { WidgetFactory, type WidgetLoader } from '@ux3/ui/widget/factory';
 
 describe('WidgetFactory - Comprehensive Tests', () => {
   let factory: WidgetFactory;

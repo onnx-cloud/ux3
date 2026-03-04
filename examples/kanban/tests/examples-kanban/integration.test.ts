@@ -59,13 +59,13 @@ describe('Kanban Integration Tests', () => {
   });
 
   it('should reject project with missing name', () => {
-    expect(() => validateProject({ name: '' })).toThrow('required');
-    expect(() => validateProject({ })).toThrow('required');
+    expect(() => validateProject({ name: '' })).toThrow('validation.projectNameRequired');
+    expect(() => validateProject({ })).toThrow('validation.projectNameRequired');
   });
 
   it('should enforce project name length limit', () => {
     const longName = 'a'.repeat(101);
-    expect(() => validateProject({ name: longName })).toThrow('characters');
+    expect(() => validateProject({ name: longName })).toThrow('validation.projectNameMax');
   });
 
   it('should validate board creation within project', () => {
@@ -88,18 +88,18 @@ describe('Kanban Integration Tests', () => {
     expect(() => validateTask({
       title: 'Test',
       priority: 'critical'  // not in [low, normal, high, urgent]
-    })).toThrow('priority');
+    })).toThrow('validation.invalidPriority');
   });
 
   it('should enforce task points range', () => {
     expect(() => validateTask({
       title: 'Test',
       points: 150  // exceeds max of 100
-    })).toThrow('between');
+    })).toThrow('validation.pointsRange');
   });
 
   it('should validate comments are not empty', () => {
-    expect(() => validateComment({ text: '    ' })).toThrow('required');
+    expect(() => validateComment({ text: '    ' })).toThrow('errors.required');
     expect(() => validateComment({ text: 'Valid comment' })).not.toThrow();
   });
 

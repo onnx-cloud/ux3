@@ -1,4 +1,4 @@
-import { i18n } from '../../../src/i18n';
+import { i18n } from '../../../generated/i18n';
 
 export function checkWIPLimit(lane: any, taskCount: number) {
   if (lane.maxTasks && taskCount > lane.maxTasks) {

@@ -354,7 +354,7 @@ export function reloadTaskDetail(ctx: any) {
 }
 
 // Error Handling
-import { i18n } from '../../../src/i18n';
+import { i18n } from '../../../generated/i18n';
 export function setError(ctx: any, evt: any) {
   ctx.error = evt.error?.message || i18n('errors.failed');
 }

@@ -44,7 +44,6 @@ export const SpaForms: Plugin = {
     app.services['ux3.service.forms'] = new FormsService();
   },
   services: {
-    'ux3.service.forms': FormsService
   },
   directives: {
     'ux-form-submit': FormSubmitDirective,

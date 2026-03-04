@@ -168,13 +168,20 @@ async function findConfigFiles(
     }
   }
 
-  // Check for ux3.config.js in project root
+  // Check for ux3.config.js or ux3.config.ts in project root
   const jsConfigPath = path.join(projectRoot, 'ux3.config.js');
+  const tsConfigPath = path.join(projectRoot, 'ux3.config.ts');
   try {
     await fs.stat(jsConfigPath);
     result.js = jsConfigPath;
   } catch {
-    // Not found, which is fine
+    // JS not found, try TS
+    try {
+      await fs.stat(tsConfigPath);
+      result.js = tsConfigPath;
+    } catch {
+      // Not found, which is fine
+    }
   }
 
   return result;
