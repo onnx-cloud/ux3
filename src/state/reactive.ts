@@ -16,6 +16,8 @@
  * ```
  */
 
+import { defaultLogger } from '../security/observability.js';
+
 type EffectFn = () => void;
 type Cleanup = () => void;
 
@@ -34,6 +36,16 @@ const trackingContext: SignalTrackingContext = {};
 type SubscriberSets = { value: Set<EffectFn>; keys: Set<EffectFn> };
 const signalSubscribers = new WeakMap<object, SubscriberSets>();
 const reactiveProxies = new WeakMap<object, any>();
+const effectSubscriptions = new WeakMap<EffectFn, Set<SubscriberSets>>();
+
+function trackEffectSubscription(effect: EffectFn, subscribers: SubscriberSets): void {
+  let deps = effectSubscriptions.get(effect);
+  if (!deps) {
+    deps = new Set<SubscriberSets>();
+    effectSubscriptions.set(effect, deps);
+  }
+  deps.add(subscribers);
+}
 
 /**
  * Create a reactive object with automatic dependency tracking
@@ -57,8 +69,7 @@ export function reactive<T extends object>(target: T): T {
       // Track value access for current effect
       if (trackingContext.currentEffect) {
         subscribers.value.add(trackingContext.currentEffect);
-        // DEBUG log
-        console.log('[reactive] subscribe value', String(prop), subscribers.value.size);
+        trackEffectSubscription(trackingContext.currentEffect, subscribers);
       }
       const value = Reflect.get(target, prop);
       // Proxy nested objects for deep reactivity
@@ -69,9 +80,6 @@ export function reactive<T extends object>(target: T): T {
     },
 
     set(target: any, prop: PropertyKey, value: any) {
-      // Pre-set debug
-      console.log('[reactive] set called for', String(prop));
-
       const oldHas = Object.prototype.hasOwnProperty.call(target, prop);
       const oldValue = Reflect.get(target, prop);
       
@@ -83,9 +91,6 @@ export function reactive<T extends object>(target: T): T {
       const result = Reflect.set(target, prop, value);
 
       const newHas = Object.prototype.hasOwnProperty.call(target, prop);
-
-      // DEBUG log
-      console.log('[reactive] notify', String(prop), 'valueSubs=', subscribers.value.size, 'keySubs=', subscribers.keys.size);
 
       // Notify value subscribers
       subscribers.value.forEach((effect) => queueEffect(effect));
@@ -102,6 +107,7 @@ export function reactive<T extends object>(target: T): T {
     has(target: any, prop: PropertyKey) {
       if (trackingContext.currentEffect) {
         subscribers.keys.add(trackingContext.currentEffect);
+        trackEffectSubscription(trackingContext.currentEffect, subscribers);
       }
       return Reflect.has(target, prop);
     },
@@ -109,6 +115,7 @@ export function reactive<T extends object>(target: T): T {
     ownKeys(target: any) {
       if (trackingContext.currentEffect) {
         subscribers.keys.add(trackingContext.currentEffect);
+        trackEffectSubscription(trackingContext.currentEffect, subscribers);
       }
       return Reflect.ownKeys(target);
     },
@@ -135,7 +142,15 @@ export function effect(fn: EffectFn): Cleanup {
   }
 
   return () => {
-    // TODO: cleanup implementation (remove from all subscriber sets)
+    const deps = effectSubscriptions.get(fn);
+    if (!deps) {
+      return;
+    }
+    for (const subscribers of deps) {
+      subscribers.value.delete(fn);
+      subscribers.keys.delete(fn);
+    }
+    effectSubscriptions.delete(fn);
   };
 }
 
@@ -144,8 +159,16 @@ export function effect(fn: EffectFn): Cleanup {
  * All state changes within callback are batched into single effect run
  */
 export function batch(fn: () => void): void {
-  fn();
-  // TODO: Implement batching with microtask queue
+  batchDepth += 1;
+
+  try {
+    fn();
+  } finally {
+    batchDepth -= 1;
+    if (batchDepth === 0 && effectQueue.size > 0 && !flushScheduled) {
+      queueEffect(() => {}); // trigger flush if needed
+    }
+  }
 }
 
 /**
@@ -153,10 +176,15 @@ export function batch(fn: () => void): void {
  */
 const effectQueue = new Set<EffectFn>();
 let flushScheduled = false;
+let batchDepth = 0;
 
 function queueEffect(effect: EffectFn): void {
   effectQueue.add(effect);
-  
+
+  if (batchDepth > 0) {
+    return;
+  }
+
   if (!flushScheduled) {
     flushScheduled = true;
     queueMicrotask(() => {
@@ -167,7 +195,7 @@ function queueEffect(effect: EffectFn): void {
         try {
           fn();
         } catch (e) {
-          console.error('[UX3] Effect error:', e);
+          defaultLogger.error('reactive.effect.error', e instanceof Error ? e : new Error(String(e)));
         }
       });
     });

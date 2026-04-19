@@ -33,7 +33,15 @@ export class UxField extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.internals = this.attachInternals();
+    const internals = this.attachInternals?.() as ElementInternals | undefined;
+    this.internals = internals ?? ({ setFormValue: () => {}, setValidity: () => {} } as any);
+
+    if (typeof this.internals.setFormValue !== 'function') {
+      (this.internals as any).setFormValue = () => {};
+    }
+    if (typeof this.internals.setValidity !== 'function') {
+      (this.internals as any).setValidity = () => {};
+    }
   }
 
   connectedCallback() {
@@ -321,12 +329,23 @@ export class UxField extends HTMLElement {
 
     if (this.error) {
       const errorId = `error-${this.name || 'field'}`;
+      this.control.setAttribute('aria-invalid', 'true');
       this.control.setAttribute('aria-describedby', errorId);
       this.internals.setValidity({ customError: true }, this.error);
     }
 
     if (this.required) {
+      this.control.setAttribute('required', '');
       this.control.setAttribute('aria-required', 'true');
+    } else {
+      this.control.removeAttribute('required');
+      this.control.removeAttribute('aria-required');
+    }
+
+    if (this.disabled) {
+      this.control.setAttribute('disabled', '');
+    } else {
+      this.control.removeAttribute('disabled');
     }
   }
 
@@ -346,9 +365,17 @@ export class UxField extends HTMLElement {
     }
 
     if (this.required) {
+      this.control.setAttribute('required', '');
       this.control.setAttribute('aria-required', 'true');
     } else {
+      this.control.removeAttribute('required');
       this.control.removeAttribute('aria-required');
+    }
+
+    if (this.disabled) {
+      this.control.setAttribute('disabled', '');
+    } else {
+      this.control.removeAttribute('disabled');
     }
   }
 

@@ -1,0 +1,44 @@
+<!-- Index/Dashboard view for tenant.saas -->
+<div ux-state="index.dashboard" class="min-h-screen bg-gray-100 p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Tenant Control Plane</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Organization Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Organization</h2>
+        <p class="text-gray-600 mb-4">Manage your organization settings, plan, and status.</p>
+        <a href="#/organization" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Go to Organization
+        </a>
+      </div>
+
+      <!-- Membership Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Team Members</h2>
+        <p class="text-gray-600 mb-4">Invite team members, manage roles, and control access.</p>
+        <a href="#/membership" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Go to Membership
+        </a>
+      </div>
+
+      <!-- Subscription Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Billing</h2>
+        <p class="text-gray-600 mb-4">Manage subscription, billing, and payment methods.</p>
+        <a href="#/subscription" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Go to Billing
+        </a>
+      </div>
+
+      <!-- Audit Log Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Audit Log</h2>
+        <p class="text-gray-600 mb-4">View compliance trails and export audit logs.</p>
+        <a href="#/audit-log" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Go to Audit Log
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

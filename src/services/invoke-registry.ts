@@ -15,8 +15,9 @@
 
 import type { InvokeSrc, InvokeService } from '../fsm/types.js';
 import type { Service } from './types.js';
-import type { AppContext } from './app.js';
+import type { AppContext } from '../ui/app.js';
 import { ServiceLifecyclePhase } from '../core/lifecycle.js';
+import { defaultLogger } from '../security/observability.js';
 
 /**
  * Result of an invoke execution
@@ -42,6 +43,7 @@ export interface InvokeOptions {
     enabled?: boolean;
     ttl?: number; // Time to live in milliseconds
     key?: string; // Custom cache key
+    maxEntries?: number; // Maximum number of cache entries to keep
   };
 }
 
@@ -137,20 +139,33 @@ export type InvokeListener = (invoke: {
  * });
  * ```
  */
+export interface InvokeRegistryOptions {
+  maxCacheSize?: number;
+  defaultCacheTTL?: number;
+}
+
 export class InvokeRegistry {
   private app: AppContext;
   private listeners: InvokeListener[] = [];
   private cache: Map<string, CacheEntry> = new Map();
+  private cacheOrder: string[] = [];
   private invokeStats: Map<string, { count: number; totalTime: number }> = new Map();
   private cacheStats: Map<string, { hits: number; misses: number }> = new Map();
+  private maxCacheSize = 1000;
   private defaultCacheTTL: number = 5 * 60 * 1000; // 5 minutes default
   private preMiddlewares: PreMiddleware[] = [];
   private postMiddlewares: PostMiddleware[] = [];
   private errorMiddlewares: ErrorMiddleware[] = [];
   private registeredServices: Set<string> = new Set(); // Track services for REGISTER phase
 
-  constructor(app: AppContext) {
+  constructor(app: AppContext, options: InvokeRegistryOptions = {}) {
     this.app = app;
+    if (options.maxCacheSize !== undefined) {
+      this.maxCacheSize = options.maxCacheSize;
+    }
+    if (options.defaultCacheTTL !== undefined) {
+      this.defaultCacheTTL = options.defaultCacheTTL;
+    }
   }
 
   /**
@@ -192,6 +207,21 @@ export class InvokeRegistry {
    */
   setDefaultCacheTTL(ttl: number): void {
     this.defaultCacheTTL = ttl;
+  }
+
+  /**
+   * Set maximum cache entries before eviction
+   */
+  setMaxCacheSize(size: number): void {
+    this.maxCacheSize = Math.max(0, size);
+    this.enforceCacheSizeLimit(this.maxCacheSize);
+  }
+
+  /**
+   * Get maximum cache size
+   */
+  getMaxCacheSize(): number {
+    return this.maxCacheSize;
   }
 
   /**
@@ -249,7 +279,11 @@ export class InvokeRegistry {
         (invoke as any).input = preResult.input;
       }
     } catch (err) {
-      console.error('[InvokeRegistry] Pre-middleware error:', err);
+      defaultLogger.error('[InvokeRegistry] Pre-middleware error', err instanceof Error ? err : new Error(String(err)), {
+        phase: 'pre-middleware',
+        service: invoke.service,
+        method: invoke.method,
+      });
       // Continue to normal execution
     }
 
@@ -264,7 +298,11 @@ export class InvokeRegistry {
         try {
           return await this.executePostMiddleware(mwContext, cached);
         } catch (err) {
-          console.error('[InvokeRegistry] Post-middleware error:', err);
+          defaultLogger.error('[InvokeRegistry] Post-middleware error', err instanceof Error ? err : new Error(String(err)), {
+            phase: 'post-middleware',
+            service: invoke.service,
+            method: invoke.method,
+          });
           return cached;
         }
       }
@@ -298,7 +336,11 @@ export class InvokeRegistry {
           return mwResult;
         }
       } catch (err) {
-        console.error('[InvokeRegistry] Error middleware error:', err);
+        defaultLogger.error('[InvokeRegistry] Error middleware error', err instanceof Error ? err : new Error(String(err)), {
+          phase: 'error-middleware',
+          service: invoke.service,
+          method: invoke.method,
+        });
       }
 
       return { success: false, error, duration: Date.now() - startTime, retries: 0, timestamp: startTime };
@@ -342,7 +384,8 @@ export class InvokeRegistry {
         if (cacheEnabled) {
           const cacheKey = options?.cache?.key || this.generateCacheKey('service', invoke.service, invoke.method || 'fetch');
           const ttl = options?.cache?.ttl ?? this.defaultCacheTTL;
-          this.setCachedResult(cacheKey, result, ttl);
+          const maxEntries = options?.cache?.maxEntries ?? this.maxCacheSize;
+          this.setCachedResult(cacheKey, result, ttl, maxEntries);
         }
 
         // Fire READY phase on successful execution (Phase 1.4)
@@ -352,7 +395,11 @@ export class InvokeRegistry {
         try {
           return await this.executePostMiddleware(mwContext, result);
         } catch (err) {
-          console.error('[InvokeRegistry] Post-middleware error:', err);
+          defaultLogger.error('[InvokeRegistry] Post-middleware error', err instanceof Error ? err : new Error(String(err)), {
+            phase: 'post-middleware',
+            service: invoke.service,
+            method: invoke.method || 'fetch',
+          });
           return result;
         }
       } catch (err) {
@@ -403,7 +450,11 @@ export class InvokeRegistry {
         return mwResult;
       }
     } catch (err) {
-      console.error('[InvokeRegistry] Error middleware error:', err);
+      defaultLogger.error('[InvokeRegistry] Error middleware error', err instanceof Error ? err : new Error(String(err)), {
+        phase: 'error-middleware',
+        service: invoke.service,
+        method: invoke.method || 'fetch',
+      });
     }
 
     return {
@@ -448,7 +499,10 @@ export class InvokeRegistry {
         (invoke as any).input = preResult.input;
       }
     } catch (err) {
-      console.error('[InvokeRegistry] Pre-middleware error:', err);
+      defaultLogger.error('[InvokeRegistry] Pre-middleware error', err instanceof Error ? err : new Error(String(err)), {
+        phase: 'pre-middleware',
+        src: srcStr,
+      });
     }
 
     // Check cache if enabled
@@ -461,7 +515,10 @@ export class InvokeRegistry {
         try {
           return await this.executePostMiddleware(mwContext, cached);
         } catch (err) {
-          console.error('[InvokeRegistry] Post-middleware error:', err);
+          defaultLogger.error('[InvokeRegistry] Post-middleware error', err instanceof Error ? err : new Error(String(err)), {
+            phase: 'post-middleware',
+            src: srcStr,
+          });
           return cached;
         }
       }
@@ -515,14 +572,18 @@ export class InvokeRegistry {
         if (cacheEnabled) {
           const cacheKey = options?.cache?.key || this.generateCacheKey('src', srcStr);
           const ttl = options?.cache?.ttl ?? this.defaultCacheTTL;
-          this.setCachedResult(cacheKey, result, ttl);
+          const maxEntries = options?.cache?.maxEntries ?? this.maxCacheSize;
+          this.setCachedResult(cacheKey, result, ttl, maxEntries);
         }
 
         // Execute post-middleware
         try {
           return await this.executePostMiddleware(mwContext, result);
         } catch (err) {
-          console.error('[InvokeRegistry] Post-middleware error:', err);
+          defaultLogger.error('[InvokeRegistry] Post-middleware error', err instanceof Error ? err : new Error(String(err)), {
+            phase: 'post-middleware',
+            src: srcStr,
+          });
           return result;
         }
       } catch (err) {
@@ -568,7 +629,10 @@ export class InvokeRegistry {
         return mwResult;
       }
     } catch (err) {
-      console.error('[InvokeRegistry] Error middleware error:', err);
+      defaultLogger.error('[InvokeRegistry] Error middleware error', err instanceof Error ? err : new Error(String(err)), {
+        phase: 'error-middleware',
+        src: srcStr,
+      });
     }
 
     return {
@@ -643,8 +707,13 @@ export class InvokeRegistry {
     // Check if cache has expired
     if (Date.now() > entry.expiresAt) {
       this.cache.delete(key);
+      this.cacheOrder = this.cacheOrder.filter((item) => item !== key);
       return undefined;
     }
+
+    // Promote entry to most recently used
+    this.cacheOrder = this.cacheOrder.filter((item) => item !== key);
+    this.cacheOrder.push(key);
 
     return entry.value;
   }
@@ -652,12 +721,29 @@ export class InvokeRegistry {
   /**
    * Set a cached result with TTL
    */
-  private setCachedResult(key: string, result: InvokeResult, ttl: number): void {
-    this.cache.set(key, {
+  private setCachedResult(key: string, result: InvokeResult, ttl: number, maxEntries: number = this.maxCacheSize): void {
+    const now = Date.now();
+    const entry: CacheEntry = {
       value: result,
-      expiresAt: Date.now() + ttl,
-      createdAt: Date.now()
-    });
+      expiresAt: now + ttl,
+      createdAt: now
+    };
+
+    if (!this.cache.has(key)) {
+      this.cacheOrder.push(key);
+    }
+
+    this.cache.set(key, entry);
+    this.enforceCacheSizeLimit(maxEntries);
+  }
+
+  private enforceCacheSizeLimit(maxEntries: number): void {
+    while (this.cacheOrder.length > maxEntries) {
+      const oldestKey = this.cacheOrder.shift();
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
+    }
   }
 
   /**
@@ -841,7 +927,12 @@ export class InvokeRegistry {
       try {
         listener(invoke);
       } catch (err) {
-        console.error('[InvokeRegistry] Listener error:', err);
+        defaultLogger.error('[InvokeRegistry] Listener error', err instanceof Error ? err : new Error(String(err)), {
+          status,
+          service: invoke.service,
+          method: invoke.method,
+          src: invoke.src,
+        });
       }
     }
   }
@@ -894,7 +985,10 @@ export class InvokeRegistry {
           meta: { serviceName }
         });
       } catch (err) {
-        console.error(`[InvokeRegistry] REGISTER hook error for ${serviceName}:`, err);
+        defaultLogger.error(`[InvokeRegistry] REGISTER hook error for ${serviceName}`, err instanceof Error ? err : new Error(String(err)), {
+          phase: 'REGISTER',
+          serviceName,
+        });
       }
     }
   }

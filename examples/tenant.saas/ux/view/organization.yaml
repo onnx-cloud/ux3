@@ -1,0 +1,94 @@
+name: Organization
+layout: admin
+initial: loading
+
+context:
+  org:
+    id: null
+    name: ""
+    plan: "starter"
+    status: "active"
+    createdAt: null
+  error: null
+  unsavedChanges: false
+
+states:
+  loading:
+    template: 'view/organization/loading.html'
+    invoke:
+      service: org-service
+      method: getOrganization
+    on:
+      SUCCESS:
+        target: viewing
+        action: onOrgLoaded
+      ERROR:
+        target: error
+        action: onLoadError
+
+  viewing:
+    template: 'view/organization/viewing.html'
+    on:
+      EDIT: editing
+      UPGRADE_PLAN:
+        target: upgrading
+        guard: canUpgradePlan
+      EXPORT_SETTINGS: { target: exporting }
+      REFRESH: loading
+
+  editing:
+    template: 'view/organization/editing.html'
+    on:
+      SAVE:
+        target: saving
+        guard: hasUnsavedChanges
+        action: clearChanges
+      CANCEL: viewing
+      CHANGE_VALUE:
+        target: editing
+        action: updateOrgField
+
+  saving:
+    invoke:
+      service: org-service
+      method: updateOrganization
+      input: '{{ ctx.org }}'
+    on:
+      SUCCESS:
+        target: viewing
+        action: onUpdateSuccess
+      ERROR:
+        target: editing
+        action: onUpdateError
+
+  upgrading:
+    template: 'view/organization/upgrading.html'
+    invoke:
+      service: stripe
+      method: initiatePlanUpgrade
+      input: '{{ ctx.org.id }}'
+    on:
+      SUCCESS:
+        target: viewing
+        action: onPlanUpgradeSuccess
+      ERROR:
+        target: viewing
+        action: onUpgradeError
+
+  exporting:
+    invoke:
+      service: org-service
+      method: exportSettings
+    on:
+      SUCCESS:
+        target: viewing
+        action: (ctx, event) => { /* trigger download */ }
+      ERROR:
+        target: viewing
+
+  error:
+    template: 'view/organization/error.html'
+    on:
+      RETRY: loading
+      DISMISS: viewing
+      CLEAR_ERROR: viewing

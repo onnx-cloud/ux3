@@ -5,6 +5,7 @@
 
 import { StateMachine } from '../fsm/state-machine.js';
 import type { AppContext } from './app.js';
+import { StructuredLogger } from '../logger/logger.js';
 
 // expose global for runtime
 declare global {
@@ -49,6 +50,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
   private unsubscribe: (() => void) | null = null;
   private eventListeners: Map<string, EventListener> = new Map();
+  private logger = new StructuredLogger('ViewComponent');
 
   /**
    * Lifecycle: element inserted into DOM
@@ -74,7 +76,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       if (!machine) {
         machine = this.app.machines[`${fsmName}FSM`];
         if (machine) {
-          console.warn(`[ViewComponent] fallback: using machine key '${fsmName}FSM' instead of '${fsmName}'`);
+          this.logger.warn('fsm.fallback', { fsmName, fallback: `${fsmName}FSM` });
         }
       }
       this.fsm = machine as any;
@@ -116,7 +118,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       // `onFSMStateChange` ignores duplicate state values, so call the invoke
       // method directly to ensure initial actions are executed.
       this.handleStateInvoke(this.currentState).catch(err => {
-        console.error('[ViewComponent] initial state invoke error', err);
+        this.logger.error('initial.invoke.error', { error: String(err) });
       });
 
       // 7. Subscribe to FSM state changes
@@ -130,7 +132,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         state: this.currentState,
       });
     } catch (error) {
-      console.error('[ViewComponent] Connection failed:', error);
+      this.logger.error('connection.failed', { error: String(error) });
       this.showErrorState(error as Error);
     }
   }
@@ -154,7 +156,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         view: this.getAttribute('ux-view'),
       });
     } catch (error) {
-      console.error('[ViewComponent] Disconnection error:', error);
+      this.logger.error('disconnection.error', { error: String(error) });
     }
   }
 
@@ -177,7 +179,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         : cfgMachine.getStateConfig?.(undefined);
 
     if (!fsmConfig.states) {
-      console.warn(`[ViewComponent] FSM has no states: ${fsmName}`);
+      this.logger.warn('fsm.no_states', { fsmName });
       return;
     }
 
@@ -187,9 +189,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       if (template) {
         this.templates.set(stateName, template);
       } else {
-        console.warn(
-          `[ViewComponent] Template not found: ${templateName}`
-        );
+        this.logger.warn('template.not_found', { templateName });
       }
     }
   }
@@ -250,7 +250,6 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * FSM state changed - swap template and rebind
    */
   private onFSMStateChange(state: string): void {
-    console.debug('[ViewComponent] onFSMStateChange', state);
     try {
       if (this.currentState !== state) {
         this.currentState = state;
@@ -262,7 +261,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
         // execute any configured invoke for this state (service call, logic function, etc)
         this.handleStateInvoke(state).catch(err => {
-          console.error('[ViewComponent] state invoke error', err);
+          this.logger.error('state.invoke.error', { state, error: String(err) });
         });
 
         this.emitTelemetry('fsm:state-change', {
@@ -271,7 +270,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         });
       }
     } catch (error) {
-      console.error('[ViewComponent] State change error:', error);
+      this.logger.error('state.change.error', { state, error: String(error) });
       this.showErrorState(error as Error);
     }
   }
@@ -282,13 +281,13 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   private renderState(state: string): void {
     const template = this.templates.get(state);
     if (!template) {
-      console.warn(`[ViewComponent] No template for state: ${state}`);
+      this.logger.warn('render.no_template', { state });
       return;
     }
 
     const contentArea = this.shadowRoot?.querySelector('#ux-content');
     if (!contentArea) {
-      console.warn('[ViewComponent] Content area not found');
+      this.logger.warn('render.no_content_area', {});
       return;
     }
 
@@ -311,7 +310,6 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * Supports service adapter invocations or local functions.
    */
   private async handleStateInvoke(state: string): Promise<void> {
-    console.debug('[ViewComponent] handleStateInvoke', state);
     try {
       // obtain raw FSM config
       const cfgMachine: any = this.fsm;
@@ -555,7 +553,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   protected stampSlotTemplate(slotName: string, data: TemplateContext): DocumentFragment | null {
     const template = this.querySelector(`template[slot="${slotName}"]`) as HTMLTemplateElement;
     if (!template) {
-      console.warn(`[ViewComponent] No template found for slot: ${slotName}`);
+      this.logger.warn('slot.template.not_found', { slotName });
       return null;
     }
     return stampTemplate(template, data);

@@ -1,0 +1,30 @@
+name: quadra.cafe
+index: view/index.yaml
+domain: 'quadra.cafe'
+
+site:
+  title: "Quadra Restaurant Operations"
+  description: "Full-stack restaurant management and customer ordering"
+
+plugins:
+  - name: '@ux3/plugin-tailwind-plus'
+    config:
+      css: 'https://cdn.tailwindcss.com'
+  - name: '@ux3/plugin-stripe'
+    config:
+      apiKey: '{{ env.STRIPE_PUBLISHABLE_KEY }}'
+  - name: '@ux3/plugin-charts-js'
+
+secrets:
+  RESTAURANT_API_KEY: "{{ env.RESTAURANT_API_KEY }}"
+  SQUARE_API_KEY: "{{ env.SQUARE_API_KEY }}"
+  JWT_SECRET: "{{ env.JWT_SECRET }}"
+
+runtime:
+  bundleKey: "quadra.cafe"
+  hydrationFn: "initRestaurant"
+
+development:
+  hot-reload: true
+  logging: "debug"
+  inspector: true

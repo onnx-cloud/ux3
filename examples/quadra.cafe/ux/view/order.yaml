@@ -1,0 +1,124 @@
+name: Order
+layout: default
+initial: creating
+
+context:
+  order:
+    id: null
+    orderNumber: null
+    items: []
+    subtotal: 0
+    tax: 0
+    total: 0
+    status: "created"
+    createdAt: null
+    notes: ""
+  selectedItems: []
+  diningMode: "dine-in"
+  tableNumber: null
+  error: null
+  estimatedReadyTime: null
+
+states:
+  creating:
+    template: 'view/order/creating.html'
+    on:
+      ADD_ITEM: browsing_menu
+      PROCEED_TO_CHECKOUT: confirming_send
+      CANCEL:
+        target: cancelled
+        guard: hasOrderItems
+
+  browsing_menu:
+    template: 'view/order/browsing_menu.html'
+    invoke:
+      service: ops-api
+      method: getMenu
+    on:
+      SELECT_ITEM:
+        target: customizing_item
+        action: selectMenuItem
+      MODIFY_ITEM:
+        target: customizing_item
+      BACK: creating
+      ERROR: error
+
+  customizing_item:
+    template: 'view/order/customizing_item.html'
+    on:
+      ADD_TO_ORDER:
+        target: creating
+        action: addItemToOrder
+      CANCEL: browsing_menu
+
+  confirming_send:
+    template: 'view/order/confirming_send.html'
+    on:
+      CONFIRM: sending_to_kitchen
+      CANCEL: creating
+
+  sending_to_kitchen:
+    invoke:
+      service: kitchen-stream
+      method: submitTicket
+      input: '{{ { order: ctx.order, notes: ctx.order.notes } }}'
+    on:
+      SUCCESS:
+        target: kitchen_tracking
+        action: onTicketSubmitted
+      ERROR:
+        target: creating
+        action: onSubmitError
+
+  kitchen_tracking:
+    template: 'view/order/kitchen_tracking.html'
+    on:
+      ITEM_READY: kitchen_tracking
+      ITEM_IN_PROGRESS: kitchen_tracking
+      ALL_READY: ready_for_pickup
+      MARK_COMPLETE: ready_for_pickup
+      CANCEL_ORDER:
+        target: cancelled
+        guard: canCancelOrder
+
+  ready_for_pickup:
+    template: 'view/order/ready_for_pickup.html'
+    on:
+      MARK_SERVED: checkout
+      EDIT_ORDER: creating
+
+  checkout:
+    template: 'view/order/checkout.html'
+    on:
+      PROCESS_PAYMENT: processing_payment
+      CANCEL: ready_for_pickup
+
+  processing_payment:
+    invoke:
+      service: payments
+      method: processPayment
+      input: '{{ { orderId: ctx.order.id, amount: ctx.order.total } }}'
+    on:
+      SUCCESS:
+        target: payment_complete
+        action: onPaymentSuccess
+      ERROR:
+        target: checkout
+        action: onPaymentError
+
+  payment_complete:
+    template: 'view/order/payment_complete.html'
+    on:
+      NEW_ORDER:
+        target: creating
+  cancelled:
+    template: 'view/order/cancelled.html'
+    on:
+      NEW_ORDER:
+        target: creating
+
+  error:
+    template: 'view/order/error.html'
+    on:
+      RETRY: creating
+      CANCEL: cancelled

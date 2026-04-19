@@ -175,6 +175,24 @@ describe('effect()', () => {
     expect(count2).toBe(2);
   });
 
+  it('should unsubscribe effects when cleaned up', async () => {
+    const state = reactive({ count: 0 });
+    let executions = 0;
+
+    const cleanup = effect(() => {
+      state.count;
+      executions++;
+    });
+
+    expect(executions).toBe(1);
+    cleanup();
+
+    state.count = 1;
+    await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+
+    expect(executions).toBe(1);
+  });
+
   it('should batch multiple updates', async () => {
     const state = reactive({ a: 0, b: 0 });
     let executions = 0;

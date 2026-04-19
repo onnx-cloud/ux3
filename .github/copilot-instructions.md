@@ -15,6 +15,7 @@ UX3 is a compile‑first SPA framework: views, styles, validation, and i18n are 
 - Example apps in `examples/` show idiomatic usage; IAM has custom dev notes in [examples/iam/README.md](examples/iam/README.md).
 - All temporary scripts, work files, adhoc tests MUST be in `./tmp/` (not `/tmp/`).
 - All plans, reviews, progress / summary reports MUST be in `./todo/` (not `/`).
+- All code should be DRY, SOLID, follow best practices, with zero anti-patterns. If you see something that could be improved, suggest a refactor or fix. 
 
 ## Workflows (npm only)
 - `npm run dev` – TS watch + example server

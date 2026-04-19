@@ -5,9 +5,10 @@
 
 import { Service } from './base.js';
 import type { JSONRPCRequest, JSONRPCResponse } from './types.js';
+import { HTTPService } from './http.js';
 
 export class JSONRPCService extends Service<JSONRPCRequest, any> {
-  private http: any;
+  private http: HTTPService;
   private requestId = 0;
   private pendingRequests = new Map<
     string | number,
@@ -16,9 +17,7 @@ export class JSONRPCService extends Service<JSONRPCRequest, any> {
 
   constructor(config: any) {
     super(config);
-    // Use HTTPService for transport
-    const { HTTPService: HTTP } = require('./http.js');
-    this.http = new HTTP(config);
+    this.http = new HTTPService(config);
   }
 
   /**

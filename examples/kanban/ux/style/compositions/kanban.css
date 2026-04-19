@@ -1,5 +1,5 @@
 /* Kanban Grid Layout */
-.kanban-grid {
+[ux-style="kanban-grid"] {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
@@ -7,7 +7,7 @@
   overflow-x: auto;
 }
 
-.lane {
+[ux-style="lane"] {
   background: #f8f9fa;
   border-radius: 8px;
   padding: 0.5rem;
@@ -16,7 +16,7 @@
   flex-direction: column;
 }
 
-.lane-header {
+[ux-style="lane-header"] {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -25,7 +25,7 @@
   border-bottom: 2px solid #e9ecef;
 }
 
-.lane-tasks {
+[ux-style="lane-tasks"] {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -35,7 +35,7 @@
   min-height: 100px;
 }
 
-.task-card {
+[ux-style="task-card"] {
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 6px;
@@ -45,30 +45,30 @@
   user-select: none;
 }
 
-.task-card:hover {
+[ux-style="task-card"]:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
 
-.task-card:active {
+[ux-style="task-card"]:active {
   cursor: grabbing;
   opacity: 0.7;
 }
 
 /* Priority Colors */
-.priority-low { color: #6c757d; }
-.priority-normal { color: #0d6efd; }
-.priority-high { color: #fd7e14; }
-.priority-urgent { color: #dc3545; }
+[ux-style="priority-low"] { color: #6c757d; }
+[ux-style="priority-normal"] { color: #0d6efd; }
+[ux-style="priority-high"] { color: #fd7e14; }
+[ux-style="priority-urgent"] { color: #dc3545; }
 
 /* WIP Limit Warning */
-.lane-wip.wip-exceeded {
+[ux-style="lane-wip"].[ux-style="wip-exceeded"] {
   color: #dc3545;
   font-weight: 700;
 }
 
 /* Modals */
-.modal {
+[ux-style="modal"] {
   position: fixed;
   top: 0;
   left: 0;
@@ -81,7 +81,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+[ux-style="modal-content"] {
   background: white;
   border-radius: 12px;
   max-width: 90vw;

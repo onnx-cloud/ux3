@@ -1,0 +1,43 @@
+services:
+  # Organization & tenant management API
+  org-service:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1/orgs'
+    auth:
+      type: bearer
+      token: '{{ secrets.TENANT_API_KEY }}'
+    headers:
+      X-Tenant-ID: '{{ ctx.tenantId }}'
+
+  # Stripe billing + subscription service
+  stripe:
+    adapter: jsonrpc
+    endpoint: 'http://localhost:3001/api/v1/billing/stripe'
+    auth:
+      type: bearer
+      token: '{{ secrets.TENANT_API_KEY }}'
+
+  # Audit log streaming service
+  audit:
+    adapter: websocket
+    url: 'ws://localhost:3001/api/v1/audit/stream'
+    auth:
+      type: bearer
+      token: '{{ secrets.TENANT_API_KEY }}'
+    reconnectAttempts: 5
+
+  # RBAC permission cache
+  rbac:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1/rbac'
+    caching:
+      enabled: true
+      ttl: 300
+
+  # User directory service
+  users:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1/users'
+    auth:
+      type: bearer
+      token: '{{ secrets.TENANT_API_KEY }}'

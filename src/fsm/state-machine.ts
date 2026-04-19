@@ -4,6 +4,8 @@
  */
 
 import type { StateEvent, StateConfig, MachineConfig, InvokeConfig } from './types.js';
+import type { InvokeRegistry } from '../services/invoke-registry.js';
+import { defaultLogger } from '../security/observability.js';
 
 type Listener<T> = (state: string, context: T) => void;
 
@@ -28,7 +30,7 @@ export class StateMachine<T extends Record<string, any>> {
   private eventQueue: StateEvent[] = [];
   private processing = false;
   private invokeHandlers: Map<string, (...args: any[]) => Promise<any>> = new Map();
-  private invokeRegistry?: any; // InvokeRegistry - weak ref to avoid circular deps
+  private invokeRegistry?: InvokeRegistry;
 
   constructor(config: MachineConfig<T>) {
     this.config = config;
@@ -52,7 +54,7 @@ export class StateMachine<T extends Record<string, any>> {
    * Set the InvokeRegistry for centralized service invocation (Phase 1.2.3)
    * When set, service invokes will use the registry for retry/monitoring/stats
    */
-  setInvokeRegistry(registry: any): void {
+  setInvokeRegistry(registry: InvokeRegistry): void {
     this.invokeRegistry = registry;
   }
 
@@ -92,8 +94,9 @@ export class StateMachine<T extends Record<string, any>> {
    */
   private transitionTo(targetState: string): void {
     if (!this.config.states[targetState]) {
-      console.error(`[FSM] Target state "${targetState}" not found`);
-      return;
+      const error = new Error(`FSM transition failed: target state "${targetState}" not found`);
+      defaultLogger.error('fsm.transition.failed', error, { targetState, currentState: this.currentState });
+      throw error;
     }
 
     const prevState = this.currentState;
@@ -168,10 +171,7 @@ export class StateMachine<T extends Record<string, any>> {
       transitionConfig.actions.forEach((action) => {
         try {
           const result = action(this.context, event);
-          if (result && typeof result === 'object') {
-            // merge returned context updates
-            this.setState(result as Partial<T>);
-          } else if (result && typeof result.then === 'function') {
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
             // async result
             (result as Promise<any>)
               .then((update) => {
@@ -179,18 +179,40 @@ export class StateMachine<T extends Record<string, any>> {
                   this.setState(update as Partial<T>);
                 }
               })
-              .catch(() => {
-                /* swallow */
+              .catch((error) => {
+                const ex = error instanceof Error ? error : new Error(String(error));
+                defaultLogger.error('fsm.action.async.error', ex, {
+                  state: this.currentState,
+                  event: event.type,
+                });
+                this.send({ type: 'ERROR', payload: { error: ex } });
               });
+          } else if (result && typeof result === 'object') {
+            // merge returned context updates
+            this.setState(result as Partial<T>);
           }
         } catch (e) {
-          console.error('[StateMachine] action error', e);
+          const ex = e instanceof Error ? e : new Error(String(e));
+          defaultLogger.error('fsm.action.error', ex, {
+            state: this.currentState,
+            event: event.type,
+          });
+          this.send({ type: 'ERROR', payload: { error: ex } });
         }
       });
     }
 
     // Transition to new state if target exists
     if (transitionConfig.target) {
+      if (!this.config.states[transitionConfig.target]) {
+        const error = new Error(`FSM transition failed: target state "${transitionConfig.target}" not found`);
+        defaultLogger.error('fsm.transition.missingTarget', error, {
+          targetState: transitionConfig.target,
+          currentState: this.currentState,
+        });
+        throw error;
+      }
+
       const prevState = this.currentState;
 
       // Execute exit actions
@@ -265,7 +287,10 @@ export class StateMachine<T extends Record<string, any>> {
             try {
               action(this.context, lastError);
             } catch (e) {
-              console.error('[FSM] errorAction threw:', e);
+              defaultLogger.error('fsm.errorAction.failed', e instanceof Error ? e : new Error(String(e)), {
+                state: stateName,
+                error: lastError,
+              });
             }
           });
         }
@@ -334,7 +359,10 @@ export class StateMachine<T extends Record<string, any>> {
         try {
           action(this.context, lastError || new Error('Unknown error'));
         } catch (e) {
-          console.error('[StateMachine] errorAction error', e);
+          defaultLogger.error('fsm.errorAction.failed', e instanceof Error ? e : new Error(String(e)), {
+            state: stateName,
+            error: lastError,
+          });
         }
       });
     }
@@ -345,7 +373,7 @@ export class StateMachine<T extends Record<string, any>> {
       
       // Ensure we only transition if still in the same state
       if (this.currentState === stateName) {
-        this.setState({ error: errorContext } as Partial<T>);
+        this.setState({ error: errorContext } as unknown as Partial<T>);
         
         // Execute exit actions
         this.executeStateActions('exit', prevState);
@@ -382,11 +410,25 @@ export class StateMachine<T extends Record<string, any>> {
       actions.forEach((action) => {
         try {
           const result = action(this.context);
-          if (result && typeof result === 'object') {
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
+            (result as Promise<Partial<T>>)
+              .then((update) => {
+                if (update && typeof update === 'object') {
+                  this.setState(update);
+                }
+              })
+              .catch((e) => {
+                defaultLogger.error('fsm.entryExitAction.failed', e instanceof Error ? e : new Error(String(e)), {
+                  state: stateName,
+                });
+              });
+          } else if (result && typeof result === 'object') {
             this.setState(result as Partial<T>);
           }
         } catch (e) {
-          console.error('[StateMachine] entry/exit action error', e);
+          defaultLogger.error('fsm.entryExitAction.failed', e instanceof Error ? e : new Error(String(e)), {
+            state: stateName,
+          });
         }
       });
     }
@@ -459,7 +501,7 @@ export class StateMachine<T extends Record<string, any>> {
   /**
    * Get machine configuration
    */
-  getMachineConfig(): StateConfig<T> {
+  getMachineConfig(): MachineConfig<T> {
     return this.config;
   }
 

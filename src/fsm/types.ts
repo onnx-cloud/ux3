@@ -12,7 +12,7 @@ export interface StateEvent {
 export interface TransitionConfig<T extends Record<string, any>> {
   target?: string;
   guard?: GuardCondition<T>;
-  actions?: Array<(context: T, event: StateEvent) => void>;
+  actions?: Array<ActionFn<T>>;
 }
 
 export type ServiceFn = (params?: any) => Promise<any>;
@@ -43,16 +43,18 @@ export interface InvokeService {
   retryDelay?: number | ((attempt: number) => number);
 }
 
-export interface InvokeConfig<T extends Record<string, any>> extends InvokeSrc, InvokeService {}
+export type InvokeConfig<T extends Record<string, any> = Record<string, any>> =
+  | InvokeSrc
+  | InvokeService;
 
 /**
  * Individual state configuration
  */
 export interface StateConfig<T extends Record<string, any>> {
   on?: Record<string, TransitionConfig<T> | string>;
-  entry?: Array<(context: T) => void>;
-  exit?: Array<(context: T) => void>;
-  invoke?: InvokeSrc | InvokeService;
+  entry?: Array<(context: T) => void | Partial<T> | Promise<Partial<T>>>;
+  exit?: Array<(context: T) => void | Partial<T> | Promise<Partial<T>>>;
+  invoke?: InvokeConfig<T>;
   errorTarget?: string;  // Auto-transition to this state on service invoke error
   errorActions?: Array<(context: T, error: Error) => void>;  // Run before transitioning to error state
 }

@@ -15,11 +15,12 @@ export const createCommand = new Command()
     const projectDir = path.resolve(process.cwd(), name);
 
     // prevent accidental overwrite
-    if (await fs.stat(projectDir).catch(() => null)) {
-      const existingPkg = path.join(projectDir, 'package.json');
-      if (await fs.stat(existingPkg).catch(() => null)) {
+    const existingProject = await fs.stat(projectDir).catch(() => null);
+    if (existingProject) {
+      const entries = await fs.readdir(projectDir);
+      if (entries.length > 0) {
         console.error(
-          `❗ Project directory already contains a package.json, aborting to avoid overwrite.`
+          `❗ Project directory already exists and is not empty, aborting to avoid overwrite.`
         );
         process.exit(1);
       }
@@ -29,8 +30,6 @@ export const createCommand = new Command()
     await fs.mkdir(projectDir, { recursive: true });
     await fs.mkdir(path.join(projectDir, 'src'), { recursive: true });
     await fs.mkdir(path.join(projectDir, 'public'), { recursive: true });
-
-    // TODO: if package.json exists, abort to prevent overwriting
 
     // Create package.json
     const packageJson = {

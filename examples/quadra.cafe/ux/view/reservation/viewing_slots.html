@@ -1,0 +1,39 @@
+<div ux-state="reservation.viewing_slots" class="max-w-4xl mx-auto p-6">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Reserve a Table</h1>
+  
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Date & Time</label>
+        <input type="datetime-local" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Party Size</label>
+        <select class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md">
+          <option value="1">1 Guest</option>
+          <option value="2" selected>2 Guests</option>
+          <option value="3">3 Guests</option>
+          <option value="4">4 Guests</option>
+          <option value="6">6+ Guests</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">Available Tables</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    {{#each ctx.availableTables}}
+    <div class="bg-white border border-gray-300 rounded-lg p-4 hover:border-blue-500 cursor-pointer">
+      <p class="font-semibold text-gray-900">Table {{ this.number }}</p>
+      <p class="text-sm text-gray-600">Seats: {{ this.capacity }}</p>
+      <button type="button" ux-event="SELECT_TABLE" class="mt-3 w-full px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+        Select
+      </button>
+    </div>
+    {{/each}}
+  </div>
+
+  <button type="button" ux-event="REQUEST_WAITLIST" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+    Join Waitlist
+  </button>
+</div>

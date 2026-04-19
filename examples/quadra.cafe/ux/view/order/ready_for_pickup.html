@@ -1,0 +1,38 @@
+<div ux-state="order.ready_for_pickup" class="max-w-4xl mx-auto p-6">
+  <div class="bg-green-50 border-2 border-green-500 rounded-lg p-6 text-center mb-6">
+    <h1 class="text-3xl font-bold text-green-900 mb-2">Order Ready!</h1>
+    <p class="text-green-800 text-lg">Order #{{ ctx.order.orderNumber }} is ready for pickup</p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="font-semibold text-gray-900 mb-4">Order Summary</h2>
+    <div class="space-y-2 pb-4 border-b">
+      {{#each ctx.order.items}}
+      <div class="flex justify-between">
+        <span>{{ this.name }} x {{ this.quantity }}</span>
+        <span>${{ (this.price * this.quantity).toFixed(2) }}</span>
+      </div>
+      {{/each}}
+    </div>
+    <div class="mt-4 space-y-2">
+      <div class="flex justify-between">
+        <span>Subtotal</span>
+        <span>${{ ctx.order.subtotal.toFixed(2) }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Tax</span>
+        <span>${{ ctx.order.tax.toFixed(2) }}</span>
+      </div>
+      <div class="flex justify-between font-bold text-lg text-green-600">
+        <span>Total</span>
+        <span>${{ ctx.order.total.toFixed(2) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="button" ux-event="MARK_SERVED" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-semibold">
+      Proceed to Payment
+    </button>
+  </div>
+</div>

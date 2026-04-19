@@ -50,7 +50,7 @@ export class UxFieldArray extends HTMLElement {
     removeBtn.className = 'field-array-remove';
     removeBtn.textContent = 'Remove';
     removeBtn.addEventListener('click', () => {
-      this.removeItem(container);
+      this.removeItem(wrapper);
     });
 
     const wrapper = document.createElement('div');
@@ -106,6 +106,16 @@ export class UxFieldArray extends HTMLElement {
         const fieldName = field.getAttribute('name');
         const control = field.querySelector('input, textarea, select') as HTMLInputElement;
         if (fieldName && control) {
+          fieldValues[fieldName] = control.value;
+        }
+      }
+
+      // Collect values from plain fields when no ux-field wrapper is present
+      const controls = Array.from(item.querySelectorAll('input, textarea, select')) as HTMLInputElement[];
+      for (const control of controls) {
+        if (control.closest('ux-field')) continue;
+        const fieldName = control.getAttribute('name');
+        if (fieldName) {
           fieldValues[fieldName] = control.value;
         }
       }

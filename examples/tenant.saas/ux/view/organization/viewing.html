@@ -1,0 +1,41 @@
+<div ux-state="organization.viewing">
+  <div class="p-8">
+    <h1 class="text-3xl font-bold mb-6">{{ i18n.organization.title }}</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <dl class="grid grid-cols-2 gap-4">
+        <div>
+          <dt class="text-sm font-medium text-gray-600">{{ i18n.organization.viewing.nameLabel }}</dt>
+          <dd class="text-lg font-semibold">{{ ctx.org.name }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-600">{{ i18n.organization.viewing.planLabel }}</dt>
+          <dd class="text-lg font-semibold">{{ ctx.org.plan }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-600">{{ i18n.organization.viewing.statusLabel }}</dt>
+          <dd class="text-lg font-semibold capitalize">{{ ctx.org.status }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-600">{{ i18n.organization.viewing.createdLabel }}</dt>
+          <dd class="text-lg font-semibold">{{ ctx.org.createdAt }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="button" ux-event="EDIT" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        {{ i18n.organization.viewing.editButton }}
+      </button>
+      <button type="button" ux-event="UPGRADE_PLAN" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+        {{ i18n.organization.viewing.upgradeButton }}
+      </button>
+      <button type="button" ux-event="EXPORT_SETTINGS" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+        {{ i18n.organization.viewing.exportButton }}
+      </button>
+      <button type="button" ux-event="REFRESH" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+        {{ i18n.actions.refresh }}
+      </button>
+    </div>
+  </div>
+</div>

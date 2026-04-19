@@ -40,7 +40,9 @@ your own service to enable online sync.
   corresponding `ux/view/**/*.html` files.
 - Add translation strings under `ux/i18n/<lang>/*.json` and run `npm run build` –
   the compiler will regenerate the `I18nKey` union automatically.
-- Styles are defined in `ux/style/compositions/kanban.css` and tokens under
+- Styles are defined in `ux/style/compositions/kanban.yaml` (and other
+  composition files); classes once held in `kanban.css` have been migrated to
+  semantic `ux-style` keys.
   `ux/token/*.yaml`.
 
 ## Validation & errors

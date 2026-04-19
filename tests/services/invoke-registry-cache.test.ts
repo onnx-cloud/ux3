@@ -211,6 +211,41 @@ describe('InvokeRegistry - Caching (Phase 1.3.1)', () => {
 
       expect(callCount).toBe(2);
     });
+
+    it('should evict oldest entries when maxEntries is exceeded', async () => {
+      const options: InvokeOptions = {
+        cache: { enabled: true, maxEntries: 2 }
+      };
+
+      await registry.executeServiceInvoke(
+        { service: 'api', method: 'getUser', input: { id: 1 } },
+        undefined,
+        options
+      );
+
+      await registry.executeServiceInvoke(
+        { service: 'api', method: 'getPost', input: { id: 1 } },
+        undefined,
+        options
+      );
+
+      await registry.executeServiceInvoke(
+        { service: 'cache_service', method: 'slowFetch', input: { key: 'x' } },
+        undefined,
+        options
+      );
+
+      expect(callCount).toBe(3);
+
+      // First entry should be evicted by the maxEntries limit
+      await registry.executeServiceInvoke(
+        { service: 'api', method: 'getUser', input: { id: 1 } },
+        undefined,
+        options
+      );
+
+      expect(callCount).toBe(4);
+    });
   });
 
   describe('Cache Invalidation', () => {

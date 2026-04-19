@@ -1,0 +1,62 @@
+{
+  "organization": {
+    "title": "Organization Settings",
+    "loading": { "label": "Loading organization..." },
+    "viewing": {
+      "nameLabel": "Organization Name",
+      "planLabel": "Current Plan",
+      "statusLabel": "Status",
+      "createdLabel": "Created",
+      "editButton": "Edit Settings",
+      "upgradeButton": "Upgrade Plan",
+      "exportButton": "Export Configuration"
+    },
+    "editing": {
+      "label": "Edit Organization",
+      "editButton": "Edit",
+      "saveButton": "Save Changes",
+      "cancelButton": "Cancel"
+    }
+  },
+  "membership": {
+    "title": "Team Members",
+    "inviteButton": "Invite Member",
+    "pendingInvites": "Pending Invites",
+    "roles": {
+      "admin": "Administrator (full access)",
+      "editor": "Editor (manage content & members)",
+      "viewer": "Viewer (read-only access)"
+    }
+  },
+  "subscription": {
+    "title": "Billing & Subscription",
+    "plans": {
+      "starter": "Starter - $29/mo",
+      "professional": "Professional - $79/mo",
+      "enterprise": "Enterprise - Custom"
+    },
+    "status": {
+      "active": "Active",
+      "past_due": "Payment Past Due",
+      "trialing": "Trial Period",
+      "cancelled": "Cancelled"
+    }
+  },
+  "auditLog": {
+    "title": "Audit Log",
+    "filters": "Filters",
+    "exportButton": "Export as CSV",
+    "columns": {
+      "date": "Date",
+      "user": "User",
+      "entityType": "Entity Type",
+      "action": "Action"
+    }
+  },
+  "actions": {
+    "SUBMIT": "Submit",
+    "refresh": "Refresh",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

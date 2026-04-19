@@ -23,7 +23,7 @@ export class WebSocketService extends Service<WebSocketMessage> {
   private messageQueue: WebSocketMessage[] = [];
 
   constructor(config: WebSocketConfig) {
-    super();
+    super(config);
     this.wsConfig = {
       reconnectAttempts: 5,
       reconnectInterval: 3000,
@@ -32,7 +32,7 @@ export class WebSocketService extends Service<WebSocketMessage> {
       ...config,
     };
 
-    if (this.config.autoConnect) {
+    if (this.wsConfig.autoConnect) {
       this.connect();
     }
 
@@ -91,7 +91,7 @@ export class WebSocketService extends Service<WebSocketMessage> {
           this.messageHandlers.delete(message.id);
         }
         resolve(null);
-      }, this.config.messageTimeout);
+      }, this.wsConfig.messageTimeout || 30000);
 
       if (message.id) {
         this.messageHandlers.set(message.id, (response) => {
@@ -212,8 +212,8 @@ export class WebSocketService extends Service<WebSocketMessage> {
    * Attempt reconnection
    */
   private attemptReconnect(): void {
-    const reconnectAttempts = this.config.reconnectAttempts || 5;
-    const reconnectInterval = this.config.reconnectInterval || 1000;
+    const reconnectAttempts = this.wsConfig.reconnectAttempts || 5;
+    const reconnectInterval = this.wsConfig.reconnectInterval || 1000;
     
     if (this.reconnectCount < reconnectAttempts) {
       this.reconnectCount++;

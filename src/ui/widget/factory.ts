@@ -3,7 +3,6 @@
  */
 
 import type { Widget, WidgetConfig } from './widget.js';
-import { AsyncLocalStorage } from 'async_hooks';
 
 /**
  * Widget loader function
@@ -17,8 +16,8 @@ export class WidgetFactory {
   private loaders: Map<string, WidgetLoader> = new Map();
   private cache: Map<string, unknown> = new Map();
   private pendingLoads: Map<string, Promise<unknown>> = new Map();
-  // AsyncLocalStorage used to track current loader context and detect self-references
-  private context = new AsyncLocalStorage<string>();
+  // Tracks widgets currently being resolved to detect circular dependencies.
+  private activeLoads: Set<string> = new Set();
 
   /**
    * Register a widget synchronously
@@ -46,8 +45,7 @@ export class WidgetFactory {
 
     // Wait for pending load if in progress
     if (this.pendingLoads.has(name)) {
-      const current = this.context.getStore();
-      if (current === name) {
+      if (this.activeLoads.has(name)) {
         // loader attempted to get the same name while it was still running
         throw new Error(`Circular widget dependency: ${name}`);
       }
@@ -79,8 +77,8 @@ export class WidgetFactory {
       // register as pending immediately so recursive get() calls can see it
       this.pendingLoads.set(name, deferred.promise);
 
-      // run loader inside the async context to track origin
-      this.context.run(name, async () => {
+      this.activeLoads.add(name);
+      void (async () => {
         try {
           const widget = await this.loadWidget(name, loader);
           this.cache.set(name, widget);
@@ -88,9 +86,10 @@ export class WidgetFactory {
         } catch (err) {
           deferred.reject(err);
         } finally {
+          this.activeLoads.delete(name);
           this.pendingLoads.delete(name);
         }
-      });
+      })();
 
       return deferred.promise;
     }
@@ -176,9 +175,13 @@ export class WidgetFactory {
     if (name) {
       this.cache.delete(name);
       this.loaders.delete(name);
+      this.pendingLoads.delete(name);
+      this.activeLoads.delete(name);
     } else {
       this.cache.clear();
       this.loaders.clear();
+      this.pendingLoads.clear();
+      this.activeLoads.clear();
     }
   }
 

@@ -234,7 +234,7 @@ export class ServiceCallRecorder {
     method: string,
     urlPattern?: RegExp
   ): void {
-    const found = this.calls find(
+    const found = this.calls.find(
       (c) =>
         c.request.method === method &&
         (!urlPattern || urlPattern.test(c.request.baseUrl || ''))

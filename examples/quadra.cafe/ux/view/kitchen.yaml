@@ -1,0 +1,59 @@
+name: Kitchen
+layout: kitchen
+initial: connecting
+
+context:
+  tickets: []
+  completedTickets: []
+  selectedTicket: null
+  stationsFilter: "all"
+  error: null
+
+states:
+  connecting:
+    template: 'view/kitchen/connecting.html'
+    invoke:
+      service: kitchen-stream
+      method: connect
+    on:
+      SUCCESS: monitoring
+      ERROR: error
+
+  monitoring:
+    template: 'view/kitchen/monitoring.html'
+    on:
+      TICKET_RECEIVED:
+        target: monitoring
+        action: onTicketReceived
+      START_PREP:
+        target: updating_ticket
+        action: startTicketPrep
+      MARK_READY:
+        target: updating_ticket
+        action: markTicketReady
+      EXPEDITE: expediting
+      FILTER_STATION:
+        target: monitoring
+        action: filterByStation
+
+  updating_ticket:
+    invoke:
+      service: kitchen-stream
+      method: updateTicket
+      input: '{{ ctx.selectedTicket }}'
+    on:
+      SUCCESS: monitoring
+      ERROR: monitoring
+
+  expediting:
+    template: 'view/kitchen/expediting.html'
+    on:
+      CONFIRM:
+        target: updating_ticket
+        action: setPriorityHigh
+      CANCEL: monitoring
+
+  error:
+    template: 'view/kitchen/error.html'
+    on:
+      RETRY: connecting

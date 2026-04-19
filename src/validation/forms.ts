@@ -154,10 +154,12 @@ export class FormValidator {
  */
 export class FormHandler {
   private validator: FormValidator;
+  private config: FormConfig;
   private isSubmitting = false;
 
   constructor(config: FormConfig) {
     this.validator = new FormValidator(config);
+    this.config = config;
   }
 
   /**
@@ -171,15 +173,25 @@ export class FormHandler {
     // Validate form
     if (!this.validator.validateAll(data)) {
       this.isSubmitting = false;
+      if (this.config.onError) {
+        this.config.onError(this.validator.getErrors());
+      }
       return false;
     }
 
     try {
-      // TODO: Call onSubmit callback
+      if (this.config.onSubmit) {
+        await this.config.onSubmit(data);
+      }
       this.isSubmitting = false;
       return true;
     } catch (error) {
       this.isSubmitting = false;
+      if (this.config.onError) {
+        this.config.onError({
+          _submit: error instanceof Error ? error.message : 'Form submission failed'
+        });
+      }
       return false;
     }
   }

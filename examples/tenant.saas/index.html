@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenant Control Plane</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div id="app" class="min-h-screen"></div>
+  <script type="module">
+    import { initMultiTenant } from './generated/__entry__.js';
+    window.addEventListener('DOMContentLoaded', async () => {
+      const app = await initMultiTenant();
+      const root = document.getElementById('app');
+      root.appendChild(app);
+    });
+  </script>
+</body>
+</html>

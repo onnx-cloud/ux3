@@ -18,14 +18,14 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   reporter: [
-    ['html', { outputFolder: 'playwright-report/html' }],
+    ['html', { outputFolder: 'playwright-report-html' }],
     ['json', { outputFile: 'playwright-report/results.json' }],
     ['junit', { outputFile: 'playwright-report/results.xml' }],
     ['list'],
   ],
 
   use: {
-    baseURL: 'http://127.0.0.1:1337',
+    baseURL: 'http://127.0.0.1:1340',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -70,9 +70,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev:iam',
-    url: 'http://127.0.0.1:1337',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run dev:iam -- --port 1340',
+    url: 'http://127.0.0.1:1340',
+    reuseExistingServer: false,
     timeout: 120000,
   },
 });

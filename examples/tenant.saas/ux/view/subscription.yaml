@@ -1,0 +1,145 @@
+name: Subscription
+layout: admin
+initial: loading
+
+context:
+  subscription:
+    id: null
+    plan: "starter"
+    status: "active"
+    currentPeriodEnd: null
+    nextBillingDate: null
+  paymentMethod: null
+  invoices: []
+  newPlan: null
+  error: null
+
+states:
+  loading:
+    template: 'view/subscription/loading.html'
+    invoke:
+      service: stripe
+      method: getSubscription
+    on:
+      SUCCESS:
+        target: viewing
+        action: onSubscriptionLoaded
+      ERROR:
+        target: error
+
+  viewing:
+    template: 'view/subscription/viewing.html'
+    on:
+      OPEN_UPGRADE: upgrade_choosing_plan
+      OPEN_DOWNGRADE: downgrade_choosing_plan
+      MANAGE_PAYMENT: managing_payment
+      OPEN_INVOICES: viewing_invoices
+      CANCEL_SUBSCRIPTION: confirming_cancellation
+
+  upgrade_choosing_plan:
+    template: 'view/subscription/upgrade_choosing_plan.html'
+    on:
+      SELECT_PLAN:
+        target: confirming_upgrade
+        action: setNewPlan
+      CANCEL: viewing
+
+  confirming_upgrade:
+    template: 'view/subscription/confirming_upgrade.html'
+    on:
+      CONFIRM:
+        target: processing_upgrade
+      CANCEL: upgrade_choosing_plan
+
+  processing_upgrade:
+    invoke:
+      service: stripe
+      method: upgradeSubscription
+      input: '{{ { newPlan: ctx.newPlan } }}'
+    on:
+      SUCCESS:
+        target: upgrade_complete
+        action: onUpgradeComplete
+      ERROR:
+        target: viewing
+        action: onUpgradeError
+
+  upgrade_complete:
+    template: 'view/subscription/upgrade_complete.html'
+    on:
+      DONE: viewing
+
+  downgrade_choosing_plan:
+    template: 'view/subscription/downgrade_choosing_plan.html'
+    on:
+      SELECT_PLAN:
+        target: confirming_downgrade
+        action: setNewPlan
+      CANCEL: viewing
+
+  confirming_downgrade:
+    template: 'view/subscription/confirming_downgrade.html'
+    on:
+      CONFIRM:
+        target: processing_downgrade
+      CANCEL: downgrade_choosing_plan
+
+  processing_downgrade:
+    invoke:
+      service: stripe
+      method: downgradeSubscription
+      input: '{{ { newPlan: ctx.newPlan } }}'
+    on:
+      SUCCESS:
+        target: viewing
+        action: onDowngradeComplete
+      ERROR:
+        target: viewing
+        action: onDowngradeError
+
+  managing_payment:
+    template: 'view/subscription/managing_payment.html'
+    on:
+      UPDATE_PAYMENT:
+        target: updating_payment
+      VIEW_PAYMENT_HISTORY: viewing_invoices
+      CANCEL: viewing
+
+  updating_payment:
+    invoke:
+      service: stripe
+      method: updatePaymentMethod
+      input: '{{ ctx.paymentMethod }}'
+    on:
+      SUCCESS:
+        target: managing_payment
+      ERROR: managing_payment
+
+  viewing_invoices:
+    template: 'view/subscription/viewing_invoices.html'
+    on:
+      BACK: viewing
+
+  confirming_cancellation:
+    template: 'view/subscription/confirming_cancellation.html'
+    on:
+      CONFIRM:
+        target: cancelled_processing
+      CANCEL: viewing
+
+  cancelled_processing:
+    invoke:
+      service: stripe
+      method: cancelSubscription
+    on:
+      SUCCESS:
+        target: viewing
+        action: onSubscriptionCancelled
+      ERROR:
+        target: viewing
+        action: onCancellationError
+
+  error:
+    template: 'view/subscription/error.html'
+    on:
+      RETRY: loading

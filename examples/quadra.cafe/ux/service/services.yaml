@@ -1,0 +1,61 @@
+services:
+  # Core operations API (orders, reservations, menu)
+  ops-api:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1'
+    auth:
+      type: bearer
+      token: '{{ secrets.RESTAURANT_API_KEY }}'
+    headers:
+      X-Location-ID: '{{ ctx.locationId }}'
+
+  # Real-time kitchen display system (KDS)
+  kitchen-stream:
+    adapter: websocket
+    url: 'ws://localhost:3001/api/v1/kitchen/stream'
+    auth:
+      type: bearer
+      token: '{{ secrets.RESTAURANT_API_KEY }}'
+    reconnectAttempts: 10
+    reconnectInterval: 1000
+
+  # Payment processing (Stripe/Square)
+  payments:
+    adapter: jsonrpc
+    endpoint: 'http://localhost:3001/api/v1/payments'
+    auth:
+      type: bearer
+      token: '{{ secrets.RESTAURANT_API_KEY }}'
+
+  # Real-time table status tracking
+  tables:
+    adapter: websocket
+    url: 'ws://localhost:3001/api/v1/tables/status'
+    reconnectAttempts: 5
+
+  # Inventory management
+  inventory:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1/inventory'
+    auth:
+      type: bearer
+      token: '{{ secrets.RESTAURANT_API_KEY }}'
+    caching:
+      enabled: true
+      ttl: 60
+
+  # Staff & shift management
+  staff:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1/staff'
+    auth:
+      type: bearer
+      token: '{{ secrets.RESTAURANT_API_KEY }}'
+
+  # Analytics & reporting
+  analytics:
+    adapter: http
+    baseUrl: 'http://localhost:3001/api/v1/analytics'
+    caching:
+      enabled: true
+      ttl: 300

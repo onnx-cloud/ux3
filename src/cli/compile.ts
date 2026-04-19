@@ -10,7 +10,7 @@ import * as fs from 'fs/promises';
 import * as fss from 'fs';
 import * as path from 'path';
 import { Command } from 'commander';
-import YAML from 'yaml';
+import * as YAML from 'yaml';
 import { compileAllViews } from '../build/view-compiler.js';
 import { mergeStyles } from '../build/style-utils.js';
 
@@ -26,7 +26,11 @@ interface CompilerConfig {
 async function loadConfig(configPath: string): Promise<CompilerConfig> {
   const content = await fs.readFile(configPath, 'utf-8');
   const parsed = YAML.parse(content) as Record<string, unknown>;
-  return (parsed.compile as CompilerConfig) || (parsed as CompilerConfig);
+  const compiled = (parsed as any).compile;
+  if (compiled && typeof compiled === 'object') {
+    return compiled as CompilerConfig;
+  }
+  return parsed as unknown as CompilerConfig;
 }
 
 async function runCompiler(config: CompilerConfig): Promise<void> {
@@ -93,8 +97,6 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
     await fs.writeFile(outPath, JSON.stringify(stylesMap, null, 2));
     console.log(`[UX3 Compiler] Generated styles map at ${outPath}`);
   }
-  // TODO: Generate index.ts exports
-
   console.log('\n✓ Compilation complete');
 }
 
@@ -172,7 +174,7 @@ async function main(): Promise<void> {
   await runCompiler(config);
 }
 
-if (import.meta.main) {
+if ((import.meta as any).main) {
   main().catch((e) => {
     console.error('Error:', e);
     process.exit(1);
