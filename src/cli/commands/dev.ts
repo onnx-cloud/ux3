@@ -59,7 +59,7 @@ export const devCommand = new Command()
       const schemas = loadSchemas();
 
       // Build function
-      const performBuild = async () => {
+      const performBuild = async (): Promise<boolean> => {
         const startTime = Date.now();
         
         try {
@@ -97,12 +97,8 @@ export const devCommand = new Command()
           const viewsDir = path.join(projectDir, 'ux', 'view');
           const viewsOutputDir = path.join(generatedDir, 'views');
           if (fs.existsSync(viewsDir)) {
-            try {
-              const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir, projectDir);
-              await viewCompiler.compileAllViews();
-            } catch (e) {
-              console.warn(`[Dev] View compilation warning: ${e instanceof Error ? e.message : String(e)}`);
-            }
+            const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir, projectDir);
+            await viewCompiler.compileAllViews();
           }
 
           const buildTime = Date.now() - startTime;
@@ -189,11 +185,13 @@ export const devCommand = new Command()
           }
 
           console.log(`✅ Rebuilt in ${buildTime}ms`);
+          return true;
         } catch (error) {
           console.error(
             `❌ Build error:`,
             error instanceof Error ? error.message : String(error)
           );
+          return false;
         }
       };
 
@@ -204,7 +202,10 @@ export const devCommand = new Command()
 
       // Perform initial build
       console.log(`🔨 Building initial project...`);
-      await performBuild();
+      const initialBuildSuccess = await performBuild();
+      if (!initialBuildSuccess) {
+        process.exit(1);
+      }
       console.log(`\n✅ Initial build complete!\n`);
 
       // Start dev server

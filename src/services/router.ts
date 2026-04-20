@@ -87,14 +87,10 @@ export class Router {
         params: {},
       },
       canNavigate: (targetView: string) => {
-        // Check if the target view exists and is registered
-        const fsmName = `${targetView}`;
-        const machine = this.machines.get(fsmName);
-        if (!machine) return false;
-
-        // Check if target FSM is in a state with a template
-        // (This is a simplification; full implementation would check machine.getStateConfig)
-        return true;
+        // Check if the target view exists and has a registered FSM.
+        if (this.machines.has(targetView)) return true;
+        if (this.machines.has(`${targetView}FSM`)) return true;
+        return false;
       },
       getLabel: (route: NavRoute, i18nData: Record<string, any> = i18n) => {
         if (!route.label) return route.view;

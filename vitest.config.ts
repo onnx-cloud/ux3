@@ -75,7 +75,7 @@ export default defineConfig({
     reporters: [
       'default',
       ['json', { outputFile: 'test-results/vitest/results.json' }],
-      ['html', { outputFolder: 'test-results/vitest/html' }],
+      ['html', { outputFolder: 'html' }],
     ],
     coverage: {
       provider: 'v8',

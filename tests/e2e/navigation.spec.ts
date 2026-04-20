@@ -26,6 +26,20 @@ import { test, expect, Page } from '@playwright/test';
  */
 async function waitForApp(page: Page, timeout = 12000) {
   await page.waitForFunction(() => !!(window as any).__ux3App, { timeout });
+
+  const mountedGuard = () => {
+    const container = document.querySelector('#ux-content');
+    if (!container) return false;
+    const children = Array.from(container.querySelectorAll(':scope > *'));
+    return (
+      children.length === 1 &&
+      children[0].tagName.toLowerCase().startsWith('ux-')
+    );
+  };
+
+  await page.waitForFunction(mountedGuard, { timeout });
+  await page.waitForTimeout(150);
+  await page.waitForFunction(mountedGuard, { timeout: Math.min(timeout, 3000) });
 }
 
 /**
@@ -69,7 +83,7 @@ test.describe('Bundle injection', () => {
     const importMatch = scriptText.match(/import\('([^']+)'\)/);
     expect(importMatch).toBeTruthy();
     const bundleUrl = importMatch![1];
-    expect(bundleUrl).toContain('bundle.ts');
+    expect(bundleUrl).toContain('bundle.js');
     
     // Verify the bundle URL points to a real file
     const resp = await page.request.get(bundleUrl);
@@ -192,8 +206,15 @@ test.describe('View mounting by route', () => {
     await page.goto('/login');
     await waitForApp(page);
 
-    const count = await page.locator('#ux-content > *').count();
-    expect(count).toBe(1);
+    const viewCount = await page.evaluate(() => {
+      const container = document.querySelector('#ux-content');
+      if (!container) return 0;
+      return Array.from(container.children).filter(el =>
+        el.tagName.toLowerCase().startsWith('ux-')
+      ).length;
+    });
+
+    expect(viewCount).toBe(1);
   });
 });
 
@@ -276,6 +297,12 @@ test.describe('Anchor click interception', () => {
       a.id = 'spa-test-link';
       a.href = '/sign-up';
       a.textContent = 'Go to sign-up';
+      a.style.position = 'fixed';
+      a.style.top = '10px';
+      a.style.left = '10px';
+      a.style.zIndex = '9999';
+      a.style.background = 'white';
+      a.style.padding = '4px 8px';
       document.body.appendChild(a);
     });
 
@@ -293,6 +320,13 @@ test.describe('Anchor click interception', () => {
       const a = document.createElement('a');
       a.id = 'param-link';
       a.href = '/market/NYSE';
+      a.textContent = 'Go to market';
+      a.style.position = 'fixed';
+      a.style.top = '10px';
+      a.style.left = '10px';
+      a.style.zIndex = '9999';
+      a.style.background = 'white';
+      a.style.padding = '4px 8px';
       document.body.appendChild(a);
     });
 

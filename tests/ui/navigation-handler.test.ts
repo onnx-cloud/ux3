@@ -92,11 +92,18 @@ describe('BUG-2: mountView via navigateTo', () => {
     expect(content!.firstElementChild!.tagName.toLowerCase()).toBe('ux-home');
   });
 
-  it('should warn but not throw when #ux-content is absent', () => {
+  it('should create a fallback #ux-content and mount the view when the host shell is absent', () => {
     document.body.innerHTML = ''; // remove #ux-content
     const ctx = makeCtx();
-    // Should not throw
+
+    expect(document.querySelector('#ux-content')).toBeNull();
     expect(() => navigateTo('/news', ctx)).not.toThrow();
+
+    const content = document.querySelector('#ux-content');
+    expect(content).not.toBeNull();
+    expect(content!.firstElementChild).not.toBeNull();
+    expect(content!.firstElementChild!.tagName.toLowerCase()).toBe('ux-news');
+    expect(content!.dataset.ux3Fallback).toBe('true');
   });
 });
 
@@ -241,7 +248,10 @@ describe('setupNavigation: <a> click interception', () => {
     const a = document.createElement('a');
     a.href = 'https://example.com/page';
     document.body.appendChild(a);
-    // jsdom won't actually navigate, but the handler should skip it
+
+    // jsdom cannot follow external navigation; prevent the browser default in the test
+    // while still asserting that our SPA handler does not intercept the link.
+    a.addEventListener('click', (event) => event.preventDefault());
     a.click();
 
     // #ux-content must not have changed due to this click

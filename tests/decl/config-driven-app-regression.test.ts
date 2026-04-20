@@ -65,6 +65,7 @@ async function writeDeclarativeProject(rootDir: string, options: DeclarativeProj
   }
 
   await fs.writeFile(path.join(layoutDir, '_.html'), '<main id="shell"><slot></slot></main>\n', 'utf-8');
+  await fs.writeFile(path.join(layoutDir, `${viewName}-layout.html`), '<main id="shell"><slot></slot></main>\n', 'utf-8');
 
   if (malformedRoutesYaml) {
     await fs.writeFile(path.join(routeDir, 'routes.yaml'), 'routes: [\n', 'utf-8');
@@ -171,6 +172,30 @@ describe('Config-driven declarative build and validation', () => {
       expect(compiledContent).toContain(`"${scenario.stateNames[0]}"`);
     });
   }
+
+  it('should reject view compilation if diagnostics are produced', async () => {
+    const projectDir = path.join(TMP_ROOT, 'view-compiler-diagnostics');
+    const outDir = path.join(projectDir, 'generated', 'views');
+
+    await fs.remove(projectDir);
+    await fs.ensureDir(path.join(projectDir, 'ux', 'view'));
+    await fs.ensureDir(path.join(projectDir, 'ux', 'layout'));
+
+    await fs.writeFile(
+      path.join(projectDir, 'ux', 'view', 'broken.yaml'),
+      'name: broken\ninitial: ready\nlayout: missing-layout\nstates:\n  ready: broken-ready.html\n',
+      'utf-8'
+    );
+    await fs.writeFile(
+      path.join(projectDir, 'ux', 'view', 'broken-ready.html'),
+      '<div>broken ready</div>\n',
+      'utf-8'
+    );
+
+    await expect(
+      compileAllViews(path.join(projectDir, 'ux', 'view'), outDir, projectDir)
+    ).rejects.toThrow(/warnings\/errors/);
+  });
 
   const invalidRouteScenarios = Array.from({ length: 12 }, (_, idx) => {
     const n = idx + 1;

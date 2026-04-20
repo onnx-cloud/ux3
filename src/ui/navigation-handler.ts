@@ -11,6 +11,7 @@
 
 import type { AppContext } from './app.js';
 import type { NavRoute } from '../services/router.js';
+import { defaultLogger } from '../security/observability.js';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -53,10 +54,27 @@ function findRouteForPath(
  * Removes any currently-mounted view first (triggering its disconnectedCallback).
  * Passes route params as data attributes for the view to consume.
  */
+function ensureMountPoint(): HTMLElement | null {
+  let main = document.querySelector<HTMLElement>('#ux-content');
+  if (main) return main;
+
+  if (typeof document === 'undefined' || !document.body) {
+    return null;
+  }
+
+  main = document.createElement('main');
+  main.id = 'ux-content';
+  main.role = 'main';
+  main.dataset.ux3Fallback = 'true';
+  document.body.appendChild(main);
+  defaultLogger.warn('[Navigation] #ux-content element not found; created fallback mount point');
+  return main;
+}
+
 function mountView(viewName: string, params?: Record<string, string>): void {
-  const main = document.querySelector<HTMLElement>('#ux-content');
+  const main = ensureMountPoint();
   if (!main) {
-    console.warn('[Navigation] #ux-content element not found; cannot mount view');
+    defaultLogger.warn('[Navigation] #ux-content element not found; cannot mount view');
     return;
   }
 
@@ -67,7 +85,7 @@ function mountView(viewName: string, params?: Record<string, string>): void {
 
   const tagName = `ux-${viewName}`;
   if (!customElements.get(tagName)) {
-    console.warn(
+    defaultLogger.warn(
       `[Navigation] Custom element <${tagName}> is not registered. ` +
       `Ensure the view file is imported before initApp() is called.`
     );
@@ -84,7 +102,7 @@ function mountView(viewName: string, params?: Record<string, string>): void {
   }
   
   main.appendChild(el);
-  console.log(`[Navigation] Mounted <${tagName}> into #ux-content`, params ? { params } : '');
+  defaultLogger.info(`[Navigation] Mounted <${tagName}> into #ux-content`, params ? { params } : {});
 }
 
 // ---------------------------------------------------------------------------
@@ -97,7 +115,7 @@ function mountView(viewName: string, params?: Record<string, string>): void {
  */
 export function setupNavigation(appContext: AppContext): void {
   if (!appContext.nav) {
-    console.warn('[Navigation] NavConfig not found in AppContext; skipping setup');
+    defaultLogger.warn('[Navigation] NavConfig not found in AppContext; skipping setup');
     return;
   }
 
@@ -137,28 +155,28 @@ export function setupNavigation(appContext: AppContext): void {
  */
 export function navigateTo(pathname: string, appContext: AppContext): void {
   if (!appContext.nav) {
-    console.warn('[Navigation] NavConfig not found; cannot navigate');
+    defaultLogger.warn('[Navigation] NavConfig not found; cannot navigate');
     return;
   }
 
   const match = findRouteForPath(pathname, appContext.nav.routes);
 
   if (!match) {
-    console.warn(`[Navigation] No route found for path: ${pathname}`);
+    defaultLogger.warn(`[Navigation] No route found for path: ${pathname}`);
     return;
   }
 
   const { view: targetView, params } = match;
 
   if (!appContext.nav.canNavigate(targetView)) {
-    console.warn(`[Navigation] Cannot navigate to view: ${targetView}`);
+    defaultLogger.warn(`[Navigation] Cannot navigate to view: ${targetView}`);
     return;
   }
 
   // Update browser history before mounting so the view can read the correct URL
   window.history.pushState({ view: targetView, path: pathname }, '', pathname);
   mountView(targetView, params);
-  console.log(`[Navigation] Navigated to ${pathname} (view: ${targetView})`);
+  defaultLogger.info(`[Navigation] Navigated to ${pathname} (view: ${targetView})`);
 }
 
 /**
@@ -175,7 +193,7 @@ function handleNavigationEvent(appContext: AppContext): void {
   const params = match?.params;
 
   if (!match) {
-    console.warn(`[Navigation] No route for path: ${pathname}; mounting default view '${targetView}'`);
+    defaultLogger.warn(`[Navigation] No route for path: ${pathname}; mounting default view '${targetView}'`);
   }
 
   mountView(targetView, params);

@@ -79,20 +79,28 @@ describe('Service Middleware System', () => {
     });
 
     it('should measure request duration', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(0);
+
       const middleware = loggingMiddleware('[DURATION]');
       const request: RequestConfig = { method: 'GET', baseUrl: 'https://api.test.com' };
 
       const mockNext = vi.fn(async () => {
-        await new Promise(r => setTimeout(r, 50));
+        await new Promise((r) => setTimeout(r, 50));
         return { method: 'GET', status: 200, data: {}, ok: true } as ServiceResponse;
       });
 
-      await middleware(request, mockNext);
+      const promise = middleware(request, mockNext);
+      await vi.advanceTimersByTimeAsync(50);
+      await promise;
 
       const logCall = consoleSpy.log.mock.calls[0][0];
       expect(logCall).toContain('ms');
-      // Duration should be >= 50ms
-      expect(parseInt(logCall.match(/(\d+)ms/)[1])).toBeGreaterThanOrEqual(50);
+      const durationMatch = logCall.match(/(\d+)ms/);
+      expect(durationMatch).toBeTruthy();
+      expect(parseInt(durationMatch![1])).toBeGreaterThanOrEqual(50);
+
+      vi.useRealTimers();
     });
   });
 

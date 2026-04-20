@@ -8,6 +8,7 @@ guards:
         operator: exists
 states:
   index:
+    template: 'view/asset/index.html'
     always:
       - cond: hasSymbol
         target: loading
@@ -23,8 +24,10 @@ states:
       SUCCESS: loaded
       ERROR: error
   loaded:
+    template: 'view/asset/detail.html'
     on:
       REFRESH: loading
   error:
+    template: 'view/asset/error.html'
     on:
       RETRY: loading

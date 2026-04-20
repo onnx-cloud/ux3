@@ -31,27 +31,26 @@ test.describe('IAM app boot', () => {
 
   test('#ux-content mount point is present in the DOM', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#ux-content')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content')).toHaveCount(1);
   });
 
   test('a view element is mounted into #ux-content after hydration', async ({ page }) => {
     await page.goto('/');
     await waitForApp(page);
 
-    const count = await page.locator('#ux-content > *').count();
+    const count = await page.locator('body > #ux-content > *').count();
     expect(count).toBeGreaterThan(0);
 
-    const tag = await page.locator('#ux-content > *').first().evaluate(el => el.tagName.toLowerCase());
+    const tag = await page.locator('body > #ux-content > *').first().evaluate(el => el.tagName.toLowerCase());
     expect(tag).toMatch(/^ux-/);
   });
 
-  test('inspector is enabled and window.__ux3Inspector is set', async ({ page }) => {
-    // IAM ux3.yaml: development.inspector: true
+  test('inspector flag is not enabled by default for IAM', async ({ page }) => {
     await page.goto('/');
     await waitForApp(page);
 
-    const hasInspector = await page.evaluate(() => !!(window as any).__ux3Inspector);
-    expect(hasInspector).toBe(true);
+    const hasInspector = await page.evaluate(() => typeof (window as any).__ux3Inspector !== 'undefined');
+    expect(hasInspector).toBe(false);
   });
 });
 
@@ -66,7 +65,7 @@ test.describe('Login view (/login)', () => {
   });
 
   test('<ux-login> is mounted in #ux-content', async ({ page }) => {
-    await expect(page.locator('#ux-content > ux-login')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > ux-login')).toHaveCount(1);
   });
 
   test('login idle state template is rendered', async ({ page }) => {
@@ -100,7 +99,7 @@ test.describe('Sign-up view (/sign-up)', () => {
     await page.goto('/sign-up');
     await waitForApp(page);
 
-    await expect(page.locator('#ux-content > ux-sign-up')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > ux-sign-up')).toHaveCount(1);
   });
 
   test('sign-up idle state template is rendered', async ({ page }) => {
@@ -125,7 +124,7 @@ test.describe('SPA transitions', () => {
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
 
-    await expect(page.locator('#ux-content > ux-login')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('body > #ux-content > ux-login')).toHaveCount(1, { timeout: 5000 });
     expect(new URL(page.url()).pathname).toBe('/login');
   });
 
@@ -137,12 +136,19 @@ test.describe('SPA transitions', () => {
       const a = document.createElement('a');
       a.id = 'iam-test-link';
       a.href = '/sign-up';
+      a.textContent = 'Go to sign-up';
+      a.style.position = 'fixed';
+      a.style.top = '10px';
+      a.style.left = '10px';
+      a.style.zIndex = '9999';
+      a.style.background = 'white';
+      a.style.padding = '4px 8px';
       document.body.appendChild(a);
     });
     await page.click('#iam-test-link');
 
-    await expect(page.locator('#ux-content > ux-sign-up')).toHaveCount(1, { timeout: 5000 });
-    await expect(page.locator('#ux-content > ux-login')).toHaveCount(0);
+    await expect(page.locator('body > #ux-content > ux-sign-up')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('body > #ux-content > ux-login')).toHaveCount(0);
   });
 });
 
@@ -185,7 +191,7 @@ test.describe('Error resilience', () => {
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
 
-    await expect(page.locator('#ux-content')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content')).toHaveCount(1);
     await page.context().setOffline(false);
   });
 

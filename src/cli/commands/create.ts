@@ -40,6 +40,7 @@ export const createCommand = new Command()
         dev: 'ux3 dev',
         build: 'ux3 build',
         preview: 'ux3 preview',
+        lint: 'ux3 lint',
         check: 'ux3 check',
       },
       dependencies: {
@@ -61,6 +62,21 @@ export const createCommand = new Command()
         packagePath,
         JSON.stringify(packageJson, null, 2)
       );
+    }
+
+    // Create .gitignore with sensible defaults for local env and build artifacts.
+    const gitignorePath = path.join(projectDir, '.gitignore');
+    if (!await fs.stat(gitignorePath).catch(() => null)) {
+      const gitignoreContent = `node_modules/
+dist/
+src/generated/
+
+# Environment files
+.env
+.env.*
+!.env.example
+`;
+      await fs.writeFile(gitignorePath, gitignoreContent);
     }
 
     // Create standalone tsconfig.json

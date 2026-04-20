@@ -40,12 +40,14 @@ class ConsoleLogHandler implements LogHandler {
       fatal: 'color: darkred; font-weight: bold'
     };
 
-    console.log(
-      `%c ${entry.message}`,
-      styleMap[entry.level],
-      entry.context,
-      entry.error || entry.timestamp
-    );
+    const args: unknown[] = [`%c ${entry.message}`, styleMap[entry.level]];
+    if (entry.context && Object.keys(entry.context).length > 0) {
+      args.push(entry.context);
+    }
+    if (entry.error) {
+      args.push(entry.error);
+    }
+    console.log(...args);
   }
 }
 
@@ -75,11 +77,12 @@ export class Logger {
       return;
     }
 
+    const mergedContext = { ...this.requestContext, ...context };
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
-      context: { ...this.requestContext, ...context },
+      context: Object.keys(mergedContext).length > 0 ? mergedContext : undefined,
       ...(error && {
         error: {
           name: error.name,
@@ -223,16 +226,18 @@ export class ErrorBoundary {
 
   constructor(endpoint?: string) {
     this.reportEndpoint = endpoint;
-    
-    // Catch unhandled errors
-    window.addEventListener('error', (event) => {
-      this.captureError(event.error, { type: 'uncaught' });
-    });
 
-    // Catch unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      this.captureError(new Error(String(event.reason)), { type: 'unhandledRejection' });
-    });
+    if (typeof window !== 'undefined') {
+      // Catch unhandled errors
+      window.addEventListener('error', (event) => {
+        this.captureError(event.error, { type: 'uncaught' });
+      });
+
+      // Catch unhandled promise rejections
+      window.addEventListener('unhandledrejection', (event) => {
+        this.captureError(new Error(String(event.reason)), { type: 'unhandledRejection' });
+      });
+    }
   }
 
   /**
@@ -280,4 +285,4 @@ export class ErrorBoundary {
   }
 }
 
-export const defaultErrorBoundary = new ErrorBoundary();
+export const defaultErrorBoundary = typeof window !== 'undefined' ? new ErrorBoundary() : undefined;

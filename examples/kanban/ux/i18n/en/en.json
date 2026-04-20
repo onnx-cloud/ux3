@@ -13,11 +13,13 @@
   "boards": {
     "create": "+ Add Board",
     "title": "Kanban Board",
+    "empty": "No boards yet. Create one to get started!",
     "nameLabel": "Board Name"
   },
   "tasks": {
     "create": "+ Add Task",
     "title": "Task",
+    "edit": "Edit Task",
     "priority": "Priority",
     "assignee": "Assignee",
     "due": "Due Date",
@@ -28,7 +30,13 @@
   "lanes": {
     "wip": "WIP Limit",
     "tasks": "Tasks",
+    "manage": "Manage lanes",
+    "add": "+ Add Lane",
     "nameLabel": "Lane Name"
+  },
+  "settings": {
+    "title": "Project Settings",
+    "edit": "Edit"
   },
   "forms": {
     "cancel": "Cancel",

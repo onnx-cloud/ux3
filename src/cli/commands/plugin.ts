@@ -58,7 +58,7 @@ async function saveUx3Config(projectRoot: string, cfg: Record<string, unknown>):
 // ux3 plugin list
 // ---------------------------------------------------------------------------
 
-async function listPlugins(projectRoot: string): Promise<void> {
+export async function listPlugins(projectRoot: string): Promise<void> {
   const installed: string[] = [];
   const local: string[] = [];
 

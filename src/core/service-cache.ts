@@ -3,6 +3,8 @@
  * Generic caching system with TTL support for service responses
  */
 
+import { defaultLogger } from '../security/observability.js';
+
 /**
  * Observer function called when cache is invalidated
  */
@@ -194,7 +196,7 @@ export class ServiceCache<T> {
         observer(this);
       } catch (error) {
         // Log error but don't throw - observers shouldn't block cache operations
-        console.error('[ServiceCache] Observer error:', error);
+        defaultLogger.error('[ServiceCache] Observer error', error instanceof Error ? error : new Error(String(error)));
       }
     }
   }

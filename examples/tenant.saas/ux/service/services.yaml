@@ -1,43 +1,125 @@
 services:
-  # Organization & tenant management API
+  # Organization & tenant management API (development mock fallback)
   org-service:
-    adapter: http
-    baseUrl: 'http://localhost:3001/api/v1/orgs'
-    auth:
-      type: bearer
-      token: '{{ secrets.TENANT_API_KEY }}'
-    headers:
-      X-Tenant-ID: '{{ ctx.tenantId }}'
+    adapter: mock
+    responses:
+      getCurrentOrganization:
+        id: 'org-demo-001'
+        name: 'Acme Cloud'
+        plan: 'professional'
+        status: 'active'
+        createdAt: '2025-01-15T10:00:00Z'
+      getOrganization:
+        id: 'org-demo-001'
+        name: 'Acme Cloud'
+        plan: 'professional'
+        status: 'active'
+        createdAt: '2025-01-15T10:00:00Z'
+      updateOrganization:
+        id: 'org-demo-001'
+        name: 'Acme Cloud'
+        plan: 'professional'
+        status: 'active'
+        createdAt: '2025-01-15T10:00:00Z'
+      exportSettings:
+        downloadUrl: '/assets/tenant-saas-demo-settings.json'
+      getMembers:
+        members:
+          - id: 'user-1001'
+            name: 'Maya Patel'
+            email: 'maya@acme.cloud'
+            role: 'admin'
+            status: 'active'
+          - id: 'user-1002'
+            name: 'Jordan Lee'
+            email: 'jordan@acme.cloud'
+            role: 'editor'
+            status: 'active'
+        pendingInvites:
+          - id: 'invite-2001'
+            email: 'newmember@acme.cloud'
+            role: 'viewer'
+            invitedAt: '2026-04-01T09:40:00Z'
+      inviteMember:
+        invite:
+          id: 'invite-2002'
+          email: '{{ params.email }}'
+          role: '{{ params.role }}'
+          invitedAt: '2026-04-20T12:00:00Z'
+      updateMemberRole:
+        success: true
+      deactivateMember:
+        success: true
+      revokeInvite:
+        success: true
 
-  # Stripe billing + subscription service
+  # Stripe billing + subscription service (mocked for local demo)
   stripe:
-    adapter: jsonrpc
-    endpoint: 'http://localhost:3001/api/v1/billing/stripe'
-    auth:
-      type: bearer
-      token: '{{ secrets.TENANT_API_KEY }}'
+    adapter: mock
+    responses:
+      getSubscription:
+        subscription:
+          id: 'sub-demo-001'
+          plan: 'starter'
+          status: 'active'
+          currentPeriodEnd: '2026-05-15T00:00:00Z'
+          nextBillingDate: '2026-05-15'
+        paymentMethod:
+          cardBrand: 'Visa'
+          last4: '4242'
+          expiry: '12/26'
+        invoices:
+          - id: 'inv-001'
+            date: '2026-03-15'
+            amount: '$199.00'
+            status: 'paid'
+      upgradeSubscription:
+        data:
+          id: 'sub-demo-001'
+          plan: 'professional'
+          status: 'active'
+          currentPeriodEnd: '2026-06-15T00:00:00Z'
+          nextBillingDate: '2026-06-15'
+      downgradeSubscription:
+        data:
+          id: 'sub-demo-001'
+          plan: 'starter'
+          status: 'active'
+          currentPeriodEnd: '2026-05-15T00:00:00Z'
+          nextBillingDate: '2026-05-15'
+      updatePaymentMethod:
+        data:
+          cardBrand: 'Mastercard'
+          last4: '5555'
+          expiry: '08/27'
+      cancelSubscription:
+        success: true
 
-  # Audit log streaming service
+  # Audit log service (mocked for local demo)
   audit:
-    adapter: websocket
-    url: 'ws://localhost:3001/api/v1/audit/stream'
-    auth:
-      type: bearer
-      token: '{{ secrets.TENANT_API_KEY }}'
-    reconnectAttempts: 5
+    adapter: mock
+    responses:
+      getEvents:
+        events:
+          - id: 'evt-3001'
+            date: '2026-04-18T14:32:00Z'
+            user: 'Maya Patel'
+            entityType: 'organization'
+            action: 'updated'
+            details: 'Organization name changed to Acme Cloud'
+          - id: 'evt-3002'
+            date: '2026-04-18T16:05:00Z'
+            user: 'Jordan Lee'
+            entityType: 'member'
+            action: 'invited'
+            details: 'Invited new member newmember@acme.cloud'
+      exportEvents:
+        data: 'date,user,entityType,action,details\n2026-04-18T14:32:00Z,Maya Patel,organization,updated,Organization name changed to Acme Cloud\n2026-04-18T16:05:00Z,Jordan Lee,member,invited,Invited new member newmember@acme.cloud'
 
-  # RBAC permission cache
+  # RBAC permission cache (mocked placeholder)
   rbac:
-    adapter: http
-    baseUrl: 'http://localhost:3001/api/v1/rbac'
-    caching:
-      enabled: true
-      ttl: 300
+    adapter: mock
 
-  # User directory service
+  # User directory service (mocked placeholder)
   users:
-    adapter: http
-    baseUrl: 'http://localhost:3001/api/v1/users'
-    auth:
-      type: bearer
-      token: '{{ secrets.TENANT_API_KEY }}'
+    adapter: mock

@@ -4,6 +4,7 @@
  */
 
 import type { Service, ServiceConfig } from './types.js';
+import { defaultLogger } from '../security/observability.js';
 
 /**
  * Service invocation options
@@ -47,7 +48,7 @@ export class ServiceContainer {
    */
   register(name: string, service: Service): this {
     if (this.services.has(name)) {
-      console.warn(`[ServiceContainer] Overwriting service: ${name}`);
+      defaultLogger.warn(`[ServiceContainer] Overwriting service: ${name}`);
     }
     this.services.set(name, service);
     return this;
@@ -206,7 +207,7 @@ export class ServiceContainer {
       try {
         listener(result);
       } catch (error) {
-        console.error('[ServiceContainer] Telemetry listener error:', error);
+        defaultLogger.error('[ServiceContainer] Telemetry listener error', error instanceof Error ? error : new Error(String(error)));
       }
     }
 
@@ -232,7 +233,7 @@ export class ServiceContainer {
       try {
         listener(error, context);
       } catch (e) {
-        console.error('[ServiceContainer] Error listener failed:', e);
+        defaultLogger.error('[ServiceContainer] Error listener failed', e instanceof Error ? e : new Error(String(e)));
       }
     }
   }

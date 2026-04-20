@@ -31,6 +31,16 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
   // ==================== Attribute Management ====================
 
   describe('Attribute Management', () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
     it('should read name attribute', () => {
       fieldArray = document.createElement('ux-field-array') as UxFieldArray;
       fieldArray.setAttribute('name', 'addresses');
@@ -58,6 +68,16 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
   // ==================== Template Requirement ====================
 
   describe('Template Requirement', () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
     it('should require template with slot="item"', () => {
       fieldArray = document.createElement('ux-field-array') as UxFieldArray;
       container.appendChild(fieldArray);

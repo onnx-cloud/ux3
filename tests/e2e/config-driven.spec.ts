@@ -127,7 +127,7 @@ test.describe(`Config-driven tests: ${config.name || PROJECT_DIR}`, () => {
       expect(page.url()).toBe(`${BASE_URL}${route.path}`);
       
       // Ensure the layout is still present (sanity check)
-      const main = page.locator('main#ux-content');
+      const main = page.locator('body > main#ux-content');
       await expect(main).toBeVisible();
     }
   });

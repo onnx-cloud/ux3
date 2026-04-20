@@ -18,6 +18,7 @@ export interface ServiceConfig {
   retryDelay?: number;
   headers?: Record<string, string>;
   autoConnect?: boolean;
+  region?: string;
   messageTimeout?: number;
   reconnectAttempts?: number;
   reconnectInterval?: number;

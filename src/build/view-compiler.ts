@@ -8,6 +8,7 @@ import * as path from 'path';
 import YAML from 'yaml';
 import { BindingExtractor } from './binding-extractor.js';
 import { MarkdownProcessor } from './markdown-processor.js';
+import { defaultLogger } from '../security/observability.js';
 import type { StateConfig } from '../fsm/types.js';
 
 /**
@@ -101,6 +102,12 @@ export class ViewCompiler {
     this.projectDir = projectDir || path.resolve(path.dirname(path.dirname(srcDir)));
   }
 
+  private toProjectRelativePath(targetPath: string): string {
+    const rel = path.relative(this.projectDir, targetPath).split(path.sep).join('/');
+    if (!rel || rel === '.') return './';
+    return rel.startsWith('.') ? rel : `./${rel}`;
+  }
+
   /**
    * Compile all views in directory
    */
@@ -110,8 +117,6 @@ export class ViewCompiler {
 
       // Read all YAML files
       const viewFiles = this.findViewFiles();
-
-      console.log(`[ViewCompiler] Compiling ${viewFiles.length} views...`);
 
       const generated: string[] = [];
 
@@ -127,24 +132,20 @@ export class ViewCompiler {
           fs.writeFileSync(outFile, code);
 
           generated.push(viewName);
-          console.log(`  ✓ ${viewName}`);
         } catch (error) {
           const msg = `Failed to compile view: ${file}: ${error}`;
           this.diagnostics.push(msg);
-          console.error(`  ✗ ${msg}`);
         }
       }
 
       // Generate index file
       this.generateIndex(generated);
 
-      console.log(`[ViewCompiler] Complete: ${generated.length} views generated`);
-
       if (this.diagnostics.length > 0) {
-        console.warn(`[ViewCompiler] ${this.diagnostics.length} warnings/errors`);
+        const diagnosticsMessage = this.diagnostics.join('\n');
+        throw new Error(diagnosticsMessage);
       }
     } catch (error) {
-      console.error('[ViewCompiler]', error);
       throw error;
     }
   }
@@ -161,22 +162,22 @@ export class ViewCompiler {
     const stateConfigs = parsed.states || {};
 
     // Load layout HTML - layouts live in ux/layout/, not ux/view/
-    // Search path: ux/layout/{layoutName}.html, then fallback to ux/layout/_.html
     const layoutDir = path.join(this.srcDir, '..', 'layout');
     const layoutPath = path.join(layoutDir, `${layoutName}.html`);
     const fallbackLayoutPath = path.join(layoutDir, '_.html');
+    const hasDeclaredLayout = typeof parsed.layout === 'string' && parsed.layout.trim().length > 0;
     let layout = '';
-    let layoutResolved = '';
     
     if (fs.existsSync(layoutPath)) {
       layout = fs.readFileSync(layoutPath, 'utf-8');
-      layoutResolved = layoutPath;
+    } else if (hasDeclaredLayout) {
+      const msg = `Layout '${layoutName}' not found: ${this.toProjectRelativePath(layoutPath)}`;
+      throw new Error(msg);
     } else if (fs.existsSync(fallbackLayoutPath)) {
       layout = fs.readFileSync(fallbackLayoutPath, 'utf-8');
-      layoutResolved = fallbackLayoutPath;
-      this.diagnostics.push(`[ViewCompiler] Layout '${layoutName}' not found at ${layoutPath}, using fallback ${fallbackLayoutPath}`);
     } else {
-      this.diagnostics.push(`[ViewCompiler] Layout '${layoutName}' not found. Checked: ${layoutPath}, ${fallbackLayoutPath}`);
+      const msg = `Layout '${layoutName}' not found: ${this.toProjectRelativePath(layoutPath)}`;
+      throw new Error(msg);
     }
 
     // Load state templates (supports both short-form and long-form state definitions)
@@ -209,6 +210,13 @@ export class ViewCompiler {
 
     const parsedStates = (parsed && parsed.states) || {};
 
+    const shouldResolveTemplate = (raw: any): boolean => {
+      if (typeof raw === 'string') return true;
+      if (!raw || typeof raw !== 'object') return false;
+      if (typeof raw.template === 'string') return true;
+      return !raw.invoke && !raw.src;
+    };
+
     // First, handle long-form/parsed states
     for (const [state, raw] of Object.entries(parsedStates)) {
       if (typeof raw === 'string') {
@@ -218,6 +226,9 @@ export class ViewCompiler {
         if (typeof (raw as any).template === 'string') {
           const content = loadTemplateFile(state, (raw as any).template);
           if (content !== null) templates[state] = content;
+        } else if (raw.invoke || raw.src) {
+          // Transitional states with invoke-only behavior may render no template.
+          continue;
         } else {
           // Try common fallback locations inside a view directory: <viewName>/<state>.html or <viewName>/<state>/index.html
           const candidates = [
@@ -241,18 +252,22 @@ export class ViewCompiler {
     // Auto-resolve templates for states defined in FSM but missing in View YAML
     if (parsed && parsed.fsm && parsed.fsm.states) {
       for (const state of Object.keys(parsed.fsm.states)) {
-        if (!templates[state]) {
-          const candidates = [
-            path.join(viewName, `${state}.html`),
-            path.join(viewName, state, 'index.html'),
-            `${viewName}-${state}.html`,
-          ];
-          for (const cand of candidates) {
-            const content = loadTemplateFile(state, cand);
-            if (content !== null) {
-              templates[state] = content;
-              break;
-            }
+        if (templates[state]) continue;
+        const stateDef = parsed.fsm.states[state];
+        if (stateDef && typeof stateDef === 'object' && !('template' in stateDef) && (stateDef.invoke || stateDef.src)) {
+          continue;
+        }
+
+        const candidates = [
+          path.join(viewName, `${state}.html`),
+          path.join(viewName, state, 'index.html'),
+          `${viewName}-${state}.html`,
+        ];
+        for (const cand of candidates) {
+          const content = loadTemplateFile(state, cand);
+          if (content !== null) {
+            templates[state] = content;
+            break;
           }
         }
       }
@@ -268,9 +283,14 @@ export class ViewCompiler {
     }
 
     // Validation: warn if no templates were loaded for defined states
-    const definedStates = Object.keys(stateConfigs);
-    if (definedStates.length > 0 && Object.keys(templates).length === 0) {
-      this.diagnostics.push(`[ViewCompiler] WARNING: ${viewName} has ${definedStates.length} state(s) defined but no templates were loaded: ${definedStates.join(', ')}`);
+    const statesRequiringTemplates = Object.entries(stateConfigs)
+      .filter(([_, raw]) => shouldResolveTemplate(raw))
+      .map(([state]) => state);
+
+    if (statesRequiringTemplates.length > 0 && Object.keys(templates).length === 0) {
+      this.diagnostics.push(
+        `[ViewCompiler] WARNING: ${viewName} has ${statesRequiringTemplates.length} render states defined but no templates were loaded: ${statesRequiringTemplates.join(', ')}`
+      );
     }
 
     // Validation: warn if layout is empty
@@ -416,15 +436,27 @@ export class ViewCompiler {
 
     // diagnostics: missing logic module or missing functions
     if (!logicExists) {
-      const anyRefs =
-        manifest.guards.size +
-        manifest.actions.size +
-        manifest.entry.size +
-        manifest.exit.size +
-        manifest.invokes.size;
-      if (anyRefs > 0) {
+      const sharedPath = path.join(this.srcDir, '..', 'logic', 'shared.ts');
+      const sharedExports = fs.existsSync(sharedPath) ? parseExports(sharedPath) : new Set<string>();
+
+      const missingRefs: string[] = [];
+      const allRefs = [
+        ...manifest.guards,
+        ...manifest.actions,
+        ...manifest.entry,
+        ...manifest.exit,
+        ...manifest.invokes,
+      ];
+
+      for (const ref of allRefs) {
+        if (!sharedExports.has(ref)) {
+          missingRefs.push(ref);
+        }
+      }
+
+      if (missingRefs.length > 0) {
         this.diagnostics.push(
-          `[ViewCompiler] ${viewName} references logic names (${[...manifest.guards, ...manifest.actions, ...manifest.entry, ...manifest.exit, ...manifest.invokes].join(', ')}) but no ux/logic/${viewName}.ts module was found`
+          `[ViewCompiler] ${viewName} references logic names (${missingRefs.join(', ')}) but no ux/logic/${viewName}.ts module was found and they are not exported from shared.ts`
         );
       }
     } else {
@@ -657,7 +689,7 @@ export default Views;
     const files: string[] = [];
 
     if (!fs.existsSync(this.srcDir)) {
-      console.warn(`[ViewCompiler] Source directory not found: ${this.srcDir}`);
+      defaultLogger.warn(`[ViewCompiler] Source directory not found: ${this.srcDir}`);
       return files;
     }
 

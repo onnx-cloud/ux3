@@ -48,9 +48,6 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
     const res = await fetch(`http://localhost:${port}/`);
     const html = await res.text();
 
-    // Debug: print full html when test fails to help diagnose rendering issues
-    console.error('DEV-SERVER-FULL-RENDER-HTML:\n' + html);
-
     // Quick local simulation of the layout insertion logic to reproduce potential parsing issues
     const viewTemplate = await fs.readFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), 'utf-8');
     const layoutHtmlRaw = await fs.readFile(path.join(temp, 'ux', 'layout', 'default.html'), 'utf-8');
@@ -63,14 +60,19 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
         return String(val);
       });
     }
-    console.error('DEV-SERVER-FULL-RENDER-DEBUG: normalized layout ->', normalized);
-    console.error('DEV-SERVER-FULL-RENDER-DEBUG: local render ->', localRender(normalized, { site: { template: viewTemplate, title: 'ACME' } }));
 
-    // Assertions: chrome (header, footer, main) and view tree (ux-state, widget content)
-    expect(html).toContain('<header id="site-header">');
-    expect(html).toContain('<main id="ux-content"');
-    expect(html).toContain('<div ux-state="home.loaded">');
-    expect(html).toContain('HELLO WIDGET');
+    try {
+      // Assertions: chrome (header, footer, main) and view tree (ux-state, widget content)
+      expect(html).toContain('<header id="site-header">');
+      expect(html).toContain('<main id="ux-content"');
+      expect(html).toContain('<div ux-state="home.loaded">');
+      expect(html).toContain('HELLO WIDGET');
+    } catch (error) {
+      console.error('DEV-SERVER-FULL-RENDER-HTML:\n' + html);
+      console.error('DEV-SERVER-FULL-RENDER-DEBUG: normalized layout ->', normalized);
+      console.error('DEV-SERVER-FULL-RENDER-DEBUG: local render ->', localRender(normalized, { site: { template: viewTemplate, title: 'ACME' } }));
+      throw error;
+    }
 
     await server.stop();
     await fs.remove(temp);

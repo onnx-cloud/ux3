@@ -10,7 +10,7 @@
         "^.*$": {
           "type": "object",
           "properties": {
-            "adapter": { "type": "string", "enum": ["plugin", "file", "http", "websocket", "jsonrpc" ] },
+            "adapter": { "type": "string", "enum": ["plugin", "file", "http", "websocket", "jsonrpc", "mock" ] },
             "baseUrl": { "type": "string" },
             "url": { "type": "string" },
             "endpoint": { "type": "string" },

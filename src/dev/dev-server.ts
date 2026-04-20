@@ -747,8 +747,19 @@ export class DevServer {
   /* removed unused generateIndexFromManifest */
 
   private pathMatches(routePath: string, requestPath: string): boolean {
-    const norm = (p: string) => (p || '').replace(/\/+$/, '') || '/';
-    return norm(routePath) === norm(requestPath);
+    const normalize = (p: string) => (p || '').replace(/\/+$/, '') || '/';
+    const route = normalize(routePath);
+    const request = normalize(requestPath);
+
+    if (route === request) return true;
+
+    const routeSegments = route.split('/').filter(Boolean);
+    const requestSegments = request.split('/').filter(Boolean);
+    if (routeSegments.length !== requestSegments.length) return false;
+
+    return routeSegments.every((segment, index) => {
+      return segment.startsWith(':') || segment === requestSegments[index];
+    });
   }
 
   /** Find repo root by looking for package.json */

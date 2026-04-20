@@ -1007,7 +1007,7 @@ export class InvokeRegistry {
           meta: { serviceName }
         });
       } catch (err) {
-        console.error(`[InvokeRegistry] AUTHENTICATE hook error for ${serviceName}:`, err);
+        defaultLogger.error(`[InvokeRegistry] AUTHENTICATE hook error for ${serviceName}`, err instanceof Error ? err : new Error(String(err)));
       }
     }
   }
@@ -1026,7 +1026,7 @@ export class InvokeRegistry {
           meta: { serviceName, result }
         });
       } catch (err) {
-        console.error(`[InvokeRegistry] READY hook error for ${serviceName}:`, err);
+        defaultLogger.error(`[InvokeRegistry] READY hook error for ${serviceName}`, err instanceof Error ? err : new Error(String(err)));
       }
     }
   }
@@ -1045,7 +1045,7 @@ export class InvokeRegistry {
           meta: { serviceName, error }
         });
       } catch (err) {
-        console.error(`[InvokeRegistry] ERROR hook error for ${serviceName}:`, err);
+        defaultLogger.error(`[InvokeRegistry] ERROR hook error for ${serviceName}`, err instanceof Error ? err : new Error(String(err)));
       }
     }
   }
@@ -1064,7 +1064,7 @@ export class InvokeRegistry {
           meta: { serviceName, attempt }
         });
       } catch (err) {
-        console.error(`[InvokeRegistry] RECONNECT hook error for ${serviceName}:`, err);
+        defaultLogger.error(`[InvokeRegistry] RECONNECT hook error for ${serviceName}`, err instanceof Error ? err : new Error(String(err)));
       }
     }
   }
@@ -1083,7 +1083,7 @@ export class InvokeRegistry {
           meta: { serviceName }
         });
       } catch (err) {
-        console.error(`[InvokeRegistry] DISCONNECT hook error for ${serviceName}:`, err);
+        defaultLogger.error(`[InvokeRegistry] DISCONNECT hook error for ${serviceName}`, err instanceof Error ? err : new Error(String(err)));
       }
     }
   }

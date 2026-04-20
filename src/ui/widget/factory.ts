@@ -4,6 +4,11 @@
 
 import type { Widget, WidgetConfig } from './widget.js';
 
+type AsyncLocalStorageType<T> = {
+  getStore(): T | undefined;
+  run(store: T, callback: () => Promise<void>): void;
+};
+
 /**
  * Widget loader function
  */
@@ -18,6 +23,28 @@ export class WidgetFactory {
   private pendingLoads: Map<string, Promise<unknown>> = new Map();
   // Tracks widgets currently being resolved to detect circular dependencies.
   private activeLoads: Set<string> = new Set();
+  private loadTokens: Map<string, symbol> = new Map();
+  private loaderContext: AsyncLocalStorageType<symbol> | null | undefined = undefined;
+
+  private async getLoaderContext(): Promise<AsyncLocalStorageType<symbol> | null> {
+    if (this.loaderContext !== undefined) {
+      return this.loaderContext;
+    }
+
+    if (typeof process === 'undefined' || process?.release?.name !== 'node') {
+      this.loaderContext = null;
+      return this.loaderContext;
+    }
+
+    try {
+      const mod = await import('async_hooks');
+      this.loaderContext = new mod.AsyncLocalStorage<symbol>();
+    } catch {
+      this.loaderContext = null;
+    }
+
+    return this.loaderContext;
+  }
 
   /**
    * Register a widget synchronously
@@ -45,11 +72,22 @@ export class WidgetFactory {
 
     // Wait for pending load if in progress
     if (this.pendingLoads.has(name)) {
-      if (this.activeLoads.has(name)) {
+      const pending = this.pendingLoads.get(name)!;
+      const activeToken = this.loadTokens.get(name);
+      const loaderContext = await this.getLoaderContext();
+      const currentToken = loaderContext?.getStore();
+
+      if (
+        loaderContext &&
+        currentToken &&
+        activeToken &&
+        currentToken === activeToken
+      ) {
         // loader attempted to get the same name while it was still running
         throw new Error(`Circular widget dependency: ${name}`);
       }
-      return this.pendingLoads.get(name)!;
+
+      return pending;
     }
 
     // Load if lazy loader registered
@@ -78,7 +116,10 @@ export class WidgetFactory {
       this.pendingLoads.set(name, deferred.promise);
 
       this.activeLoads.add(name);
-      void (async () => {
+      const token = Symbol(name);
+      this.loadTokens.set(name, token);
+
+      const executeLoader = async () => {
         try {
           const widget = await this.loadWidget(name, loader);
           this.cache.set(name, widget);
@@ -88,6 +129,16 @@ export class WidgetFactory {
         } finally {
           this.activeLoads.delete(name);
           this.pendingLoads.delete(name);
+          this.loadTokens.delete(name);
+        }
+      };
+
+      void (async () => {
+        const loaderContext = await this.getLoaderContext();
+        if (loaderContext) {
+          loaderContext.run(token, executeLoader);
+        } else {
+          await executeLoader();
         }
       })();
 

@@ -9,7 +9,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   test('should initialize AppContext on application load', async ({ page }) => {
     // Test with a simple HTML page that uses UX3
     // use baseURL defined in playwright config
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check if AppContext is available
     const hasAppContext = await page.evaluate(() => {
@@ -22,7 +23,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
 
   test('should inject runtime bundle/styles/hydration tags', async ({ page }) => {
     // navigate to a sample project (IAM example)
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     const hasStyles = await page.locator('link[data-ux3="styles"]').count();
     const hasHydration = await page.locator('script[data-ux3="hydration"]').count();
@@ -33,7 +35,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support custom element definitions', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check for custom elements
     const customElements = await page.evaluate(() => {
@@ -45,7 +48,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should handle state machine transitions', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Interact with UI to trigger state changes
     const button = page.locator('button').first();
@@ -61,7 +65,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support service calls', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check if services can be invoked (look for network requests)
     const requestsMade: string[] = [];
@@ -83,7 +88,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support data binding', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Fill an input and check if DOM updates
     const input = page.locator('input').first();
@@ -96,7 +102,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support event handling', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Track clicks
     let clickCount = 0;
@@ -118,7 +125,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support i18n integration', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check if i18n function is available
     const hasi18n = await page.evaluate(() => {
@@ -130,7 +138,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should handle form submissions', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     const form = page.locator('form').first();
 
@@ -153,7 +162,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should maintain application state', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Set some state
     const stateKey = 'testState';
@@ -172,7 +182,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support error recovery', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Try invalid action
     const button = page.locator('button').first();
@@ -190,7 +201,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support lazy loading', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check for lazy-loaded content
     const lazyElements = page.locator('[data-lazy]');
@@ -200,7 +212,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should initialize with correct HTML structure', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check for expected DOM structure
     const body = page.locator('body');
@@ -213,7 +226,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support custom attributes', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Look for UX3-specific attributes
     const elements = page.locator('[ux-fsm], [ux-layout], [ux-view]');
@@ -223,7 +237,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should emit telemetry events', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check if telemetry function exists
     const hasTelemetry = await page.evaluate(() => {
@@ -234,7 +249,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should support shadow DOM components', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check for shadow DOM usage
     const shadowRoots = await page.evaluate(() => {
@@ -250,7 +266,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should handle viewport changes', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     const sizes = [
       { width: 1920, height: 1080 },
@@ -268,7 +285,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should handle concurrent operations', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Simulate concurrent interactions
     const buttons = page.locator('button');
@@ -288,7 +306,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
 
   test('should clean up resources', async ({ page }) => {
     // Load page
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Get initial listener count
     const initialListeners = await page.evaluate(() => {
@@ -300,7 +319,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
     await page.waitForTimeout(500);
 
     // Navigate back
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Check listeners still work
     const finalListeners = await page.evaluate(() => {
@@ -311,7 +331,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should handle storage integration', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     // Test localStorage
     await page.evaluate(() => {
@@ -326,7 +347,8 @@ test.describe('UX3 Framework Core E2E Tests', () => {
   });
 
   test('should handle history API', async ({ page }) => {
-    await page.goto('/examples/iam', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('ux-index >> text=home page loaded', { timeout: 10000 });
 
     const url1 = page.url();
 

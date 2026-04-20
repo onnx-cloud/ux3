@@ -5,6 +5,7 @@
 
 import { Service } from './base.js';
 import type { WebSocketMessage, SubscriptionHandler, SubscriptionUnsubscribe } from './types.js';
+import { defaultLogger } from '../security/observability.js';
 
 export interface WebSocketConfig {
   url: string;
@@ -33,7 +34,9 @@ export class WebSocketService extends Service<WebSocketMessage> {
     };
 
     if (this.wsConfig.autoConnect) {
-      this.connect();
+      void this.connect().catch((error) => {
+        defaultLogger.warn('[WebSocketService] autoConnect failed', { error });
+      });
     }
 
     // Monitor online/offline
@@ -204,7 +207,7 @@ export class WebSocketService extends Service<WebSocketMessage> {
         }
       }
     } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
+      defaultLogger.error('Failed to parse WebSocket message', error instanceof Error ? error : new Error(String(error)));
     }
   }
 

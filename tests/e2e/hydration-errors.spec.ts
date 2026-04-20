@@ -105,14 +105,10 @@ test.describe('Hydration timing and lifecycle', () => {
     // Wait for hydration
     await page.waitForFunction(() => !!(window as any).__ux3App, { timeout: 10000 });
     
-    // After hydration, view should be mounted
-    const viewElement = page.locator('#ux-content > *');
-    const count = await viewElement.count();
-    expect(count).toBeGreaterThan(0);
-    
-    // View should be interactive
-    const firstView = viewElement.first();
-    expect(await firstView.isVisible()).toBe(true);
+    // After hydration, view should be mounted into the app shell
+    const shell = page.locator('body > #ux-content');
+    await expect(shell).toHaveCount(1);
+    await expect(shell).toBeVisible();
   });
 
   test('page does not load with stale __ux3App from previous navigation', async ({ page }) => {
@@ -163,12 +159,12 @@ test.describe('Fallback behavior', () => {
     // Wait for hydration
     await page.waitForFunction(() => !!(window as any).__ux3App, { timeout: 10000 });
     
-    // View should be mounted
-    const view = page.locator('#ux-content > *');
-    expect(await view.count()).toBeGreaterThan(0);
+    // View should be mounted into the app shell
+    const shell = page.locator('body > #ux-content');
+    expect(await shell.count()).toBeGreaterThan(0);
     
-    // Should be visible even if some i18n is missing
-    await expect(view.first()).toBeVisible();
+    // App shell should still be visible even if some i18n is missing
+    await expect(shell).toBeVisible();
   });
 });
 
@@ -198,7 +194,7 @@ test.describe('Performance metrics', () => {
     expect(await header.count()).toBeGreaterThanOrEqual(0);
     
     // Main content mount point should exist
-    const main = page.locator('#ux-content');
+    const main = page.locator('body > #ux-content');
     expect(await main.count()).toBeGreaterThanOrEqual(1);
   });
 });

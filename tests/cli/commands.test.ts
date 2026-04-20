@@ -7,10 +7,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 // import commands directly (use .js extension for runtime)
 import { createCommand } from '../../src/cli/commands/create.ts';
 import { checkCommand } from '../../src/cli/commands/check.ts';
+import { lintCommand } from '../../src/cli/commands/lint.ts';
 import { buildCommand } from '../../src/cli/commands/build.ts';
 import { compileCommand } from '../../src/cli/compile.ts';
 import { configCommand } from '../../src/cli/commands/config.ts';
 import { previewCommand } from '../../src/cli/commands/preview.ts';
+import { helpCommand } from '../../src/cli/commands/help.ts';
 
 // helper to run a command and capture exit code
 async function runCommand(cmd: any, args: string[], cwd: string) {
@@ -59,6 +61,7 @@ describe('UX3 CLI commands', () => {
     expect(idx.createCommand).toBeDefined();
     expect(idx.devCommand).toBeDefined();
     expect(idx.buildCommand).toBeDefined();
+    expect(idx.lintCommand).toBeDefined();
     expect(idx.checkCommand).toBeDefined();
     expect(idx.compileCommand).toBeDefined();
     expect(idx.configCommand).toBeDefined();
@@ -90,6 +93,11 @@ describe('UX3 CLI commands', () => {
     expect(await fs.pathExists(path.join(project, 'ux', 'view', 'hello', 'clicked.html'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux3.config.json'))).toBe(true);
 
+    const gitignore = await fs.readFile(path.join(project, '.gitignore'), 'utf8');
+    expect(gitignore).toContain('.env');
+    expect(gitignore).toContain('dist/');
+    expect(gitignore).toContain('src/generated/');
+
   });
 
   it('`create` refuses to overwrite existing package.json', async () => {
@@ -97,9 +105,14 @@ describe('UX3 CLI commands', () => {
     await fs.ensureDir(project);
     await fs.writeJson(path.join(project, 'package.json'), { name: 'existing' });
 
-    // run create command against existing directory
-    const code = await runCommand(createCommand, ['proj2'], tmpRoot);
-    expect(code).toBe(1);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      // run create command against existing directory
+      const code = await runCommand(createCommand, ['proj2'], tmpRoot);
+      expect(code).toBe(1);
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 
   it('`check --logic` detects unused exports', async () => {
@@ -112,8 +125,26 @@ describe('UX3 CLI commands', () => {
       'initial: s\nstates:\n  s:\n    entry: enter1\n'
     );
 
-    const code = await runCommand(checkCommand, ['--logic'], project);
-    expect(code).toBe(1);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const code = await runCommand(checkCommand, ['--logic'], project);
+      expect(code).toBe(1);
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('`lint` fails when ux directory is missing', async () => {
+    const project = path.join(tmpRoot, 'proj-lint-missing-ux');
+    await fs.ensureDir(project);
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const code = await runCommand(lintCommand, [], project);
+      expect(code).toBe(1);
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 
   it('`build` creates generated/config.ts and dist directory', async () => {
@@ -179,6 +210,33 @@ describe('UX3 CLI commands', () => {
     expect(logs.join('')).toContain('/');
 
     console.log = origLog;
+  });
+
+  it('`help` command exposes resources for components, plugins, and services', async () => {
+    let logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: any[]) => {
+      logs.push(args.join(' '));
+      origLog(...args);
+    };
+
+    try {
+      let exit = await runCommand(helpCommand, ['components'], process.cwd());
+      expect(exit).toBe(0);
+      expect(logs.some((l) => l.includes('UX3 components'))).toBe(true);
+
+      logs = [];
+      exit = await runCommand(helpCommand, ['plugins'], process.cwd());
+      expect(exit).toBe(0);
+      expect(logs.some((l) => l.includes('UX3 Plugins'))).toBe(true);
+
+      logs = [];
+      exit = await runCommand(helpCommand, ['services'], process.cwd());
+      expect(exit).toBe(0);
+      expect(logs.some((l) => l.includes('UX3 services'))).toBe(true);
+    } finally {
+      console.log = origLog;
+    }
   });
 
   it('`preview` command handles direction and once flag', async () => {

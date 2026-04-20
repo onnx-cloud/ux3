@@ -22,31 +22,36 @@ const appRoutes = [
 ];
 
 async function waitForApp(page: Page, timeout = 15000) {
-  await page.waitForFunction(
-    () => !!(window as any).__ux3App || !!document.querySelector('#ux-content'),
-    { timeout }
-  );
+  await page.waitForFunction(() => !!(window as any).__ux3App, { timeout });
+  await page.waitForFunction(() => {
+    const container = document.querySelector('#ux-content');
+    if (!container) return false;
+    const viewChildren = Array.from(container.children).filter(el =>
+      el.tagName.toLowerCase().startsWith('ux-')
+    );
+    return viewChildren.length === 1;
+  }, { timeout });
 }
 
 async function loadRoute(page: Page, route: string) {
   await page.goto(route, { waitUntil: 'networkidle' });
   await waitForApp(page);
-  await page.waitForSelector('#ux-content', { state: 'attached', timeout: 10000 });
+  await page.waitForSelector('body > #ux-content', { state: 'attached', timeout: 10000 });
 }
 
 async function routeHasMountedShell(page: Page) {
-  return (await page.locator('#ux-content').count()) === 1;
+  return (await page.locator('body > #ux-content').count()) === 1;
 }
 
 test.describe('Kitchen sink app flow', () => {
   test('main app shell is mounted', async ({ page }) => {
     await loadRoute(page, '/login');
-    await expect(page.locator('#ux-content')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content')).toHaveCount(1);
   });
 
   test('login route renders the login page structure', async ({ page }) => {
     await loadRoute(page, '/login');
-    await expect(page.locator('#ux-content > *')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > *')).toHaveCount(1);
     await expect(page.locator('[ux-state="login.idle"]')).toHaveCount(1, { timeout: 5000 });
   });
 
@@ -80,7 +85,7 @@ test.describe('Kitchen sink app flow', () => {
 
   test('sign-up route renders the sign-up page structure', async ({ page }) => {
     await loadRoute(page, '/sign-up');
-    await expect(page.locator('#ux-content > *')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > *')).toHaveCount(1);
     await expect(page.locator('[ux-state="sign-up.idle"]')).toHaveCount(1, { timeout: 5000 });
   });
 
@@ -152,22 +157,22 @@ test.describe('Kitchen sink app flow', () => {
   test('account route loads and does not 404', async ({ page }) => {
     await loadRoute(page, '/account');
     expect(page.url().endsWith('/account')).toBe(true);
-    await expect(page.locator('#ux-content')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content')).toHaveCount(1);
   });
 
   test('billing route loads a billing page structure', async ({ page }) => {
     await loadRoute(page, '/billing');
-    await expect(page.locator('#ux-content')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content')).toHaveCount(1);
   });
 
   test('home route renders the root view structure', async ({ page }) => {
     await loadRoute(page, '/home');
-    await expect(page.locator('#ux-content > *')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > *')).toHaveCount(1);
   });
 
   test('root route renders a view container', async ({ page }) => {
     await loadRoute(page, '/');
-    await expect(page.locator('#ux-content > *')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > *')).toHaveCount(1);
   });
 
   test('navigation does not expose raw template syntax', async ({ page }) => {

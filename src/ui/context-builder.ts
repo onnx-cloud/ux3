@@ -6,14 +6,12 @@
 import { StateMachine } from '../fsm/state-machine.js';
 import { FSMRegistry } from '../fsm/registry.js';
 import type { StateConfig } from '../fsm/types.js';
-import { HttpService } from '../services/http.js';
+import { ServiceFactory } from '../services/service-factory.js';
 import { LogLevel } from '../security/observability.js';
-import { WebSocketService } from '../services/websocket.js';
-import { JSONRPCService } from '../services/jsonrpc.js';
 import { Router } from '../services/router.js';
 import type { Service, ServiceConfig } from '../services/types.js';
 import { InvokeRegistry } from '../services/invoke-registry.js';
-import path from 'path';
+import * as path from 'path';
 import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
@@ -127,7 +125,7 @@ export class AppContextBuilder {
         import('../security/observability.js').then(({ defaultLogger }) => {
           defaultLogger.debug('service.spec', { name, spec: serviceSpec });
         });
-        const service = this.createService(name, serviceSpec);
+        const service = ServiceFactory.create(name, serviceSpec);
         this.services.set(name, service);
         
         // Emit REGISTER lifecycle phase for this service
@@ -150,60 +148,51 @@ export class AppContextBuilder {
   /**
    * Create service instance based on type
    */
-  private createService(
-    name: string,
-    spec: { type?: string; adapter?: string; config?: ServiceConfig; [key: string]: any }
-  ): Service {
-    // prior versions of the config used `type`; newer schema calls it `adapter`.
-    const svcType = spec.type || spec.adapter;
-    // ConfigGenerator emits flat specs (fields directly on the object, no nested .config).
-    // Derive the effective config by stripping the discriminator keys.
-    const { type: _t, adapter: _a, config: nestedCfg, ...flatCfg } = spec;
-    const svcConfig: ServiceConfig = nestedCfg ?? (flatCfg as unknown as ServiceConfig);
-    // log for troubleshooting
-    if (typeof console !== 'undefined' && console.debug) {
-      console.debug('[AppContextBuilder] createService', name, { svcType, svcConfig });
-    }
-    switch (svcType) {
-      case 'http':
-        return new HttpService(svcConfig);
-      case 'websocket':
-        // config may not strictly match WebSocketConfig but is assumed to contain url
-        return new WebSocketService(svcConfig as any);
-      case 'jsonrpc':
-        return new JSONRPCService(svcConfig);
-      case 'file':
-        // file adapter simply performs GETs to static resources (using HTTP under the hood)
-        return new HttpService(svcConfig);
-      case 'mock':
-        // Mock service returns predefined responses
-        return {
-          async fetch(_req: any) {
-            return { success: true };
-          },
-          async call(method: string, params?: any) {
-            return { success: true, method, params };
-          },
-        };
-      default:
-        throw new Error(`Unknown service type: ${svcType} for service ${name}`);
-    }
-  }
-
   /**
    * Build widget factory - setup lazy-loading
    */
   withWidgets(): this {
+    const resolveWidgetPath = (widgetPath: string): string | undefined => {
+      if (path.isAbsolute(widgetPath)) return widgetPath;
+      const candidates = [
+        path.resolve(process.cwd(), widgetPath),
+        path.resolve(process.cwd(), 'src/ui/widget', widgetPath),
+        path.resolve(process.cwd(), 'src/ui', widgetPath),
+      ];
+
+      if (typeof process !== 'undefined' && process.release?.name === 'node') {
+        try {
+          // Resolve fs at runtime only so bundlers do not statically include it.
+          const fs = new Function('id', 'return require(id)')('fs');
+          for (const candidate of candidates) {
+            if (fs.existsSync(candidate)) {
+              return candidate;
+            }
+          }
+        } catch {
+          // ignore if fs is unavailable in this environment
+        }
+      }
+
+      return undefined;
+    };
+
     try {
       this.widgets = new WidgetFactory();
 
       // Register all widgets
       for (const [name, spec] of Object.entries(this.config.widgets || {})) {
+        const resolvedPath = resolveWidgetPath(spec.path);
+        if (!resolvedPath) {
+          // Skip unresolved widget paths instead of generating noisy warnings during build/test.
+          continue;
+        }
+
         if (spec.lazy) {
           // Lazy-load widget - loader handles missing module gracefully
           this.widgets.registerLazy(name, async () => {
             try {
-              const module = await import(spec.path);
+              const module = await import(resolvedPath);
               return module.default || module;
             } catch (e) {
               console.warn(`[AppContextBuilder] Failed to lazy-load widget ${name}: ${e}`);
@@ -214,8 +203,7 @@ export class AppContextBuilder {
           // Sync-load widget - handle missing module gracefully
           try {
             // Use require for synchronous loading
-            // Resolve relative paths safely
-            const widget = require(spec.path);
+            const widget = require(resolvedPath);
             this.widgets.register(name, widget.default || widget);
           } catch (e) {
             console.warn(`[AppContextBuilder] Failed to load widget ${name}: ${e}`);
@@ -298,13 +286,17 @@ export class AppContextBuilder {
    * Handle errors during building
    */
   private handleError(error: Error, fatal: boolean = false): void {
-    console.error('[AppContextBuilder]', error);
+    import('../security/observability.js').then(({ defaultLogger }) => {
+      defaultLogger.error('[AppContextBuilder] Build error', error);
+    });
     if (fatal) this.buildErrors.push(error);
     for (const handler of this.errorHandlers) {
       try {
         handler(error);
       } catch (e) {
-        console.error('[AppContextBuilder] Error handler failed:', e);
+        import('../security/observability.js').then(({ defaultLogger }) => {
+          defaultLogger.error('[AppContextBuilder] Error handler failed', e instanceof Error ? e : new Error(String(e)));
+        });
       }
     }
   }

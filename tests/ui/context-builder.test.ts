@@ -3,6 +3,8 @@
  * Test the DI container initialization and context creation
  */
 
+import fs from 'fs';
+import path from 'path';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AppContextBuilder, type GeneratedConfig } from '../../src/ui/context-builder';
 import { clearStyles, getRegisteredStyles } from '../../src/ui/style-registry';
@@ -195,6 +197,28 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       builder.withServices();
 
       expect(() => builder.build()).toThrow();
+    });
+
+    it('should support plugin adapter services without failing build', async () => {
+      const pluginConfig = {
+        ...config,
+        services: {
+          storeService: {
+            adapter: 'plugin',
+            provider: 'store',
+            backend: 'local',
+          },
+        },
+      } as any;
+
+      const builder = new AppContextBuilder(pluginConfig);
+      builder.withServices();
+
+      const app = builder.build();
+      expect(app.services['storeService']).toBeDefined();
+      await expect((app.services['storeService'] as any)()).rejects.toThrow(
+        'Plugin service \'storeService\' is not installed yet'
+      );
     });
 
     it('should support adapter field when type is missing', () => {

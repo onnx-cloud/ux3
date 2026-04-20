@@ -30,3 +30,6 @@ todo
 generated/
 html/
 test-results
+playwright-report-html
+playwright-report
+

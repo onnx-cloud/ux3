@@ -69,8 +69,12 @@
       "types": "./dist/a11y/index.d.ts"
     }
   },
+  "bin": {
+    "ux3": "./bin/ux3"
+  },
   "files": [
     "dist",
+    "bin",
     "README.md",
     "LICENSE"
   ],
@@ -81,17 +85,17 @@
     "dev:iam": "npx tsx src/cli/cli.ts dev examples/iam --port 1337",
     "dev:kanban": "npx tsx src/cli/cli.ts dev examples/kanban --port 1337",
     "dev:onnx.cloud": "npx tsx src/cli/cli.ts dev examples/onnx.cloud --port 1337",
-    "dev:quadra.cafe": "npx tsx src/cli/cli.ts dev examples/quadra.cafe --port 1337",
+    "dev:quadra": "npx tsx src/cli/cli.ts dev examples/quadra --port 1337",
     "dev:tenant.saas": "npx tsx src/cli/cli.ts dev examples/tenant.saas --port 1337",
     "validate:iam": "npx tsx src/cli/validate.ts --projectDir ./examples/iam",
     "validate:kanban": "npx tsx src/cli/validate.ts --projectDir ./examples/kanban",
     "validate:onnx.cloud": "npx tsx src/cli/validate.ts --projectDir ./examples/onnx.cloud",
-    "validate:quadra.cafe": "npx tsx src/cli/validate.ts --projectDir ./examples/quadra.cafe",
+    "validate:quadra": "npx tsx src/cli/validate.ts --projectDir ./examples/quadra",
     "validate:tenant.saas": "npx tsx src/cli/validate.ts --projectDir ./examples/tenant.saas",
     "validate:strict:iam": "npx tsx src/cli/validate.ts --projectDir ./examples/iam --strict",
     "validate:strict:kanban": "npx tsx src/cli/validate.ts --projectDir ./examples/kanban --strict",
     "validate:strict:onnx.cloud": "npx tsx src/cli/validate.ts --projectDir ./examples/onnx.cloud --strict",
-    "validate:strict:quadra.cafe": "npx tsx src/cli/validate.ts --projectDir ./examples/quadra.cafe --strict",
+    "validate:strict:quadra": "npx tsx src/cli/validate.ts --projectDir ./examples/quadra --strict",
     "validate:strict:tenant.saas": "npx tsx src/cli/validate.ts --projectDir ./examples/tenant.saas --strict",
     "build": "npm run clean && tsc -b tsconfig.build.json && npm run size-check",
     "gold": "npm run clean && tsc && vitest run && npm run size-check && npm run minify",
@@ -99,6 +103,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:html": "vite preview --outDir html",
     "test-plugins": "vitest run tests/plugin-*",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:ui": "playwright test --ui",
