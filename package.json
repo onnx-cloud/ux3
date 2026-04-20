@@ -1,6 +1,6 @@
 {
   "name": "@ux3/ux3",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "Lightweight declarative UI framework with FSM, security, and accessibility built-in",
   "license": "MIT",
   "author": "UX3 Contributors",
