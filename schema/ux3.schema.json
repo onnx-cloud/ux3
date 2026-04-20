@@ -14,6 +14,10 @@
       "minLength": 1,
       "description": "Entry-point view, relative to ux/ (e.g. view/home.yaml)"
     },
+    "domain": {
+      "type": "string",
+      "description": "Optional domain name for the application"
+    },
     "site": {
       "type": "object",
       "properties": {
