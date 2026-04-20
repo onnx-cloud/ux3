@@ -1,5 +1,0 @@
-routes:
-  - path: /
-    view: content
-  # additional routes (e.g. /about-us) will be added during runtime by the
-  # content plugin based on frontmatter.path or slug values

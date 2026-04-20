@@ -1,8 +1,0 @@
-card:
-  base: 'bg-white rounded-md border border-gray-200 shadow-sm p-4'
-  variants:
-    state:
-      default: 'border-gray-200'
-      hover: 'hover:shadow-md hover:border-gray-300'
-  defaults:
-    state: default

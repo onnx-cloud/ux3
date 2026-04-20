@@ -1,7 +1,0 @@
-{
-  "dashboard": {
-    "loading": { "label": "Loading dashboard" },
-    "loaded": { "label": "Your dashboard" },
-    "error": { "label": "Unable to load dashboard" }
-  }
-}

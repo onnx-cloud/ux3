@@ -1,28 +1,8 @@
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { Validator } from '../../build/validator.js';
 import { lintLogicModules } from '../logic-lint.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(__dirname, '../../../');
-
-function loadSchemas() {
-  const schemasDir = path.join(rootDir, 'schema');
-  const schemas: Record<string, any> = {};
-  const schemaFiles = ['routes', 'services', 'i18n', 'style', 'tokens', 'validate', 'view', 'content'];
-
-  for (const file of schemaFiles) {
-    const schemaPath = path.join(schemasDir, `${file}.schema.json`);
-    if (fs.existsSync(schemaPath)) {
-      const content = fs.readFileSync(schemaPath, 'utf-8');
-      schemas[file] = JSON.parse(content);
-    }
-  }
-
-  return schemas;
-}
 
 type LintOptions = {
   strict?: boolean;
@@ -69,7 +49,6 @@ function parseFailedViewLine(line: string): { viewFile: string; detail: string }
 }
 
 async function runLint(projectDir: string, options: LintOptions): Promise<void> {
-  const schemas = loadSchemas();
   const strict = Boolean(options.strict);
   const uxDir = path.join(projectDir, 'ux');
 
@@ -80,7 +59,6 @@ async function runLint(projectDir: string, options: LintOptions): Promise<void> 
 
   const validator = new Validator({
     projectDir,
-    schemas,
     failOnWarnings: strict,
   });
 

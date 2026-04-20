@@ -1,7 +1,0 @@
-{
-  "for-you": {
-    "loading": { "label": "Loading recommendations" },
-    "loaded": { "label": "For you" },
-    "error": { "label": "Unable to load recommendations" }
-  }
-}

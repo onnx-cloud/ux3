@@ -1,8 +1,0 @@
-name: content
-states:
-  viewing:
-    template: 'content.html'
-    invoke:
-      service: 'content'
-      method: 'load'
-      # entry is optional; service will infer from pathname if absent

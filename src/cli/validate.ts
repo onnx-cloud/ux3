@@ -1,4 +1,3 @@
-import fs from 'fs/promises';
 import path from 'path';
 import { Validator } from '../build/validator.js';
 
@@ -10,21 +9,7 @@ async function main(): Promise<void> {
 
   console.log(`[ux3 validate] projectDir=${projectDir} strict=${strict}`);
 
-  // Load a minimal set of schemas if available
-  const schemas: Record<string, any> = {};
-  const schemaFiles = ['routes', 'services'];
-  const schemaDir = path.join(process.cwd(), 'schema');
-  for (const name of schemaFiles) {
-    try {
-      const p = path.join(schemaDir, `${name}.schema.json`);
-      const content = await fs.readFile(p, 'utf-8');
-      schemas[name] = JSON.parse(content);
-    } catch (err) {
-      // ignore missing schemas
-    }
-  }
-
-  const validator = new Validator({ projectDir, schemas, failOnWarnings: strict });
+  const validator = new Validator({ projectDir, failOnWarnings: strict });
   const result = await validator.validate();
 
   if (result.errors.length > 0) {

@@ -88,7 +88,6 @@ export const buildCommand = new Command()
       console.log(`✔️  Validating configuration...`);
       const validator = new Validator({
         projectDir,
-        schemas,
       });
       const validation = await validator.validate();
 

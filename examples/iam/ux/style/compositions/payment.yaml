@@ -1,4 +1,0 @@
-payment.form:
-  base: 'p-4 bg-white rounded-md shadow-sm space-y-3'
-upgrade.modal:
-  base: 'p-6 bg-white rounded-lg shadow-lg text-center'

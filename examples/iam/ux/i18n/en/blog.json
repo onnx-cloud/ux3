@@ -1,7 +1,0 @@
-{
-  "blog": {
-    "loading": { "label": "Loading posts" },
-    "loaded": { "label": "Latest posts" },
-    "error": { "label": "Unable to load blog" }
-  }
-}

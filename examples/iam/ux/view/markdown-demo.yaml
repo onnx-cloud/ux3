@@ -1,8 +1,0 @@
-name: 'markdown-demo'
-layout: default
-initial: ready
-states:
-  ready:
-    template: 'view/markdown-demo/ready.html'
-
-

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UX3 project configuration schema",
+  "type": "object",
+  "required": ["name", "index"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique application identifier (e.g. app.my.project)"
+    },
+    "index": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Entry-point view, relative to ux/ (e.g. view/home.yaml)"
+    },
+    "site": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "config": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "development": {
+      "type": "object",
+      "properties": {
+        "hot-reload": { "type": "boolean" },
+        "logging": { "type": "string" },
+        "inspector": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "bundleKey": { "type": "string" },
+        "hydrationFn": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

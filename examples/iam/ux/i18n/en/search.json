@@ -1,8 +1,0 @@
-{
-  "search": {
-    "results": { "label": "Search results" },
-    "searching": { "label": "Searching" },
-    "idle": { "label": "Search" },
-    "error": { "label": "No results" }
-  }
-}

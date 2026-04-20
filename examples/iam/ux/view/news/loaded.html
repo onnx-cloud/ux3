@@ -1,9 +1,0 @@
-<div ux-state="news.loaded">
-  <div ux-style="widget">{{i18n.news.loaded.label}}</div>
-  <ul ux-each="{{ctx}}"> <!-- assume ctx is array from loadNewsData -->
-    <li>
-      <h3>{{this.title}}</h3>
-      <p>{{this.body}}</p>
-    </li>
-  </ul>
-</div>

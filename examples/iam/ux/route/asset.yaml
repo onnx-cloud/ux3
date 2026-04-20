@@ -1,3 +1,0 @@
-routes:
-  - path: /asset/:asset
-    view: asset

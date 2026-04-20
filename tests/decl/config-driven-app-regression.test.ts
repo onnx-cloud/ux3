@@ -194,7 +194,7 @@ describe('Config-driven declarative build and validation', () => {
 
     await expect(
       compileAllViews(path.join(projectDir, 'ux', 'view'), outDir, projectDir)
-    ).rejects.toThrow(/warnings\/errors/);
+    ).rejects.toThrow(/Layout.*not found|Failed to compile/);
   });
 
   const invalidRouteScenarios = Array.from({ length: 12 }, (_, idx) => {
@@ -220,7 +220,6 @@ describe('Config-driven declarative build and validation', () => {
 
       const result = await new Validator({
         projectDir,
-        schemas: {},
         enableAdvancedValidation: false,
       }).validate();
 
@@ -381,6 +380,83 @@ describe('Config-driven loader and mutation behavior', () => {
     expect((merged.tokens as any).color.accent).toBe('#0af');
   });
 });
+
+describe('UxFolderValidator', () => {
+  it('reports error for unsupported top-level ux/ folder', async () => {
+    const projectDir = path.join(TMP_ROOT, 'ux-folder-unknown');
+    await fs.remove(projectDir);
+    await fs.ensureDir(path.join(projectDir, 'ux', 'widgets'));
+
+    const validator = new Validator({ projectDir, enableAdvancedValidation: true });
+    const result = await validator.validate();
+
+    expect(result.errors.some((e) => e.message.includes("Unsupported top-level ux/ folder: 'widgets'"))).toBe(true);
+  });
+
+  it('passes when only allowed top-level ux/ folders are present', async () => {
+    const projectDir = path.join(TMP_ROOT, 'ux-folder-allowed');
+    await fs.remove(projectDir);
+    await writeDeclarativeProject(projectDir, { viewName: 'test-view', stateNames: ['idle'] });
+
+    const validator = new Validator({ projectDir, enableAdvancedValidation: true });
+    const result = await validator.validate();
+
+    expect(result.errors.some((e) => e.message.includes('Unsupported top-level ux/ folder'))).toBe(false);
+  });
+});
+
+describe('StyleRefValidator', () => {
+  it('reports error for unknown ux-style key in a view template', async () => {
+    const projectDir = path.join(TMP_ROOT, 'style-ref-unknown');
+    await fs.remove(projectDir);
+    await writeDeclarativeProject(projectDir, { viewName: 'style-test', stateNames: ['idle'] });
+
+    // Add a style YAML with one registered key
+    await fs.ensureDir(path.join(projectDir, 'ux', 'style'));
+    await fs.writeFile(
+      path.join(projectDir, 'ux', 'style', 'tokens.yaml'),
+      'card:\n  base: p-4\n',
+      'utf-8'
+    );
+
+    // Write a template that references a key NOT in the style registry
+    await fs.writeFile(
+      path.join(projectDir, 'ux', 'view', 'style-test-idle.html'),
+      '<section ux-style="ghost-key">content</section>\n',
+      'utf-8'
+    );
+
+    const validator = new Validator({ projectDir, enableAdvancedValidation: true });
+    const result = await validator.validate();
+
+    expect(result.errors.some((e) => e.message.includes('Unknown ux-style key "ghost-key"'))).toBe(true);
+  });
+
+  it('passes when ux-style key exists in style registry', async () => {
+    const projectDir = path.join(TMP_ROOT, 'style-ref-valid');
+    await fs.remove(projectDir);
+    await writeDeclarativeProject(projectDir, { viewName: 'style-valid', stateNames: ['idle'] });
+
+    await fs.ensureDir(path.join(projectDir, 'ux', 'style'));
+    await fs.writeFile(
+      path.join(projectDir, 'ux', 'style', 'tokens.yaml'),
+      'card:\n  base: p-4\n',
+      'utf-8'
+    );
+
+    await fs.writeFile(
+      path.join(projectDir, 'ux', 'view', 'style-valid-idle.html'),
+      '<section ux-style="card">content</section>\n',
+      'utf-8'
+    );
+
+    const validator = new Validator({ projectDir, enableAdvancedValidation: true });
+    const result = await validator.validate();
+
+    expect(result.errors.some((e) => e.message.includes('Unknown ux-style key'))).toBe(false);
+  });
+});
+
 
 describe('Config-driven FSM behavior under declarative changes', () => {
   const eventSet = ['INC', 'DEC', 'MUL2', 'RESET'];

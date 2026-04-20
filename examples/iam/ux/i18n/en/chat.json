@@ -1,8 +1,0 @@
-{
-  "chat": {
-    "loading": { "label": "Loading conversations" },
-    "ready": { "label": "Conversations" },
-    "chatting": { "label": "Conversation" },
-    "error": { "label": "Unable to load chat" }
-  }
-}

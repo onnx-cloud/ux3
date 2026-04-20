@@ -89,7 +89,6 @@ export const devCommand = new Command()
 
           const validator = new Validator({
             projectDir,
-            schemas,
           });
           const validation = await validator.validate();
 

@@ -1,7 +1,0 @@
-{
-  "today": {
-    "loading": { "label": "Loading today" },
-    "loaded": { "label": "Today" },
-    "error": { "label": "Unable to load today" }
-  }
-}

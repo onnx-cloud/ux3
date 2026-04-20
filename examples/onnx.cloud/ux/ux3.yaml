@@ -1,8 +1,0 @@
-name: onnx-cloud
-site:
-  title: "ONNX.cloud"
-  description: "machine intelligence built on open standards"
-routes:
-  - path: /
-    view: content
-

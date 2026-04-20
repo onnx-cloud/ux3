@@ -1,8 +1,0 @@
-{
-  "products": {
-    "searching": { "label": "Searching products" },
-    "idle": { "label": "Products" },
-    "loaded": { "label": "Products" },
-    "error": { "label": "Unable to load products" }
-  }
-}

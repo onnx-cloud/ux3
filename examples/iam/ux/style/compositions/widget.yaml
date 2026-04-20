@@ -1,5 +1,0 @@
-widget:
-  base: 'p-4 bg-white rounded-md shadow-sm text-gray-800'
-  props:
-    direction: 'vertical'
-    gap: 'md'

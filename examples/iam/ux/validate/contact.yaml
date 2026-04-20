@@ -1,9 +1,0 @@
-contact:
-  email:
-    type: string
-    required: true
-    pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
-  message:
-    type: string
-    required: true
-    minLength: 10

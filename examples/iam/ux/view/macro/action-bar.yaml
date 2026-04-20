@@ -1,4 +1,0 @@
-initial: idle
-states:
-  idle:
-    template: 'view/macro/action-bar.html'

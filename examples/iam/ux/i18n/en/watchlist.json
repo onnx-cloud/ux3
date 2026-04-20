@@ -1,7 +1,0 @@
-{
-  "watchlist": {
-    "loading": { "label": "Loading watchlist" },
-    "loaded": { "label": "Your watchlist" },
-    "error": { "label": "Unable to load watchlist" }
-  }
-}

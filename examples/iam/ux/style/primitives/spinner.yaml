@@ -1,2 +1,0 @@
-spinner:
-  base: 'animate-spin inline-block h-6 w-6 border-2 border-t-transparent rounded-full text-$colors-light-primary'

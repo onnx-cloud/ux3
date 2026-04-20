@@ -32,4 +32,5 @@ html/
 test-results
 playwright-report-html
 playwright-report
+examples
 
