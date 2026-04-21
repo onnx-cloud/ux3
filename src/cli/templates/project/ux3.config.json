@@ -1,0 +1,4 @@
+{
+  "views": "ux/view/**/*.yaml",
+  "output": "src/generated"
+}

@@ -84,8 +84,12 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         throw new Error(`FSM not found: '${fsmName}'. Available: ${Object.keys(this.app.machines).join(', ')}`);
       }
 
-      this.layout = this.app.template(layoutName);
-      if (!this.layout) {
+      // Prefer app-level layout templates, but keep the generated in-class
+      // layout fallback so examples using only `ux/layout/_.html` still render.
+      const runtimeLayout = this.app.template(layoutName);
+      if (runtimeLayout) {
+        this.layout = runtimeLayout;
+      } else if (!this.layout) {
         throw new Error(`Layout not found: ${layoutName}`);
       }
 

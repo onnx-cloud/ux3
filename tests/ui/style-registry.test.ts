@@ -62,4 +62,20 @@ describe('StyleRegistry', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
     expect(el.className).toBe('z');
   });
+
+  it('should apply styles immediately when init runs after DOMContentLoaded', () => {
+    clearStyles();
+    registerStyles({ late: 'late-class' });
+
+    const el = document.createElement('div');
+    el.setAttribute('ux-style', 'late');
+    document.body.appendChild(el);
+
+    // Simulate a page where hydration starts after DOM ready.
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+
+    // Re-initialize style registry; immediate pass should style existing nodes.
+    initStyleRegistry();
+    expect(el.className).toContain('late-class');
+  });
 });

@@ -4,6 +4,7 @@ import { promises as fs } from 'fs';
 import fsSync from 'fs';
 import path from 'path';
 import YAML from 'yaml';
+import { buildContext, emitScaffold } from '../template-engine.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -157,58 +158,10 @@ async function installPlugin(raw: string, options: { dev?: boolean; save?: boole
   console.log(`   Configure it in ux3.yaml under plugins.${JSON.stringify(pkgName)}`);
 }
 
-// ---------------------------------------------------------------------------
-// ux3 plugin create <name>
-// ---------------------------------------------------------------------------
-
-const PLUGIN_INDEX_TEMPLATE = (name: string, display: string) => `import type { Plugin } from '@ux3/core';
-
-const ${name}: Plugin = {
-  name: '${display}',
-  description: 'TODO: describe your plugin',
-  install(app) {
-    // TODO: implement your plugin
-    console.log('[${display}] installed');
-  },
-};
-
-export default ${name};
-`;
-
-const PLUGIN_PACKAGE_TEMPLATE = (name: string, display: string) =>
-  JSON.stringify(
-    {
-      name: display,
-      version: '0.1.0',
-      description: 'TODO: describe your plugin',
-      type: 'module',
-      main: 'dist/index.js',
-      types: 'dist/index.d.ts',
-      scripts: { build: 'tsc -p tsconfig.json' },
-      peerDependencies: { '@ux3/core': '^0.1.0' },
-      dependencies: {},
-      keywords: ['ux3', 'plugin'],
-    },
-    null,
-    2
-  );
-
-const PLUGIN_TSCONFIG_TEMPLATE = () =>
-  JSON.stringify(
-    {
-      extends: '../../../../tsconfig.json',
-      compilerOptions: { outDir: 'dist', rootDir: 'src' },
-      include: ['src'],
-    },
-    null,
-    2
-  );
-
 async function createPlugin(raw: string, options: { dir?: string }): Promise<void> {
   // "my-plugin" → camelCase "myPlugin" for the export name
   const slug = raw.replace(/^plugin-/, '');
   const pkgName = `@ux3/plugin-${slug}`;
-  const exportName = slug.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
   const projectRoot = findProjectRoot();
   const baseDir = options.dir
@@ -221,16 +174,14 @@ async function createPlugin(raw: string, options: { dir?: string }): Promise<voi
     process.exit(1);
   }
 
-  await fs.mkdir(path.join(baseDir, 'src'), { recursive: true });
-  await fs.writeFile(path.join(baseDir, 'src', 'index.ts'), PLUGIN_INDEX_TEMPLATE(exportName, pkgName));
-  await fs.writeFile(path.join(baseDir, 'package.json'), PLUGIN_PACKAGE_TEMPLATE(slug, pkgName));
-  await fs.writeFile(path.join(baseDir, 'tsconfig.json'), PLUGIN_TSCONFIG_TEMPLATE());
+  const ctx = buildContext(slug);
+  const written = await emitScaffold('plugin', ctx, baseDir);
 
   console.log(`\n🎨 Plugin scaffold created at ${baseDir}`);
   console.log(`\nFiles:`);
-  console.log(`  ${path.relative(projectRoot, path.join(baseDir, 'package.json'))}`);
-  console.log(`  ${path.relative(projectRoot, path.join(baseDir, 'tsconfig.json'))}`);
-  console.log(`  ${path.relative(projectRoot, path.join(baseDir, 'src', 'index.ts'))}`);
+  for (const f of written) {
+    console.log(`  ${path.relative(projectRoot, f)}`);
+  }
   console.log(`\nNext steps:`);
   console.log(`  1. cd ${path.relative(process.cwd(), baseDir)}`);
   console.log(`  2. npm run build`);

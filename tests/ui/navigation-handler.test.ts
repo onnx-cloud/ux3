@@ -215,6 +215,17 @@ describe('setupNavigation: popstate event triggers re-mount', () => {
     window.dispatchEvent(new PopStateEvent('popstate'));
     expect(document.querySelector('#ux-content')!.firstElementChild!.tagName.toLowerCase()).toBe('ux-home');
   });
+
+  it('mounts the hash route on hashchange (e.g. #/market/NASDAQ)', () => {
+    const ctx = makeCtx();
+    setupNavigation(ctx);
+
+    window.location.hash = '#/market/NASDAQ';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    const content = document.querySelector('#ux-content');
+    expect(content!.firstElementChild!.tagName.toLowerCase()).toBe('ux-market');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -270,6 +281,20 @@ describe('setupNavigation: <a> click interception', () => {
     a.click();
 
     expect(document.querySelector('#ux-content')!.innerHTML).toBe(before);
+  });
+
+  it('intercepts hash routes (e.g. #/news) and mounts the matching view', () => {
+    const ctx = makeCtx();
+    setupNavigation(ctx);
+
+    const a = document.createElement('a');
+    a.href = '#/news';
+    document.body.appendChild(a);
+    a.click();
+
+    const content = document.querySelector('#ux-content');
+    expect(window.location.hash).toBe('#/news');
+    expect(content!.firstElementChild!.tagName.toLowerCase()).toBe('ux-news');
   });
 
   it('does NOT intercept an anchor with the "disabled" attribute', () => {

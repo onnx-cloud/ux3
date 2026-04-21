@@ -50,6 +50,18 @@ function findRouteForPath(
 }
 
 /**
+ * Resolve current app path, preferring hash-based SPA routes (e.g. #/market)
+ * when present, then falling back to location.pathname.
+ */
+function currentPathname(): string {
+  const hash = window.location.hash || '';
+  if (hash.startsWith('#/')) {
+    return hash.slice(1);
+  }
+  return window.location.pathname || '/';
+}
+
+/**
  * BUG-2 fix: Insert a view custom element into #ux-content.
  * Removes any currently-mounted view first (triggering its disconnectedCallback).
  * Passes route params as data attributes for the view to consume.
@@ -124,6 +136,11 @@ export function setupNavigation(appContext: AppContext): void {
     handleNavigationEvent(appContext);
   });
 
+  // Handle hash-based navigation changes (#/path)
+  window.addEventListener('hashchange', () => {
+    handleNavigationEvent(appContext);
+  });
+
   // Handle all anchor clicks (SPA link interception)
   document.addEventListener('click', (event: Event) => {
     const target = event.target as HTMLElement;
@@ -132,8 +149,19 @@ export function setupNavigation(appContext: AppContext): void {
     if (!anchor) return;
 
     const href = anchor.getAttribute('href');
-    if (!href || href.startsWith('http') || href.startsWith('//') || href.startsWith('#') || href.startsWith('?')) {
+    if (!href || href.startsWith('http') || href.startsWith('//') || href.startsWith('?')) {
       return; // External, hash-only, or query-only link — let browser handle
+    }
+
+    // Hash-based SPA route (e.g. #/capabilities/platform)
+    if (href.startsWith('#/')) {
+      event.preventDefault();
+      navigateTo(href.slice(1), appContext, true);
+      return;
+    }
+
+    if (href.startsWith('#')) {
+      return; // non-route hash anchor
     }
 
     // Check if link is explicitly disabled
@@ -153,7 +181,7 @@ export function setupNavigation(appContext: AppContext): void {
 /**
  * Navigate to a path programmatically (updates history + mounts the view).
  */
-export function navigateTo(pathname: string, appContext: AppContext): void {
+export function navigateTo(pathname: string, appContext: AppContext, useHash: boolean = false): void {
   if (!appContext.nav) {
     defaultLogger.warn('[Navigation] NavConfig not found; cannot navigate');
     return;
@@ -173,8 +201,12 @@ export function navigateTo(pathname: string, appContext: AppContext): void {
     return;
   }
 
-  // Update browser history before mounting so the view can read the correct URL
-  window.history.pushState({ view: targetView, path: pathname }, '', pathname);
+  // Update browser location before mounting so the view can read the correct URL.
+  if (useHash) {
+    window.location.hash = pathname;
+  } else {
+    window.history.pushState({ view: targetView, path: pathname }, '', pathname);
+  }
   mountView(targetView, params);
   defaultLogger.info(`[Navigation] Navigated to ${pathname} (view: ${targetView})`);
 }
@@ -186,7 +218,7 @@ export function navigateTo(pathname: string, appContext: AppContext): void {
 function handleNavigationEvent(appContext: AppContext): void {
   if (!appContext.nav) return;
 
-  const pathname = window.location.pathname;
+  const pathname = currentPathname();
   const match = findRouteForPath(pathname, appContext.nav.routes);
 
   const targetView = match?.view ?? 'home';

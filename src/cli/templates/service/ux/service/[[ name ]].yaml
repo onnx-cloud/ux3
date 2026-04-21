@@ -1,0 +1,19 @@
+name: [[ name ]]
+description: [[ Name ]] service
+endpoint: /api/[[ name ]]
+methods:
+  - name: get
+    http: GET
+    path: /{id}
+  - name: list
+    http: GET
+    path: /
+  - name: create
+    http: POST
+    path: /
+  - name: update
+    http: PUT
+    path: /{id}
+  - name: remove
+    http: DELETE
+    path: /{id}

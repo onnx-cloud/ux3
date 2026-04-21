@@ -1,0 +1,8 @@
+initial: idle
+states:
+  idle: |
+    <div>
+      <h1>Welcome to [[ name ]]</h1>
+      <button ux-event="CLICK">Click me</button>
+    </div>
+  clicked: 'view/hello/clicked.html'

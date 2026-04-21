@@ -1,0 +1,14 @@
+initial: idle
+states:
+  idle:
+    template: view/[[ name ]]/idle.html
+    on:
+      SUBMIT: submitting
+  submitting:
+    template: view/[[ name ]]/submitting.html
+    invoke:
+      src: handle[[ Name ]]Submit
+    on:
+      SUCCESS: done
+      ERROR: idle
+  done: view/[[ name ]]/done.html

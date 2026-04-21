@@ -268,10 +268,15 @@ export const TailwindPlusPlugin: Plugin = {
   version: '0.1.0',
   description: 'Tailwind CSS integration with FSM-driven UI components',
   async install(app: AppContext) {
-    // Register stylesheet if configured
+    // Register CDN asset — @tailwindcss/browser is a JS runtime, not a stylesheet
     const cssPath = app.config.plugins?.['tailwind-plus']?.css;
     if (cssPath) {
-      app.registerAsset?.({ type: 'style', href: cssPath });
+      const isScript = cssPath.includes('@tailwindcss/browser') || cssPath.endsWith('.js');
+      if (isScript) {
+        app.registerAsset?.({ type: 'script', src: cssPath });
+      } else {
+        app.registerAsset?.({ type: 'style', href: cssPath });
+      }
     }
 
     // Register utility helper

@@ -13,6 +13,7 @@ import { compileCommand } from '../../src/cli/compile.ts';
 import { configCommand } from '../../src/cli/commands/config.ts';
 import { previewCommand } from '../../src/cli/commands/preview.ts';
 import { helpCommand } from '../../src/cli/commands/help.ts';
+import { pluginCommand } from '../../src/cli/commands/plugin.ts';
 
 // helper to run a command and capture exit code
 async function runCommand(cmd: any, args: string[], cwd: string) {
@@ -237,6 +238,26 @@ describe('UX3 CLI commands', () => {
     } finally {
       console.log = origLog;
     }
+  });
+
+  it('`plugin create` scaffolds a valid UX3 plugin package', async () => {
+    const pluginDir = path.join(tmpRoot, 'pkg-plugin-analytics');
+    const exit = await runCommand(
+      pluginCommand,
+      ['create', 'analytics', '--dir', pluginDir],
+      tmpRoot
+    );
+    expect(exit).toBe(0);
+
+    const pkg = await fs.readJson(path.join(pluginDir, 'package.json'));
+    expect(pkg.name).toBe('@ux3/plugin-analytics');
+    expect(pkg.peerDependencies?.['@ux3/ux3']).toBeDefined();
+
+    const indexSource = await fs.readFile(path.join(pluginDir, 'src', 'index.ts'), 'utf8');
+    expect(indexSource).toContain("import type { Plugin } from '@ux3/ux3';");
+    expect(indexSource).toContain("version: '0.1.0'");
+    expect(indexSource).not.toContain('TODO:');
+    expect(indexSource).not.toContain('console.log(');
   });
 
   it('`preview` command handles direction and once flag', async () => {

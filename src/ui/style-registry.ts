@@ -178,4 +178,11 @@ export function initStyleRegistry(): void {
     });
     domListenerAdded = true;
   }
+
+  // Hydration often runs after DOMContentLoaded has already fired, so apply
+  // styles immediately as well to ensure server-rendered markup gets class
+  // injection on first hydrate.
+  if (typeof document !== 'undefined' && document.body) {
+    applyStyles(document.body);
+  }
 }

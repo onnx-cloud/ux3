@@ -735,10 +735,17 @@ export default Views;
    * Convert to PascalCase
    */
   private toPascalCase(str: string): string {
-    return str
-      .split('-')
+    const base = str
+      .split(/[^a-zA-Z0-9]+/)
+      .filter(Boolean)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join('');
+
+    const safe = base || 'View';
+    if (/^[0-9]/.test(safe)) {
+      return `V${safe}`;
+    }
+    return safe;
   }
 
   /**
