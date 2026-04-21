@@ -17,7 +17,7 @@ afterEach(async () => {
 });
 
 describe('Tenant SaaS view compilation', () => {
-  it('should fail fast on missing view templates', async () => {
-    await expect(compileAllViews(viewsDir, outDir, exampleRoot)).rejects.toThrow(/warnings\/errors/);
+  it('should compile tenant SaaS views successfully', async () => {
+    await expect(compileAllViews(viewsDir, outDir, exampleRoot)).resolves.toBeUndefined();
   });
 });

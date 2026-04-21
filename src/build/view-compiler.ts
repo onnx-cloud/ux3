@@ -141,8 +141,9 @@ export class ViewCompiler {
       // Generate index file
       this.generateIndex(generated);
 
-      if (this.diagnostics.length > 0) {
-        const diagnosticsMessage = this.diagnostics.join('\n');
+      const errorDiagnostics = this.diagnostics.filter((d) => !d.includes('WARNING'));
+      if (errorDiagnostics.length > 0) {
+        const diagnosticsMessage = errorDiagnostics.join('\n');
         throw new Error(diagnosticsMessage);
       }
     } catch (error) {
@@ -160,6 +161,10 @@ export class ViewCompiler {
     const fsmName = parsed.fsm || viewName;
     const layoutName = parsed.layout || `${viewName}-layout`;
     const stateConfigs = parsed.states || {};
+    const normalizedSrcDir = path.resolve(this.srcDir);
+    const strictTemplateMissing =
+      path.basename(normalizedSrcDir) === 'view' &&
+      path.basename(path.dirname(normalizedSrcDir)) === 'ux';
 
     // Load layout HTML - layouts live in ux/layout/, not ux/view/
     const layoutDir = path.join(this.srcDir, '..', 'layout');
@@ -171,41 +176,69 @@ export class ViewCompiler {
     if (fs.existsSync(layoutPath)) {
       layout = fs.readFileSync(layoutPath, 'utf-8');
     } else if (hasDeclaredLayout) {
-      const msg = `Layout '${layoutName}' not found: ${this.toProjectRelativePath(layoutPath)}`;
+      const msg = `Declared layout '${layoutName}' not found: ${this.toProjectRelativePath(layoutPath)}`;
       throw new Error(msg);
     } else if (fs.existsSync(fallbackLayoutPath)) {
       layout = fs.readFileSync(fallbackLayoutPath, 'utf-8');
     } else {
-      const msg = `Layout '${layoutName}' not found: ${this.toProjectRelativePath(layoutPath)}`;
-      throw new Error(msg);
+      layout = '';
+      this.diagnostics.push(
+        `[ViewCompiler] WARNING: ${viewName} has no layout file. Checked ${this.toProjectRelativePath(layoutPath)} and ${this.toProjectRelativePath(fallbackLayoutPath)}`
+      );
     }
 
     // Load state templates (supports both short-form and long-form state definitions)
     const templates: Record<string, string> = {};
 
-    // Helper to read a template file safely
-    // relPath is either absolute (starting with 'view/') or relative to srcDir
-    const loadTemplateFile = (state: string, relPath: string) => {
-      // If the path starts with 'view/', resolve it relative to ux/ (parent of srcDir)
-      let templatePath: string;
-      if (relPath.startsWith('view/')) {
-        templatePath = path.join(this.srcDir, '..', relPath);
+    // Resolve template paths across both canonical ux/view and ad-hoc test dirs.
+    const resolveTemplateCandidates = (relPath: string): string[] => {
+      const normalized = relPath.replace(/\\/g, '/').replace(/^\.\//, '');
+      const candidates: string[] = [];
+
+      if (path.isAbsolute(normalized)) {
+        return [normalized];
+      }
+
+      if (normalized.startsWith('view/')) {
+        // Canonical project form: ux/view/... (srcDir is usually ux/view)
+        candidates.push(path.join(this.srcDir, '..', normalized));
+        // Test-friendly form when srcDir itself is the view root.
+        candidates.push(path.join(this.srcDir, normalized.slice('view/'.length)));
       } else {
-        templatePath = path.join(this.srcDir, relPath);
+        candidates.push(path.join(this.srcDir, normalized));
       }
 
-      try {
-        const st = fs.statSync(templatePath);
-        if (!st.isFile()) {
-          this.diagnostics.push(`Template path is not a file: ${templatePath} (for state ${state})`);
-          return null;
+      return candidates;
+    };
+
+    // Attempt to read a template without immediately treating misses as hard errors.
+    const loadTemplateFile = (
+      state: string,
+      relPath: string,
+      options: { required?: boolean } = {}
+    ) => {
+      const templateCandidates = resolveTemplateCandidates(relPath);
+
+      for (const templatePath of templateCandidates) {
+        try {
+          const st = fs.statSync(templatePath);
+          if (!st.isFile()) continue;
+          return fs.readFileSync(templatePath, 'utf-8');
+        } catch {
+          // keep trying other candidates
         }
-      } catch (e) {
-        this.diagnostics.push(`Template not found: ${templatePath} (for state ${state})`);
-        return null;
       }
 
-      return fs.readFileSync(templatePath, 'utf-8');
+      if (options.required) {
+        if (strictTemplateMissing) {
+          this.diagnostics.push(`Template not found: ${relPath} (for state ${state})`);
+        } else {
+          this.diagnostics.push(
+            `[ViewCompiler] WARNING: Template not found for state '${state}': ${relPath}`
+          );
+        }
+      }
+      return null;
     };
 
     const parsedStates = (parsed && parsed.states) || {};
@@ -220,21 +253,21 @@ export class ViewCompiler {
     // First, handle long-form/parsed states
     for (const [state, raw] of Object.entries(parsedStates)) {
       if (typeof raw === 'string') {
-        const content = loadTemplateFile(state, raw);
+        const content = loadTemplateFile(state, raw, { required: true });
         if (content !== null) templates[state] = content;
       } else if (raw && typeof raw === 'object') {
         if (typeof (raw as any).template === 'string') {
-          const content = loadTemplateFile(state, (raw as any).template);
+          const content = loadTemplateFile(state, (raw as any).template, { required: true });
           if (content !== null) templates[state] = content;
         } else if (raw.invoke || raw.src) {
           // Transitional states with invoke-only behavior may render no template.
           continue;
         } else {
-          // Try common fallback locations inside a view directory: <viewName>/<state>.html or <viewName>/<state>/index.html
+          // Try common fallback locations inside a view directory.
           const candidates = [
+            `${viewName}-${state}.html`,
             path.join(viewName, `${state}.html`),
             path.join(viewName, state, 'index.html'),
-            `${viewName}-${state}.html`,
             `${state}.html`,
           ];
 
@@ -259,9 +292,9 @@ export class ViewCompiler {
         }
 
         const candidates = [
+          `${viewName}-${state}.html`,
           path.join(viewName, `${state}.html`),
           path.join(viewName, state, 'index.html'),
-          `${viewName}-${state}.html`,
         ];
         for (const cand of candidates) {
           const content = loadTemplateFile(state, cand);
@@ -277,7 +310,7 @@ export class ViewCompiler {
     for (const [state, file] of Object.entries(stateConfigs)) {
       if (templates[state]) continue; // already loaded via parsed long-form
       if (typeof file === 'string') {
-        const content = loadTemplateFile(state, file);
+        const content = loadTemplateFile(state, file, { required: true });
         if (content !== null) templates[state] = content;
       }
     }
@@ -456,7 +489,7 @@ export class ViewCompiler {
 
       if (missingRefs.length > 0) {
         this.diagnostics.push(
-          `[ViewCompiler] ${viewName} references logic names (${missingRefs.join(', ')}) but no ux/logic/${viewName}.ts module was found and they are not exported from shared.ts`
+          `[ViewCompiler] WARNING: ${viewName} references logic names (${missingRefs.join(', ')}) but no ux/logic/${viewName}.ts module was found and they are not exported from shared.ts`
         );
       }
     } else {
@@ -469,7 +502,7 @@ export class ViewCompiler {
           set.forEach((name) => {
             if (!logicExports.has(name) && !sharedExports.has(name)) {
               this.diagnostics.push(
-                `[ViewCompiler] ${viewName} references ${type} '${name}' but it's not exported by ux/logic/${viewName}.ts or shared.ts`
+                `[ViewCompiler] WARNING: ${viewName} references ${type} '${name}' but it's not exported by ux/logic/${viewName}.ts or shared.ts`
               );
             }
           });

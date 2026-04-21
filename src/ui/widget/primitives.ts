@@ -7,7 +7,7 @@
  * dedicated implementations and are not overridden.
  */
 
-type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form';
+type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'lang-switcher' | 'theme-toggle' | 'network-status';
 
 interface PrimitiveDefinition {
   tag: string;
@@ -85,6 +85,9 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-wizard', role: 'group', kind: 'value' },
   { tag: 'ux-content', role: 'region', kind: 'region' },
   { tag: 'ux-chart-line-legend', role: 'list', kind: 'region' },
+  { tag: 'ux-lang-switcher', role: 'group', kind: 'lang-switcher' },
+  { tag: 'ux-theme-toggle', role: 'switch', kind: 'theme-toggle', stateAttr: 'checked' },
+  { tag: 'ux-network-status', role: 'status', kind: 'network-status' },
 ];
 
 const DEF_BY_TAG = new Map(PRIMITIVES.map((def) => [def.tag, def]));
@@ -404,6 +407,284 @@ class UxPrimitiveForm extends UxPrimitiveBase {
   };
 }
 
+class UxLangSwitcher extends UxPrimitiveBase {
+  private selectEl: HTMLSelectElement | null = null;
+  private readonly rtlLanguages = new Set(['ar', 'fa', 'he', 'ur', 'ps', 'sd', 'ug', 'yi']);
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: 'open' });
+    }
+    this.render();
+  }
+
+  disconnectedCallback(): void {
+    this.selectEl?.removeEventListener('change', this.onChange);
+  }
+
+  private getLocales(): string[] {
+    const attrLocales = (this.getAttribute('locales') || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (attrLocales.length > 0) {
+      return attrLocales;
+    }
+
+    const appLocales = Object.keys(((window as any).__ux3App?.config?.i18n || {}) as Record<string, unknown>);
+    if (appLocales.length > 0) {
+      return appLocales;
+    }
+
+    const browserPreferred = ((window as any).__ux3App?.browser?.locale?.preferred || navigator.languages || [navigator.language || 'en']) as string[];
+    return Array.from(new Set(browserPreferred));
+  }
+
+  private getCurrentLocale(locales: string[]): string {
+    const persisted = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false'
+      ? window.localStorage.getItem('ux3.locale')
+      : null;
+    const explicit = this.getAttribute('value');
+    const docLang = document.documentElement.lang;
+    const browserPrimary = (window as any).__ux3App?.browser?.locale?.primary;
+    const fallback = locales[0] || 'en';
+
+    const candidate = persisted || explicit || docLang || browserPrimary || fallback;
+    return locales.includes(candidate) ? candidate : fallback;
+  }
+
+  private render(): void {
+    const locales = this.getLocales();
+    const current = this.getCurrentLocale(locales);
+
+    if (!this.shadowRoot) {
+      return;
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: inline-flex; align-items: center; gap: 0.375rem; }
+        label { font: inherit; color: inherit; }
+        select {
+          font: inherit;
+          color: inherit;
+          background: var(--ux-color-surface, #ffffff);
+          border: 1px solid var(--ux-color-border, #cbd5e1);
+          border-radius: 0.375rem;
+          padding: 0.25rem 0.5rem;
+          min-width: 5.5rem;
+        }
+      </style>
+      <label part="label">${escapeText(this.getAttribute('label') || 'Language')}</label>
+      <select part="select"></select>
+    `;
+
+    const select = this.shadowRoot.querySelector('select') as HTMLSelectElement;
+    for (const locale of locales) {
+      const option = document.createElement('option');
+      option.value = locale;
+      option.textContent = locale;
+      select.appendChild(option);
+    }
+    select.value = current;
+    this.selectEl = select;
+    this.selectEl.addEventListener('change', this.onChange);
+  }
+
+  private readonly onChange = (): void => {
+    if (!this.selectEl) {
+      return;
+    }
+
+    const locale = this.selectEl.value;
+    const lang = locale.split('-')[0]?.toLowerCase() || 'en';
+
+    this.setAttribute('value', locale);
+    document.documentElement.lang = locale;
+    document.documentElement.dir = this.rtlLanguages.has(lang) ? 'rtl' : 'ltr';
+
+    const shouldPersist = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false';
+    if (shouldPersist) {
+      try {
+        window.localStorage.setItem('ux3.locale', locale);
+      } catch {
+        // ignore storage failures
+      }
+    }
+
+    const app = (window as any).__ux3App;
+    if (app?.browser?.locale) {
+      app.browser.locale.primary = locale;
+      app.browser.locale.language = lang;
+      app.browser.locale.region = locale.split('-')[1]?.toUpperCase();
+      app.browser.locale.direction = this.rtlLanguages.has(lang) ? 'rtl' : 'ltr';
+      if (app.ui?.browser?.locale) {
+        app.ui.browser.locale = app.browser.locale;
+      }
+    }
+
+    window.dispatchEvent(new Event('languagechange'));
+    this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { locale } }));
+    this.dispatchEvent(new CustomEvent('ux:locale-change', { bubbles: true, detail: { locale } }));
+  };
+}
+
+class UxThemeToggle extends UxPrimitiveBase {
+  private buttonEl: HTMLButtonElement | null = null;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: 'open' });
+    }
+    this.render();
+  }
+
+  disconnectedCallback(): void {
+    this.buttonEl?.removeEventListener('click', this.onToggle);
+    this.buttonEl?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private getTheme(): 'light' | 'dark' {
+    const persisted = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false'
+      ? window.localStorage.getItem('ux3.theme')
+      : null;
+    const attrTheme = this.getAttribute('theme');
+    const docTheme = document.documentElement.dataset.theme;
+
+    if (persisted === 'light' || persisted === 'dark') return persisted;
+    if (attrTheme === 'light' || attrTheme === 'dark') return attrTheme;
+    if (docTheme === 'light' || docTheme === 'dark') return docTheme;
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  private render(): void {
+    const theme = this.getTheme();
+    if (!this.shadowRoot) {
+      return;
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: inline-block; }
+        button {
+          font: inherit;
+          color: inherit;
+          background: var(--ux-color-surface, #ffffff);
+          border: 1px solid var(--ux-color-border, #cbd5e1);
+          border-radius: 999px;
+          padding: 0.25rem 0.625rem;
+          cursor: pointer;
+        }
+      </style>
+      <button part="button" type="button"></button>
+    `;
+
+    const button = this.shadowRoot.querySelector('button') as HTMLButtonElement;
+    this.buttonEl = button;
+    this.applyTheme(theme);
+    this.buttonEl.addEventListener('click', this.onToggle);
+    this.buttonEl.addEventListener('keydown', this.onKeyDown);
+  }
+
+  private applyTheme(theme: 'light' | 'dark'): void {
+    document.documentElement.dataset.theme = theme;
+    this.setAttribute('theme', theme);
+    this.toggleAttribute('checked', theme === 'dark');
+    if (this.buttonEl) {
+      this.buttonEl.textContent = theme === 'dark' ? 'Dark mode' : 'Light mode';
+      this.buttonEl.setAttribute('aria-pressed', String(theme === 'dark'));
+    }
+  }
+
+  private readonly onToggle = (): void => {
+    const current = this.getTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    this.applyTheme(next);
+
+    const shouldPersist = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false';
+    if (shouldPersist) {
+      try {
+        window.localStorage.setItem('ux3.theme', next);
+      } catch {
+        // ignore storage failures
+      }
+    }
+
+    this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { theme: next } }));
+    this.dispatchEvent(new CustomEvent('ux:theme-change', { bubbles: true, detail: { theme: next } }));
+  };
+
+  private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.onToggle();
+    }
+  };
+}
+
+class UxNetworkStatus extends UxPrimitiveBase {
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: 'open' });
+    }
+    this.render();
+    window.addEventListener('online', this.onConnectivityChange);
+    window.addEventListener('offline', this.onConnectivityChange);
+  }
+
+  disconnectedCallback(): void {
+    window.removeEventListener('online', this.onConnectivityChange);
+    window.removeEventListener('offline', this.onConnectivityChange);
+  }
+
+  private render(): void {
+    if (!this.shadowRoot) {
+      return;
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: inline-flex; align-items: center; gap: 0.375rem; }
+        .dot {
+          width: 0.625rem;
+          height: 0.625rem;
+          border-radius: 50%;
+          background: var(--status-color, #16a34a);
+        }
+      </style>
+      <span class="dot" aria-hidden="true"></span>
+      <span part="label" aria-live="polite"></span>
+    `;
+    this.update();
+  }
+
+  private readonly onConnectivityChange = (): void => {
+    this.update();
+    this.dispatchEvent(new CustomEvent('ux:change', {
+      bubbles: true,
+      detail: { online: navigator.onLine },
+    }));
+  };
+
+  private update(): void {
+    if (!this.shadowRoot) {
+      return;
+    }
+    const label = this.shadowRoot.querySelector('span[part="label"]') as HTMLSpanElement;
+    const dot = this.shadowRoot.querySelector('.dot') as HTMLSpanElement;
+    const isOnline = navigator.onLine;
+
+    label.textContent = isOnline ? 'Online' : 'Offline';
+    dot.style.background = isOnline ? '#16a34a' : '#dc2626';
+    this.toggleAttribute('online', isOnline);
+    this.setAttribute('aria-label', isOnline ? 'Online' : 'Offline');
+  }
+}
+
 function collectFieldValues(host: HTMLElement): Record<string, string> {
   const values: Record<string, string> = {};
   const elements = host.querySelectorAll('ux-input, ux-textarea, ux-select, ux-slider');
@@ -451,6 +732,12 @@ function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
       return UxPrimitiveSlider;
     case 'form':
       return UxPrimitiveForm;
+    case 'lang-switcher':
+      return UxLangSwitcher;
+    case 'theme-toggle':
+      return UxThemeToggle;
+    case 'network-status':
+      return UxNetworkStatus;
     default:
       return UxPrimitiveRegion;
   }

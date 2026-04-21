@@ -68,11 +68,18 @@ const BUILT_IN_TAGS = [
   'ux-hover-panel',
   'ux-splash-screen',
   'ux-wizard',
+  'ux-lang-switcher',
+  'ux-theme-toggle',
+  'ux-network-status',
 ];
 
 describe('Built-in primitives', () => {
   afterEach(() => {
     document.body.innerHTML = '';
+    document.documentElement.removeAttribute('lang');
+    document.documentElement.removeAttribute('dir');
+    delete document.documentElement.dataset.theme;
+    delete (window as any).__ux3App;
   });
 
   it('registers primitive tags', () => {
@@ -226,5 +233,68 @@ describe('Built-in primitives', () => {
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     expect(payload).toEqual({ name: 'Ada', bio: 'Engineer' });
+  });
+
+  it('ux-lang-switcher switches document lang and emits locale event', () => {
+    (window as any).__ux3App = {
+      config: { i18n: { en: {}, fr: {} } },
+      browser: { locale: { primary: 'en', language: 'en', direction: 'ltr' } },
+      ui: { browser: { locale: {} } },
+    };
+
+    const switcher = document.createElement('ux-lang-switcher');
+    switcher.setAttribute('persist', 'false');
+    document.body.appendChild(switcher);
+
+    let locale = '';
+    switcher.addEventListener('ux:locale-change', (event: Event) => {
+      locale = (event as CustomEvent).detail.locale;
+    });
+
+    const select = switcher.shadowRoot?.querySelector('select') as HTMLSelectElement;
+    select.value = 'fr';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(document.documentElement.lang).toBe('fr');
+    expect(locale).toBe('fr');
+  });
+
+  it('ux-theme-toggle toggles document theme and emits theme event', () => {
+    document.documentElement.dataset.theme = 'light';
+
+    const toggle = document.createElement('ux-theme-toggle');
+    toggle.setAttribute('persist', 'false');
+    document.body.appendChild(toggle);
+
+    let theme = '';
+    toggle.addEventListener('ux:theme-change', (event: Event) => {
+      theme = (event as CustomEvent).detail.theme;
+    });
+
+    const button = toggle.shadowRoot?.querySelector('button') as HTMLButtonElement;
+    button.click();
+
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(theme).toBe('dark');
+  });
+
+  it('ux-network-status reacts to offline/online events', () => {
+    const status = document.createElement('ux-network-status');
+    document.body.appendChild(status);
+
+    const setOnline = (value: boolean) => {
+      Object.defineProperty(window.navigator, 'onLine', {
+        configurable: true,
+        value,
+      });
+    };
+
+    setOnline(false);
+    window.dispatchEvent(new Event('offline'));
+    expect(status.hasAttribute('online')).toBe(false);
+
+    setOnline(true);
+    window.dispatchEvent(new Event('online'));
+    expect(status.hasAttribute('online')).toBe(true);
   });
 });

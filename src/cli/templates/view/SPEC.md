@@ -1,5 +1,7 @@
 # UX View Hints
 
+Use `ux3 generate view <name>` to scaffold a new view quickly.
+
 `ux/view/` defines screen-level finite-state machines (FSMs).
 
 ## What belongs here

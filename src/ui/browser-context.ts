@@ -136,6 +136,11 @@ function hasWebGLSupport(): boolean {
     return false;
   }
 
+  // jsdom stubs canvas and logs "Not implemented" when getContext is called.
+  if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent || '')) {
+    return false;
+  }
+
   try {
     const canvas = document.createElement('canvas');
     return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));

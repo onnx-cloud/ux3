@@ -55,6 +55,8 @@ Each view mounts a layout to Shadow DOM:
 
 ## Basic Usage
 
+For browser-aware built-ins such as locale switcher, theme toggle, and network status, see [Browser-Aware Built-In Components](browser-components.md).
+
 ### Define a View Component
 
 ```typescript

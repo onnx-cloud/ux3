@@ -29,6 +29,8 @@ The five core UX3 topics are covered in these guides:
 ## Practical Guides
 
 - [Template System](template-system.md): template syntax and rendering patterns.
+- [Browser Components](browser-components.md): built-in locale switcher, theme toggle, and network status components.
+- [Telemetry and Analytics](telemetry-analytics.md): provider-based instrumentation with batching and realtime controls.
 - [Validation](validation.md): schema and compile-time checks.
 - [Tokens](tokens.md): design token conventions.
 - [Parts and Theming](parts-and-theming.md): consistent theming strategy.

@@ -12,11 +12,14 @@ the `@ux3` scope:
 
 * `@ux3/plugin-i18n` – enhanced internationalization features
 * `@ux3/plugin-sentry` – error reporting integration with Sentry
-* `@ux3/plugin-analytics` – analytics/telemetry helpers
+* `@ux3/plugin-analytics` – analytics/telemetry helpers (see [Telemetry and Analytics](telemetry-analytics.md))
 * `@ux3/plugin-validation` – additional form validation rules
 * `@ux3/plugin-charts-js` – sample charting integration with lazy service and CDN asset
 * `@ux3/plugin-stripe` – sample payments integration demonstrating conditional asset injection
 * `@ux3/plugin-tailwind-plus` – styling helper with FSM/view/route demo and utility hooks
+
+For configuration examples and provider adapter patterns, see
+[Telemetry and Analytics](telemetry-analytics.md).
 
 Each package lives in the `packages/@ux3/` directory of the repo and exposes a
 default plugin object.  You can inspect or modify them locally for testing, and

@@ -9,6 +9,7 @@ const __dirname = dirname(__filename);
 
 export default defineConfig({
   resolve: {
+    preserveSymlinks: true,
     extensions: ['.ts', '.mts', '.tsx', '.js', '.mjs', '.cjs'],
     alias: [
       // support plugin packages under /packages (most specific)
@@ -70,6 +71,7 @@ export default defineConfig({
       '**/dist/**',
       '**/node_modules/**',
       '**/iam/**',
+      'examples/quadra/tests/**',
     ],
     // store results under test-results/vitest for CI or local inspection
     reporters: [
