@@ -336,7 +336,11 @@ export function captureBrowserContext(options: BrowserContextOptions = {}): Brow
       webGL: hasWebGLSupport(),
       wasm: typeof WebAssembly !== 'undefined',
       notificationsPermission:
-        typeof Notification === 'undefined' ? 'unknown' : Notification.permission,
+        typeof Notification === 'undefined'
+          ? 'unknown'
+          : Notification.permission === 'default'
+            ? 'prompt'
+            : Notification.permission,
       reliability: 'medium',
     },
     sources: {

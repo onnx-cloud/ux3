@@ -72,6 +72,10 @@ export class Logger {
     this.requestContext = context;
   }
 
+  setMinLevel(level: LogLevel): void {
+    this.config.minLevel = level;
+  }
+
   private log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
     if (logLevelMap[level] < logLevelMap[this.config.minLevel]) {
       return;

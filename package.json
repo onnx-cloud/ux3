@@ -1,16 +1,16 @@
 {
-  "name": "@ux3/ux3",
+  "name": "@ux3/ux",
   "version": "0.2.0",
-  "description": "Lightweight declarative UI framework with FSM, security, and accessibility built-in",
+  "description": "Tiny declarative UI framework. batteries included.",
   "license": "MIT",
   "author": "UX3 Contributors",
-  "homepage": "https://ux3.dev",
+  "homepage": "https://iqns.org/ux3/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/onnx-cloud/ux3.git"
+    "url": "https://github.com/iqns-org/ux3.git"
   },
   "bugs": {
-    "url": "https://github.com/onnx-cloud/ux3/issues"
+    "url": "https://github.com/iqns-org/ux3/issues"
   },
   "keywords": [
     "ui",
@@ -119,7 +119,7 @@
     "lint:iam": "npx tsx scripts/lint-iam.ts",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "size-check": "du -sh dist && echo 'Bundle size OK if < 30KB'",
+    "size-check": "[ -d dist ] && du -sh dist && echo 'Bundle size OK if < 30KB' || echo 'dist not emitted (type-check build mode)'",
     "security-audit": "npm audit --production",
     "a11y-audit": "node scripts/a11y-audit.js",
     "example": "node scripts/run-example.mjs",
@@ -129,27 +129,26 @@
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@types/fs-extra": "^11.0.4",
-    "@types/glob": "^8.1.0",
+    "@types/marked": "^5.0.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
     "@typescript-eslint/parser": "^7.6.0",
-    "typescript": "^5.3.0",
-    "@vitest/coverage-v8": "^1.0.0",
-    "@vitest/ui": "^1.0.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/ui": "^4.1.4",
     "ajv-formats": "^3.0.1",
     "chokidar": "^5.0.0",
     "commander": "^11.1.0",
     "esbuild": "^0.27.3",
-    "gray-matter": "^4.0.3",
-    "marked": "^5.1.1",
-    "@types/marked": "^5.0.0",
     "eslint": "^8.54.0",
     "fs-extra": "^11.3.3",
     "glob": "^13.0.1",
+    "gray-matter": "^4.0.3",
     "jsdom": "^28.0.0",
-    "mocha": "^11.7.5",
+    "marked": "^5.1.1",
+    "mocha": "^11.3.0",
     "rollup": "^4.24.0",
-    "vitest": "^1.0.4",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4",
     "yaml": "^2.8.2"
   },
   "overrides": {

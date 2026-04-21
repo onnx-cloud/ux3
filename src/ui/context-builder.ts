@@ -89,7 +89,7 @@ export class AppContextBuilder {
   withMachines(): this {
     try {
       for (const [name, machineConfig] of Object.entries(this.config.machines)) {
-        const machine = new StateMachine(machineConfig);
+        const machine = new StateMachine(machineConfig as any);
         this.machines.set(name, machine);
         // Register in FSMRegistry so navigation handler can look up by name
         FSMRegistry.register(name, machine);
@@ -133,6 +133,7 @@ export class AppContextBuilder {
         
         // Emit REGISTER lifecycle phase for this service
         void this.hooks.execute(ServiceLifecyclePhase.REGISTER, {
+          phase: ServiceLifecyclePhase.REGISTER,
           service: { name, instance: service },
           meta: { serviceType: serviceSpec.type || serviceSpec.adapter }
         });
@@ -339,6 +340,7 @@ export class AppContextBuilder {
     // Emit CONNECT lifecycle phase for all services
     for (const [name, service] of this.services) {
       void this.hooks.execute(ServiceLifecyclePhase.CONNECT, {
+        phase: ServiceLifecyclePhase.CONNECT,
         service: { name, instance: service }
       });
     }
@@ -593,8 +595,7 @@ export async function createAppContext(
     defaultLogger = mod.defaultLogger;
 
     if (config.development.logging) {
-      defaultLogger.config.minLevel = config.development
-        .logging;
+      (defaultLogger as any).setMinLevel?.(config.development.logging);
     }
 
     if (
@@ -753,7 +754,10 @@ export async function createAppContext(
   // Emit READY phase to signal that app is fully initialized and interactive
   if (context.hooks) {
     try {
-      await context.hooks.execute(AppLifecyclePhase.READY, { app: context });
+      await context.hooks.execute(AppLifecyclePhase.READY, {
+        app: context,
+        phase: AppLifecyclePhase.READY,
+      });
     } catch (err) {
       console.warn('[AppContext] READY phase hook execution failed', err);
     }

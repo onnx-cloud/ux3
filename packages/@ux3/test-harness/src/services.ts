@@ -3,7 +3,22 @@
  * Mock services, request/response recording, and service testing helpers
  */
 
-import type { Middleware, RequestConfig, ServiceResponse } from '@ux3/ux3/services';
+type RequestConfig = {
+  method?: string;
+  baseUrl?: string;
+  [key: string]: any;
+};
+
+type ServiceResponse = {
+  status?: number;
+  data?: any;
+  [key: string]: any;
+};
+
+type Middleware<Req, Res> = (
+  request: Req,
+  next: (request: Req) => Promise<Res>
+) => Promise<Res>;
 
 /**
  * Mock HTTP service for testing

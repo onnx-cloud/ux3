@@ -1,4 +1,4 @@
-import type { Plugin } from '../../../src/plugin/registry';
+import type { Plugin } from '../../../../src/plugin/registry';
 
 export interface I18nPluginConfig {
   /** Locale to activate on install. Defaults to document.documentElement.lang or 'en'. */

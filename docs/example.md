@@ -9,7 +9,7 @@ Let's walk through creating and building a minimal UX3 application. This example
 The best way to get started is to copy an existing example. Clone this repository and navigate to an example:
 
 ```bash
-git clone https://github.com/onnx-cloud/ux3.git
+git clone https://github.com/iqns-org/ux3.git
 cd ux3/examples/kanban
 ux3 dev
 ```

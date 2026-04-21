@@ -42,16 +42,16 @@ export const SpaRouter: Plugin = {
   install(app: AppContext) {
     // attach simple router service based on config routes
     const routes = (app as any).config?.routes || [];
-    app.services['ux3.service.router'] = new RouterService(app, routes);
+    (app.services as any)['ux3.service.router'] = new RouterService(app, routes);
   },
   services: {
-    'ux3.service.router': RouterService
+    'ux3.service.router': (...args: any[]) => new RouterService(args[0], args[1] || [])
   },
   hooks: {
     app: {
       [AppLifecyclePhase.READY]: [
         async (ctx) => {
-          ctx.app?.services['ux3.service.router']?.start?.();
+          (ctx.app?.services as any)?.['ux3.service.router']?.start?.();
           ctx.app?.logger?.log('sys.router.start');
         }
       ]

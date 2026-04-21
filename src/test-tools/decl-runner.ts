@@ -17,6 +17,7 @@ export interface RunnerOptions {
 interface Scenario {
   name?: string;
   steps: Step[];
+  macros?: Record<string, Step[]>;
 }
 
 type Step =
@@ -195,7 +196,7 @@ export async function runScenario(filePath: string, options: RunnerOptions) {
         } else {
           const el = document.querySelector(step.selector);
           if (!el) throw new Error(`selector not found: ${step.selector}`);
-          el.value = step.text;
+          (el as HTMLInputElement).value = step.text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
         }
         break;

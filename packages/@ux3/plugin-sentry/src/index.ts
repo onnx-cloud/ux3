@@ -1,4 +1,4 @@
-import type { Plugin } from '../../../src/plugin/registry';
+import type { Plugin } from '../../../../src/plugin/registry';
 
 export interface SentryConfig {
   /** Sentry DSN string */

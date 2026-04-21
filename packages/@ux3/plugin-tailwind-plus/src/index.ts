@@ -1,8 +1,8 @@
 // allow legacy require() calls in TypeScript
 declare const require: any;
 
-import type { Plugin } from '../../../src/plugin/registry';
-import type { AssetDescriptor, AppContext } from '../../../src/ui/app';
+import type { Plugin } from '../../../../src/plugin/registry';
+import type { AssetDescriptor, AppContext } from '../../../../src/ui/app';
 
 // Helper to safely require StateMachine from either the compiled or source context
 function tryRequireStateMachine(): any {
@@ -281,7 +281,7 @@ export const TailwindPlusPlugin: Plugin = {
 
     // Register utility helper
     app.utils = app.utils || {};
-    app.utils.tailwind = {
+    (app.utils as any).tailwind = {
       mergeClasses,
       getButtonClass,
       colorUtilities,

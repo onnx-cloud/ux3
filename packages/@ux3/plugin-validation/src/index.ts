@@ -1,4 +1,4 @@
-import type { Plugin } from '../../../src/plugin/registry';
+import type { Plugin } from '../../../../src/plugin/registry';
 
 export type RuleResult = { valid: boolean; message?: string };
 export type Rule = (value: any) => RuleResult;
@@ -58,10 +58,10 @@ export const ValidationPlugin: Plugin = {
     (app as any).utils.validate = validate;
 
     // optionally hook into the forms service to add rule-based validation
-    const forms = app.services?.['ux3.service.forms'];
+    const forms = app.services?.['ux3.service.forms'] as any;
     if (forms && typeof forms.validate === 'function') {
       const originalValidate = forms.validate.bind(forms);
-      (forms as any).validate = (form: HTMLFormElement, rules?: Record<string, ValidationRules>) => {
+      forms.validate = (form: HTMLFormElement, rules?: Record<string, ValidationRules>) => {
         const baseResult = originalValidate(form);
         if (!rules) return baseResult;
         // apply plugin rules per field name

@@ -9,7 +9,7 @@
 ### Installation
 
 ```bash
-git clone https://github.com/onnx-cloud/ux3.git
+git clone https://github.com/iqns-org/ux3.git
 cd ux3
 pnpm install
 ```

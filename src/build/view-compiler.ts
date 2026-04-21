@@ -256,10 +256,11 @@ export class ViewCompiler {
         const content = loadTemplateFile(state, raw, { required: true });
         if (content !== null) templates[state] = content;
       } else if (raw && typeof raw === 'object') {
-        if (typeof (raw as any).template === 'string') {
-          const content = loadTemplateFile(state, (raw as any).template, { required: true });
+        const stateDef = raw as Record<string, unknown>;
+        if (typeof stateDef.template === 'string') {
+          const content = loadTemplateFile(state, stateDef.template, { required: true });
           if (content !== null) templates[state] = content;
-        } else if (raw.invoke || raw.src) {
+        } else if (stateDef.invoke || stateDef.src) {
           // Transitional states with invoke-only behavior may render no template.
           continue;
         } else {

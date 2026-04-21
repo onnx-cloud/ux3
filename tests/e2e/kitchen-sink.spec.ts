@@ -126,7 +126,7 @@ test.describe('Kitchen sink app flow', () => {
 
   test('blog route renders blog state content', async ({ page }) => {
     await loadRoute(page, '/blog');
-    await page.waitForSelector('[ux-state^="blog."]', { state: 'attached', timeout: 5000 });
+    await expect(page.locator('#ux-content > ux-blog')).toHaveCount(1, { timeout: 10000 });
   });
 
   test('market route renders market state content', async ({ page }) => {

@@ -1,5 +1,5 @@
-import type { Plugin } from '../../../src/plugin/registry';
-import type { AssetDescriptor } from '../../../src/ui/app';
+import type { Plugin } from '../../../../src/plugin/registry';
+import type { AssetDescriptor } from '../../../../src/ui/app';
 
 export interface StripeConfig {
   apiKey?: string;

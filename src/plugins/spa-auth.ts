@@ -29,16 +29,16 @@ export const SpaAuth: Plugin = {
   name: 'spa-auth',
   version: '1.0.0',
   install(app) {
-    app.services['ux3.service.auth'] = new AuthService();
+    (app.services as any)['ux3.service.auth'] = new AuthService();
   },
   services: {
-    'ux3.service.auth': AuthService
+    'ux3.service.auth': () => new AuthService()
   },
   hooks: {
     app: {
       [AppLifecyclePhase.HYDRATE]: [
         async (ctx) => {
-          await ctx.app?.services['ux3.service.auth']?.restoreSession?.();
+          await (ctx.app?.services as any)?.['ux3.service.auth']?.restoreSession?.();
         }
       ]
     }

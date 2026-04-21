@@ -9,5 +9,12 @@ export * from './ui/index';
 export * from './services/index';
 export * from './validation/index';
 export * from './state/index';
-export * from './security/index';
+export * from './security/sanitizer';
+export * from './security/observability';
+export {
+	InputValidator,
+	CSRFProtection,
+	type InputValidationRule as SecurityValidationRule,
+	type ValidationResult as SecurityValidationResult,
+} from './security/validator';
 export * from './a11y/index';
