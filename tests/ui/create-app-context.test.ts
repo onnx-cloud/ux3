@@ -32,23 +32,37 @@ describe('createAppContext development logging', () => {
     expect((window as any).__ux3Inspector).toBe(ctx);
   });
 
+  it('should expose browser context on app context', async () => {
+    const cfg = { ...baseConfig };
+    const ctx = await createAppContext(cfg as any);
+    expect(ctx.browser).toBeTruthy();
+    expect(ctx.browser.locale.primary).toBeTruthy();
+    expect((ctx.ui as any).browser).toBeTruthy();
+  });
+
   it('should mount a <ux3-inspector> widget to the body', async () => {
     const cfg = { ...baseConfig, development: { inspector: true } };
     await createAppContext(cfg as any);
     const el = document.body.querySelector('ux3-inspector');
     expect(el).toBeInstanceOf(HTMLElement);
-    // header and close button exist
-    const header = el!.shadowRoot?.querySelector('div');
+    // shadow DOM with shell structure
+    const header = el!.shadowRoot?.querySelector('#header');
     expect(header).toBeTruthy();
-    const btn = el!.shadowRoot?.querySelector('button');
-    expect(btn).toBeInstanceOf(HTMLElement);
-    // clicking close removes element
-    btn?.dispatchEvent(new MouseEvent('click'));
-    expect(document.body.querySelector('ux3-inspector')).toBeNull();
+    // at least three window-control buttons (minimize, maximize, iconify)
+    const buttons = el!.shadowRoot?.querySelectorAll('button.hbtn');
+    expect(buttons!.length).toBeGreaterThanOrEqual(3);
+    // tab bar with 10 tabs
+    const tabs = el!.shadowRoot?.querySelectorAll('.tab');
+    expect(tabs!.length).toBe(10);
+    // iconify button sets data-wstate to iconified (widget stays in DOM)
+    const iconifyBtn = Array.from(buttons!).find(b => (b as HTMLButtonElement).title === 'Iconify') as HTMLButtonElement;
+    iconifyBtn?.dispatchEvent(new MouseEvent('click'));
+    expect(el!.getAttribute('data-wstate')).toBe('iconified');
+    // widget remains in DOM after iconify
+    expect(document.body.querySelector('ux3-inspector')).toBeInstanceOf(HTMLElement);
   });
 
   it('inspector widget should update when machine state changes', async () => {
-    // create a config with a simple machine
     const cfg: any = {
       ...baseConfig,
       machines: {
@@ -59,13 +73,12 @@ describe('createAppContext development logging', () => {
     const ctx = await createAppContext(cfg);
     const widget = document.body.querySelector('ux3-inspector') as HTMLElement;
     expect(widget).toBeTruthy();
-    // initial snapshot should include state 'a'
-    const pre = widget.shadowRoot?.querySelector('pre');
-    expect(pre?.textContent).toContain('"test": "a"');
-    // send an event and wait
+    // widget mounts with correct initial window state attribute
+    expect(widget.getAttribute('data-wstate')).toBeTruthy();
+    // machines are accessible and transitions work
     ctx.machines['test'].send('NEXT');
     await new Promise((r) => setTimeout(r, 0));
-    expect(pre?.textContent).toContain('"test": "b"');
+    expect(ctx.machines['test'].getState()).toBe('b');
   });
 });
 

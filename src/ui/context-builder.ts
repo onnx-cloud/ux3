@@ -20,6 +20,7 @@ import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
 import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/lifecycle.js';
+import { captureBrowserContext, observeBrowserContext, type BrowserContextOptions } from './browser-context.js';
 
 /**
  * Generated configuration structure
@@ -42,6 +43,7 @@ export interface GeneratedConfig {
     inspector?: boolean;
   };
   content?: ContentManifest;
+  browserContext?: BrowserContextOptions;
 }
 
 /**
@@ -60,6 +62,7 @@ export class AppContextBuilder {
   private errorHandlers: Array<(error: Error) => void> = [];
   private buildErrors: Error[] = [];
   private hooks: HookRegistry = new HookRegistry();
+  private stopBrowserObserver: (() => void) | null = null;
   constructor(config: GeneratedConfig) {
     this.config = config;
     this.validateConfig();
@@ -374,6 +377,7 @@ export class AppContextBuilder {
     };
 
     const navConfig: NavConfig | null = this.router ? this.router.getNavConfig() : null;
+    const browserContext = captureBrowserContext(this.config.browserContext || {});
 
     const renderFn = (template: string, props?: Record<string, any>): string => {
       // Render template through Handlebars with provided context
@@ -394,6 +398,7 @@ export class AppContextBuilder {
     const context: AppContext = {
       machines,
       services,
+      browser: browserContext,
       widgets: this.widgets!,
       styles: this.styles,
       ui: {},
@@ -404,6 +409,9 @@ export class AppContextBuilder {
       config: this.config,
       hooks: this.hooks,
     };
+
+    // Keep browser context available from both app.browser and app.ui.browser.
+    (context.ui as any).browser = browserContext;
 
     // Initialize InvokeRegistry after context is created (needs circular reference resolved)
     // Use a proxy to delay initialization until all properties are set
@@ -500,6 +508,13 @@ export class AppContextBuilder {
     // keep a global style registry in sync so that runtime class injection works
     registerStyles(context.styles || {});
     initStyleRegistry();
+
+    // Live browser context updates for guards/services/ui consumers.
+    this.stopBrowserObserver?.();
+    this.stopBrowserObserver = observeBrowserContext((nextContext) => {
+      context.browser = nextContext;
+      (context.ui as any).browser = nextContext;
+    }, this.config.browserContext || {});
 
     // Export globally for testing/debugging
     if (typeof window !== 'undefined') {

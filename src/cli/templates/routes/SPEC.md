@@ -1,34 +1,37 @@
-# Template: `routes`
+# UX Routing Hints
 
-Used by: `ux3 generate routes`
+`ux/route/routes.yaml` defines URL-to-view mapping and navigation policy.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ date ]]` | `2026-04-21` |
+- The route table (`routes:`) for all navigable screens.
+- Optional route metadata such as `title`, `layout`, and `guard`.
 
-## Files emitted (relative to `ux/route/`)
+## Core rules
 
-```
-routes.yaml   — route table
-```
+- Every route needs `path` and `view`.
+- `view` should match a view slug under `ux/view/`.
+- Prefer stable, human-readable paths and avoid embedding business logic in route names.
+- Dynamic segments use `:param` (for example, `/users/:id`).
 
-## Conventions
+## Navigation and access control
 
-- Each route entry must have `path` and `view`.
-- `view` must match the slug of a YAML file under `ux/view/`.
-- `title` is used for `<title>` and breadcrumbs; use the i18n key if i18n is active.
-- `layout` is optional; if omitted the default layout is used.
-- Dynamic segments use `:param` syntax (e.g. `/users/:id`).
-- Guard expressions in `guard` evaluate against `ctx` (the app context).
+- Use `guard` for access checks and gating logic.
+- Keep guards deterministic and based on app context (`ctx`).
+- Put auth/permission semantics in services or plugins; use route guards for orchestration.
 
-## Route entry shape
+## Layout and metadata
+
+- `layout` selects an alternative page shell when needed.
+- `title` should be present for UX consistency and better history/bookmark readability.
+- If i18n is enabled, prefer using keys that map to locale strings.
+
+## Reference shape
 
 ```yaml
 routes:
   - path: /
-    view: hello
+    view: home
     title: Home
   - path: /about
     view: about
@@ -38,10 +41,4 @@ routes:
     title: User
     layout: main
     guard: ctx.user.isAuthenticated
-```
-
-## Example invocation
-
-```bash
-ux3 generate routes
 ```

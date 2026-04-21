@@ -1,55 +1,46 @@
-# Template: `plugin`
+# UX Plugin Hints
 
-Used by: `ux3 generate plugin <name>` (also aliased as `ux3 plugin create <name>`)
+`packages/@ux3/plugin-*` packages extend UX3 with reusable integrations and capabilities.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `analytics` (bare slug, no `plugin-` prefix) |
-| `[[ Name ]]` | `Analytics` (PascalCase) |
-| `[[ NAME ]]` | `ANALYTICS` |
-| `[[ ux3Version ]]` | `0.1.0` |
-| `[[ date ]]` | `2026-04-21` |
+- A plugin descriptor object exported as default.
+- Registration logic in `install(app)` for components, services, hooks, or feature wiring.
+- Package metadata that tracks peer compatibility with UX3.
 
-## Files emitted (into `packages/@ux3/plugin-[[ name ]]/`)
+## Runtime role
 
-```
-package.json
-tsconfig.json
-src/index.ts
-```
+- Plugins are loaded into the app to augment behavior without modifying core framework code.
+- `install(app)` should be deterministic and safe to run once per app bootstrap.
+- Plugin code should coordinate extension points, not implement full app business flows.
 
-## Conventions
+## Authoring conventions
 
-- Package name is always `@ux3/plugin-<name>`.
-- The default export must be a `Plugin` object (not a class).
-- `install(_app)` is the only required method; use it to register components, services, hooks.
-- Do NOT export anything other than the default plugin object from `src/index.ts`.
-- Peer-depend on `@ux3/ux3`, not on specific sub-packages.
-- Plugin slug must be lowercase kebab-case (no `plugin-` prefix in the name arg).
+- Keep plugin slug lowercase kebab-case.
+- Use package naming `@ux3/plugin-<name>`.
+- Keep external dependencies minimal and explicit.
+- Prefer small, composable plugin responsibilities over monolithic plugin bundles.
 
-## Plugin shape
+## Compatibility guidance
+
+- Declare `@ux3/ux3` as peer dependency.
+- Keep `ux3PeerVersion` aligned with supported framework ranges.
+- Document expected config and side effects in plugin README files.
+
+## Reference shape
 
 ```typescript
 import type { Plugin } from '@ux3/ux3';
 
-const [[ name ]]: Plugin = {
-  name: '@ux3/plugin-[[ name ]]',
+const analytics: Plugin = {
+  name: '@ux3/plugin-analytics',
   version: '0.1.0',
-  ux3PeerVersion: '^[[ ux3Version ]]',
-  description: '[[ Name ]] plugin for UX3.',
+  ux3PeerVersion: '^0.1.0',
+  description: 'Analytics plugin for UX3.',
   install(_app) {
-    // register here
+    // register plugin integrations
   },
 };
 
-export default [[ name ]];
-```
-
-## Example invocation
-
-```bash
-ux3 generate plugin analytics
-ux3 generate plugin stripe
+export default analytics;
 ```

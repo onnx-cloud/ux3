@@ -1,49 +1,41 @@
-# Template: `logic`
+# UX Logic Hints
 
-Used by: `ux3 generate logic <name>`
+`src/logic/` contains local event handlers used by view FSM invokes.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `login` |
-| `[[ Name ]]` | `Login` |
-| `[[ name_snake ]]` | `login` |
-| `[[ NAME ]]` | `LOGIN` |
-| `[[ date ]]` | `2026-04-21` |
+- View-specific handler functions for business actions and orchestration.
+- Side-effect coordination that is too specific for shared services.
 
-## Files emitted (relative to `src/logic/`)
+## Runtime role
 
-```
-[[ name ]].logic.ts   — typed FSM handler stubs
-```
+- FSM states can call logic handlers via `invoke.src`.
+- Handlers receive `ctx` and `event`, then either:
+  - Complete successfully (normal transition path), or
+  - Throw/fail for error transitions and recovery flows.
 
-## Conventions
+## Authoring conventions
 
-- One logic file per view; file name must match the view slug.
-- Handler functions are named `handle<Name><Event>` (PascalCase event).
-- `ctx` is the FSM context object (typed from generated types if available).
-- `event` carries `{ type, payload }`.
-- Throw or return `{ error: true }` to signal ERROR transitions.
-- Return nothing (or `undefined`) to signal SUCCESS.
-- Do NOT import from `generated/` directly — import from `@ux3/core` types only.
+- Keep one logic file per view domain when possible.
+- Use stable handler names so view YAML references remain readable.
+- Keep handlers thin: delegate transport/data access to services.
+- Avoid direct DOM work in logic handlers.
 
-## Handler signature
+## Reliability guidance
+
+- Validate incoming event payload shape before use.
+- Throw explicit, meaningful errors for failure branches.
+- Keep async flows idempotent where retry behavior is possible.
+
+## Reference shape
 
 ```typescript
 import type { FSMContext, FSMEvent } from '@ux3/core';
 
-export async function handle[[ Name ]]Submit(
+export async function handleLoginSubmit(
   ctx: FSMContext,
   event: FSMEvent
 ): Promise<void> {
-  // throw on error, return normally on success
+  // orchestrate local flow; throw for error paths
 }
-```
-
-## Example invocation
-
-```bash
-ux3 generate logic login
-ux3 generate logic user-profile
 ```

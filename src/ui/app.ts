@@ -5,6 +5,7 @@ import type { Widget } from "./widget/index.js";
 import { WidgetFactory } from "./widget/factory.js";
 import type { HookRegistry } from "../core/lifecycle.js";
 import type { ServiceFactory, ComponentFactory } from "../plugin/registry.js";
+import type { BrowserContext } from './browser-context.js';
 
 /**
  * App Context
@@ -22,6 +23,7 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   styles: Record<string, string>; // normalized styles (named sets of classes)
   machines: Record<string, StateMachine<C>>; // running FSM instances
   services: Record<string, Service>; // registered services (e.g., API clients)
+  browser: BrowserContext; // normalized browser runtime context
   widgets: WidgetFactory; // widget factory
   ui: Record<string, Widget>; // global UI state
   template: (name: string) => string; // template registry function

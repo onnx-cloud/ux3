@@ -1,59 +1,49 @@
-# Template: `view`
+# UX View Hints
 
-Used by: `ux3 generate view <name>`
+`ux/view/` defines screen-level finite-state machines (FSMs).
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `login` (kebab-case slug) |
-| `[[ Name ]]` | `Login` (PascalCase) |
-| `[[ name_snake ]]` | `login` |
-| `[[ NAME ]]` | `LOGIN` |
-| `[[ year ]]` | `2026` |
-| `[[ date ]]` | `2026-04-21` |
+- One YAML file per view (`ux/view/<view>.yaml`) that defines state transitions.
+- One folder per view (`ux/view/<view>/`) containing the HTML template for each state.
 
-## Files emitted (relative to `ux/view/`)
+## How a view works
 
-```
-[[ name ]].yaml            — FSM config
-[[ name ]]/idle.html       — idle state HTML template
-[[ name ]]/submitting.html — submitting state HTML template
-[[ name ]]/done.html       — done state HTML template
-```
+- `initial` sets the starting state.
+- `states` maps state names to either:
+  - A template path string, or
+  - An object with `template`, optional `invoke`, and optional `on` transitions.
+- `on` transitions are event-driven (`EVENT: targetState`).
+- Guards and conditions evaluate against `ctx` and `event`.
 
-## Conventions
+## Side effects and integrations
 
-- `initial` must reference an existing state key.
-- State values are either a template path string or an object `{ template, invoke, on }`.
-- `invoke.src` names a local function in the paired logic file (`src/logic/<name>.logic.ts`).
-- `invoke.service` + `invoke.method` call a declared service from `ux/service/*.yaml`.
-- Guard expressions in `on` use `ctx` and `event` variables.
-- Template paths are relative to the project root, not the view directory.
-- One YAML per view; one subdirectory per view for HTML partials.
+- Use `invoke.src` for local logic handlers (typically implemented in `src/logic/*.logic.ts`).
+- Use `invoke.service` + `invoke.method` to call declared services from `ux/service/*.yaml`.
+- Keep template files focused on rendering; put behavior in FSM + logic/service layers.
 
-## FSM shape reference
+## Authoring conventions
+
+- Keep view names kebab-case (for stable paths and route matching).
+- Keep template paths rooted from `view/...` for consistency.
+- Ensure every transition target exists in `states`.
+- Prefer explicit intermediate states (`loading`, `submitting`, `error`) over implicit async behavior.
+
+## Reference shape
 
 ```yaml
 initial: idle
 states:
   idle:
-    template: view/[[ name ]]/idle.html
+    template: view/login/idle.html
     on:
       SUBMIT: submitting
   submitting:
-    template: view/[[ name ]]/submitting.html
+    template: view/login/submitting.html
     invoke:
-      src: handle[[ Name ]]Submit     # local logic function
+      src: handleLoginSubmit
     on:
       SUCCESS: done
       ERROR: idle
-  done: view/[[ name ]]/done.html
-```
-
-## Example invocation
-
-```bash
-ux3 generate view login
-ux3 generate view user-profile
+  done: view/login/done.html
 ```

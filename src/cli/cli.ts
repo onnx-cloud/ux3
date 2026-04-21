@@ -14,6 +14,7 @@ import { helpCommand } from './commands/help.js';
 import { pluginCommand } from './commands/plugin.js';
 import { styleCommand } from './commands/style.js';
 import { generateCommand } from './commands/generate.js';
+import { hintsCommand } from './commands/hints.js';
 
 const version = '0.1.0';
 
@@ -32,6 +33,7 @@ program.addCommand(helpCommand);
 program.addCommand(pluginCommand);
 program.addCommand(styleCommand);
 program.addCommand(generateCommand);
+program.addCommand(hintsCommand);
 
 program.parse(process.argv);
 

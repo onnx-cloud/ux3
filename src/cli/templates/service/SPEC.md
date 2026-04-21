@@ -1,39 +1,37 @@
-# Template: `service`
+# UX Service Hints
 
-Used by: `ux3 generate service <name>`
+`ux/service/` defines service contracts used by FSM invokes.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `user` |
-| `[[ Name ]]` | `User` |
-| `[[ name_snake ]]` | `user` |
-| `[[ NAME ]]` | `USER` |
-| `[[ date ]]` | `2026-04-21` |
+- Declarative service contract files in `ux/service/*.yaml`.
+- Optional runtime implementations under `src/services/*.ts`.
 
-## Files emitted
+## Contract semantics
 
-```
-ux/service/[[ name ]].yaml       — service declaration
-src/services/[[ name ]].ts       — TypeScript implementation stub
-```
+- `name` is the service identity and should match the file slug.
+- `endpoint` defines the base target (can reference environment values).
+- `methods` declares the operations available to views and logic.
+- Method names should be stable because FSM invokes depend on them.
 
-## Conventions
+## Runtime behavior
 
-- The YAML `name` field must match the file slug exactly.
-- `methods` lists the operations the service exposes.
-- `endpoint` is the base URL (may reference env vars via `${ENV_VAR}`).
-- The TS implementation must export an object matching the service name.
-- Use `fetch` or an injected HTTP client — do NOT import framework internals.
-- Error handling: throw a typed error; the FSM maps it to an ERROR transition.
+- FSMs call services with `invoke.service` + `invoke.method`.
+- Implementations should stay transport-focused (HTTP/data translation), not UI-focused.
+- Throw explicit errors so FSM transitions can route to recovery states.
 
-## YAML shape
+## Authoring conventions
+
+- Keep service names and method names kebab or lower camel style consistently.
+- Keep contracts small and cohesive by domain (`auth`, `user`, `catalog`).
+- Keep request/response shaping in one place per method.
+
+## Reference shape
 
 ```yaml
-name: [[ name ]]
-description: [[ Name ]] service
-endpoint: /api/[[ name ]]
+name: user
+description: User service
+endpoint: /api/user
 methods:
   - name: get
     http: GET
@@ -44,17 +42,4 @@ methods:
   - name: create
     http: POST
     path: /
-  - name: update
-    http: PUT
-    path: /{id}
-  - name: remove
-    http: DELETE
-    path: /{id}
-```
-
-## Example invocation
-
-```bash
-ux3 generate service user
-ux3 generate service product-catalog
 ```

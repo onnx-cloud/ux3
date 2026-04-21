@@ -1,47 +1,39 @@
-# Template: `style`
+# UX Style Hints
 
-Used by: `ux3 generate style <name>`
+`ux/style/` defines semantic style mappings for widgets and components.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `button` |
-| `[[ Name ]]` | `Button` |
-| `[[ date ]]` | `2026-04-21` |
+- Widget style contracts (`widget`, `base`, `variants`).
+- Reusable visual semantics instead of one-off class usage in templates.
 
-## Files emitted (relative to `ux/style/`)
+## Styling model
 
-```
-[[ name ]].yaml   — widget style mapping
-```
+- `widget` maps to the component/widget key used by `ux-style`.
+- `base` classes are always applied.
+- `variants` provide conditional visual modes (`primary`, `danger`, `sm`, etc.).
 
-## Conventions
+## Authoring conventions
 
-- `widget` must match the component/widget name as used in templates via `ux-style`.
-- `base` is always applied; `variants` are conditionally applied via the `variant` attribute.
-- Class values are plain CSS class strings — no framework-specific syntax.
-- If using Tailwind, use Tailwind utility classes directly.
-- Avoid one-off inline classes in templates; prefer named variants here.
-- Variant keys must be lowercase identifiers (e.g. `primary`, `danger`, `sm`).
+- Keep variant names stable and lowercase.
+- Prefer semantic variant names over implementation detail names.
+- Keep templates presentation-light: choose variants, do not inline large class strings.
+- Keep spacing/typography decisions centralized in style mappings where possible.
 
-## Style shape
+## Framework compatibility
+
+- Class values are plain strings and can map to your CSS system (custom CSS, Tailwind, etc.).
+- Avoid coupling style keys to transient utility decisions.
+
+## Reference shape
 
 ```yaml
-widget: [[ name ]]
-base: [[ name ]]
+widget: button
+base: btn
 variants:
-  default: [[ name ]]-default
-  primary: [[ name ]]-primary
-  danger: [[ name ]]-danger
-  sm: [[ name ]]-sm
-  lg: [[ name ]]-lg
-```
-
-## Example invocation
-
-```bash
-ux3 generate style button
-ux3 generate style card
-ux3 generate style form-field
+  default: btn-default
+  primary: btn-primary
+  danger: btn-danger
+  sm: btn-sm
+  lg: btn-lg
 ```

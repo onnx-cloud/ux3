@@ -1,5 +1,6 @@
 export { createCommand } from './commands/create.js';
 export { generateCommand } from './commands/generate.js';
+export { hintsCommand } from './commands/hints.js';
 export { devCommand } from './commands/dev.js';
 export { buildCommand } from './commands/build.js';
 export { lintCommand } from './commands/lint.js';

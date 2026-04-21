@@ -1,50 +1,36 @@
-# Template: `i18n`
+# UX I18N Hints
 
-Used by: `ux3 generate i18n <locale>`
+`ux/i18n/` contains locale bundles used by templates, views, and validation messages.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `en` or `fr-CA` (the locale tag, passed as the name argument) |
-| `[[ date ]]` | `2026-04-21` |
+- One YAML file per locale (`en.yaml`, `fr-CA.yaml`, etc.).
+- Human-facing text only. Keep behavior, branching, and markup out of locale files.
 
-## Files emitted (relative to `ux/i18n/`)
+## Localization rules
 
-```
-[[ name ]].yaml   — locale strings bundle
-```
+- Use valid BCP-47 locale tags for file names.
+- Keep key structure consistent across locales.
+- Prefer semantic key groups (`common`, `errors`, `nav`, `forms`).
+- Avoid string concatenation patterns that break in other languages.
 
-## Conventions
+## Quality guidelines
 
-- File name MUST be the BCP-47 locale tag (e.g. `en`, `en-US`, `fr-CA`).
-- Keys use dot-path grouping: `section.key`.
-- Never embed raw HTML in i18n strings.
-- Pluralisation: use `one` / `other` sub-keys when needed.
-- Missing keys fall through to the default locale (usually `en`).
-- All keys referenced in templates must exist in every locale file.
+- Every key used in templates should exist in every active locale.
+- Keep error messages and labels concise and context-aware.
+- Use plural-aware structures when count-sensitive text is needed.
+- Do not embed HTML; let templates control markup.
 
-## File shape
+## Reference shape
 
 ```yaml
-# [[ name ]].yaml — i18n strings
 common:
   submit: Submit
   cancel: Cancel
-  loading: Loading…
-  back: Back
+  loading: Loading...
 errors:
   required: This field is required.
   invalid: Invalid value.
-  server: Something went wrong. Please try again.
 nav:
   home: Home
-```
-
-## Example invocation
-
-```bash
-ux3 generate i18n en
-ux3 generate i18n fr-CA
-ux3 generate i18n de
 ```

@@ -62,6 +62,7 @@ describe('UX3 CLI commands', () => {
     expect(idx.createCommand).toBeDefined();
     expect(idx.devCommand).toBeDefined();
     expect(idx.buildCommand).toBeDefined();
+    expect(idx.hintsCommand).toBeDefined();
     expect(idx.lintCommand).toBeDefined();
     expect(idx.checkCommand).toBeDefined();
     expect(idx.compileCommand).toBeDefined();

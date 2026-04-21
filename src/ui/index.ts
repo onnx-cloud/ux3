@@ -7,6 +7,8 @@
  */
 export { ViewComponent, type TemplateBindings } from './view-component.js';
 export type { AppContext, AppContextLoader, AssetDescriptor } from './app.js';
+export type { BrowserContext, BrowserContextOptions, Reliability } from './browser-context.js';
+export { captureBrowserContext, observeBrowserContext } from './browser-context.js';
 export { createBootstrap } from './bootstrap.js';
 export { AppContextBuilder, createAppContext, hydrate, type GeneratedConfig, type HydrationOptions } from './context-builder.js';
 export { registerStyles, applyStyles, initStyleRegistry, clearStyles, getRegisteredStyles } from './style-registry.js';

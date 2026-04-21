@@ -16,6 +16,7 @@ export { UxDropdown } from './dropdown.js';
 // Presentation components
 export { UxButton } from './button.js';
 export { UxPanel } from './panel.js';
+export { registerBuiltInPrimitives } from './primitives.js';
 
 // Compliance components
 export { UxConsentBanner } from './consent-banner.js';

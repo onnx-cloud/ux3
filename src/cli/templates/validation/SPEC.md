@@ -1,41 +1,42 @@
-# Template: `validation`
+# UX Validation Hints
 
-Used by: `ux3 generate validation <name>`
+`ux/validate/` contains declarative validation schemas for forms and user inputs.
 
-## Tokens
+## What belongs here
 
-| Token | Example |
-|---|---|
-| `[[ name ]]` | `login` |
-| `[[ Name ]]` | `Login` |
-| `[[ date ]]` | `2026-04-21` |
+- Validation definitions grouped by form or view intent.
+- Field-level constraints (required, type, range, pattern).
+- Message keys that map to i18n resources.
 
-## Files emitted (relative to `ux/validate/`)
+## Validation behavior
 
-```
-[[ name ]].yaml   — validation schema
-```
+- Client validation should fail fast before invoking async side effects.
+- Validation should be deterministic and not depend on network state.
+- Server-side validation still matters; client validation is for UX and early feedback.
 
-## Conventions
+## Authoring conventions
 
-- Schema name (top-level key) must match the view slug it validates.
-- Field `type` values: `string`, `number`, `boolean`, `email`, `url`, `date`.
-- `required: true` fails on empty / null / undefined.
-- `minLength` / `maxLength` apply to strings; `min` / `max` to numbers.
-- `pattern` accepts a regex string (no slashes, no flags).
-- i18n error messages reference keys from the `errors` namespace in locale files.
-- Validation runs client-side in the FSM before `invoke`; server validation is separate.
+- Keep schema naming aligned with the view/form domain.
+- Use explicit field types (`string`, `number`, `email`, `url`, `date`, `boolean`).
+- Use `minLength`/`maxLength` for strings and `min`/`max` for numbers.
+- Use regex `pattern` sparingly and document intent in comments when complex.
 
-## Schema shape
+## Error messaging
+
+- Prefer i18n keys over hardcoded prose.
+- Keep messages specific to the failed constraint.
+- Reuse common error keys where semantics are identical.
+
+## Reference shape
 
 ```yaml
-[[ name ]]:
+registration:
   fields:
-    fieldName:
+    username:
       type: string
       required: true
-      minLength: 2
-      maxLength: 100
+      minLength: 3
+      maxLength: 32
     email:
       type: email
       required: true
@@ -43,11 +44,4 @@ Used by: `ux3 generate validation <name>`
       type: number
       min: 18
       max: 120
-```
-
-## Example invocation
-
-```bash
-ux3 generate validation login
-ux3 generate validation registration
 ```
