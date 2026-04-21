@@ -1,5 +1,9 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import type { AssetDescriptor } from '../../../../src/ui/app';
+import { createRequire } from 'module';
+
+const _stripeRequire = createRequire(import.meta.url);
+const { version: _stripeVersion } = _stripeRequire('../package.json') as { version: string };
 
 export interface StripeConfig {
   apiKey?: string;
@@ -8,7 +12,7 @@ export interface StripeConfig {
 
 export const StripePlugin: Plugin = {
   name: '@ux3/plugin-stripe',
-  version: '0.1.0',
+  version: _stripeVersion,
   install(app) {
     const cfg: StripeConfig = app.config.plugins?.stripe || {};
 

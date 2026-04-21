@@ -1,3 +1,4 @@
+import { createRequire } from 'module';
 import type { Plugin } from '../plugin/registry';
 
 // A simple plugin that registers a `content` service using configuration
@@ -5,9 +6,12 @@ import type { Plugin } from '../plugin/registry';
 // looks up an entry by slug or path and returns the pre-rendered HTML and
 // frontmatter data.
 
+const _require = createRequire(import.meta.url);
+const { version: _version } = _require('../../package.json') as { version: string };
+
 export const ContentPlugin: Plugin = {
   name: '@ux3/content-plugin',
-  version: '0.1.0',
+  version: _version,
   install(app) {
     app.registerService('content', () => {
       // service methods close over app.config so they always see up-to-date

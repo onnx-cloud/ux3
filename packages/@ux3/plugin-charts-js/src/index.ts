@@ -1,19 +1,25 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import type { AssetDescriptor } from '../../../../src/ui/app';
+import { createRequire } from 'module';
+
+const _chartsRequire = createRequire(import.meta.url);
+const { version: _chartsVersion } = _chartsRequire('../package.json') as { version: string };
 
 // minimal charting plugin example
 export const ChartsJsPlugin: Plugin = {
   name: '@ux3/plugin-charts-js',
-  version: '0.1.0',
+  version: _chartsVersion,
   install(app) {
-    // register a CDN script asset (helper method catches missing site)
-    app.registerAsset({ type: 'script', src: 'https://cdn.example.com/charts.js' });
+    // Register the Chart.js CDN asset. Users can override via config.plugins['charts-js'].cdn.
+    const cfg = (app.config.plugins as any)?.['charts-js'] ?? {};
+    const cdnUrl: string = cfg.cdn ?? 'https://cdn.jsdelivr.net/npm/chart.js';
+    app.registerAsset({ type: 'script', src: cdnUrl });
 
     // register a service that lazy-loads the charts library
     app.registerService('chart', () => {
       let chartsLib: any;
       async function load() {
-        if (!chartsLib) chartsLib = await import('charts.js');
+        if (!chartsLib) chartsLib = await import('chart.js');
         return chartsLib;
       }
       return {

@@ -215,9 +215,11 @@ const DEFAULT_TAILWIND_CDN = 'https://cdn.tailwindcss.com';
 // PLUGIN DEFINITION
 // ============================================================================
 
+const { version: _cssVersion } = require('../package.json') as { version: string };
+
 export const TailwindCssPlugin: Plugin = {
   name: '@ux3/plugin-tailwind-css',
-  version: '0.1.0',
+  version: _cssVersion,
   description: 'Lightweight Tailwind CSS integration for UX3',
 
   async install(app) {

@@ -15,8 +15,10 @@ import { pluginCommand } from './commands/plugin.js';
 import { styleCommand } from './commands/style.js';
 import { generateCommand } from './commands/generate.js';
 import { hintsCommand } from './commands/hints.js';
+import { createRequire } from 'module';
 
-const version = '0.1.0';
+const _require = createRequire(import.meta.url);
+const { version } = _require('../../package.json') as { version: string };
 
 program.version(version).description('UX3 - Lightweight SPA framework CLI');
 

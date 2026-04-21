@@ -9,7 +9,12 @@ export class RemoteAdapter extends BaseAdapter {
 
   constructor(config: StoreConfig) {
     super('remote', config);
-    this.baseUrl = config.baseUrl || 'http://localhost:3000/api';
+    if (!config.baseUrl) {
+      throw new Error(
+        "[RemoteAdapter] config.baseUrl is required. Provide the full base URL of your REST API (e.g. 'https://api.example.com/v1')."
+      );
+    }
+    this.baseUrl = config.baseUrl;
   }
 
   async connect(): Promise<void> {

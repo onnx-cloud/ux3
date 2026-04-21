@@ -9,6 +9,6 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "charts.js": "^1.0.0"
+    "chart.js": "^4.0.0"
   }
 }

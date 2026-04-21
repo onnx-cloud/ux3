@@ -1,6 +1,6 @@
 {
   "name": "@ux3/ux",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Tiny declarative UI framework. batteries included.",
   "license": "MIT",
   "author": "UX3 Contributors",
@@ -128,6 +128,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
+    "@types/chai": "^5.2.3",
     "@types/fs-extra": "^11.0.4",
     "@types/marked": "^5.0.0",
     "@types/node": "^20.10.0",

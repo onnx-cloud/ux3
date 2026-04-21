@@ -55,7 +55,7 @@ function readUx3Version(): string {
       if (fsSync.existsSync(pkgPath)) {
         const pkg = JSON.parse(fsSync.readFileSync(pkgPath, 'utf-8'));
         if (pkg.name && (pkg.name === 'ux3' || pkg.name?.startsWith('@ux3'))) {
-          return pkg.version ?? '0.1.0';
+          return pkg.version ?? 'unknown';
         }
       }
       dir = path.dirname(dir);
@@ -63,7 +63,7 @@ function readUx3Version(): string {
   } catch {
     // ignore
   }
-  return '0.1.0';
+  return 'unknown';
 }
 
 /**
