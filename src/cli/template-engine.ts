@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function resolveBuiltInTemplatesDir(): string {
-  const appTemplatesDir = path.resolve(__dirname, '../templates/app');
-  return appTemplatesDir;
+  const templatesDir = path.resolve(__dirname, '../templates');
+  return templatesDir;
 }
 
 const BUILT_IN_TEMPLATES_DIR = resolveBuiltInTemplatesDir();
@@ -119,8 +119,15 @@ export function resolveTemplateDir(section: string, projectRoot?: string): strin
   if (projectRoot) {
     const override = path.join(projectRoot, '.ux3', 'templates', section);
     if (fsSync.existsSync(override)) return override;
+
+    const appOverride = path.join(projectRoot, '.ux3', 'templates', 'app', section);
+    if (fsSync.existsSync(appOverride)) return appOverride;
   }
-  return path.join(BUILT_IN_TEMPLATES_DIR, section);
+
+  const direct = path.join(BUILT_IN_TEMPLATES_DIR, section);
+  if (fsSync.existsSync(direct)) return direct;
+
+  return path.join(BUILT_IN_TEMPLATES_DIR, 'app', section);
 }
 
 /**

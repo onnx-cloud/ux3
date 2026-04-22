@@ -111,6 +111,16 @@ describe('resolveTemplateDir', () => {
     expect(dir).toMatch(/templates[/\\]app[/\\]view$/);
   });
 
+  it('resolves top-level named templates directly', () => {
+    const dir = resolveTemplateDir('component');
+    expect(dir).toMatch(/templates[/\\]component$/);
+  });
+
+  it('resolves app namespaced templates when section is not top-level', () => {
+    const dir = resolveTemplateDir('plugin');
+    expect(dir).toMatch(/templates[/\\]app[/\\]plugin$/);
+  });
+
   it('prefers user override when present', async () => {
     const override = path.join(TMP, '.ux3', 'templates', 'view');
     await fs.ensureDir(override);

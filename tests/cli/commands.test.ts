@@ -104,6 +104,25 @@ describe('UX3 CLI commands', () => {
 
   });
 
+  it('`create --template app` scaffolds from the app project template', async () => {
+    const project = path.join(tmpRoot, 'proj-app-template');
+    const exit = await runCommand(createCommand, ['proj-app-template', '--template', 'app'], tmpRoot);
+    expect(exit).toBe(0);
+
+    expect(await fs.pathExists(path.join(project, 'ux3.config.json'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'layout', 'default.html'))).toBe(true);
+  });
+
+  it('`create` fails for unknown template names', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const code = await runCommand(createCommand, ['proj-unknown-template', '--template', 'unknown-template'], tmpRoot);
+      expect(code).toBe(1);
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   it('`create` refuses to overwrite existing package.json', async () => {
     const project = path.join(tmpRoot, 'proj2');
     await fs.ensureDir(project);

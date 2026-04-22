@@ -4,20 +4,29 @@ import fsSync from 'fs';
 import path from 'path';
 import { buildContext, emitScaffold, resolveTemplateDir } from '../template-engine.js';
 
-const VALID_TEMPLATES = ['spa', 'admin', 'blog'] as const;
-type ProjectTemplate = typeof VALID_TEMPLATES[number];
+function resolveCreateSection(template: string): string | null {
+  const normalized = template.trim().toLowerCase();
+  const projectSection = path.join(normalized, 'project');
+  if (fsSync.existsSync(resolveTemplateDir(projectSection))) return projectSection;
+  if (fsSync.existsSync(resolveTemplateDir(normalized))) return normalized;
+  return null;
+}
 
 export const createCommand = new Command()
   .name('create')
   .description('Create a new UX3 project')
   .argument('<name>', 'project name')
-  .option('--template <template>', `starter template (${VALID_TEMPLATES.join(', ')})`, 'spa')
+  .option('--template <template>', 'starter template name', 'app')
   .option('--version <version>', 'semantic version', '0.0.0')
   .option('--dry-run', 'print files without writing them')
   .action(async (name: string, options: { template: string; version: string; dryRun?: boolean }) => {
-    const template = VALID_TEMPLATES.includes(options.template as ProjectTemplate)
-      ? (options.template as ProjectTemplate)
-      : 'spa';
+    const template = options.template.trim().toLowerCase();
+    const section = resolveCreateSection(template);
+
+    if (!section) {
+      console.error(`❗ Unknown template "${template}"`);
+      process.exit(1);
+    }
 
     console.log(`🎨 Creating UX3 project: ${name}`);
     console.log(`📋 Template: ${template}`);
@@ -39,11 +48,6 @@ export const createCommand = new Command()
     }
 
     const ctx = buildContext(name, { version: options.version });
-
-    // Resolve section name: try variant-specific dir first, fall back to 'project'
-    const variantSection = `project/${template}`;
-    const variantDir = resolveTemplateDir(variantSection);
-    const section = fsSync.existsSync(variantDir) ? variantSection : 'project';
 
     const written = await emitScaffold(section, ctx, projectDir, {
       dryRun: options.dryRun,
