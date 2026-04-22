@@ -142,7 +142,12 @@ describe('MCP Tools', () => {
     const serviceList = await toolRegistry.executeTool('entity.list', { kind: 'service' });
     const routeList = await toolRegistry.executeTool('entity.list', { kind: 'route' });
 
-    expect(viewList.items).toContain('home');
+    expect(viewList.items).toContain('home/index');
+    expect(viewList.items).toContain('home/loading');
+    expect(viewList.items).toContain('home/error');
+    expect(viewList.items).toContain('oops/404');
+    expect(viewList.items).toContain('capability/knowledge/ready');
+    expect(viewList.items).toContain('capability/mcp/loading_tools');
     expect(layoutList.items).toContain('default');
     expect(i18nList.items).toContain('en/en');
     expect(serviceList.items).toContain('iq');

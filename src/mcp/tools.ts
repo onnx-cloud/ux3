@@ -24,6 +24,14 @@ interface ToolDef {
   };
 }
 
+interface ViewEntityRecord {
+  name: string;
+  sourceName: string;
+  stateName?: string;
+  mainPath: string;
+  extraPath?: string;
+}
+
 /**
  * Registry for MCP tools.
  * Tools are verbs: view.create, view.validate, views.search, etc.
@@ -1217,10 +1225,108 @@ ${Object.entries(strings)
     throw new Error(`Unsupported entity kind: ${kind}`);
   }
 
+  private walkEntityFiles(rootDir: string, extension: string): string[] {
+    if (!fs.existsSync(rootDir)) {
+      return [];
+    }
+
+    const files: string[] = [];
+    const walk = (dir: string): void => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name.startsWith('.')) continue;
+        const abs = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(abs);
+        } else if (entry.isFile() && entry.name.endsWith(extension)) {
+          files.push(abs);
+        }
+      }
+    };
+
+    walk(rootDir);
+    files.sort();
+    return files;
+  }
+
+  private templateEntityName(templateRef: string): string | null {
+    const normalized = templateRef.replace(/\\/g, '/').replace(/^\.\//, '');
+    if (!normalized.startsWith('view/')) {
+      return null;
+    }
+
+    return normalized.slice('view/'.length).replace(/\.html$/, '');
+  }
+
+  private buildViewEntityIndex(): ViewEntityRecord[] {
+    if (!fs.existsSync(this.viewsDir)) {
+      return [];
+    }
+
+    const records = new Map<string, ViewEntityRecord>();
+    const yamlFiles = this.walkEntityFiles(this.viewsDir, '.yaml');
+
+    for (const yamlPath of yamlFiles) {
+      const relYaml = path.relative(this.viewsDir, yamlPath).replace(/\\/g, '/');
+      const sourceName = relYaml.replace(/\.yaml$/, '');
+      const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+      const parsed = this.parseViewYAML(yamlContent);
+      const states = parsed?.states && typeof parsed.states === 'object' ? parsed.states : {};
+      let derivedCount = 0;
+
+      for (const [stateName, rawConfig] of Object.entries(states)) {
+        const templateRef = typeof rawConfig === 'string'
+          ? rawConfig
+          : rawConfig && typeof rawConfig === 'object' && typeof (rawConfig as Record<string, unknown>).template === 'string'
+            ? String((rawConfig as Record<string, unknown>).template)
+            : null;
+
+        if (!templateRef) {
+          continue;
+        }
+
+        const entityName = this.templateEntityName(templateRef);
+        if (!entityName) {
+          continue;
+        }
+
+        const extraPath = path.join(this.uxDir, templateRef.replace(/\\/g, '/'));
+        records.set(entityName, {
+          name: entityName,
+          sourceName,
+          stateName,
+          mainPath: yamlPath,
+          extraPath,
+        });
+        derivedCount += 1;
+      }
+
+      if (derivedCount === 0) {
+        const defaultTemplatePath = path.join(this.viewsDir, sourceName, 'index.html');
+        records.set(sourceName, {
+          name: sourceName,
+          sourceName,
+          mainPath: yamlPath,
+          extraPath: fs.existsSync(defaultTemplatePath) ? defaultTemplatePath : undefined,
+        });
+      }
+    }
+
+    return Array.from(records.values()).sort((left, right) => left.name.localeCompare(right.name));
+  }
+
+  private findViewEntity(name: string): ViewEntityRecord | undefined {
+    const normalized = name.replace(/^\/+/, '').replace(/\.yaml$/, '').replace(/\.html$/, '');
+    return this.buildViewEntityIndex().find((record) => record.name === normalized);
+  }
+
   private listEntityNames(kind: EntityKind): string[] {
     const def = this.entityDefinitions[kind];
     if (!fs.existsSync(def.dir)) {
       return [];
+    }
+
+    if (kind === 'view') {
+      return this.buildViewEntityIndex().map((record) => record.name);
     }
 
     if (def.mode === 'directory') {
@@ -1260,8 +1366,25 @@ ${Object.entries(strings)
     const normalized = name.replace(/^\/+/, '').replace(new RegExp(`${def.extension}$`), '');
 
     if (kind === 'view') {
+      const indexed = this.findViewEntity(normalized);
+      if (indexed) {
+        return {
+          mainPath: indexed.mainPath,
+          extraPath: indexed.extraPath,
+        };
+      }
+
+      const siblingYamlPath = path.join(def.dir, `${normalized}.yaml`);
+      if (fs.existsSync(siblingYamlPath)) {
+        return {
+          mainPath: siblingYamlPath,
+          extraPath: path.join(def.dir, normalized, 'index.html'),
+        };
+      }
+
+      const viewBase = path.basename(normalized);
       return {
-        mainPath: path.join(def.dir, `${normalized}.yaml`),
+        mainPath: path.join(def.dir, normalized, `${viewBase}.yaml`),
         extraPath: path.join(def.dir, normalized, 'index.html'),
       };
     }
