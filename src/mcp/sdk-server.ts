@@ -3,14 +3,14 @@ import { z } from 'zod';
 import { ToolRegistry } from './tools.js';
 import { ResourceRegistry } from './resources.js';
 
-export function createSDKServer(projectDir: string): McpServer {
+export function createSDKServer(projectDir: string, resourceBaseUrl?: string): McpServer {
   const server = new McpServer({
     name: 'ux3-mcp',
     version: '0.1.0',
   });
 
   const toolRegistry = new ToolRegistry(projectDir);
-  const resourceRegistry = new ResourceRegistry(projectDir);
+  const resourceRegistry = new ResourceRegistry(projectDir, resourceBaseUrl);
 
   // Register all tools from toolRegistry
   const toolDefs = toolRegistry.getToolDefinitions();

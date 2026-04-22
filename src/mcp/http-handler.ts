@@ -37,7 +37,9 @@ export class MCPHTTPHandler {
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
       });
-      const server = createSDKServer(this.projectDir);
+      const protocol = String(req.headers['x-forwarded-proto'] || 'http');
+      const host = String(req.headers.host || 'localhost');
+      const server = createSDKServer(this.projectDir, `${protocol}://${host}`);
 
       await server.connect(transport);
       try {

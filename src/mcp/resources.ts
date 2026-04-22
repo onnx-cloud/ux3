@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 interface Resource {
   uri: string;
@@ -8,47 +9,68 @@ interface Resource {
   mimeType?: string;
 }
 
+const RESOURCE_URIS = {
+  schemaView: '/schema/view',
+  schemaI18n: '/schema/i18n',
+  schemaStyle: '/schema/style',
+  promptSystem: '/prompt/system',
+  projectStructure: '/project/structure',
+  projectServices: '/project/services',
+  view: (name: string) => `/views/${name}`,
+  example: (name: string) => `/examples/${name}`,
+} as const;
+
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+
 /**
  * Registry for MCP resources.
- * Resources are nouns: view://{name}, schema://view, example://{name}, etc.
+ * Resources are exposed as server-relative paths for browser-friendly MCP clients.
  */
 export class ResourceRegistry {
   private projectDir: string;
   private resources = new Map<string, Resource>();
   private viewsDir: string;
   private uxDir: string;
+  private frameworkRoot: string;
+  private resourceBaseUrl: string;
 
-  constructor(projectDir: string) {
+  constructor(projectDir: string, resourceBaseUrl = 'http://localhost') {
     this.projectDir = projectDir;
+    this.resourceBaseUrl = resourceBaseUrl;
     
     // Support both src/ux (new projects) and ux (examples)
     const uxPath = path.join(projectDir, 'ux');
     const srcUxPath = path.join(projectDir, 'src', 'ux');
     this.uxDir = fs.existsSync(uxPath) ? uxPath : srcUxPath;
     this.viewsDir = path.join(this.uxDir, 'view');
+    this.frameworkRoot =
+      this.findFrameworkRoot(MODULE_DIR) ??
+      this.findFrameworkRoot(process.cwd()) ??
+      this.findFrameworkRoot(projectDir) ??
+      path.resolve(projectDir);
     
     this.registerResources();
   }
 
   private registerResources() {
     // View resources (dynamic)
-    this.registerPattern('view://');
+    this.registerPattern('/views/');
     
     // Schema resources
     this.registerResource({
-      uri: 'schema://view',
+      uri: RESOURCE_URIS.schemaView,
       name: 'View Schema',
       description: 'JSON Schema for UX3 views',
       mimeType: 'application/json',
     });
     this.registerResource({
-      uri: 'schema://i18n',
+      uri: RESOURCE_URIS.schemaI18n,
       name: 'i18n Schema',
       description: 'JSON Schema for i18n declarations',
       mimeType: 'application/json',
     });
     this.registerResource({
-      uri: 'schema://style',
+      uri: RESOURCE_URIS.schemaStyle,
       name: 'Style Schema',
       description: 'JSON Schema for styles',
       mimeType: 'application/json',
@@ -56,18 +78,18 @@ export class ResourceRegistry {
 
     // System prompt resource
     this.registerResource({
-      uri: 'prompt://system',
+      uri: RESOURCE_URIS.promptSystem,
       name: 'System Prompt',
       description: 'System prompt for LLM assistance',
       mimeType: 'text/plain',
     });
 
     // Example resources
-    const examplesDir = path.join(this.projectDir, '..', 'examples');
+    const examplesDir = path.join(this.frameworkRoot, 'examples');
     if (fs.existsSync(examplesDir)) {
       fs.readdirSync(examplesDir).forEach((example) => {
         this.registerResource({
-          uri: `example://${example}`,
+          uri: RESOURCE_URIS.example(example),
           name: `${example} Example`,
           description: `Example app: ${example}`,
         });
@@ -76,60 +98,73 @@ export class ResourceRegistry {
 
     // Project resources
     this.registerResource({
-      uri: 'project://structure',
+      uri: RESOURCE_URIS.projectStructure,
       name: 'Project Structure',
       description: 'Directory tree and stats',
     });
     this.registerResource({
-      uri: 'project://services',
+      uri: RESOURCE_URIS.projectServices,
       name: 'Services',
       description: 'Service registry and signatures',
     });
   }
 
   private registerPattern(pattern: string) {
-    // Dynamic pattern for view://{name}
+    // Dynamic pattern for /views/{name}
     // Will be resolved in readResource()
   }
 
   private registerResource(resource: Resource) {
-    this.resources.set(resource.uri, resource);
+    this.resources.set(this.toResourceUri(resource.uri), {
+      ...resource,
+      uri: this.toResourceUri(resource.uri),
+    });
   }
 
   async readResource(uri: string): Promise<string> {
-    // Handle view://{name} resources
+    const resourcePath = this.toResourcePath(uri);
+
+    // Handle /views/{name} resources (and legacy view://{name})
+    if (resourcePath.startsWith('/views/')) {
+      const viewName = resourcePath.slice('/views/'.length);
+      return this.readViewResource(viewName);
+    }
     if (uri.startsWith('view://')) {
-      const viewName = uri.slice(7);
+      const viewName = uri.slice('view://'.length);
       return this.readViewResource(viewName);
     }
 
     // Handle schema resources
-    if (uri === 'schema://view') {
+    if (resourcePath === RESOURCE_URIS.schemaView || uri === 'schema://view') {
       return this.readSchemaFile('view');
     }
-    if (uri === 'schema://i18n') {
+    if (resourcePath === RESOURCE_URIS.schemaI18n || uri === 'schema://i18n') {
       return this.readSchemaFile('i18n');
     }
-    if (uri === 'schema://style') {
+    if (resourcePath === RESOURCE_URIS.schemaStyle || uri === 'schema://style') {
       return this.readSchemaFile('style');
     }
 
     // Handle system prompt
-    if (uri === 'prompt://system') {
+    if (resourcePath === RESOURCE_URIS.promptSystem || uri === 'prompt://system') {
       return this.readSystemPrompt();
     }
 
     // Handle example resources
+    if (resourcePath.startsWith('/examples/')) {
+      const exampleName = resourcePath.slice('/examples/'.length);
+      return this.readExampleResource(exampleName);
+    }
     if (uri.startsWith('example://')) {
-      const exampleName = uri.slice(10);
+      const exampleName = uri.slice('example://'.length);
       return this.readExampleResource(exampleName);
     }
 
     // Handle project resources
-    if (uri === 'project://structure') {
+    if (resourcePath === RESOURCE_URIS.projectStructure || uri === 'project://structure') {
       return this.readProjectStructure();
     }
-    if (uri === 'project://services') {
+    if (resourcePath === RESOURCE_URIS.projectServices || uri === 'project://services') {
       return this.readServicesRegistry();
     }
 
@@ -210,13 +245,19 @@ states:
 
   private readViewResource(viewName: string): string {
     const viewDir = path.join(this.uxDir, 'view', viewName);
+    const siblingYamlPath = path.join(this.viewsDir, `${viewName}.yaml`);
+    const siblingHtmlPath = path.join(this.viewsDir, `${viewName}.html`);
 
-    if (!fs.existsSync(viewDir)) {
+    if (!fs.existsSync(viewDir) && !fs.existsSync(siblingYamlPath) && !fs.existsSync(siblingHtmlPath)) {
       throw new Error(`View not found: ${viewName}`);
     }
 
-    const yamlPath = path.join(viewDir, `${viewName}.yaml`);
-    const htmlPath = path.join(viewDir, `${viewName}.html`);
+    const yamlPath = fs.existsSync(path.join(viewDir, `${viewName}.yaml`))
+      ? path.join(viewDir, `${viewName}.yaml`)
+      : siblingYamlPath;
+    const htmlPath = fs.existsSync(path.join(viewDir, `${viewName}.html`))
+      ? path.join(viewDir, `${viewName}.html`)
+      : siblingHtmlPath;
 
     let content = `# ${viewName}\n\n`;
 
@@ -236,15 +277,10 @@ states:
   }
 
   private readSchemaFile(schemaName: string): string {
-    // Try project schema first
     let schemaPath = path.join(this.projectDir, 'schema', `${schemaName}.schema.json`);
-    
-    // Fall back to framework schema if not found in project
+
     if (!fs.existsSync(schemaPath)) {
-      const frameworkSchemaPath = path.join(this.projectDir, '..', '..', 'schema', `${schemaName}.schema.json`);
-      if (fs.existsSync(frameworkSchemaPath)) {
-        schemaPath = frameworkSchemaPath;
-      }
+      schemaPath = path.join(this.frameworkRoot, 'schema', `${schemaName}.schema.json`);
     }
 
     if (!fs.existsSync(schemaPath)) {
@@ -255,7 +291,7 @@ states:
   }
 
   private readExampleResource(exampleName: string): string {
-    const examplePath = path.join(this.projectDir, '..', 'examples', exampleName);
+    const examplePath = path.join(this.frameworkRoot, 'examples', exampleName);
 
     if (!fs.existsSync(examplePath)) {
       throw new Error(`Example not found: ${exampleName}`);
@@ -265,7 +301,9 @@ states:
     let content = `# ${exampleName} Example\n\n`;
 
     // List views in the example
-    const viewsDir = path.join(examplePath, 'src', 'ux', 'view');
+    const viewsDir = fs.existsSync(path.join(examplePath, 'ux', 'view'))
+      ? path.join(examplePath, 'ux', 'view')
+      : path.join(examplePath, 'src', 'ux', 'view');
     if (fs.existsSync(viewsDir)) {
       const views = fs.readdirSync(viewsDir).filter((f) => !f.startsWith('.'));
       content += `## Views\n\n${views.map((v) => `- ${v}`).join('\n')}\n\n`;
@@ -373,7 +411,7 @@ states:
         const stats = fs.statSync(fullPath);
         if (stats.isDirectory()) {
           resources.push({
-            uri: `view://${entry}`,
+            uri: this.toResourceUri(RESOURCE_URIS.view(entry)),
             name: `${entry} View`,
             description: `View: ${entry}`,
           });
@@ -386,6 +424,42 @@ states:
 
   getResourceDefinitions(): Resource[] {
     return this.listResources();
+  }
+
+  private toResourceUri(resourcePath: string): string {
+    return new URL(resourcePath, this.resourceBaseUrl).toString();
+  }
+
+  private toResourcePath(uri: string): string {
+    if (uri.startsWith('/')) {
+      return uri;
+    }
+
+    if (/^[a-z]+:\/\//i.test(uri)) {
+      return new URL(uri).pathname;
+    }
+
+    return uri;
+  }
+
+  private findFrameworkRoot(startDir: string): string | null {
+    let current = path.resolve(startDir);
+
+    while (true) {
+      if (
+        fs.existsSync(path.join(current, 'schema')) &&
+        fs.existsSync(path.join(current, 'package.json')) &&
+        fs.existsSync(path.join(current, 'src', 'mcp'))
+      ) {
+        return current;
+      }
+
+      const parent = path.dirname(current);
+      if (parent === current) {
+        return null;
+      }
+      current = parent;
+    }
   }
 }
 

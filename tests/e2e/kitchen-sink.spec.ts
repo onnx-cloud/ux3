@@ -270,15 +270,15 @@ test.describe('Kitchen sink component showcase', () => {
   test('switches between capability, operations, and narrative layouts', async ({ page }) => {
     await waitForShowcase(page);
 
-    await expect(page.locator('text=Active layout: capability')).toBeVisible();
-    await expect(page.locator('text=Capability Matrix')).toBeVisible();
+    await expect(page.locator('text=Active layout: Capability Matrix')).toBeVisible();
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:SET_LAYOUT"][ux-event-value="layout=operations"]');
-    await expect(page.locator('text=Active layout: operations')).toBeVisible();
-    await expect(page.locator('text=Operations board is healthy')).toBeVisible();
+    await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_OPERATIONS"]');
+    await expect(page.locator('text=Active layout: Operations Board')).toBeVisible();
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:SET_LAYOUT"][ux-event-value="layout=narrative"]');
-    await expect(page.locator('text=Active layout: narrative')).toBeVisible();
-    await expect(page.locator('text=Narrative Journey')).toBeVisible();
+    await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_NARRATIVE"]');
+    await expect(page.locator('text=Active layout: Narrative Journey')).toBeVisible();
+
+    await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_CAPABILITY"]');
+    await expect(page.locator('text=Active layout: Capability Matrix')).toBeVisible();
   });
 });

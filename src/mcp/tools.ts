@@ -3,6 +3,17 @@ import path from 'path';
 import { Validator } from '../build/validator.js';
 import YAML from 'yaml';
 
+type EntityKind = 'view' | 'layout' | 'i18n' | 'service' | 'route';
+
+interface EntityDefinition {
+  kind: EntityKind;
+  dir: string;
+  mode: 'single-file' | 'directory';
+  extension: string;
+  description: string;
+  listName: string;
+}
+
 interface ToolDef {
   name: string;
   description: string;
@@ -23,6 +34,11 @@ export class ToolRegistry {
   private validator: Validator;
   private viewsDir: string;
   private uxDir: string;
+  private layoutsDir: string;
+  private i18nDir: string;
+  private servicesDir: string;
+  private routesDir: string;
+  private entityDefinitions: Record<EntityKind, EntityDefinition>;
 
   constructor(projectDir: string) {
     this.projectDir = projectDir;
@@ -33,6 +49,52 @@ export class ToolRegistry {
     const uxPath = path.join(projectDir, 'ux');
     this.uxDir = fs.existsSync(uxPath) ? uxPath : srcUxPath;
     this.viewsDir = path.join(this.uxDir, 'view');
+    this.layoutsDir = path.join(this.uxDir, 'layout');
+    this.i18nDir = path.join(this.uxDir, 'i18n');
+    this.servicesDir = path.join(this.uxDir, 'service');
+    this.routesDir = path.join(this.uxDir, 'route');
+    this.entityDefinitions = {
+      view: {
+        kind: 'view',
+        dir: this.viewsDir,
+        mode: 'directory',
+        extension: '.yaml',
+        description: 'FSM views and templates',
+        listName: 'views',
+      },
+      layout: {
+        kind: 'layout',
+        dir: this.layoutsDir,
+        mode: 'single-file',
+        extension: '.html',
+        description: 'Layout templates',
+        listName: 'layouts',
+      },
+      i18n: {
+        kind: 'i18n',
+        dir: this.i18nDir,
+        mode: 'single-file',
+        extension: '.json',
+        description: 'Locale string catalogs',
+        listName: 'i18n',
+      },
+      service: {
+        kind: 'service',
+        dir: this.servicesDir,
+        mode: 'single-file',
+        extension: '.yaml',
+        description: 'Service declarations',
+        listName: 'services',
+      },
+      route: {
+        kind: 'route',
+        dir: this.routesDir,
+        mode: 'single-file',
+        extension: '.yaml',
+        description: 'Route declarations',
+        listName: 'routes',
+      },
+    };
     
     this.registerTools();
   }
@@ -40,13 +102,44 @@ export class ToolRegistry {
   private registerTools() {
     // Browse tools
     this.registerTool('project.list', this.projectList.bind(this));
+    this.registerTool('entity.list', this.entityList.bind(this));
+    this.registerTool('entity.get', this.entityGet.bind(this));
+    this.registerTool('entity.search', this.entitySearch.bind(this));
     this.registerTool('view.get', this.viewGet.bind(this));
     this.registerTool('views.search', this.viewsSearch.bind(this));
 
     // Create tools
+    this.registerTool('entity.create', this.entityCreate.bind(this));
+    this.registerTool('entity.update', this.entityUpdate.bind(this));
+    this.registerTool('entity.delete', this.entityDelete.bind(this));
     this.registerTool('view.create', this.viewCreate.bind(this));
     this.registerTool('style.create', this.styleCreate.bind(this));
     this.registerTool('i18n.create', this.i18nCreate.bind(this));
+
+    this.registerTool('layout.create', this.layoutCreate.bind(this));
+    this.registerTool('layout.get', this.layoutGet.bind(this));
+    this.registerTool('layouts.search', this.layoutsSearch.bind(this));
+    this.registerTool('layout.update', this.layoutUpdate.bind(this));
+    this.registerTool('layout.delete', this.layoutDelete.bind(this));
+
+    this.registerTool('i18n.get', this.i18nGet.bind(this));
+    this.registerTool('i18n.search', this.i18nSearch.bind(this));
+    this.registerTool('i18n.update', this.i18nUpdate.bind(this));
+    this.registerTool('i18n.delete', this.i18nDelete.bind(this));
+
+    this.registerTool('service.list', this.serviceList.bind(this));
+    this.registerTool('service.get', this.serviceGet.bind(this));
+    this.registerTool('service.search', this.serviceSearch.bind(this));
+    this.registerTool('service.create', this.serviceCreate.bind(this));
+    this.registerTool('service.update', this.serviceUpdate.bind(this));
+    this.registerTool('service.delete', this.serviceDelete.bind(this));
+
+    this.registerTool('route.list', this.routeList.bind(this));
+    this.registerTool('route.get', this.routeGet.bind(this));
+    this.registerTool('route.search', this.routeSearch.bind(this));
+    this.registerTool('route.create', this.routeCreate.bind(this));
+    this.registerTool('route.update', this.routeUpdate.bind(this));
+    this.registerTool('route.delete', this.routeDelete.bind(this));
 
     // Validate tools
     this.registerTool('view.validate', this.viewValidate.bind(this));
@@ -87,6 +180,41 @@ export class ToolRegistry {
         },
       },
       {
+        name: 'entity.list',
+        description: 'List entities for a given kind: view, layout, i18n, service, or route',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['view', 'layout', 'i18n', 'service', 'route'], description: 'Entity kind' },
+          },
+          required: ['kind'],
+        },
+      },
+      {
+        name: 'entity.get',
+        description: 'Read one entity by kind and name',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['view', 'layout', 'i18n', 'service', 'route'], description: 'Entity kind' },
+            name: { type: 'string', description: 'Entity name' },
+          },
+          required: ['kind', 'name'],
+        },
+      },
+      {
+        name: 'entity.search',
+        description: 'Search entities by text content or name',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['view', 'layout', 'i18n', 'service', 'route'], description: 'Entity kind' },
+            query: { type: 'string', description: 'Search query' },
+          },
+          required: ['kind', 'query'],
+        },
+      },
+      {
         name: 'view.get',
         description: 'Read view YAML and HTML source',
         inputSchema: {
@@ -109,6 +237,46 @@ export class ToolRegistry {
         },
       },
       {
+        name: 'entity.create',
+        description: 'Create an entity by kind and content',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['view', 'layout', 'i18n', 'service', 'route'], description: 'Entity kind' },
+            name: { type: 'string', description: 'Entity name' },
+            content: { type: 'string', description: 'Entity content' },
+            template: { type: 'string', description: 'Optional extra template content for views' },
+          },
+          required: ['kind', 'name'],
+        },
+      },
+      {
+        name: 'entity.update',
+        description: 'Update an existing entity by kind and content',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['view', 'layout', 'i18n', 'service', 'route'], description: 'Entity kind' },
+            name: { type: 'string', description: 'Entity name' },
+            content: { type: 'string', description: 'Replacement content' },
+            template: { type: 'string', description: 'Optional replacement template for views' },
+          },
+          required: ['kind', 'name'],
+        },
+      },
+      {
+        name: 'entity.delete',
+        description: 'Delete an entity by kind and name',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['view', 'layout', 'i18n', 'service', 'route'], description: 'Entity kind' },
+            name: { type: 'string', description: 'Entity name' },
+          },
+          required: ['kind', 'name'],
+        },
+      },
+      {
         name: 'view.create',
         description: 'Generate a new view from description',
         inputSchema: {
@@ -120,6 +288,63 @@ export class ToolRegistry {
             states: { type: 'array', description: 'Optional state definitions' },
           },
           required: ['name', 'description', 'initialState'],
+        },
+      },
+      {
+        name: 'layout.create',
+        description: 'Create a layout template',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Layout name' },
+            content: { type: 'string', description: 'HTML content' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'layout.get',
+        description: 'Read a layout template',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Layout name' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'layouts.search',
+        description: 'Search layout templates',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search query' },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'layout.update',
+        description: 'Update a layout template',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Layout name' },
+            content: { type: 'string', description: 'Replacement HTML content' },
+          },
+          required: ['name', 'content'],
+        },
+      },
+      {
+        name: 'layout.delete',
+        description: 'Delete a layout template',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Layout name' },
+          },
+          required: ['name'],
         },
       },
       {
@@ -145,6 +370,175 @@ export class ToolRegistry {
             strings: { type: 'object', description: 'English strings map' },
           },
           required: ['viewName', 'strings'],
+        },
+      },
+      {
+        name: 'i18n.get',
+        description: 'Read an i18n locale catalog',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Locale name or relative catalog path' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'i18n.search',
+        description: 'Search i18n locale catalogs',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search query' },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'i18n.update',
+        description: 'Update an i18n locale catalog',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Locale name or relative catalog path' },
+            content: { type: 'string', description: 'Replacement JSON or YAML content' },
+          },
+          required: ['name', 'content'],
+        },
+      },
+      {
+        name: 'i18n.delete',
+        description: 'Delete an i18n locale catalog',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Locale name or relative catalog path' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'service.list',
+        description: 'List service declarations',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'service.get',
+        description: 'Read a service declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Service file name' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'service.search',
+        description: 'Search service declarations',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search query' },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'service.create',
+        description: 'Create a service declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Service file name' },
+            content: { type: 'string', description: 'YAML content' },
+          },
+          required: ['name', 'content'],
+        },
+      },
+      {
+        name: 'service.update',
+        description: 'Update a service declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Service file name' },
+            content: { type: 'string', description: 'Replacement YAML content' },
+          },
+          required: ['name', 'content'],
+        },
+      },
+      {
+        name: 'service.delete',
+        description: 'Delete a service declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Service file name' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'route.list',
+        description: 'List route declaration files',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'route.get',
+        description: 'Read a route declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Route file name' },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'route.search',
+        description: 'Search route declarations',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search query' },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'route.create',
+        description: 'Create a route declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Route file name' },
+            content: { type: 'string', description: 'YAML content' },
+          },
+          required: ['name', 'content'],
+        },
+      },
+      {
+        name: 'route.update',
+        description: 'Update a route declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Route file name' },
+            content: { type: 'string', description: 'Replacement YAML content' },
+          },
+          required: ['name', 'content'],
+        },
+      },
+      {
+        name: 'route.delete',
+        description: 'Delete a route declaration file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Route file name' },
+          },
+          required: ['name'],
         },
       },
       {
@@ -220,40 +614,54 @@ export class ToolRegistry {
       },
     ];
   }
-
   // ===== Browse Tools =====
 
   private async projectList(args: any): Promise<any> {
-    const viewNames = fs.existsSync(this.viewsDir)
-      ? fs.readdirSync(this.viewsDir).filter((f) => !f.startsWith('.'))
-      : [];
+    const viewNames = this.listEntityNames('view');
 
     return {
       views: viewNames,
-      servicesDir: path.join(this.projectDir, 'src', 'services'),
-      stylesDir: path.join(this.projectDir, 'src', 'ux', 'style'),
-      i18nDir: path.join(this.projectDir, 'src', 'ux', 'i18n'),
+      layouts: this.listEntityNames('layout'),
+      i18n: this.listEntityNames('i18n'),
+      services: this.listEntityNames('service'),
+      routes: this.listEntityNames('route'),
+      servicesDir: this.servicesDir,
+      stylesDir: path.join(this.uxDir, 'style'),
+      i18nDir: this.i18nDir,
     };
+  }
+
+  private async entityList(args: any): Promise<any> {
+    const kind = this.parseEntityKind(args.kind);
+    return {
+      kind,
+      items: this.listEntityNames(kind),
+    };
+  }
+
+  private async entityGet(args: any): Promise<any> {
+    const kind = this.parseEntityKind(args.kind);
+    return this.readEntity(kind, args.name);
+  }
+
+  private async entitySearch(args: any): Promise<any> {
+    const kind = this.parseEntityKind(args.kind);
+    return this.searchEntities(kind, args.query);
   }
 
   private async viewGet(args: any): Promise<any> {
     const { name } = args;
-    const viewDir = path.join(this.viewsDir, name);
+    const { mainPath: yamlPath, extraPath: htmlPath } = this.resolveEntityPaths('view', name);
 
-    if (!fs.existsSync(viewDir)) {
+    if (!fs.existsSync(yamlPath)) {
       throw new Error(`View not found: ${name}`);
     }
-
-    const yamlPath = path.join(viewDir, `${name}.yaml`);
-    const htmlPath = path.join(viewDir, `${name}.html`);
 
     let yaml = '';
     let html = '';
 
-    if (fs.existsSync(yamlPath)) {
-      yaml = fs.readFileSync(yamlPath, 'utf-8');
-    }
-    if (fs.existsSync(htmlPath)) {
+    yaml = fs.readFileSync(yamlPath, 'utf-8');
+    if (htmlPath && fs.existsSync(htmlPath)) {
       html = fs.readFileSync(htmlPath, 'utf-8');
     }
 
@@ -266,24 +674,7 @@ export class ToolRegistry {
   }
 
   private async viewsSearch(args: any): Promise<any> {
-    const { query } = args;
-    const pattern = query.toLowerCase();
-
-    const matches = fs
-      .readdirSync(this.viewsDir)
-      .filter((name) => {
-        if (name.toLowerCase().includes(pattern)) return true;
-
-        const yamlPath = path.join(this.viewsDir, name, `${name}.yaml`);
-        if (fs.existsSync(yamlPath)) {
-          const content = fs.readFileSync(yamlPath, 'utf-8');
-          return content.toLowerCase().includes(pattern);
-        }
-        return false;
-      })
-      .map((name) => ({ name, type: 'view' }));
-
-    return { results: matches };
+    return this.searchEntities('view', args.query);
   }
 
   // ===== Create Tools =====
@@ -373,6 +764,47 @@ ${Object.entries(fsm.states)
     };
   }
 
+  private async entityCreate(args: any): Promise<any> {
+    const kind = this.parseEntityKind(args.kind);
+    if (kind === 'view') {
+      if (args.content) {
+        return this.writeEntity('view', args.name, args.content, { template: args.template, requireExisting: false });
+      }
+      return this.viewCreate(args);
+    }
+    return this.writeEntity(kind, args.name, args.content || this.defaultEntityContent(kind, args.name), { requireExisting: false });
+  }
+
+  private async entityUpdate(args: any): Promise<any> {
+    const kind = this.parseEntityKind(args.kind);
+    return this.writeEntity(kind, args.name, args.content, { template: args.template, requireExisting: true });
+  }
+
+  private async entityDelete(args: any): Promise<any> {
+    const kind = this.parseEntityKind(args.kind);
+    return this.deleteEntity(kind, args.name);
+  }
+
+  private async layoutCreate(args: any): Promise<any> {
+    return this.writeEntity('layout', args.name, args.content || this.defaultEntityContent('layout', args.name), { requireExisting: false });
+  }
+
+  private async layoutGet(args: any): Promise<any> {
+    return this.readEntity('layout', args.name);
+  }
+
+  private async layoutsSearch(args: any): Promise<any> {
+    return this.searchEntities('layout', args.query);
+  }
+
+  private async layoutUpdate(args: any): Promise<any> {
+    return this.writeEntity('layout', args.name, args.content, { requireExisting: true });
+  }
+
+  private async layoutDelete(args: any): Promise<any> {
+    return this.deleteEntity('layout', args.name);
+  }
+
   private async styleCreate(args: any): Promise<any> {
     const { name, description, designTokens } = args;
     
@@ -430,6 +862,70 @@ ${Object.entries(strings)
     };
   }
 
+  private async i18nGet(args: any): Promise<any> {
+    return this.readEntity('i18n', args.name);
+  }
+
+  private async i18nSearch(args: any): Promise<any> {
+    return this.searchEntities('i18n', args.query);
+  }
+
+  private async i18nUpdate(args: any): Promise<any> {
+    return this.writeEntity('i18n', args.name, args.content, { requireExisting: true });
+  }
+
+  private async i18nDelete(args: any): Promise<any> {
+    return this.deleteEntity('i18n', args.name);
+  }
+
+  private async serviceList(): Promise<any> {
+    return this.entityList({ kind: 'service' });
+  }
+
+  private async serviceGet(args: any): Promise<any> {
+    return this.readEntity('service', args.name);
+  }
+
+  private async serviceSearch(args: any): Promise<any> {
+    return this.searchEntities('service', args.query);
+  }
+
+  private async serviceCreate(args: any): Promise<any> {
+    return this.writeEntity('service', args.name, args.content, { requireExisting: false });
+  }
+
+  private async serviceUpdate(args: any): Promise<any> {
+    return this.writeEntity('service', args.name, args.content, { requireExisting: true });
+  }
+
+  private async serviceDelete(args: any): Promise<any> {
+    return this.deleteEntity('service', args.name);
+  }
+
+  private async routeList(): Promise<any> {
+    return this.entityList({ kind: 'route' });
+  }
+
+  private async routeGet(args: any): Promise<any> {
+    return this.readEntity('route', args.name);
+  }
+
+  private async routeSearch(args: any): Promise<any> {
+    return this.searchEntities('route', args.query);
+  }
+
+  private async routeCreate(args: any): Promise<any> {
+    return this.writeEntity('route', args.name, args.content, { requireExisting: false });
+  }
+
+  private async routeUpdate(args: any): Promise<any> {
+    return this.writeEntity('route', args.name, args.content, { requireExisting: true });
+  }
+
+  private async routeDelete(args: any): Promise<any> {
+    return this.deleteEntity('route', args.name);
+  }
+
   // ===== Validate Tools =====
 
   private parseViewYAML(yamlContent: string): Record<string, any> | null {
@@ -448,8 +944,7 @@ ${Object.entries(strings)
       const validation = await this.validator.validate();
       
       // Try to parse the view YAML to get state info
-      const viewDir = path.join(this.viewsDir, nameOrPath);
-      const yamlPath = path.join(viewDir, `${nameOrPath}.yaml`);
+      const { mainPath: yamlPath } = this.resolveEntityPaths('view', nameOrPath);
       
       let stateInfo: any = { states: [], edges: [] };
       if (fs.existsSync(yamlPath)) {
@@ -511,8 +1006,7 @@ ${Object.entries(strings)
 
   private async viewExplain(args: any): Promise<any> {
     const { name } = args;
-    const viewDir = path.join(this.viewsDir, name);
-    const yamlPath = path.join(viewDir, `${name}.yaml`);
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', name);
 
     if (!fs.existsSync(yamlPath)) {
       throw new Error(`View not found: ${name}`);
@@ -568,8 +1062,7 @@ ${Object.entries(strings)
 
   private async fsmGraph(args: any): Promise<any> {
     const { viewName, format = 'json' } = args;
-    const viewDir = path.join(this.viewsDir, viewName);
-    const yamlPath = path.join(viewDir, `${viewName}.yaml`);
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', viewName);
 
     if (!fs.existsSync(yamlPath)) {
       throw new Error(`View not found: ${viewName}`);
@@ -715,5 +1208,184 @@ ${Object.entries(strings)
       section,
       content,
     };
+  }
+
+  private parseEntityKind(kind: string): EntityKind {
+    if (kind in this.entityDefinitions) {
+      return kind as EntityKind;
+    }
+    throw new Error(`Unsupported entity kind: ${kind}`);
+  }
+
+  private listEntityNames(kind: EntityKind): string[] {
+    const def = this.entityDefinitions[kind];
+    if (!fs.existsSync(def.dir)) {
+      return [];
+    }
+
+    if (def.mode === 'directory') {
+      const yamlNames = fs
+        .readdirSync(def.dir, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.endsWith(def.extension) && !entry.name.startsWith('.'))
+        .map((entry) => entry.name.slice(0, -def.extension.length));
+
+      const dirNames = fs
+        .readdirSync(def.dir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+        .map((entry) => entry.name);
+
+      return [...new Set([...yamlNames, ...dirNames])].sort();
+    }
+
+    const names: string[] = [];
+    const walk = (dir: string, prefix = ''): void => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name.startsWith('.')) continue;
+        const abs = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(abs, prefix ? `${prefix}/${entry.name}` : entry.name);
+        } else if (entry.isFile() && entry.name.endsWith(def.extension)) {
+          const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+          names.push(rel.slice(0, -def.extension.length));
+        }
+      }
+    };
+
+    walk(def.dir);
+    return names.sort();
+  }
+
+  private resolveEntityPaths(kind: EntityKind, name: string): { mainPath: string; extraPath?: string } {
+    const def = this.entityDefinitions[kind];
+    const normalized = name.replace(/^\/+/, '').replace(new RegExp(`${def.extension}$`), '');
+
+    if (kind === 'view') {
+      return {
+        mainPath: path.join(def.dir, `${normalized}.yaml`),
+        extraPath: path.join(def.dir, normalized, 'index.html'),
+      };
+    }
+
+    return {
+      mainPath: path.join(def.dir, `${normalized}${def.extension}`),
+    };
+  }
+
+  private async readEntity(kind: EntityKind, name: string): Promise<any> {
+    const paths = this.resolveEntityPaths(kind, name);
+    if (!fs.existsSync(paths.mainPath)) {
+      throw new Error(`${kind} not found: ${name}`);
+    }
+
+    const content = fs.readFileSync(paths.mainPath, 'utf-8');
+    const result: Record<string, unknown> = {
+      kind,
+      name,
+      content,
+      path: paths.mainPath,
+    };
+
+    if (kind === 'view' && paths.extraPath && fs.existsSync(paths.extraPath)) {
+      result.template = fs.readFileSync(paths.extraPath, 'utf-8');
+      result.templatePath = paths.extraPath;
+    }
+
+    return result;
+  }
+
+  private async searchEntities(kind: EntityKind, query: string): Promise<any> {
+    const pattern = String(query || '').toLowerCase();
+    const results = this.listEntityNames(kind)
+      .map((name) => ({ name, entity: this.resolveEntityPaths(kind, name) }))
+      .filter(({ name, entity }) => {
+        if (name.toLowerCase().includes(pattern)) {
+          return true;
+        }
+
+        const mainContent = fs.existsSync(entity.mainPath) ? fs.readFileSync(entity.mainPath, 'utf-8').toLowerCase() : '';
+        const extraContent = entity.extraPath && fs.existsSync(entity.extraPath)
+          ? fs.readFileSync(entity.extraPath, 'utf-8').toLowerCase()
+          : '';
+
+        return mainContent.includes(pattern) || extraContent.includes(pattern);
+      })
+      .map(({ name }) => ({ name, type: kind }));
+
+    return { kind, results };
+  }
+
+  private async writeEntity(
+    kind: EntityKind,
+    name: string,
+    content: string,
+    options: { template?: string; requireExisting: boolean },
+  ): Promise<any> {
+    const paths = this.resolveEntityPaths(kind, name);
+    const exists = fs.existsSync(paths.mainPath);
+
+    if (options.requireExisting && !exists) {
+      throw new Error(`${kind} not found: ${name}`);
+    }
+    if (!options.requireExisting && exists) {
+      throw new Error(`${kind} already exists: ${name}`);
+    }
+
+    fs.mkdirSync(path.dirname(paths.mainPath), { recursive: true });
+    fs.writeFileSync(paths.mainPath, content);
+
+    if (kind === 'view' && paths.extraPath) {
+      fs.mkdirSync(path.dirname(paths.extraPath), { recursive: true });
+      fs.writeFileSync(paths.extraPath, options.template || this.defaultViewTemplate(name));
+    }
+
+    return {
+      success: true,
+      kind,
+      name,
+      writtenTo: paths.mainPath,
+      templatePath: paths.extraPath,
+      content,
+    };
+  }
+
+  private async deleteEntity(kind: EntityKind, name: string): Promise<any> {
+    const paths = this.resolveEntityPaths(kind, name);
+    if (!fs.existsSync(paths.mainPath)) {
+      throw new Error(`${kind} not found: ${name}`);
+    }
+
+    fs.rmSync(paths.mainPath, { force: true });
+    if (kind === 'view' && paths.extraPath) {
+      const viewDir = path.dirname(paths.extraPath);
+      if (fs.existsSync(viewDir)) {
+        fs.rmSync(viewDir, { recursive: true, force: true });
+      }
+    }
+
+    return {
+      success: true,
+      kind,
+      name,
+      deleted: true,
+    };
+  }
+
+  private defaultEntityContent(kind: EntityKind, name: string): string {
+    switch (kind) {
+      case 'layout':
+        return `<div ux-style="${name}">\n  <div id="ux-content"></div>\n</div>\n`;
+      case 'i18n':
+        return JSON.stringify({ [name]: { title: name } }, null, 2);
+      case 'service':
+        return `services:\n  ${name}:\n    adapter: http\n    baseUrl: http://localhost:8080\n    operations: {}\n`;
+      case 'route':
+        return `routes:\n  - path: /${name.toLowerCase()}\n    view: ${name}\n`;
+      case 'view':
+        return `name: ${name}\ninitial: idle\nstates:\n  idle:\n    template: view/${name}/index.html\n`;
+    }
+  }
+
+  private defaultViewTemplate(name: string): string {
+    return `<div class="view-${name.toLowerCase()}">\n  <h1>${name}</h1>\n</div>\n`;
   }
 }
