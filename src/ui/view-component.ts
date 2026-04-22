@@ -212,12 +212,44 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     const renderedLayout = this.app?.render?.(this.layout) || this.layout;
     layoutEl.innerHTML = renderedLayout;
 
+    this.normalizeLayoutMountPoint(layoutEl);
+
     // Inject styles
     const style = document.createElement('style');
     style.textContent = this.getStyles();
     shadow.appendChild(style);
 
     shadow.appendChild(layoutEl);
+  }
+
+  /**
+   * Normalize layout mount region.
+   *
+   * Preferred runtime contract is `#ux-content`. For ergonomics, allow
+   * `<ux-view />` in layout templates as an alias and map it to
+   * `<ux-content id="ux-content" role="main"></ux-content>`.
+   */
+  private normalizeLayoutMountPoint(layoutEl: HTMLElement): void {
+    if (layoutEl.querySelector('#ux-content')) {
+      return;
+    }
+
+    const viewSlot = layoutEl.querySelector('ux-view');
+    if (!viewSlot) {
+      return;
+    }
+
+    const mount = document.createElement('ux-content');
+    mount.id = 'ux-content';
+    mount.setAttribute('role', viewSlot.getAttribute('role') || 'main');
+
+    // Preserve useful author-defined attributes (for style hooks, data attrs, etc.)
+    for (const attr of Array.from(viewSlot.attributes)) {
+      if (attr.name === 'id' || attr.name === 'role') continue;
+      mount.setAttribute(attr.name, attr.value);
+    }
+
+    viewSlot.replaceWith(mount);
   }
 
   /**

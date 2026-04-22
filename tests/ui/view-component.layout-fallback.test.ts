@@ -11,6 +11,15 @@ class FallbackLayoutView extends ViewComponent<any> {
   }
 }
 
+class MagicLayoutSlotView extends ViewComponent<any> {
+  protected layout = '<div id="ux-layout"><ux-view class="mount-slot"></ux-view></div>';
+  protected templates = new Map<string, string>([['idle', '<div id="magic-ok">Ready</div>']]);
+
+  protected getStyles(): string {
+    return '';
+  }
+}
+
 describe('ViewComponent layout fallback', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -35,6 +44,9 @@ describe('ViewComponent layout fallback', () => {
     if (!customElements.get('ux-fallback-layout-view')) {
       customElements.define('ux-fallback-layout-view', FallbackLayoutView as any);
     }
+    if (!customElements.get('ux-magic-layout-slot-view')) {
+      customElements.define('ux-magic-layout-slot-view', MagicLayoutSlotView as any);
+    }
   });
 
   afterEach(() => {
@@ -53,5 +65,21 @@ describe('ViewComponent layout fallback', () => {
     expect(shadow).toBeTruthy();
     expect(shadow?.querySelector('#ux-content')).toBeTruthy();
     expect(shadow?.querySelector('#ok')?.textContent).toContain('Ready');
+  });
+
+  it('supports <ux-view> layout alias for the active content mount point', () => {
+    const el = document.createElement('ux-magic-layout-slot-view');
+    el.setAttribute('ux-fsm', 'fallback');
+    el.setAttribute('ux-view', 'fallback');
+    document.body.appendChild(el);
+
+    const shadow = (el as HTMLElement).shadowRoot;
+    const mount = shadow?.querySelector('#ux-content');
+
+    expect(shadow).toBeTruthy();
+    expect(mount).toBeTruthy();
+    expect(mount?.tagName).toBe('UX-CONTENT');
+    expect(mount?.classList.contains('mount-slot')).toBe(true);
+    expect(shadow?.querySelector('#magic-ok')?.textContent).toContain('Ready');
   });
 });

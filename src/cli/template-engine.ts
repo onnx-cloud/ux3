@@ -149,7 +149,7 @@ async function listFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const result: string[] = [];
   for (const entry of entries) {
-    if (entry.name === 'SPEC.md') continue; // never emit SPECs into user projects
+    if (entry.name === 'SPEC.md' || entry.name === 'HINTS.md') continue; // never emit template hint docs into user projects
     if (entry.isDirectory()) {
       const sub = await listFiles(path.join(dir, entry.name));
       for (const f of sub) result.push(path.join(entry.name, f));

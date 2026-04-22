@@ -122,7 +122,7 @@ describe('resolveTemplateDir', () => {
 
 describe('loadTemplate', () => {
   it('loads a built-in template file', async () => {
-    const content = await loadTemplate('view', 'SPEC.md');
+    const content = await loadTemplate('view', 'HINTS.md');
     expect(content).toContain('ux3 generate view');
   });
 });
@@ -163,10 +163,10 @@ describe('emitScaffold', () => {
     expect(src).toContain('const analytics: Plugin');
   });
 
-  it('does not emit SPEC.md into output', async () => {
+  it('does not emit HINTS.md into output', async () => {
     const ctx = buildContext('test');
     await emitScaffold('view', ctx, outDir);
-    expect(await fs.pathExists(path.join(outDir, 'SPEC.md'))).toBe(false);
+    expect(await fs.pathExists(path.join(outDir, 'HINTS.md'))).toBe(false);
   });
 
   it('dry-run writes no files', async () => {

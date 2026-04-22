@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { buildEntityIndex, type EntityIndexRecord, type EntityKind, type GeneratedEntities } from '../build/entity-index.js';
 import { Validator } from '../build/validator.js';
 import YAML from 'yaml';
-
-type EntityKind = 'view' | 'layout' | 'i18n' | 'service' | 'route';
 
 interface EntityDefinition {
   kind: EntityKind;
@@ -24,14 +23,6 @@ interface ToolDef {
   };
 }
 
-interface ViewEntityRecord {
-  name: string;
-  sourceName: string;
-  stateName?: string;
-  mainPath: string;
-  extraPath?: string;
-}
-
 /**
  * Registry for MCP tools.
  * Tools are verbs: view.create, view.validate, views.search, etc.
@@ -47,6 +38,7 @@ export class ToolRegistry {
   private servicesDir: string;
   private routesDir: string;
   private entityDefinitions: Record<EntityKind, EntityDefinition>;
+  private entityIndexCache?: GeneratedEntities;
 
   constructor(projectDir: string) {
     this.projectDir = projectDir;
@@ -1186,10 +1178,14 @@ ${Object.entries(strings)
     const sections = section ? [section] : ['view', 'style', 'i18n', 'route', 'service', 'logic', 'validation'];
 
     for (const sec of sections) {
-      const specPath = path.join(templateDir, sec, 'SPEC.md');
-      if (!fs.existsSync(specPath)) continue;
+      const hintsPath = path.join(templateDir, sec, 'HINTS.md');
+      const legacySpecPath = path.join(templateDir, sec, 'SPEC.md');
+      const hintFilePath = fs.existsSync(hintsPath)
+        ? hintsPath
+        : legacySpecPath;
+      if (!fs.existsSync(hintFilePath)) continue;
 
-      const content = fs.readFileSync(specPath, 'utf-8');
+      const content = fs.readFileSync(hintFilePath, 'utf-8');
       const { title, summary } = this.parseHintFile(content);
 
       hints.push({
@@ -1206,12 +1202,16 @@ ${Object.entries(strings)
     const { section } = args;
     const templateDir = this.findTemplateDir();
 
-    const specPath = path.join(templateDir, section, 'SPEC.md');
-    if (!fs.existsSync(specPath)) {
+    const hintsPath = path.join(templateDir, section, 'HINTS.md');
+    const legacySpecPath = path.join(templateDir, section, 'SPEC.md');
+    const hintFilePath = fs.existsSync(hintsPath)
+      ? hintsPath
+      : legacySpecPath;
+    if (!fs.existsSync(hintFilePath)) {
       throw new Error(`Hints not found for section: ${section}`);
     }
 
-    const content = fs.readFileSync(specPath, 'utf-8');
+    const content = fs.readFileSync(hintFilePath, 'utf-8');
     return {
       section,
       content,
@@ -1225,155 +1225,43 @@ ${Object.entries(strings)
     throw new Error(`Unsupported entity kind: ${kind}`);
   }
 
-  private walkEntityFiles(rootDir: string, extension: string): string[] {
-    if (!fs.existsSync(rootDir)) {
-      return [];
+  private getEntityIndex(): GeneratedEntities {
+    if (!this.entityIndexCache) {
+      this.entityIndexCache = buildEntityIndex(this.projectDir, this.uxDir);
     }
-
-    const files: string[] = [];
-    const walk = (dir: string): void => {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name.startsWith('.')) continue;
-        const abs = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(abs);
-        } else if (entry.isFile() && entry.name.endsWith(extension)) {
-          files.push(abs);
-        }
-      }
-    };
-
-    walk(rootDir);
-    files.sort();
-    return files;
+    return this.entityIndexCache;
   }
 
-  private templateEntityName(templateRef: string): string | null {
-    const normalized = templateRef.replace(/\\/g, '/').replace(/^\.\//, '');
-    if (!normalized.startsWith('view/')) {
-      return null;
-    }
-
-    return normalized.slice('view/'.length).replace(/\.html$/, '');
+  private invalidateEntityIndex(): void {
+    this.entityIndexCache = undefined;
   }
 
-  private buildViewEntityIndex(): ViewEntityRecord[] {
-    if (!fs.existsSync(this.viewsDir)) {
-      return [];
-    }
-
-    const records = new Map<string, ViewEntityRecord>();
-    const yamlFiles = this.walkEntityFiles(this.viewsDir, '.yaml');
-
-    for (const yamlPath of yamlFiles) {
-      const relYaml = path.relative(this.viewsDir, yamlPath).replace(/\\/g, '/');
-      const sourceName = relYaml.replace(/\.yaml$/, '');
-      const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
-      const parsed = this.parseViewYAML(yamlContent);
-      const states = parsed?.states && typeof parsed.states === 'object' ? parsed.states : {};
-      let derivedCount = 0;
-
-      for (const [stateName, rawConfig] of Object.entries(states)) {
-        const templateRef = typeof rawConfig === 'string'
-          ? rawConfig
-          : rawConfig && typeof rawConfig === 'object' && typeof (rawConfig as Record<string, unknown>).template === 'string'
-            ? String((rawConfig as Record<string, unknown>).template)
-            : null;
-
-        if (!templateRef) {
-          continue;
-        }
-
-        const entityName = this.templateEntityName(templateRef);
-        if (!entityName) {
-          continue;
-        }
-
-        const extraPath = path.join(this.uxDir, templateRef.replace(/\\/g, '/'));
-        records.set(entityName, {
-          name: entityName,
-          sourceName,
-          stateName,
-          mainPath: yamlPath,
-          extraPath,
-        });
-        derivedCount += 1;
-      }
-
-      if (derivedCount === 0) {
-        const defaultTemplatePath = path.join(this.viewsDir, sourceName, 'index.html');
-        records.set(sourceName, {
-          name: sourceName,
-          sourceName,
-          mainPath: yamlPath,
-          extraPath: fs.existsSync(defaultTemplatePath) ? defaultTemplatePath : undefined,
-        });
-      }
-    }
-
-    return Array.from(records.values()).sort((left, right) => left.name.localeCompare(right.name));
+  private getEntityRecords(kind: EntityKind): EntityIndexRecord[] {
+    return this.getEntityIndex()[kind] || [];
   }
 
-  private findViewEntity(name: string): ViewEntityRecord | undefined {
+  private findEntityRecord(kind: EntityKind, name: string): EntityIndexRecord | undefined {
     const normalized = name.replace(/^\/+/, '').replace(/\.yaml$/, '').replace(/\.html$/, '');
-    return this.buildViewEntityIndex().find((record) => record.name === normalized);
+    return this.getEntityRecords(kind).find((record) => record.name === normalized);
   }
 
   private listEntityNames(kind: EntityKind): string[] {
-    const def = this.entityDefinitions[kind];
-    if (!fs.existsSync(def.dir)) {
-      return [];
-    }
-
-    if (kind === 'view') {
-      return this.buildViewEntityIndex().map((record) => record.name);
-    }
-
-    if (def.mode === 'directory') {
-      const yamlNames = fs
-        .readdirSync(def.dir, { withFileTypes: true })
-        .filter((entry) => entry.isFile() && entry.name.endsWith(def.extension) && !entry.name.startsWith('.'))
-        .map((entry) => entry.name.slice(0, -def.extension.length));
-
-      const dirNames = fs
-        .readdirSync(def.dir, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
-        .map((entry) => entry.name);
-
-      return [...new Set([...yamlNames, ...dirNames])].sort();
-    }
-
-    const names: string[] = [];
-    const walk = (dir: string, prefix = ''): void => {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name.startsWith('.')) continue;
-        const abs = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(abs, prefix ? `${prefix}/${entry.name}` : entry.name);
-        } else if (entry.isFile() && entry.name.endsWith(def.extension)) {
-          const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-          names.push(rel.slice(0, -def.extension.length));
-        }
-      }
-    };
-
-    walk(def.dir);
-    return names.sort();
+    return this.getEntityRecords(kind).map((record) => record.name);
   }
 
   private resolveEntityPaths(kind: EntityKind, name: string): { mainPath: string; extraPath?: string } {
     const def = this.entityDefinitions[kind];
     const normalized = name.replace(/^\/+/, '').replace(new RegExp(`${def.extension}$`), '');
 
-    if (kind === 'view') {
-      const indexed = this.findViewEntity(normalized);
-      if (indexed) {
-        return {
-          mainPath: indexed.mainPath,
-          extraPath: indexed.extraPath,
-        };
-      }
+    const indexed = this.findEntityRecord(kind, normalized);
+    if (indexed) {
+      return {
+        mainPath: indexed.path,
+        extraPath: indexed.templatePath,
+      };
+    }
 
+    if (kind === 'view') {
       const siblingYamlPath = path.join(def.dir, `${normalized}.yaml`);
       if (fs.existsSync(siblingYamlPath)) {
         return {
@@ -1461,6 +1349,8 @@ ${Object.entries(strings)
       fs.writeFileSync(paths.extraPath, options.template || this.defaultViewTemplate(name));
     }
 
+    this.invalidateEntityIndex();
+
     return {
       success: true,
       kind,
@@ -1484,6 +1374,8 @@ ${Object.entries(strings)
         fs.rmSync(viewDir, { recursive: true, force: true });
       }
     }
+
+    this.invalidateEntityIndex();
 
     return {
       success: true,

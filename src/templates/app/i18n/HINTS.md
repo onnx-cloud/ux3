@@ -4,14 +4,15 @@
 
 ## What belongs here
 
-- One YAML file per locale (`en.yaml`, `fr-CA.yaml`, etc.).
+- Multiple YAML files per locale (`en/common.yaml`, `fr/navigation.yaml`, etc.).
 - Human-facing text only. Keep behavior, branching, and markup out of locale files.
 
 ## Localization rules
 
 - Use valid BCP-47 locale tags for file names.
 - Keep key structure consistent across locales.
-- Prefer semantic key groups (`common`, `errors`, `nav`, `forms`).
+- Prefer semantic key groups (`common`, `errors`, `nav`, `forms`) with files.
+- separate files are for developer ergonomics, all top-level keys are merged.
 - Avoid string concatenation patterns that break in other languages.
 
 ## Quality guidelines

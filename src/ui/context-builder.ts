@@ -21,6 +21,7 @@ import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
 import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/lifecycle.js';
 import { captureBrowserContext, observeBrowserContext, type BrowserContextOptions } from './browser-context.js';
+import type { GeneratedEntities } from '../build/entity-index.js';
 
 /**
  * Generated configuration structure
@@ -45,6 +46,7 @@ export interface GeneratedConfig {
   oauth?: Record<string, Record<string, unknown>>;
   content?: ContentManifest;
   browserContext?: BrowserContextOptions;
+  entities?: GeneratedEntities;
 }
 
 /**
