@@ -4,7 +4,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BUILT_IN_TEMPLATES_DIR = path.resolve(__dirname, 'templates');
+
+function resolveBuiltInTemplatesDir(): string {
+  const appTemplatesDir = path.resolve(__dirname, '../templates/app');
+  return appTemplatesDir;
+}
+
+const BUILT_IN_TEMPLATES_DIR = resolveBuiltInTemplatesDir();
 
 // ---------------------------------------------------------------------------
 // Context

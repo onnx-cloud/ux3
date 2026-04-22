@@ -108,7 +108,7 @@ describe('interpolate', () => {
 describe('resolveTemplateDir', () => {
   it('returns a path ending in the section name', () => {
     const dir = resolveTemplateDir('view');
-    expect(dir).toMatch(/templates[/\\]view$/);
+    expect(dir).toMatch(/templates[/\\]app[/\\]view$/);
   });
 
   it('prefers user override when present', async () => {
