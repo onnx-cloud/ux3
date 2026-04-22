@@ -11,7 +11,7 @@ import http from 'http';
 export const previewCommand = new Command()
   .name('preview')
   .description('Preview built output with a simple HTTP server')
-  .option('--port <port>', 'port to bind (0 = random)', '8080')
+  .option('--port <port>', 'port to bind (0 = random)', '1337')
   .option('--dir <dir>', 'directory to serve', 'dist')
   .option('--once', 'start server and then exit after short delay', false)
   .action((options) => {
@@ -23,7 +23,7 @@ export const previewCommand = new Command()
       process.exit(1);
     }
 
-    const port = parseInt(options.port, 10) || 8080;
+    const port = parseInt(options.port, 10) || 1337;
     const server = http.createServer((req, res) => {
       let reqPath = req.url || '/';
       if (reqPath === '/') reqPath = '/index.html';

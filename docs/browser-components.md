@@ -4,38 +4,38 @@ Use these built-ins to make apps adapt to locale, theme, and network conditions 
 
 Components covered:
 
-- `ux-lang-switcher`
-- `ux-theme-toggle`
+- `ux-locale`
+- `ux-theme`
 - `ux-network-status`
 
 ---
 
-## ux-lang-switcher
+## ux-locale
 
 Renders a locale selector and updates `document.documentElement.lang` and `dir`.
 
 ### Basic
 
 ```html
-<ux-lang-switcher></ux-lang-switcher>
+<ux-locale></ux-locale>
 ```
 
 ### With explicit locale list
 
 ```html
-<ux-lang-switcher locales="en,fr,de,ar"></ux-lang-switcher>
+<ux-locale locales="en,fr,de,ar"></ux-locale>
 ```
 
 ### With label and no persistence
 
 ```html
-<ux-lang-switcher label="Locale" persist="false"></ux-lang-switcher>
+<ux-locale label="Locale" persist="false"></ux-locale>
 ```
 
 ### Events
 
 ```ts
-const el = document.querySelector('ux-lang-switcher');
+const el = document.querySelector('ux-locale');
 el?.addEventListener('ux:locale-change', (event) => {
   const locale = (event as CustomEvent).detail.locale;
   console.log('Locale changed:', locale);
@@ -52,26 +52,26 @@ Notes:
 
 ---
 
-## ux-theme-toggle
+## ux-theme
 
 Toggles light/dark theme by setting `document.documentElement.dataset.theme`.
 
 ### Basic
 
 ```html
-<ux-theme-toggle></ux-theme-toggle>
+<ux-theme></ux-theme>
 ```
 
 ### No persistence
 
 ```html
-<ux-theme-toggle persist="false"></ux-theme-toggle>
+<ux-theme persist="false"></ux-theme>
 ```
 
 ### Events
 
 ```ts
-const el = document.querySelector('ux-theme-toggle');
+const el = document.querySelector('ux-theme');
 el?.addEventListener('ux:theme-change', (event) => {
   const theme = (event as CustomEvent).detail.theme;
   console.log('Theme changed:', theme);
@@ -116,8 +116,8 @@ el?.addEventListener('ux:change', (event) => {
 ```html
 <header ux-style="topbar">
   <ux-network-status></ux-network-status>
-  <ux-theme-toggle></ux-theme-toggle>
-  <ux-lang-switcher locales="en,fr,de,ar"></ux-lang-switcher>
+  <ux-theme></ux-theme>
+  <ux-locale locales="en,fr,de,ar"></ux-locale>
 </header>
 ```
 
@@ -128,8 +128,8 @@ el?.addEventListener('ux:change', (event) => {
 These components are normal custom elements and can be styled with `ux-style` wrappers, CSS variables, or host selectors.
 
 ```css
-ux-lang-switcher,
-ux-theme-toggle,
+ux-locale,
+ux-theme,
 ux-network-status {
   margin-inline: 0.25rem;
 }

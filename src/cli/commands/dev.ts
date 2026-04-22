@@ -19,6 +19,7 @@ interface DevCommandOptions {
   port: string;
   host: string;
   open: boolean;
+  mcp?: boolean;
 }
 
 interface JsonSchema {
@@ -49,6 +50,7 @@ export const devCommand = new Command()
   .option('--port <port>', 'port to run on', '1337')
   .option('--host <host>', 'host to bind to', 'localhost')
   .option('--open', 'open browser on startup', false)
+  .option('--mcp', 'enable MCP (Model Context Protocol) endpoint at /$/mcp', false)
   .action(async (project: string | undefined, options: DevCommandOptions) => {
     try {
       const projectDir = project ? path.resolve(project) : process.cwd();
@@ -222,6 +224,10 @@ export const devCommand = new Command()
       await watcher.start();
 
       console.log(`📝 Watch mode enabled. Changes will rebuild automatically.\n`);
+
+      if (options.mcp) {
+        console.log(`🔌 MCP endpoint available at http://${options.host}:${port}/$/mcp\n`);
+      }
 
       // Handle Ctrl+C and SIGTERM (idempotent, with forced timeout)
       let stopping = false;

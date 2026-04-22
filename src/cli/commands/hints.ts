@@ -69,7 +69,7 @@ async function listMarkdownFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-async function syncHints(projectRoot: string, options: HintOptions): Promise<string[]> {
+export async function syncHints(projectRoot: string, options: HintOptions): Promise<string[]> {
   const written: string[] = [];
 
   for (const mapping of HINT_MAPPINGS) {
@@ -119,7 +119,7 @@ export function createHintsCommand(): Command {
       }
 
       if (written.length === 0) {
-        console.log('No hint updates were applied (files may already be up to date).');
+        console.log('No hints were applied (up to date).');
         return;
       }
 

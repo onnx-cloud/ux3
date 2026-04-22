@@ -9,7 +9,7 @@ import { HandlebarsLite } from '../hbs/index.js';
  */
 export function processAssets(manifest: any, projectDir: string) {
   let siteAssets = (manifest?.config)?.site?.assets || [];
-  const rawSite = (manifest?.config)?.site || { title: path.basename(projectDir) };
+const rawSite = (manifest?.config)?.site || {};
 
   // Fallback: If manifest has NO assets but we're in a project, check ux3.yaml directly
   if (!siteAssets || siteAssets.length === 0) {

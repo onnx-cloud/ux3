@@ -1,10 +1,86 @@
 import { Command } from 'commander';
+import fs from 'fs';
 import path from 'path';
+import YAML from 'yaml';
 import { lintLogicModules } from '../logic-lint.js';
 import { Validator } from '../../build/validator.js';
 
 function resolveProjectRoot(project?: string): string {
 	return project ? path.resolve(project) : process.cwd();
+}
+
+function countViewArtifacts(projectDir: string): number {
+	const viewsDir = path.join(projectDir, 'ux', 'view');
+	if (!fs.existsSync(viewsDir)) return 0;
+
+	const stack = [viewsDir];
+	let count = 0;
+	while (stack.length > 0) {
+		const current = stack.pop();
+		if (!current) continue;
+		for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+			const fullPath = path.join(current, entry.name);
+			if (entry.isDirectory()) {
+				stack.push(fullPath);
+				continue;
+			}
+			if (entry.isFile() && (entry.name.endsWith('.html') || entry.name.endsWith('.yaml') || entry.name.endsWith('.yml'))) {
+				count += 1;
+			}
+		}
+	}
+
+	return count;
+}
+
+function countLeafKeys(value: unknown): number {
+	if (Array.isArray(value)) {
+		return value.reduce<number>((sum, item) => sum + countLeafKeys(item), 0);
+	}
+	if (value && typeof value === 'object') {
+		return Object.values(value as Record<string, unknown>).reduce<number>((sum, item) => sum + countLeafKeys(item), 0);
+	}
+	return 1;
+}
+
+function countI18nKeys(projectDir: string): number {
+	const i18nDir = path.join(projectDir, 'ux', 'i18n');
+	if (!fs.existsSync(i18nDir)) return 0;
+
+	const stack = [i18nDir];
+	let count = 0;
+	while (stack.length > 0) {
+		const current = stack.pop();
+		if (!current) continue;
+		for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+			const fullPath = path.join(current, entry.name);
+			if (entry.isDirectory()) {
+				stack.push(fullPath);
+				continue;
+			}
+			if (!entry.isFile()) continue;
+			const text = fs.readFileSync(fullPath, 'utf-8');
+			if (entry.name.endsWith('.json')) {
+				count += countLeafKeys(JSON.parse(text));
+			} else if (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml')) {
+				count += countLeafKeys(YAML.parse(text));
+			}
+		}
+	}
+
+	return count;
+}
+
+function countRoutes(projectDir: string): number {
+	const routesPath = path.join(projectDir, 'ux', 'route', 'routes.yaml');
+	if (!fs.existsSync(routesPath)) return 0;
+
+	const routesData = YAML.parse(fs.readFileSync(routesPath, 'utf-8'));
+	return Array.isArray(routesData?.routes) ? routesData.routes.length : 0;
+}
+
+function formatLintSummary(projectDir: string): string {
+	return `✅ lint passed - views: ${countViewArtifacts(projectDir)} - i18n: ${countI18nKeys(projectDir)} - routes: ${countRoutes(projectDir)}`;
 }
 
 export const checkCommand = new Command()
@@ -74,7 +150,7 @@ export const lintCommand = new Command()
 				process.exit(1);
 			}
 
-			console.log('\n✅ Lint passed');
+			console.log(`\n${formatLintSummary(projectDir)}`);
 		} catch (err) {
 			console.error('❌ lint failed:', err instanceof Error ? err.message : String(err));
 			process.exit(1);

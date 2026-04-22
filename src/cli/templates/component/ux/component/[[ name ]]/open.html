@@ -1,0 +1,11 @@
+<ux-[[ name ]] ux-state="open" role="group" aria-label="{{ i18n.component.[[ name_snake ]].label }}">
+  <div id="[[ name ]]-panel" ux-style="[[ name ]]">
+    <header>
+      <strong>{{ i18n.component.[[ name_snake ]].panel_title }}</strong>
+    </header>
+    <p>{{ i18n.component.[[ name_snake ]].panel_body }}</p>
+    <button ux-event="CLOSE" aria-expanded="true">
+      {{ i18n.component.[[ name_snake ]].close_label }}
+    </button>
+  </div>
+</ux-[[ name ]]>

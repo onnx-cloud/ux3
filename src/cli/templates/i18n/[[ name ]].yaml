@@ -1,3 +1,6 @@
+site:
+  title: "[[ Name ]]"
+  description: ""
 common:
   submit: Submit
   cancel: Cancel

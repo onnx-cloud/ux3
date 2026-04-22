@@ -29,14 +29,21 @@ describe('UxToastContainer - Toast Notifications', () => {
     const toastContainer = document.createElement('ux-toast-container') as UxToastContainer;
     container.appendChild(toastContainer);
 
+    const openSpy = vi.fn();
+    toastContainer.addEventListener('ux:open', openSpy);
+
     const id = toastContainer.show({ message: 'Saved!', type: 'success', duration: 0 });
     expect(id).toContain('toast-');
     expect(toastContainer.shadowRoot?.querySelector('.toast.success')).toBeTruthy();
+    expect(openSpy).toHaveBeenCalledTimes(1);
   });
 
   it('dismisses a toast by id', async () => {
     const toastContainer = document.createElement('ux-toast-container') as UxToastContainer;
     container.appendChild(toastContainer);
+
+    const closeSpy = vi.fn();
+    toastContainer.addEventListener('ux:close', closeSpy);
 
     const id = toastContainer.show({ message: 'Dismiss me', duration: 0 });
     expect(toastContainer.shadowRoot?.querySelector('.toast')).toBeTruthy();
@@ -45,6 +52,7 @@ describe('UxToastContainer - Toast Notifications', () => {
     await Promise.resolve();
 
     expect(toastContainer.shadowRoot?.querySelector('.toast')).toBeNull();
+    expect(closeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('calls the action callback when the toast action button is clicked', async () => {
@@ -86,5 +94,17 @@ describe('UxToastContainer - Toast Notifications', () => {
     toastContainer.dismissAll();
     await Promise.resolve();
     expect(toastContainer.shadowRoot?.querySelectorAll('.toast').length).toBe(0);
+  });
+
+  it('supports declarative ux-toast usage from markup', async () => {
+    const inlineToast = document.createElement('ux-toast');
+    inlineToast.setAttribute('type', 'info');
+    inlineToast.textContent = 'Inline message';
+
+    container.appendChild(inlineToast);
+    await Promise.resolve();
+
+    expect(inlineToast.shadowRoot?.querySelector('.toast.info')).toBeTruthy();
+    expect(inlineToast.shadowRoot?.textContent).toContain('Inline message');
   });
 });

@@ -1,0 +1,7 @@
+component:
+  [[ name_snake ]]:
+    label: [[ Name ]]
+    open_label: Open [[ Name ]]
+    close_label: Close [[ Name ]]
+    panel_title: [[ Name ]]
+    panel_body: Replace this copy with component content.

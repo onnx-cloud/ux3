@@ -20,9 +20,31 @@
     },
     "site": {
       "type": "object",
+      "description": "Site-level config for assets, head injections, and scripts. Use ux/i18n for site.title and site.description.",
       "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" }
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["style", "script"] },
+              "href": { "type": "string" },
+              "src": { "type": "string" },
+              "async": { "type": "boolean" },
+              "defer": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "cdn": { "type": "array", "items": { "type": "string" } },
+        "head": { "type": "string", "description": "Raw HTML injected into <head>" },
+        "scripts": { "type": "string", "description": "Raw HTML injected before </body>" }
+      },
+      "not": {
+        "anyOf": [
+          { "required": ["title"] },
+          { "required": ["description"] }
+        ]
       },
       "additionalProperties": false
     },
@@ -37,6 +59,16 @@
         },
         "additionalProperties": false
       }
+    },
+    "oauth": {
+      "type": "object",
+      "properties": {
+        "google": { "type": "object", "additionalProperties": true },
+        "okta": { "type": "object", "additionalProperties": true },
+        "auth0": { "type": "object", "additionalProperties": true },
+        "cognito": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
     },
     "development": {
       "type": "object",

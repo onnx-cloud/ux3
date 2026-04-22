@@ -5,32 +5,29 @@ import * as path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createHintsCommand } from '../../src/cli/commands/hints.ts';
 
-async function runHints(args: string[], cwd: string): Promise<number> {
-  const originalCwd = process.cwd;
+async function runHints(args: string[]): Promise<number> {
   const originalExit = process.exit;
   let code = 0;
 
-  (process as any).cwd = () => cwd;
   (process as any).exit = (c?: number) => {
     code = c ?? 0;
     throw new Error(`exit:${c}`);
   };
 
   try {
-    const hintsCommand = createHintsCommand();
-    await hintsCommand.parseAsync(['', '', ...args]);
+    const cmd = createHintsCommand();
+    await cmd.parseAsync(['', '', ...args]);
   } catch (e: any) {
     if (!String(e?.message).startsWith('exit:')) throw e;
   } finally {
-    (process as any).cwd = originalCwd;
     (process as any).exit = originalExit;
   }
 
   return code;
 }
 
-describe('ux3 hints', () => {
-  const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'hints');
+describe('ux3 sync hints (createHintsCommand)', () => {
+  const tmpRoot = path.join(process.cwd(), 'tests', 'tmp', 'sync-hints');
   const project = path.join(tmpRoot, 'app');
 
   beforeEach(async () => {
@@ -44,7 +41,7 @@ describe('ux3 hints', () => {
   });
 
   it('copies scaffold markdown hints into ux folders', async () => {
-    const code = await runHints(['--project', project], project);
+    const code = await runHints(['--project', project]);
     expect(code).toBe(0);
 
     expect(await fs.pathExists(path.join(project, 'ux', 'view', 'SPEC.md'))).toBe(true);
@@ -53,12 +50,11 @@ describe('ux3 hints', () => {
     expect(await fs.pathExists(path.join(project, 'ux', 'validate', 'SPEC.md'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux', 'style', 'SPEC.md'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux', 'service', 'SPEC.md'))).toBe(true);
-
     expect(await fs.pathExists(path.join(project, 'src', 'services', 'SPEC.md'))).toBe(false);
   });
 
   it('dry-run does not write files', async () => {
-    const code = await runHints(['--project', project, '--dry-run'], project);
+    const code = await runHints(['--project', project, '--dry-run']);
     expect(code).toBe(0);
     expect(await fs.pathExists(path.join(project, 'ux', 'view', 'SPEC.md'))).toBe(false);
   });
@@ -67,7 +63,7 @@ describe('ux3 hints', () => {
     await fs.ensureDir(path.join(project, 'ux', 'view'));
     await fs.writeFile(path.join(project, 'ux', 'view', 'SPEC.md'), 'sentinel', 'utf8');
 
-    const code = await runHints(['--project', project], project);
+    const code = await runHints(['--project', project]);
     expect(code).toBe(0);
     expect(await fs.readFile(path.join(project, 'ux', 'view', 'SPEC.md'), 'utf8')).toBe('sentinel');
   });
@@ -76,7 +72,7 @@ describe('ux3 hints', () => {
     await fs.ensureDir(path.join(project, 'ux', 'view'));
     await fs.writeFile(path.join(project, 'ux', 'view', 'SPEC.md'), 'sentinel', 'utf8');
 
-    const code = await runHints(['--project', project, '--force'], project);
+    const code = await runHints(['--project', project, '--force']);
     expect(code).toBe(0);
     expect(await fs.readFile(path.join(project, 'ux', 'view', 'SPEC.md'), 'utf8')).not.toBe('sentinel');
   });

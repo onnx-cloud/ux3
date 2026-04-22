@@ -14,6 +14,7 @@ import { configCommand } from '../../src/cli/commands/config.ts';
 import { previewCommand } from '../../src/cli/commands/preview.ts';
 import { helpCommand } from '../../src/cli/commands/help.ts';
 import { pluginCommand } from '../../src/cli/commands/plugin.ts';
+import { componentCommand } from '../../src/cli/commands/component.ts';
 
 // helper to run a command and capture exit code
 async function runCommand(cmd: any, args: string[], cwd: string) {
@@ -60,9 +61,10 @@ describe('UX3 CLI commands', () => {
   it('index module exports all expected commands', async () => {
     const idx = await import('../../src/cli/index.ts');
     expect(idx.createCommand).toBeDefined();
+    expect(idx.componentCommand).toBeDefined();
     expect(idx.devCommand).toBeDefined();
     expect(idx.buildCommand).toBeDefined();
-    expect(idx.hintsCommand).toBeDefined();
+    expect(idx.syncCommand).toBeDefined();
     expect(idx.lintCommand).toBeDefined();
     expect(idx.checkCommand).toBeDefined();
     expect(idx.compileCommand).toBeDefined();
@@ -146,6 +148,44 @@ describe('UX3 CLI commands', () => {
       expect(code).toBe(1);
     } finally {
       errorSpy.mockRestore();
+    }
+  });
+
+  it('`lint` prints a success summary with views, i18n, and routes counts', async () => {
+    const project = path.join(tmpRoot, 'proj-lint-summary');
+    await fs.ensureDir(path.join(project, 'ux', 'view', 'hello'));
+    await fs.ensureDir(path.join(project, 'ux', 'route'));
+    await fs.ensureDir(path.join(project, 'ux', 'i18n', 'en'));
+
+    await fs.writeFile(
+      path.join(project, 'ux', 'ux3.yaml'),
+      ['name: lint-summary', 'index: view/hello.yaml'].join('\n')
+    );
+    await fs.writeFile(
+      path.join(project, 'ux', 'view', 'hello.yaml'),
+      ['initial: idle', 'states:', '  idle: hello/idle.html'].join('\n')
+    );
+    await fs.writeFile(path.join(project, 'ux', 'view', 'hello', 'idle.html'), '<div>{{ i18n.site.title }}</div>');
+    await fs.writeFile(
+      path.join(project, 'ux', 'route', 'routes.yaml'),
+      ['routes:', '  - path: /', '    view: hello'].join('\n')
+    );
+    await fs.writeFile(
+      path.join(project, 'ux', 'i18n', 'en', 'common.yaml'),
+      ['site:', '  title: Summary Demo', '  description: Summary description'].join('\n')
+    );
+
+    const logs: string[] = [];
+    const logSpy = vi.spyOn(console, 'log').mockImplementation((...args: any[]) => {
+      logs.push(args.join(' '));
+    });
+
+    try {
+      const code = await runCommand(lintCommand, [], project);
+      expect(code).toBe(0);
+      expect(logs.some((line) => line.includes('✅ lint passed - views: 2 - i18n: 2 - routes: 1'))).toBe(true);
+    } finally {
+      logSpy.mockRestore();
     }
   });
 
@@ -259,6 +299,29 @@ describe('UX3 CLI commands', () => {
     expect(indexSource).toContain("version: '0.1.0'");
     expect(indexSource).not.toContain('TODO:');
     expect(indexSource).not.toContain('console.log(');
+  });
+
+  it('`component create` scaffolds a reusable UX3 component package', async () => {
+    const project = path.join(tmpRoot, 'proj-component');
+    await fs.ensureDir(project);
+    await fs.writeJson(path.join(project, 'package.json'), { name: 'proj-component', version: '0.0.0' });
+
+    const exit = await runCommand(
+      componentCommand,
+      ['create', 'profile-card', '--project', project],
+      project
+    );
+    expect(exit).toBe(0);
+
+    expect(await fs.pathExists(path.join(project, 'ux', 'component', 'profile-card.yaml'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'component', 'profile-card', 'idle.html'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'component', 'profile-card', 'open.html'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'i18n', 'en', 'profile-card.yaml'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'style', 'profile-card.yaml'))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'src', 'logic', 'profile-card.logic.ts'))).toBe(true);
+
+    const componentYaml = await fs.readFile(path.join(project, 'ux', 'component', 'profile-card.yaml'), 'utf8');
+    expect(componentYaml).toContain('template: component/profile-card/idle.html');
   });
 
   it('`preview` command handles direction and once flag', async () => {

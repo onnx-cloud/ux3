@@ -99,6 +99,12 @@ export class UxModal extends HTMLElement {
     this.backdrop?.classList.add('visible');
     this.focusTrap?.trapFocus();
 
+    this.dispatchEvent(new CustomEvent('ux:open', {
+      bubbles: true,
+      composed: true
+    }));
+
+    // Backward compatibility for existing consumers.
     this.dispatchEvent(new CustomEvent('modal-open', {
       bubbles: true,
       composed: true
@@ -121,6 +127,12 @@ export class UxModal extends HTMLElement {
     this.backdrop?.classList.remove('visible');
     this.focusTrap?.releaseFocus();
 
+    this.dispatchEvent(new CustomEvent('ux:close', {
+      bubbles: true,
+      composed: true
+    }));
+
+    // Backward compatibility for existing consumers.
     this.dispatchEvent(new CustomEvent('modal-close', {
       bubbles: true,
       composed: true

@@ -6,6 +6,7 @@ import YAML from 'yaml';
 import { processAssets } from './asset-processor';
 import { renderDashboard } from './dashboard';
 import { HandlebarsLite } from '../hbs/index.js';
+import { MCPHTTPHandler } from '../mcp/http-handler.js';
 
 export interface DevServerOptions {
   verbose?: boolean;
@@ -42,7 +43,6 @@ async function getSiteConfig(projectDir: string, manifest: ServerManifest | null
 
   const siteFromManifest = (manifest?.config as any)?.site || {};
   const siteFields = {
-    title: path.basename(projectDir),
     ...siteFromManifest,
     ...(ux3Config.site || {})
   };
@@ -184,6 +184,7 @@ export class DevServer {
   private manifest: ServerManifest | null = null;
   private clients: Set<http.ServerResponse> = new Set();
   private options: Required<DevServerOptions>;
+  private mcpHandler: MCPHTTPHandler;
 
   constructor(
     private projectDir: string,
@@ -195,6 +196,7 @@ export class DevServer {
       verbose: options.verbose ?? false,
       onError: options.onError ?? ((e) => console.error('Server error:', e)),
     };
+    this.mcpHandler = new MCPHTTPHandler(projectDir);
   }
 
   async start(): Promise<void> {
@@ -218,8 +220,8 @@ export class DevServer {
 
         // CORS headers
         res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID');
 
         if (req.method === 'OPTIONS') {
           res.writeHead(204);
@@ -265,6 +267,11 @@ export class DevServer {
           if (pathname === '/$/stats') {
             res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
             res.end(JSON.stringify(this.manifest?.stats ?? {}, null, 2));
+            return;
+          }
+
+          if (pathname === '/$/mcp') {
+            await this.mcpHandler.handle(req, res);
             return;
           }
 

@@ -19,7 +19,10 @@ export const ChartsJsPlugin: Plugin = {
     app.registerService('chart', () => {
       let chartsLib: any;
       async function load() {
-        if (!chartsLib) chartsLib = await import('chart.js');
+        if (!chartsLib) {
+          const moduleName = 'chart.js';
+          chartsLib = await import(/* @vite-ignore */ moduleName);
+        }
         return chartsLib;
       }
       return {

@@ -483,15 +483,60 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     element: HTMLElement,
     event: Event
   ): Record<string, unknown> {
+    const attrPayload = this.parseEventValueAttribute(element.getAttribute('ux-event-value'));
+
     if (element instanceof HTMLFormElement) {
-      return Object.fromEntries(new FormData(element));
+      return {
+        ...attrPayload,
+        ...Object.fromEntries(new FormData(element)),
+      };
     }
 
     if (element instanceof HTMLInputElement) {
-      return { value: element.value };
+      return {
+        ...attrPayload,
+        value: element.value,
+      };
     }
 
-    return {};
+    return attrPayload;
+  }
+
+  private parseEventValueAttribute(value: string | null): Record<string, unknown> {
+    if (!value) {
+      return {};
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return {};
+    }
+
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+          ? parsed as Record<string, unknown>
+          : { value: parsed };
+      } catch {
+        // Fall through to key=value parsing.
+      }
+    }
+
+    if (trimmed.includes('=')) {
+      const payload: Record<string, unknown> = {};
+      for (const pair of trimmed.split(',')) {
+        const [rawKey, ...rawValue] = pair.split('=');
+        const key = rawKey?.trim();
+        if (!key) {
+          continue;
+        }
+        payload[key] = rawValue.join('=').trim();
+      }
+      return payload;
+    }
+
+    return { value: trimmed };
   }
 
   /**

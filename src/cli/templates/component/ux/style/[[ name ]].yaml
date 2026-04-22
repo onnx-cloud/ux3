@@ -1,0 +1,5 @@
+widget: [[ name ]]
+base: [[ name ]]
+variants:
+  default: [[ name ]]-default
+  elevated: [[ name ]]-elevated

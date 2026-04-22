@@ -1,0 +1,19 @@
+## UX3 Component: [[ Name ]]
+## Tag: ux-[[ name ]]
+## Generated: [[ date ]]
+
+initial: idle
+
+context:
+  open: false
+
+states:
+  idle:
+    template: component/[[ name ]]/idle.html
+    on:
+      OPEN: open
+
+  open:
+    template: component/[[ name ]]/open.html
+    on:
+      CLOSE: idle

@@ -192,11 +192,21 @@ export class UxDropdown extends HTMLElement {
         const filter = this.shadowRoot?.querySelector('.dropdown-filter') as HTMLInputElement;
         if (filter) filter.focus();
       }, 0);
+
+      this.dispatchEvent(new CustomEvent('ux:open', {
+        bubbles: true,
+        composed: true
+      }));
     } else {
       wrapper?.classList.remove('open');
       toggle?.setAttribute('aria-expanded', 'false');
       options?.setAttribute('aria-expanded', 'false');
       toggle?.focus();
+
+      this.dispatchEvent(new CustomEvent('ux:close', {
+        bubbles: true,
+        composed: true
+      }));
     }
   }
 
@@ -229,6 +239,13 @@ export class UxDropdown extends HTMLElement {
     this.updateFormValue();
 
     // Emit change event
+    this.dispatchEvent(new CustomEvent('ux:change', {
+      detail: { value: this.value },
+      bubbles: true,
+      composed: true
+    }));
+
+    // Backward compatibility for existing consumers.
     this.dispatchEvent(new CustomEvent('change', {
       detail: { value: this.value },
       bubbles: true,

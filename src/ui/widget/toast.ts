@@ -77,6 +77,12 @@ export class UxToastContainer extends HTMLElement {
 
     this.toasts.set(id, toast);
 
+    this.dispatchEvent(new CustomEvent('ux:open', {
+      bubbles: true,
+      composed: true,
+      detail: { id, config }
+    }));
+
     // Auto-dismiss after duration
     const duration = config.duration ?? 3000;
     if (duration > 0) {
@@ -96,6 +102,12 @@ export class UxToastContainer extends HTMLElement {
     if (toast) {
       toast.remove();
       this.toasts.delete(id);
+
+      this.dispatchEvent(new CustomEvent('ux:close', {
+        bubbles: true,
+        composed: true,
+        detail: { id }
+      }));
     }
   }
 
@@ -115,19 +127,35 @@ class UxToast extends HTMLElement {
   private toastId: string;
   private config: ToastConfig;
 
-  constructor(id: string, config: ToastConfig) {
+  constructor(id = 'inline-toast', config: ToastConfig = { message: '' }) {
     super();
     this.toastId = id;
     this.config = config;
-    this.classList.add('toast');
-    if (config.type) {
-      this.classList.add(config.type);
-    }
   }
 
   connectedCallback() {
+    this.hydrateInlineConfig();
     this.render();
     this.setupAccessibility();
+  }
+
+  private hydrateInlineConfig() {
+    const type = this.getAttribute('type') as ToastConfig['type'] | null;
+    const durationAttr = this.getAttribute('duration');
+    const messageAttr = this.getAttribute('message');
+    const inlineText = this.textContent?.trim() || '';
+
+    this.config = {
+      ...this.config,
+      type: type || this.config.type,
+      duration: durationAttr ? Number(durationAttr) : this.config.duration,
+      message: messageAttr || this.config.message || inlineText,
+    };
+
+    this.className = 'toast';
+    if (this.config.type) {
+      this.classList.add(this.config.type);
+    }
   }
 
   private render() {

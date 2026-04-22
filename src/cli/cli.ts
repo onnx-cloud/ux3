@@ -12,9 +12,10 @@ import { previewCommand } from './commands/preview.js';
 import { contentCommand } from './commands/content.js';
 import { helpCommand } from './commands/help.js';
 import { pluginCommand } from './commands/plugin.js';
+import { componentCommand } from './commands/component.js';
 import { styleCommand } from './commands/style.js';
 import { generateCommand } from './commands/generate.js';
-import { hintsCommand } from './commands/hints.js';
+import { syncCommand } from './commands/sync.js';
 import { createRequire } from 'module';
 
 const _require = createRequire(import.meta.url);
@@ -33,9 +34,10 @@ program.addCommand(previewCommand);
 program.addCommand(contentCommand);
 program.addCommand(helpCommand);
 program.addCommand(pluginCommand);
+program.addCommand(componentCommand);
 program.addCommand(styleCommand);
 program.addCommand(generateCommand);
-program.addCommand(hintsCommand);
+program.addCommand(syncCommand);
 
 program.parse(process.argv);
 

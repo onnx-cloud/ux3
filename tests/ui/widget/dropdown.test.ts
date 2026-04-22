@@ -81,7 +81,9 @@ describe('UxDropdown - Dropdown Component', () => {
     await Promise.resolve();
 
     const changeSpy = vi.fn();
+    const uxChangeSpy = vi.fn();
     dropdown.addEventListener('change', changeSpy);
+    dropdown.addEventListener('ux:change', uxChangeSpy);
 
     const toggle = dropdown.shadowRoot?.querySelector('.dropdown-toggle') as HTMLButtonElement;
     toggle.click();
@@ -90,6 +92,26 @@ describe('UxDropdown - Dropdown Component', () => {
     option.click();
 
     expect(changeSpy).toHaveBeenCalledTimes(1);
+    expect(uxChangeSpy).toHaveBeenCalledTimes(1);
     expect(changeSpy.mock.calls[0][0].detail.value).toBe('us');
+  });
+
+  it('emits ux:open and ux:close when toggled', async () => {
+    const dropdown = document.createElement('ux-dropdown') as UxDropdown;
+    dropdown.innerHTML = `<option value="us">United States</option>`;
+    container.appendChild(dropdown);
+    await Promise.resolve();
+
+    const openSpy = vi.fn();
+    const closeSpy = vi.fn();
+    dropdown.addEventListener('ux:open', openSpy);
+    dropdown.addEventListener('ux:close', closeSpy);
+
+    const toggle = dropdown.shadowRoot?.querySelector('.dropdown-toggle') as HTMLButtonElement;
+    toggle.click();
+    toggle.click();
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(closeSpy).toHaveBeenCalledTimes(1);
   });
 });

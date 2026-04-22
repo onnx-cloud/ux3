@@ -42,6 +42,7 @@ export interface GeneratedConfig {
     hotReload?: boolean;
     inspector?: boolean;
   };
+  oauth?: Record<string, Record<string, unknown>>;
   content?: ContentManifest;
   browserContext?: BrowserContextOptions;
 }

@@ -55,6 +55,23 @@ describe('UxModal - Modal Component', () => {
     expect(closeSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('emits ux:open and ux:close lifecycle events', async () => {
+    const modal = document.createElement('ux-modal') as UxModal;
+    container.appendChild(modal);
+    await Promise.resolve();
+
+    const openSpy = vi.fn();
+    const closeSpy = vi.fn();
+    modal.addEventListener('ux:open', openSpy);
+    modal.addEventListener('ux:close', closeSpy);
+
+    modal.openModal();
+    modal.closeModal();
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(closeSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('closes when pressing Escape', async () => {
     const modal = document.createElement('ux-modal') as UxModal;
     container.appendChild(modal);

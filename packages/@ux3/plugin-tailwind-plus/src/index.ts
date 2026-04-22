@@ -3,6 +3,9 @@ declare const require: any;
 
 import type { Plugin } from '../../../../src/plugin/registry';
 import type { AssetDescriptor, AppContext } from '../../../../src/ui/app';
+import { createRequire } from 'module';
+
+const _plusRequire = createRequire(import.meta.url);
 
 // Helper to safely require StateMachine from either the compiled or source context
 function tryRequireStateMachine(): any {
@@ -210,32 +213,32 @@ const toastTemplate = `<div ux-state="toast" {{#if context.visible}}class="fixed
     <div class="flex justify-between items-center">
       <span>{{context.message}}</span>
       <button ux-on="click:DISMISS" class="ml-4 text-white hover:text-gray-200">×</button>
-
-    const navbarTemplate = `<nav class="bg-white border-b shadow-sm" ux-state="navbar">
-      <div class="mx-auto px-4 max-w-6xl flex items-center justify-between h-16">
-        <span class="font-bold text-lg">Brand</span>
-        <div class="hidden md:flex gap-6">
-          <a href="/" class="hover:text-blue-600">Home</a>
-          <a href="/about" class="hover:text-blue-600">About</a>
-          <a href="/contact" class="hover:text-blue-600">Contact</a>
-        </div>
-        <button ux-on="click:TOGGLE_MENU" class="md:hidden p-2 rounded hover:bg-gray-100" aria-label="Toggle menu">
-          <span class="block w-5 h-0.5 bg-gray-600 mb-1"></span>
-          <span class="block w-5 h-0.5 bg-gray-600 mb-1"></span>
-          <span class="block w-5 h-0.5 bg-gray-600"></span>
-        </button>
-      </div>
-      {{#if context.mobileMenuOpen}}
-        <div class="md:hidden border-t px-4 py-2 flex flex-col gap-2 bg-white">
-          <a href="/" class="py-2 hover:text-blue-600">Home</a>
-          <a href="/about" class="py-2 hover:text-blue-600">About</a>
-          <a href="/contact" class="py-2 hover:text-blue-600">Contact</a>
-        </div>
-      {{/if}}
-    </nav>`;
     </div>
   {{/if}}
 </div>`;
+
+const navbarTemplate = `<nav class="bg-white border-b shadow-sm" ux-state="navbar">
+  <div class="mx-auto px-4 max-w-6xl flex items-center justify-between h-16">
+    <span class="font-bold text-lg">Brand</span>
+    <div class="hidden md:flex gap-6">
+      <a href="/" class="hover:text-blue-600">Home</a>
+      <a href="/about" class="hover:text-blue-600">About</a>
+      <a href="/contact" class="hover:text-blue-600">Contact</a>
+    </div>
+    <button ux-on="click:TOGGLE_MENU" class="md:hidden p-2 rounded hover:bg-gray-100" aria-label="Toggle menu">
+      <span class="block w-5 h-0.5 bg-gray-600 mb-1"></span>
+      <span class="block w-5 h-0.5 bg-gray-600 mb-1"></span>
+      <span class="block w-5 h-0.5 bg-gray-600"></span>
+    </button>
+  </div>
+  {{#if context.mobileMenuOpen}}
+    <div class="md:hidden border-t px-4 py-2 flex flex-col gap-2 bg-white">
+      <a href="/" class="py-2 hover:text-blue-600">Home</a>
+      <a href="/about" class="py-2 hover:text-blue-600">About</a>
+      <a href="/contact" class="py-2 hover:text-blue-600">Contact</a>
+    </div>
+  {{/if}}
+</nav>`;
 
 // ============================================================================
 // UTILITY CLASSES & HELPERS
@@ -286,7 +289,7 @@ export function getButtonClass(
 // PLUGIN REGISTRATION
 // ============================================================================
 
-const { version: _plusVersion } = require('../package.json') as { version: string };
+const { version: _plusVersion } = _plusRequire('../package.json') as { version: string };
 
 export const TailwindPlusPlugin: Plugin = {
   name: '@ux3/plugin-tailwind-plus',
@@ -334,7 +337,6 @@ export const TailwindPlusPlugin: Plugin = {
       { name: 'tabs', factory: createTabsFSM, template: tabsTemplate },
       { name: 'modal', factory: createModalFSM, template: modalTemplate },
       { name: 'toast', factory: createToastFSM, template: toastTemplate },
-      { name: 'navbar', factory: createNavbarFSM, template: '' }
       { name: 'navbar', factory: createNavbarFSM, template: navbarTemplate }
     ];
 

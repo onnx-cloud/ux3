@@ -31,6 +31,9 @@ function loadI18n(lang = 'en') {
       if (file.endsWith('.json')) {
         const content = JSON.parse(fs.readFileSync(path.join(i18nDir, file), 'utf-8'));
         Object.assign(result, content);
+      } else if (file.endsWith('.yaml') || file.endsWith('.yml')) {
+        const content = YAML.parse(fs.readFileSync(path.join(i18nDir, file), 'utf-8'));
+        Object.assign(result, content);
       }
     }
   }
@@ -45,14 +48,14 @@ test.describe(`Config-driven tests: ${config.name || PROJECT_DIR}`, () => {
   test('should render the correct site title and meta tags', async ({ page }) => {
     await page.goto(BASE_URL);
     
-    // Title from site config (ux3.yaml)
-    const expectedTitle = config.site?.title || config.name;
+    // Title from i18n (site.title is now in i18n, not ux3.yaml)
+    const expectedTitle = i18n.site?.title || config.name;
     await expect(page).toHaveTitle(expectedTitle);
     
-    // Meta description if present in config
-    if (config.site?.description) {
+    // Meta description from i18n
+    if (i18n.site?.description) {
       const description = page.locator('meta[name="description"]');
-      await expect(description).toHaveAttribute('content', config.site.description);
+      await expect(description).toHaveAttribute('content', i18n.site.description);
     }
   });
 
