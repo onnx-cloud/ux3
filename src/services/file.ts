@@ -19,12 +19,9 @@ export class FileService extends Service<RequestConfig, any> {
       throw new Error('FileService requires a baseUrl or request.baseUrl');
     }
 
-    if (/^https?:\/\//.test(baseUrl)) {
-      return this.http.get(baseUrl, request);
-    }
 
-    if (baseUrl.startsWith('file://')) {
-      return this.readLocalFile(this.toLocalPath(baseUrl));
+    if (!baseUrl.startsWith('file://')) {
+      throw new Error('oops.missing.file.url');
     }
 
     if (isNode) {
@@ -32,7 +29,7 @@ export class FileService extends Service<RequestConfig, any> {
     }
 
     throw new Error(
-      `FileService cannot resolve local file path in this environment: ${baseUrl}`
+      `oops.node.file.service`
     );
   }
 

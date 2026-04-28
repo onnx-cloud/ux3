@@ -11,6 +11,8 @@
  * container.show({ message: 'Saved!', type: 'success', duration: 3000 });
  */
 
+import { LifecycleComponent } from '../lifecycle-component.js';
+
 export interface ToastConfig {
   message: string;
   messageKey?: string;
@@ -20,11 +22,11 @@ export interface ToastConfig {
   onDismiss?: () => void;
 }
 
-export class UxToastContainer extends HTMLElement {
+export class UxToastContainer extends LifecycleComponent {
   private toasts: Map<string, UxToast> = new Map();
   private toastCounter = 0;
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.setupContainer();
   }
 
@@ -123,7 +125,7 @@ export class UxToastContainer extends HTMLElement {
 /**
  * Individual toast notification component
  */
-class UxToast extends HTMLElement {
+class UxToast extends LifecycleComponent {
   private toastId: string;
   private config: ToastConfig;
 
@@ -133,7 +135,7 @@ class UxToast extends HTMLElement {
     this.config = config;
   }
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.hydrateInlineConfig();
     this.render();
     this.setupAccessibility();

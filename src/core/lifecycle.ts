@@ -1,4 +1,6 @@
+import { ViewComponent } from "@ux3/ui";
 import type { AppContext } from "./../ui/app";
+import { Service } from "@ux3/services/types";
 
 // -----------------------------------------------------------------------------
 // Lifecycle phase enums
@@ -38,18 +40,14 @@ export enum ServiceLifecyclePhase {
 
 export interface HookContext {
   app?: AppContext;
-  component?: any;   // use any for now until view component type stabilized
-  service?: any;     // similar placeholder
+  component?: ViewComponent;   
+  service?: Service
   phase: string;
   meta?: Record<string, any>;
 }
 
 export type Hook = (context: HookContext) => Promise<void> | void;
 
-/**
- * Simple registry mapping phase names to arrays of hooks.
- * Hooks are executed in registration order.  Async handlers are awaited.
- */
 export class HookRegistry {
   private hooks = new Map<string, Hook[]>();
 

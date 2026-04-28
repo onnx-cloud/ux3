@@ -424,15 +424,6 @@ async function initApp() {
     // Make available globally
     window.__ux3App = appContext;
 
-    // Mount app
-    const root = document.getElementById('app');
-    if (root) {
-      root.innerHTML = `
-        <ux-app>
-          <ux-login ux-fsm="auth" ux-view="login"></ux-login>
-        </ux-app>
-      `;
-    }
 
     console.log('✓ App initialized');
   } catch (error) {

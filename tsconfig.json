@@ -6,8 +6,9 @@
     "skipLibCheck": true,
     "strict": false,
     "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "./dist",
     "paths": { 
       "@ux3/*": [
         "./src/*",
@@ -15,6 +16,6 @@
       ]
     }
   },
-  "include": ["src/**/*.ts", "packages/@ux3/*/src/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "src/templates"]
 }

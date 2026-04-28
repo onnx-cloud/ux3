@@ -22,8 +22,9 @@
  *   </div>
  * </ux-panel>
  */
+import { LifecycleComponent } from '../lifecycle-component.js';
 
-export class UxPanel extends HTMLElement {
+export class UxPanel extends LifecycleComponent {
   private isExpanded = true;
 
   constructor() {
@@ -31,7 +32,7 @@ export class UxPanel extends HTMLElement {
     this.attachShadow({ mode: 'open' });
   }
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.setupPanel();
     this.render();
     this.setupEventListeners();
@@ -80,14 +81,15 @@ export class UxPanel extends HTMLElement {
       ${this.title ? `
         <div class="panel-header ${this.collapsible ? 'collapsible' : ''}">
           ${this.collapsible ? `
-            <button class="panel-toggle" type="button" aria-expanded="${this.expanded}">
-              <span class="toggle-icon">▶</span>
-            </button>
+            <slot name="toggle">
+              <button class="panel-toggle" type="button" aria-expanded="${this.expanded}">
+                <span class="toggle-icon">▶</span>
+              </button>
+            </slot >
           ` : ''}
           
           <div class="panel-title-group">
-            <h3 class="panel-title">${this.escapeHtml(this.title)}</h3>
-            ${this.subtitle ? `<p class="panel-subtitle">${this.escapeHtml(this.subtitle)}</p>` : ''}
+            <slot name="title"></slot >
           </div>
 
           <div class="panel-actions">
@@ -150,9 +152,11 @@ export class UxPanel extends HTMLElement {
   private setupEventListeners() {
     if (!this.shadowRoot) return;
 
+    this.clearManagedCleanups();
+
     const toggle = this.shadowRoot.querySelector('.panel-toggle') as HTMLButtonElement;
     if (toggle) {
-      toggle.addEventListener('click', () => {
+      this.listen(toggle, 'click', () => {
         this.isExpanded = !this.isExpanded;
         this.updateExpandedState();
       });
@@ -324,7 +328,7 @@ export class UxPanel extends HTMLElement {
     `;
   }
 
-  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
+  protected onAttributeChanged(name: string, oldVal: string | null, newVal: string | null): void {
     if (name === 'expanded') {
       this.isExpanded = newVal !== 'false';
       this.updateExpandedState();

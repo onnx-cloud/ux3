@@ -7,7 +7,6 @@
  * - Retry logic, error handling, monitoring
  * - Testing of service invocations independently
  * 
- * This is part of Phase 1.2 architectural refactor to separate concerns:
  * - ViewComponent handles UI rendering
  * - FSM handles state management  
  * - InvokeRegistry handles service orchestration
@@ -116,28 +115,6 @@ export type InvokeListener = (invoke: {
 /**
  * InvokeRegistry - Central registry for all service invocations
  * 
- * Usage:
- * ```typescript
- * const registry = new InvokeRegistry(appContext);
- * 
- * // Execute a service invoke
- * const result = await registry.executeInvoke({
- *   service: 'api',
- *   method: 'fetch',
- *   input: { url: '/users' }
- * }, context);
- * 
- * // Execute a src invoke (local function)
- * const result = await registry.executeInvoke({
- *   src: myLocalFunction,
- *   input: { data: 'test' }
- * }, context);
- * 
- * // Monitor invokes
- * registry.onInvoke((invoke) => {
- *   console.log(`Invoke ${invoke.service}.${invoke.method} took ${invoke.duration}ms`);
- * });
- * ```
  */
 export interface InvokeRegistryOptions {
   maxCacheSize?: number;

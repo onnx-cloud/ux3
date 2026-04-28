@@ -11,7 +11,7 @@ import type { GeneratedConfig, HydrationOptions } from './context-builder.js';
 import { hydrate as coreHydrate } from './context-builder.js';
 
 /**
- * Create a project-specific bootstrap function and optionally expose it globally.
+ * Create a project-specific bootstrap function.
  *
  * Usage from an application entrypoint (eg. `src/index.ts`):
  *

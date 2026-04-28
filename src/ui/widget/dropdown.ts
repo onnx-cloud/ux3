@@ -22,8 +22,9 @@
  *   ...
  * </ux-dropdown>
  */
+import { LifecycleComponent } from '../lifecycle-component.js';
 
-export class UxDropdown extends HTMLElement {
+export class UxDropdown extends LifecycleComponent {
   static formAssociated = true;
 
   private internals: ElementInternals;
@@ -32,6 +33,8 @@ export class UxDropdown extends HTMLElement {
   private filteredOptions: OptionItem[] = [];
   private allOptions: OptionItem[] = [];
   private highlightedIndex = 0;
+  private optionsObserver: MutationObserver | null = null;
+  private stopOptionsObserver: (() => void) | null = null;
 
   constructor() {
     super();
@@ -43,11 +46,19 @@ export class UxDropdown extends HTMLElement {
     }
   }
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.render();
     this.loadOptions();
     this.setupEventListeners();
     this.setupAccessibility();
+  }
+
+  protected onDisconnected(): void {
+    if (this.stopOptionsObserver) {
+      this.stopOptionsObserver();
+      this.stopOptionsObserver = null;
+    }
+    this.optionsObserver = null;
   }
 
   // ==================== Attributes ====================
@@ -135,7 +146,7 @@ export class UxDropdown extends HTMLElement {
           <span class="dropdown-display">${this.placeholder}</span>
           <span class="dropdown-arrow">▼</span>
         </button>
-        ${this.filterable ? '<input class="dropdown-filter" type="text" placeholder="Filter..." />' : ''}
+        ${this.filterable ? '<input class="dropdown-filter" type="text" placeholder="i18n.dropdown.filter" />' : ''}
         <div class="dropdown-options" role="listbox" aria-expanded="false"></div>
       </div>
     `;
@@ -148,27 +159,34 @@ export class UxDropdown extends HTMLElement {
     const filter = this.shadowRoot?.querySelector('.dropdown-filter') as HTMLInputElement;
     const options = this.shadowRoot?.querySelector('.dropdown-options') as HTMLDivElement;
 
-    toggle?.addEventListener('click', () => this.toggleDropdown());
+    if (toggle) {
+      this.listen(toggle, 'click', () => this.toggleDropdown());
+    }
 
     if (filter) {
-      filter.addEventListener('input', (e) => {
+      this.listen(filter, 'input', (e) => {
         this.filterOptions((e.target as HTMLInputElement).value);
       });
     }
 
-    this.addEventListener('keydown', (e) => this.handleKeydown(e));
+    this.listen(this, 'keydown', (e) => this.handleKeydown(e as KeyboardEvent));
   }
 
   private setupEventListeners() {
     // Listen to option changes
-    const observer = new MutationObserver(() => {
+    if (this.stopOptionsObserver) {
+      this.stopOptionsObserver();
+      this.stopOptionsObserver = null;
+    }
+
+    this.optionsObserver = new MutationObserver(() => {
       this.loadOptions();
       if (this.isOpen) {
         this.renderOptions();
       }
     });
 
-    observer.observe(this, { childList: true, subtree: true });
+    this.stopOptionsObserver = this.observe(this.optionsObserver, this, { childList: true, subtree: true });
   }
 
   // ==================== Dropdown Logic ====================
@@ -450,7 +468,7 @@ export class UxDropdown extends HTMLElement {
     `;
   }
 
-  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
+  protected onAttributeChanged(name: string, oldVal: string | null, newVal: string | null): void {
     if (name === 'disabled') {
       const toggle = this.shadowRoot?.querySelector('.dropdown-toggle') as HTMLButtonElement;
       if (toggle) {

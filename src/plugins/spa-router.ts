@@ -1,6 +1,7 @@
 import type { Plugin } from "../plugin/registry";
 import { AppLifecyclePhase } from "../core/lifecycle";
 import type { AppContext } from "../ui/app";
+import { version } from '../../package.json'
 
 export interface Route {
   path: string;
@@ -37,8 +38,8 @@ export class RouterService {
 }
 
 export const SpaRouter: Plugin = {
-  name: 'spa-router',
-  version: '1.0.0',
+  name: 'ux3.service.router',
+  version: version,
   install(app: AppContext) {
     // attach simple router service based on config routes
     const routes = (app as any).config?.routes || [];

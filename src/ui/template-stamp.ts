@@ -4,7 +4,7 @@
  */
 
 import { escapeHtml } from '../security/sanitizer.js';
-import { HandlebarsLite } from '../hbs/index.js';
+import { HandlebarsLite } from '../logger/hbs/index.js';
 
 /**
  * Interface for simple template context

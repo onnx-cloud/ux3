@@ -249,7 +249,7 @@ export function createStore<T extends Record<string, any>>(config: StoreConfig<T
 }
 
 /**
- * Composable store hooks for Alpine.js
+ * Composable store hooks 
  */
 export function createStoreHook<T extends Record<string, any>>(store: Store<T>) {
   return {

@@ -12,6 +12,7 @@ import { UxField, UxFieldArray } from '../ui/widget/form/index.js';
 import { RuleEngine } from '../validation/rule-engine.js';
 import { rules } from '../validation/rule-library.js';
 import { formActions, formGuards } from '../fsm/form-helpers.js';
+import { version } from '../../package.json'
 
 export interface FormPluginConfig {
   // Enable auto-registration of form components
@@ -25,6 +26,7 @@ export interface FormPluginConfig {
  */
 export const FormPlugin = {
   name: 'ux3-forms',
+  version: version,
 
   install(app: any, config: FormPluginConfig = {}) {
     // Auto-register form components

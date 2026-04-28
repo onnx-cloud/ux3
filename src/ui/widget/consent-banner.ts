@@ -31,14 +31,16 @@ export interface ConsentState {
   accepted: boolean;
 }
 
-export class UxConsentBanner extends HTMLElement {
+import { LifecycleComponent } from '../lifecycle-component.js';
+
+export class UxConsentBanner extends LifecycleComponent {
   private consentState: ConsentState | null = null;
   private persistentKey: string = 'consent';
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.persistentKey = this.getAttribute('persistent-key') || 'consent';
     this.loadConsentState();
-    
+
     if (!this.isConsentGiven()) {
       this.render();
       this.setupEventListeners();
@@ -83,7 +85,7 @@ export class UxConsentBanner extends HTMLElement {
 
   private render() {
     const variant = this.getAttribute('variant') || 'banner';
-    
+
     this.attachShadow({ mode: 'open' });
     if (!this.shadowRoot) return;
 
@@ -96,15 +98,12 @@ export class UxConsentBanner extends HTMLElement {
     container.innerHTML = `
       <div class="consent-content">
         <div class="consent-header">
-          <h3 class="consent-title">
-            <slot name="title">We value your privacy</slot>
-          </h3>
-          <button class="consent-close" aria-label="Dismiss" title="Dismiss">✕</button>
+          <slot name="header">
+          <button class="consent-close" aria-label="i18n.consent.dismiss" title="i18n.consent.title">✕</button>
         </div>
         
         <div class="consent-message">
           <slot name="message">
-            We use cookies and similar technologies to provide essential functionality and analyze site usage.
           </slot>
         </div>
 
@@ -113,21 +112,21 @@ export class UxConsentBanner extends HTMLElement {
         </div>
 
         <div class="consent-actions">
-          <button class="consent-btn consent-reject" type="button">
-            <span class="btn-label">
-              <slot name="reject-label">Reject All</slot>
-            </span>
-          </button>
-          <button class="consent-btn consent-accept" type="button">
-            <span class="btn-label">
-              <slot name="accept-label">Accept All</slot>
-            </span>
-          </button>
+            <slot name="reject" consent-reject">
+              <button class="consent-btn consent-reject" type="button">
+                <span class="btn-label">
+                </span>
+              </button>
+            </slot>
+            <slot name="accept-label" class="consent-accept">
+              <button class="consent-btn consent-accept" type="button">
+              </button>
+            </slot>
         </div>
 
         <div class="consent-footer">
-          <a href="#" class="consent-learn-more" target="_blank" rel="noopener">
-            <slot name="learn-more-label">Learn more about our privacy policy</slot>
+          <a href="#" class="consent-privacy" target="_blank" rel="noopener">
+            <slot name="privacy"></slot>
           </a>
         </div>
       </div>
@@ -143,17 +142,17 @@ export class UxConsentBanner extends HTMLElement {
     const rejectBtn = this.shadowRoot.querySelector('.consent-reject') as HTMLButtonElement;
     const closeBtn = this.shadowRoot.querySelector('.consent-close') as HTMLButtonElement;
 
-    acceptBtn?.addEventListener('click', () => this.handleAccept());
-    rejectBtn?.addEventListener('click', () => this.handleReject());
-    closeBtn?.addEventListener('click', () => this.handleDismiss());
+    if (acceptBtn) this.listen(acceptBtn, 'click', () => this.handleAccept());
+    if (rejectBtn) this.listen(rejectBtn, 'click', () => this.handleReject());
+    if (closeBtn) this.listen(closeBtn, 'click', () => this.handleDismiss());
 
     // Handle category checkboxes
-    const checkboxes = this.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    if (checkboxes) {
-      checkboxes.addEventListener('change', () => {
+    const checkboxes = this.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+    checkboxes.forEach((checkbox) => {
+      this.listen(checkbox, 'change', () => {
         this.updatePreferences();
       });
-    }
+    });
   }
 
   private getAllPreferences(): Record<string, boolean> {
@@ -180,7 +179,6 @@ export class UxConsentBanner extends HTMLElement {
     Object.keys(preferences).forEach(key => {
       preferences[key] = true;
     });
-
     this.saveConsentState(preferences);
 
     this.dispatchEvent(new CustomEvent('consent-accept', {
@@ -248,7 +246,7 @@ export class UxConsentBanner extends HTMLElement {
   private getStyles(variant: string): string {
     const isFloating = variant === 'floating';
     const position = this.getAttribute('position') || 'bottom-right';
-    
+
     return `
       :host {
         --consent-z-index: 9998;

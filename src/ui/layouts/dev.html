@@ -3,25 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>UX3 Dev — {{ projectName }}</title>
+  <title>UX3 Dev — {{ project.name }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>/* fallback styles */ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2rem}pre{background:#f8fafc;padding:1rem;border-radius:6px}</style>
 </head>
 <body>
   <div class="container">
-    <h1>UX3 Dev Server — {{ projectName }}</h1>
-    <div><strong>Status:</strong> Connected</div>
-
-
+    <h1>{{ project.name }}</h1>
     <div class="grid grid-cols-2 gap-6">
       <div>
         <h2 class="text-lg font-semibold">Build Stats</h2>
-        <pre id="stats" class="mt-2 bg-slate-50 p-4 rounded text-sm">{{ stats }}</pre>
+        <pre id="stats" class="mt-2 bg-slate-50 p-4 rounded text-sm">{{ build }}</pre>
 
-        <h2 class="text-lg font-semibold mt-4">Configuration Summary</h2>
-        <pre id="summary" class="mt-2 bg-slate-50 p-4 rounded text-sm">{{ summary }}</pre>
-
-        <h2 class="text-lg font-semibold mt-4">Available Endpoints</h2>
+        <h2 class="text-lg font-semibold mt-4">Endpoints</h2>
         <ul class="list-disc list-inside mt-2">
           <li><a class="text-blue-600 hover:underline" href="/$/config"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/config</code></a> — configuration</li>
           <li><a class="text-blue-600 hover:underline" href="/$/types"><code class="bg-slate-100 px-2 py-1 rounded">GET /$/types</code></a> — generated types</li>

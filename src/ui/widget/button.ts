@@ -4,7 +4,9 @@
  * Autonomous custom element used as:
  * <ux-button variant="primary">Save</ux-button>
  */
-export class UxButton extends HTMLElement {
+import { LifecycleComponent } from '../lifecycle-component.js';
+
+export class UxButton extends LifecycleComponent {
   private buttonEl: HTMLButtonElement | null = null;
 
   constructor() {
@@ -12,7 +14,7 @@ export class UxButton extends HTMLElement {
     this.attachShadow({ mode: 'open' });
   }
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.render();
     this.setupAccessibility();
     this.updateLoadingState();
@@ -185,7 +187,7 @@ export class UxButton extends HTMLElement {
     `;
   }
 
-  attributeChangedCallback(name: string, _oldVal: string, _newVal: string) {
+  protected onAttributeChanged(name: string, _oldVal: string | null, _newVal: string | null): void {
     if (name === 'loading' || name === 'disabled') {
       this.updateLoadingState();
     }

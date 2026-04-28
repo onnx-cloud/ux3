@@ -9,7 +9,7 @@ type Listener<T> = (state: string, context: T) => void;
  * StateMachine - Core FSM engine
  */
 export declare class StateMachine<T extends Record<string, any>> {
-    private currentState;
+    private state;
     private context;
     private config;
     private listeners;

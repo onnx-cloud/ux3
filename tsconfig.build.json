@@ -17,7 +17,6 @@
     { "path": "packages/@ux3/plugin-cytoscape" },
     { "path": "packages/@ux3/plugin-search-lunr" },
     { "path": "packages/@ux3/plugin-translate" },
-    { "path": "packages/@ux3/plugin-stripe" },
     { "path": "packages/@ux3/test-harness" }
   ]
 }

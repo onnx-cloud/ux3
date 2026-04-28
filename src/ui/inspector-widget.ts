@@ -7,6 +7,7 @@
  */
 
 import type { AppContext } from './app.js';
+import { LifecycleComponent } from './lifecycle-component.js';
 import { inspectorBus } from './inspector/event-bus.js';
 import { onBadgeUpdate } from './inspector/panels/validation-panel.js';
 
@@ -243,7 +244,7 @@ const STYLES = `
 
 // ─────────────────────────── Widget ───────────────────────────
 
-export default class InspectorWidget extends HTMLElement {
+export default class InspectorWidget extends LifecycleComponent {
   private ctx: AppContext | null = null;
   private state: PersistedState = {
     x: 0,
@@ -266,7 +267,7 @@ export default class InspectorWidget extends HTMLElement {
     this.attachShadow({ mode: 'open' });
   }
 
-  connectedCallback(): void {
+  protected onConnected(): void {
     this.ctx = (window as any).__ux3Inspector ?? null;
     if (!this.ctx) return;
 
@@ -282,7 +283,7 @@ export default class InspectorWidget extends HTMLElement {
     document.addEventListener('keydown', this.onKeyDown);
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     document.removeEventListener('keydown', this.onKeyDown);
   }
 

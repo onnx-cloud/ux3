@@ -2,29 +2,19 @@
  * Color Scheme (dark-mode) runtime helper
  *
  * Toggles between light and dark mode by setting `data-color-scheme` on
- * `<html>`.  The corresponding CSS custom properties are emitted by
- * `tokensToCss()` in `src/build/style-utils.ts` into `generated/tokens.css`.
- *
- * Usage:
- *   import { initColorScheme, setColorScheme } from '@ux3/ui/color-scheme';
  *   initColorScheme(); // call once at startup to apply saved/OS preference
  *   setColorScheme('dark');
  */
 
-export type ColorScheme = 'light' | 'dark';
+export type ColorScheme = 'light' | 'dark' | "system" | "sepia";
 
-const STORAGE_KEY = 'ux3:color-scheme';
+const STORAGE_KEY = 'ux3.color.scheme';
 
 /**
  * Read the current scheme preference from localStorage or the OS media query.
  */
 export function getColorScheme(): ColorScheme {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark') return stored;
-  } catch {
-    // localStorage unavailable (SSR, privacy mode, etc.)
-  }
+  const stored = localStorage.getItem(STORAGE_KEY)  as ColorScheme;
   if (typeof window !== 'undefined') {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }

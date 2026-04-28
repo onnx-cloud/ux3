@@ -20,8 +20,9 @@
  *   <input />
  * </ux-field>
  */
+import { LifecycleComponent } from '../../lifecycle-component.js';
 
-export class UxField extends HTMLElement {
+export class UxField extends LifecycleComponent {
   static formAssociated = true;
 
   private internals: ElementInternals;
@@ -29,6 +30,8 @@ export class UxField extends HTMLElement {
   private errorEl: HTMLDivElement | null = null;
   private labelEl: HTMLLabelElement | null = null;
   private control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null = null;
+  private controlDisposers: Array<() => void> = [];
+  private stopValidationObserver: (() => void) | null = null;
 
   constructor() {
     super();
@@ -44,7 +47,7 @@ export class UxField extends HTMLElement {
     }
   }
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.render();
     this.setupSlotListener();
     // Try direct children first (for implicit slot binding)
@@ -164,8 +167,8 @@ export class UxField extends HTMLElement {
   private render() {
     if (!this.shadowRoot) return;
 
+    // TODO: lookup ux-form-field ViewComponent
     this.shadowRoot.innerHTML = `
-      <style>${this.getStyles()}</style>
       <div class="field-container">
         <label class="label" for="control"></label>
         <div class="control-wrapper">
@@ -184,7 +187,7 @@ export class UxField extends HTMLElement {
     // Also listen to default slot for unnamed controls
     const defaultSlot = this.shadowRoot.querySelector('slot:not([name])') as HTMLSlotElement;
     if (defaultSlot) {
-      defaultSlot.addEventListener('slotchange', () => {
+      this.listen(defaultSlot, 'slotchange', () => {
         if (!this.control) {
           this.detectControlFromChildren();
         }
@@ -234,7 +237,7 @@ export class UxField extends HTMLElement {
   private setupSlotListener() {
     if (!this.controlSlot) return;
 
-    this.controlSlot.addEventListener('slotchange', () => {
+    this.listen(this.controlSlot, 'slotchange', () => {
       const nodes = this.controlSlot!.assignedElements();
       if (nodes.length > 0) {
         const element = nodes[0] as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -254,6 +257,11 @@ export class UxField extends HTMLElement {
 
   private syncControlAttributes() {
     if (!this.control) return;
+
+    for (const dispose of this.controlDisposers) {
+      dispose();
+    }
+    this.controlDisposers = [];
 
     // Set name attribute on control
     if (this.name) {
@@ -280,13 +288,13 @@ export class UxField extends HTMLElement {
     }
 
     // Bind input event to form association
-    this.control.addEventListener('input', (e) => {
+    this.controlDisposers.push(this.listen(this.control, 'input', (e: Event) => {
       const target = e.target as HTMLInputElement;
       this.internals.setFormValue(target.value);
-    });
+    }));
 
     // Emit field change event
-    this.control.addEventListener('change', (e) => {
+    this.controlDisposers.push(this.listen(this.control, 'change', (e: Event) => {
       const target = e.target as HTMLInputElement;
       this.dispatchEvent(
         new CustomEvent('field-change', {
@@ -295,12 +303,12 @@ export class UxField extends HTMLElement {
           composed: true,
         })
       );
-    });
+    }));
 
     // Mark as touched on blur
-    this.control.addEventListener('blur', () => {
+    this.controlDisposers.push(this.listen(this.control, 'blur', () => {
       this.setAttribute('touched', '');
-    });
+    }));
   }
 
   // ==================== Validation ====================
@@ -309,6 +317,11 @@ export class UxField extends HTMLElement {
     if (!this.control) return;
 
     // Listen for validation-related attribute changes
+    if (this.stopValidationObserver) {
+      this.stopValidationObserver();
+      this.stopValidationObserver = null;
+    }
+
     const observer = new MutationObserver(() => {
       if (this.error) {
         this.internals.setValidity({ customError: true }, this.error);
@@ -317,7 +330,7 @@ export class UxField extends HTMLElement {
       }
     });
 
-    observer.observe(this, { attributes: true, attributeFilter: ['error'] });
+    this.stopValidationObserver = this.observe(observer, this, { attributes: true, attributeFilter: ['error'] });
   }
 
   // ==================== Accessibility ====================
@@ -396,7 +409,7 @@ export class UxField extends HTMLElement {
 
   // ==================== Attribute Observation ====================
 
-  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
+  protected onAttributeChanged(name: string, oldVal: string | null, newVal: string | null): void {
     if (name === 'error' || name === 'touched') {
       this.updateError();
       this.updateAccessibility();

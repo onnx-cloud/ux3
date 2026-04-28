@@ -34,6 +34,7 @@ export declare class Logger {
      */
     setContext(context: Record<string, unknown>): void;
     private log;
+    // message = `service:action.event` 
     debug(message: string, context?: Record<string, unknown>): void;
     info(message: string, context?: Record<string, unknown>): void;
     warn(message: string, context?: Record<string, unknown>): void;

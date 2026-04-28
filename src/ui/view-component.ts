@@ -6,6 +6,7 @@
 import { StateMachine } from '../fsm/state-machine.js';
 import type { AppContext } from './app.js';
 import { StructuredLogger } from '../logger/logger.js';
+import { LifecycleComponent } from './lifecycle-component.js';
 
 // expose global for runtime
 declare global {
@@ -35,11 +36,11 @@ export interface TemplateBindings {
  * - Templates (HTML for each FSM state)
  * - Bindings (event listeners, reactive updates, etc.)
  */
-export abstract class ViewComponent<Context extends Record<string, unknown> = Record<string, unknown>> extends HTMLElement {
+export abstract class ViewComponent<Context extends Record<string, unknown> = Record<string, unknown>> extends LifecycleComponent {
   protected app!: AppContext<Context>;
   protected fsm!: StateMachine<Context>;
   protected layout: string = '';
-  protected currentState: string = '';
+  protected state: string = '';
   protected templates: Map<string, string> = new Map();
   protected bindings: TemplateBindings = {
     events: [],
@@ -49,13 +50,13 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   };
 
   private unsubscribe: (() => void) | null = null;
-  private eventListeners: Map<string, EventListener> = new Map();
+  private templateEventDisposers: Array<() => void> = [];
   private logger = new StructuredLogger('ViewComponent');
 
   /**
    * Lifecycle: element inserted into DOM
    */
-  connectedCallback(): void {
+  protected onConnected(): void {
     try {
       // 1. Get app context from window (typed above)
       this.app = window.__ux3App as AppContext<Context>;
@@ -115,13 +116,13 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       }
 
       // 6. Render initial state
-      this.currentState = this.fsm.getState();
-      this.renderState(this.currentState);
+      this.state = this.fsm.getState();
+      this.renderState(this.state);
 
       // run any side-effects for the starting state (e.g. service invokes)
       // `onFSMStateChange` ignores duplicate state values, so call the invoke
       // method directly to ensure initial actions are executed.
-      this.handleStateInvoke(this.currentState).catch(err => {
+      this.handleStateInvoke(this.state).catch(err => {
         this.logger.error('initial.invoke.error', { error: String(err) });
       });
 
@@ -133,7 +134,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       // Emit telemetry
       this.emitTelemetry('view:mount', {
         view: viewName || fsmName,
-        state: this.currentState,
+        state: this.state,
       });
     } catch (error) {
       this.logger.error('connection.failed', { error: String(error) });
@@ -144,7 +145,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   /**
    * Lifecycle: element removed from DOM
    */
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     try {
       // Cleanup: unsubscribe from FSM
       if (this.unsubscribe) {
@@ -287,8 +288,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   private onFSMStateChange(state: string): void {
     try {
-      if (this.currentState !== state) {
-        this.currentState = state;
+      if (this.state !== state) {
+        this.state = state;
         
         // Reflect state to attribute for CSS-driven visibility
         this.setAttribute('data-state', state);
@@ -433,8 +434,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
             const payload = this.extractPayload(element as HTMLElement, event);
             this.fsm.send({ type: action, payload });
           };
-          element.addEventListener(eventName, listener);
-          this.eventListeners.set(`${element.tagName}:${eventName}:${action}`, listener);
+          this.templateEventDisposers.push(this.listen(element, eventName, listener));
         }
       }
 
@@ -449,8 +449,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
             this.fsm.send({ type: action, payload });
           };
 
-          element.addEventListener(eventName, listener);
-          this.eventListeners.set(`${element.id || element.tagName}:${eventName}`, listener);
+          this.templateEventDisposers.push(this.listen(element, eventName, listener));
         }
       }
     });
@@ -475,8 +474,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         this.fsm.send({ type: action, payload });
       };
 
-      form.addEventListener('submit', listener);
-      this.eventListeners.set(`form:submit`, listener);
+      this.templateEventDisposers.push(this.listen(form, 'submit', listener));
     });
   }
 
@@ -575,12 +573,10 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * Remove all event listeners
    */
   private removeEventListeners(): void {
-    const contentArea = this.shadowRoot?.querySelector('#ux-content');
-    if (!contentArea) return;
-
-    // Would need to keep references to remove properly
-    // For now, just clear the map
-    this.eventListeners.clear();
+    for (const dispose of this.templateEventDisposers) {
+      dispose();
+    }
+    this.templateEventDisposers = [];
   }
 
   /**
@@ -592,8 +588,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
     contentArea.innerHTML = `
       <div class="ux-error">
-        <h3>Error</h3>
-        <p>${error.message}</p>
+        <pre>${error.message}</pre>
       </div>
     `;
 

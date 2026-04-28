@@ -6,6 +6,7 @@
  * ux3-resolver plugin in bundler.ts).
  */
 export { ViewComponent, type TemplateBindings } from './view-component.js';
+export { LifecycleComponent } from './lifecycle-component.js';
 export type { AppContext, AppContextLoader, AssetDescriptor } from './app.js';
 export type { BrowserContext, BrowserContextOptions, Reliability } from './browser-context.js';
 export { captureBrowserContext, observeBrowserContext } from './browser-context.js';

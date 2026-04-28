@@ -3,12 +3,12 @@ import type { AssetDescriptor } from '../../../../src/ui/app';
 import { createRequire } from 'module';
 
 const _chartsRequire = createRequire(import.meta.url);
-const { version: _chartsVersion } = _chartsRequire('../package.json') as { version: string };
+const { version } = _chartsRequire('../package.json') as { version: string };
 
 // minimal charting plugin example
 export const ChartsJsPlugin: Plugin = {
   name: '@ux3/plugin-charts-js',
-  version: _chartsVersion,
+  version: version,
   install(app) {
     // Register the Chart.js CDN asset. Users can override via config.plugins['charts-js'].cdn.
     const cfg = (app.config.plugins as any)?.['charts-js'] ?? {};

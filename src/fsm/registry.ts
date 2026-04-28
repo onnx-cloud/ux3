@@ -16,9 +16,9 @@
  * ```
  */
 
-import { StateMachine } from './state-machine.ts';
+import { StateMachine } from './state-machine.js';
 import type { StateEvent } from './types.js';
-import { ServiceCache } from '../core/service-cache.ts';
+import { ServiceCache } from '../core/service-cache.js';
 
 export interface FSMRegistryConfig {
   namespace: string;

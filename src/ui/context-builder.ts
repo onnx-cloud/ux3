@@ -16,7 +16,7 @@ import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
 import type { ContentManifest } from '../services/content.js';
-import { HandlebarsLite } from '../hbs/index.js';
+import { HandlebarsLite } from '../logger/hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
 import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/lifecycle.js';
@@ -137,8 +137,8 @@ export class AppContextBuilder {
         // Emit REGISTER lifecycle phase for this service
         void this.hooks.execute(ServiceLifecyclePhase.REGISTER, {
           phase: ServiceLifecyclePhase.REGISTER,
-          service: { name, instance: service },
-          meta: { serviceType: serviceSpec.type || serviceSpec.adapter }
+          service,
+          meta: { serviceName: name, serviceType: serviceSpec.type || serviceSpec.adapter }
         });
         
         import('../security/observability.js').then(({ defaultLogger }) => {
@@ -344,7 +344,8 @@ export class AppContextBuilder {
     for (const [name, service] of this.services) {
       void this.hooks.execute(ServiceLifecyclePhase.CONNECT, {
         phase: ServiceLifecyclePhase.CONNECT,
-        service: { name, instance: service }
+        service,
+        meta: { serviceName: name }
       });
     }
 
@@ -718,7 +719,8 @@ export async function createAppContext(
     for (const [name, service] of Object.entries(context.services)) {
       try {
         await context.hooks.execute(ServiceLifecyclePhase.AUTHENTICATE, {
-          service: { name, instance: service },
+          service,
+          meta: { serviceName: name },
           app: context,
           phase: ServiceLifecyclePhase.AUTHENTICATE
         });
@@ -734,7 +736,8 @@ export async function createAppContext(
     for (const [name, service] of Object.entries(context.services)) {
       try {
         await context.hooks.execute(ServiceLifecyclePhase.READY, {
-          service: { name, instance: service },
+          service,
+          meta: { serviceName: name },
           app: context,
           phase: ServiceLifecyclePhase.READY
         });

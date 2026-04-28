@@ -1,5 +1,6 @@
 import type { Plugin } from "../plugin/registry";
 import { AppLifecyclePhase } from "../core/lifecycle";
+import { version } from '../../package.json'
 
 export class FormsService {
   async fetch() {
@@ -41,8 +42,8 @@ export function FormValidateDirective(el: HTMLElement) {
 }
 
 export const SpaForms: Plugin = {
-  name: 'spa-forms',
-  version: '1.0.0',
+  name: 'ux3.service.forms',
+  version: version,
   install(app) {
     app.services['ux3.service.forms'] = new FormsService();
   },

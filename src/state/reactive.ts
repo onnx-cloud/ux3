@@ -1,6 +1,4 @@
 /**
- * Reactive Signals - Lightweight reactive state (~1KB gzipped)
- * 
  * Based on solid.js signal model with auto-tracking via Proxy
  * No dependencies, native browser APIs only
  * 

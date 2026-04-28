@@ -17,8 +17,9 @@
  *   </div>
  * </ux-modal>
  */
+import { LifecycleComponent } from '../lifecycle-component.js';
 
-export class UxModal extends HTMLElement {
+export class UxModal extends LifecycleComponent {
   private backdrop: HTMLDivElement | null = null;
   private dialog: HTMLDialogElement | null = null;
   private focusTrap: FocusTrap | null = null;
@@ -28,7 +29,7 @@ export class UxModal extends HTMLElement {
     this.attachShadow({ mode: 'open' });
   }
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.render();
     this.initializeModal();
   }
@@ -43,9 +44,9 @@ export class UxModal extends HTMLElement {
         <div class="modal-content">
           <div class="modal-header">
             <slot name="header">
-              <h2>Dialog</h2>
             </slot>
-            <button class="modal-close-btn" type="button" aria-label="Close">✕</button>
+            <button class="modal-close-btn" type="button" aria-label="modal.close.label">
+            <slot name="close-button"></slot></button>
           </div>
           <div class="modal-body">
             <slot name="body"></slot>
@@ -151,7 +152,7 @@ export class UxModal extends HTMLElement {
       const closeOnBackdrop = this.getAttribute('close-on-backdrop') !== 'false';
       
       if (closeOnBackdrop) {
-        backdrop.addEventListener('click', () => {
+        this.listen(backdrop, 'click', () => {
           this.closeModal();
         });
       }
@@ -161,7 +162,7 @@ export class UxModal extends HTMLElement {
   private setupCloseButton() {
     const closeBtn = this.shadowRoot?.querySelector('.modal-close-btn') as HTMLButtonElement;
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.closeModal());
+      this.listen(closeBtn, 'click', () => this.closeModal());
     }
   }
 
@@ -171,9 +172,10 @@ export class UxModal extends HTMLElement {
   private setupKeyboardHandling() {
     if (!this.dialog) return;
 
-    this.dialog.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
+    this.listen(this.dialog, 'keydown', (e: Event) => {
+      const keyEvent = e as KeyboardEvent;
+      if (keyEvent.key === 'Escape') {
+        keyEvent.preventDefault();
         this.closeModal();
       }
     });
@@ -342,12 +344,7 @@ export class UxModal extends HTMLElement {
     `;
   }
 
-  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
-    const base = HTMLElement.prototype as any;
-    if (typeof base.attributeChangedCallback === 'function') {
-      base.attributeChangedCallback.call(this, name, oldVal, newVal);
-    }
-
+  protected onAttributeChanged(name: string, oldVal: string | null, newVal: string | null): void {
     if (name === 'opened') {
       this.syncOpenedAttribute();
     }
@@ -365,6 +362,7 @@ export class UxModal extends HTMLElement {
 class FocusTrap {
   private element: HTMLElement;
   private previouslyFocusedElement: HTMLElement | null = null;
+  private readonly tabKeyHandler = (event: KeyboardEvent) => this.handleTabKey(event);
 
   constructor(element: HTMLElement) {
     this.element = element;
@@ -403,7 +401,7 @@ class FocusTrap {
     }
 
     // Add Tab key handler
-    this.element.addEventListener('keydown', this.handleTabKey.bind(this));
+    this.element.addEventListener('keydown', this.tabKeyHandler);
   }
 
   /**
@@ -416,7 +414,7 @@ class FocusTrap {
     }
     
     // Remove Tab key handler
-    this.element.removeEventListener('keydown', this.handleTabKey.bind(this));
+    this.element.removeEventListener('keydown', this.tabKeyHandler);
   }
 
   /**

@@ -1203,15 +1203,12 @@ ${Object.entries(strings)
     const templateDir = this.findTemplateDir();
 
     const hintsPath = path.join(templateDir, section, 'HINTS.md');
-    const legacySpecPath = path.join(templateDir, section, 'SPEC.md');
-    const hintFilePath = fs.existsSync(hintsPath)
-      ? hintsPath
-      : legacySpecPath;
-    if (!fs.existsSync(hintFilePath)) {
+    const hintFound = fs.existsSync(hintsPath);
+    if (!hintFound) {
       throw new Error(`Hints not found for section: ${section}`);
     }
 
-    const content = fs.readFileSync(hintFilePath, 'utf-8');
+    const content = fs.readFileSync(hintsPath, 'utf-8');
     return {
       section,
       content,

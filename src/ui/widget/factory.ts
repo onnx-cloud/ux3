@@ -213,11 +213,6 @@ export class WidgetFactory {
     return [...new Set([...registered, ...lazy])];
   }
 
-  // Backwards-compatible alias expected by tests
-  listWidgets(): string[] {
-    return this.list();
-  }
-
   /**
    * Clear cache (useful in tests or for memory management)
    * If a name is provided, clear only that widget from cache and loaders
@@ -236,10 +231,4 @@ export class WidgetFactory {
     }
   }
 
-  /**
-   * Clear a specific widget from cache (legacy API)
-   */
-  clearWidget(name: string): void {
-    this.clear(name);
-  }
 }

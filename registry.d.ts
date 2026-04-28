@@ -15,9 +15,9 @@
  * fsm?.subscribe((state) => {});
  * ```
  */
-import { StateMachine } from './state-machine.ts';
-import type { StateEvent } from './types.js';
-import { ServiceCache } from '../core/service-cache.ts';
+import { StateMachine } from './src/fsm/state-machine.ts';
+import type { StateEvent } from './src/fsm/types.js';
+import { ServiceCache } from './src/core/service-cache.ts';
 export interface FSMRegistryConfig {
     namespace: string;
     fsm: StateMachine<any>;

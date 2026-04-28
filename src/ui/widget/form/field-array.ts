@@ -12,12 +12,14 @@
  *   </template>
  * </ux-field-array>
  */
+import { LifecycleComponent } from '../../lifecycle-component.js';
 
-export class UxFieldArray extends HTMLElement {
+export class UxFieldArray extends LifecycleComponent {
   private items: HTMLElement[] = [];
   private template: HTMLTemplateElement | null = null;
+  private readonly itemRemoveListeners = new WeakMap<HTMLElement, () => void>();
 
-  connectedCallback() {
+  protected onConnected(): void {
     this.template = this.querySelector('template[slot="item"]');
     if (!this.template) {
       console.warn('ux-field-array requires a template with slot="item"');
@@ -49,7 +51,7 @@ export class UxFieldArray extends HTMLElement {
     removeBtn.type = 'button';
     removeBtn.className = 'field-array-remove';
     removeBtn.textContent = 'Remove';
-    removeBtn.addEventListener('click', () => {
+    const removeItemListener = this.listen(removeBtn, 'click', () => {
       this.removeItem(wrapper);
     });
 
@@ -60,6 +62,7 @@ export class UxFieldArray extends HTMLElement {
 
     this.appendChild(wrapper);
     this.items.push(wrapper);
+  this.itemRemoveListeners.set(wrapper, removeItemListener);
 
     // Dispatch event
     this.dispatchEvent(
@@ -77,6 +80,12 @@ export class UxFieldArray extends HTMLElement {
   removeItem(element: HTMLElement) {
     const index = this.items.indexOf(element);
     if (index > -1) {
+      const cleanup = this.itemRemoveListeners.get(element);
+      if (cleanup) {
+        cleanup();
+        this.itemRemoveListeners.delete(element);
+      }
+
       element.remove();
       this.items.splice(index, 1);
 

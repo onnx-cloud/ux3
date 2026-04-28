@@ -337,17 +337,17 @@ export const assertions = {
    * Assert FSM is in a valid state from its config
    */
   isValidState(fsm: StateMachine<any>, config: any): boolean {
-    const currentState = fsm.getState();
+    const state = fsm.getState();
     const validStates = Object.keys(config.states || {});
-    return validStates.includes(currentState);
+    return validStates.includes(state);
   },
 
   /**
    * Assert event can be sent from current state
    */
   canSendEvent(fsm: StateMachine<any>, event: string, config: any): boolean {
-    const currentState = fsm.getState();
-    const stateConfig = config.states?.[currentState];
+    const state = fsm.getState();
+    const stateConfig = config.states?.[state];
 
     if (!stateConfig) return false;
     if (typeof stateConfig === 'string') return false; // No transitions in short form

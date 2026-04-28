@@ -6,6 +6,7 @@
  * Richer widgets like ux-button and ux-modal remain sourced from their
  * dedicated implementations and are not overridden.
  */
+import { LifecycleComponent } from '../lifecycle-component.js';
 
 type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'lang-switcher' | 'theme-toggle' | 'network-status';
 
@@ -103,12 +104,12 @@ const PRIMITIVES: PrimitiveDefinition[] = [
 
 const DEF_BY_TAG = new Map(PRIMITIVES.map((def) => [def.tag, def]));
 
-class UxPrimitiveBase extends HTMLElement {
+class UxPrimitiveBase extends LifecycleComponent {
   protected get definition(): PrimitiveDefinition | undefined {
     return DEF_BY_TAG.get(this.localName);
   }
 
-  connectedCallback(): void {
+  protected onConnected(): void {
     this.ensureRole();
     this.ensureTabIndex();
     emitReadyOnce(this);
@@ -137,8 +138,8 @@ class UxPrimitiveBase extends HTMLElement {
 class UxPrimitiveRegion extends UxPrimitiveBase {}
 
 class UxPrimitiveToggle extends UxPrimitiveBase {
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     const stateAttr = this.getStateAttr();
     if (this.hasAttribute(stateAttr)) {
       this.applyAriaState(true);
@@ -147,7 +148,7 @@ class UxPrimitiveToggle extends UxPrimitiveBase {
     this.addEventListener('keydown', this.onKeyDown);
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     this.removeEventListener('click', this.onToggleActivate);
     this.removeEventListener('keydown', this.onKeyDown);
   }
@@ -190,8 +191,8 @@ class UxPrimitiveValue extends UxPrimitiveBase {
     return ['value'];
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     if (!this.hasAttribute('value')) {
       this.setAttribute('value', '');
     }
@@ -199,11 +200,11 @@ class UxPrimitiveValue extends UxPrimitiveBase {
     this.syncA11yValue(this.getAttribute('value') ?? '');
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     this.removeEventListener('keydown', this.onKeyDown);
   }
 
-  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+  protected onAttributeChanged(name: string, oldValue: string | null, newValue: string | null): void {
     if (name !== 'value' || oldValue === newValue) {
       return;
     }
@@ -246,8 +247,8 @@ class UxPrimitiveInput extends UxPrimitiveBase {
     return ['value', 'placeholder', 'name', 'type', 'disabled'];
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
@@ -255,7 +256,7 @@ class UxPrimitiveInput extends UxPrimitiveBase {
     emitReadyOnce(this);
   }
 
-  attributeChangedCallback(): void {
+  protected onAttributeChanged(): void {
     if (!this.isConnected) {
       return;
     }
@@ -315,8 +316,8 @@ class UxPrimitiveTextarea extends UxPrimitiveBase {
     return ['value', 'placeholder', 'name', 'rows', 'disabled'];
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
@@ -324,7 +325,7 @@ class UxPrimitiveTextarea extends UxPrimitiveBase {
     emitReadyOnce(this);
   }
 
-  attributeChangedCallback(): void {
+  protected onAttributeChanged(): void {
     if (!this.isConnected) {
       return;
     }
@@ -379,7 +380,7 @@ class UxPrimitiveTextarea extends UxPrimitiveBase {
 }
 
 class UxPrimitiveSlider extends UxPrimitiveValue {
-  connectedCallback(): void {
+  protected onConnected(): void {
     if (!this.hasAttribute('min')) {
       this.setAttribute('min', '0');
     }
@@ -389,7 +390,7 @@ class UxPrimitiveSlider extends UxPrimitiveValue {
     if (!this.hasAttribute('value')) {
       this.setAttribute('value', this.getAttribute('min') || '0');
     }
-    super.connectedCallback();
+    super.onConnected();
   }
 
   protected syncA11yValue(value: string): void {
@@ -400,12 +401,12 @@ class UxPrimitiveSlider extends UxPrimitiveValue {
 }
 
 class UxPrimitiveForm extends UxPrimitiveBase {
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     this.addEventListener('submit', this.onSubmit);
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     this.removeEventListener('submit', this.onSubmit);
   }
 
@@ -422,15 +423,15 @@ class UxLangSwitcher extends UxPrimitiveBase {
   private selectEl: HTMLSelectElement | null = null;
   private readonly rtlLanguages = new Set(['ar', 'fa', 'he', 'ur', 'ps', 'sd', 'ug', 'yi']);
 
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
     this.render();
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     this.selectEl?.removeEventListener('change', this.onChange);
   }
 
@@ -545,15 +546,15 @@ class UxLangSwitcher extends UxPrimitiveBase {
 class UxThemeToggle extends UxPrimitiveBase {
   private buttonEl: HTMLButtonElement | null = null;
 
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
     this.render();
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     this.buttonEl?.removeEventListener('click', this.onToggle);
     this.buttonEl?.removeEventListener('keydown', this.onKeyDown);
   }
@@ -637,8 +638,8 @@ class UxThemeToggle extends UxPrimitiveBase {
 }
 
 class UxNetworkStatus extends UxPrimitiveBase {
-  connectedCallback(): void {
-    super.connectedCallback();
+  protected onConnected(): void {
+    super.onConnected();
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
@@ -647,7 +648,7 @@ class UxNetworkStatus extends UxPrimitiveBase {
     window.addEventListener('offline', this.onConnectivityChange);
   }
 
-  disconnectedCallback(): void {
+  protected onDisconnected(): void {
     window.removeEventListener('online', this.onConnectivityChange);
     window.removeEventListener('offline', this.onConnectivityChange);
   }

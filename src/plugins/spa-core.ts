@@ -1,6 +1,7 @@
 import type { Plugin } from "../plugin/registry";
 import { AppLifecyclePhase } from "../core/lifecycle";
 import { StructuredLogger } from "../logger/logger";
+import { version } from '../../package.json'
 
 // simple service to recover state and reconnect services
 export class StateRecoveryService {
@@ -22,8 +23,8 @@ export class ServiceReconnectService {
 }
 
 export const SpaCore: Plugin = {
-  name: 'spa-core',
-  version: '1.0.0',
+  name: 'ux3.service.core',
+  version: version,
   install(app) {
     // attach logger namespace for core
     if (!app.logger) {

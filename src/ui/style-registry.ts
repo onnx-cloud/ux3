@@ -133,11 +133,11 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
         el2.className = merged.join(' ');
       } else {
         // P3-2: warn on unknown key so developers notice missing style registrations
-        console.warn(`[UX3 style-registry] unknown ux-style key: '${key}'`);
+        console.warn(`[Ux3] unknown ux-style key: '${key}'`);
       }
     });
   } catch (e) {
-    console.warn('[UX3 style-registry] applyStyles failed', e);
+    console.warn('[Ux3] applyStyles failed', e);
   }
 }
 
@@ -152,20 +152,14 @@ let domListenerAdded = false;
  */
 export function initStyleRegistry(): void {
   if (!patched) {
-    // Keep a direct reference; .bind() would lock `this` to the prototype, breaking
-    // the subsequent orig.call(instance) invocation.
-    // capture the original method with explicit `this` signature so eslint
-    // doesn't warn about unbound methods
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const orig: (this: ViewComponent & HTMLElement) => void = (ViewComponent.prototype as any).mountLayout;
-
     (ViewComponent.prototype as any).mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
       try {
         if (this.shadowRoot) applyStyles(this.shadowRoot);
         applyStyles(this);
       } catch (e) {
-        console.warn('[UX3 style-registry] view style injection failed', e);
+        console.warn('[Ux3] view style injection failed', e);
       }
     };
     patched = true;

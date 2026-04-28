@@ -23,7 +23,7 @@ function getRetryDelay(baseDelay: number | ((attempt: number) => number), attemp
  * StateMachine - Core FSM engine
  */
 export class StateMachine<T extends Record<string, any>> {
-  private currentState: string;
+  private state: string;
   private context: T;
   private config: MachineConfig<T>;
   private listeners: Set<Listener<T>> = new Set();
@@ -34,13 +34,13 @@ export class StateMachine<T extends Record<string, any>> {
 
   constructor(config: MachineConfig<T>) {
     this.config = config;
-    this.currentState = config.initial;
+    this.state = config.initial;
     this.context = typeof config.context === 'function' 
       ? config.context() 
       : { ...(config.context || {} as T) };
 
     // Call entry actions for initial state
-    this.executeStateActions('entry', this.currentState);
+    this.executeStateActions('entry', this.state);
   }
 
   /**
@@ -78,7 +78,7 @@ export class StateMachine<T extends Record<string, any>> {
    * Get current state
    */
   getState(): string {
-    return this.currentState;
+    return this.state;
   }
 
   /**
@@ -95,23 +95,23 @@ export class StateMachine<T extends Record<string, any>> {
   private transitionTo(targetState: string): void {
     if (!this.config.states[targetState]) {
       const error = new Error(`FSM transition failed: target state "${targetState}" not found`);
-      defaultLogger.error('fsm.transition.failed', error, { targetState, currentState: this.currentState });
+      defaultLogger.error('fsm.transition.failed', error, { targetState, state: this.state });
       throw error;
     }
 
-    const prevState = this.currentState;
+    const prevState = this.state;
 
     // Execute exit actions
     this.executeStateActions('exit', prevState);
 
     // Update state
-    this.currentState = targetState;
+    this.state = targetState;
 
     // Execute entry actions
-    this.executeStateActions('entry', this.currentState);
+    this.executeStateActions('entry', this.state);
 
     // Start invoke for new state (if configured)
-    this.handleStateInvoke(this.currentState);
+    this.handleStateInvoke(this.state);
 
     // Notify listeners
     this.notifyListeners();
@@ -149,7 +149,7 @@ export class StateMachine<T extends Record<string, any>> {
    * Handle single event
    */
   private handleEvent(event: StateEvent): void {
-    const stateConfig = this.config.states[this.currentState];
+    const stateConfig = this.config.states[this.state];
     if (!stateConfig || !stateConfig.on) {
       return;
     }
@@ -182,7 +182,7 @@ export class StateMachine<T extends Record<string, any>> {
               .catch((error) => {
                 const ex = error instanceof Error ? error : new Error(String(error));
                 defaultLogger.error('fsm.action.async.error', ex, {
-                  state: this.currentState,
+                  state: this.state,
                   event: event.type,
                 });
                 this.send({ type: 'ERROR', payload: { error: ex } });
@@ -194,7 +194,7 @@ export class StateMachine<T extends Record<string, any>> {
         } catch (e) {
           const ex = e instanceof Error ? e : new Error(String(e));
           defaultLogger.error('fsm.action.error', ex, {
-            state: this.currentState,
+            state: this.state,
             event: event.type,
           });
           this.send({ type: 'ERROR', payload: { error: ex } });
@@ -208,24 +208,24 @@ export class StateMachine<T extends Record<string, any>> {
         const error = new Error(`FSM transition failed: target state "${transitionConfig.target}" not found`);
         defaultLogger.error('fsm.transition.missingTarget', error, {
           targetState: transitionConfig.target,
-          currentState: this.currentState,
+          state: this.state,
         });
         throw error;
       }
 
-      const prevState = this.currentState;
+      const prevState = this.state;
 
       // Execute exit actions
       this.executeStateActions('exit', prevState);
 
       // Update state
-      this.currentState = transitionConfig.target;
+      this.state = transitionConfig.target;
 
       // Execute entry actions
-      this.executeStateActions('entry', this.currentState);
+      this.executeStateActions('entry', this.state);
 
       // Start invoke for new state (if configured)
-      this.handleStateInvoke(this.currentState);
+      this.handleStateInvoke(this.state);
 
       // Notify listeners
       this.notifyListeners();
@@ -369,20 +369,20 @@ export class StateMachine<T extends Record<string, any>> {
 
     // Transition to errorTarget if configured
     if (stateConfig.errorTarget) {
-      const prevState = this.currentState;
+      const prevState = this.state;
       
       // Ensure we only transition if still in the same state
-      if (this.currentState === stateName) {
+      if (this.state === stateName) {
         this.setState({ error: errorContext } as unknown as Partial<T>);
         
         // Execute exit actions
         this.executeStateActions('exit', prevState);
 
         // Update state
-        this.currentState = stateConfig.errorTarget;
+        this.state = stateConfig.errorTarget;
 
         // Execute entry actions
-        this.executeStateActions('entry', this.currentState);
+        this.executeStateActions('entry', this.state);
 
         // Notify listeners
         this.notifyListeners();
@@ -457,7 +457,7 @@ export class StateMachine<T extends Record<string, any>> {
    * Notify all listeners
    */
   private notifyListeners(): void {
-    this.listeners.forEach((listener) => listener(this.currentState, this.context));
+    this.listeners.forEach((listener) => listener(this.state, this.context));
   }
 
   /**
@@ -468,7 +468,7 @@ export class StateMachine<T extends Record<string, any>> {
    */
   matches(pattern: string | string[]): boolean {
     const patterns = Array.isArray(pattern) ? pattern : [pattern];
-    return patterns.includes(this.currentState);
+    return patterns.includes(this.state);
   }
 
   /**
@@ -477,7 +477,7 @@ export class StateMachine<T extends Record<string, any>> {
    * @returns true if the event has a handler in current state
    */
   can(event: StateEvent | string): boolean {
-    const stateConfig = this.config.states[this.currentState];
+    const stateConfig = this.config.states[this.state];
     if (!stateConfig || !stateConfig.on) {
       return false;
     }
@@ -509,7 +509,7 @@ export class StateMachine<T extends Record<string, any>> {
    * Get state configuration
    */
   getStateConfig(stateName?: string): any {
-    const state = stateName || this.currentState;
+    const state = stateName || this.state;
     return this.config.states[state] || {};
   }
 
@@ -521,12 +521,12 @@ export class StateMachine<T extends Record<string, any>> {
     this.processing = false;
 
     // Execute exit actions for current state
-    this.executeStateActions('exit', this.currentState);
+    this.executeStateActions('exit', this.state);
 
-    this.currentState = this.config.initial;
+    this.state = this.config.initial;
 
     // Execute entry actions for initial state
-    this.executeStateActions('entry', this.currentState);
+    this.executeStateActions('entry', this.state);
 
     // Notify listeners
     this.notifyListeners();

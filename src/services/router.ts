@@ -3,7 +3,7 @@
  * Implements the navigation model from NAV.md
  */
 
-import type { StateMachine } from '../fsm/state-machine.ts';
+import type { StateMachine } from '../fsm/state-machine.js';
 
 export interface RouteConfig {
   path: string;
@@ -17,10 +17,10 @@ export interface RouteMatch {
 }
 
 export interface NavRoute {
-  path: string;           // e.g., "/market"
-  view: string;          // FSM name, e.g., "market"
+  path: string;           // 
+  view: string;          // FSM name
   label?: string;        // i18n key or label, e.g., "header.market"
-  params?: string[];     // e.g., ["exchange"] for "/market/:exchange"
+  params?: string[];     // query params in the path, e.g., ["id"] for "/market/:id"
 }
 
 export interface NavConfig {

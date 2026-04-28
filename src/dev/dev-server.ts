@@ -5,7 +5,7 @@ import fsExtra from 'fs-extra';
 import YAML from 'yaml';
 import { processAssets } from './asset-processor';
 import { renderDashboard } from './dashboard';
-import { HandlebarsLite } from '../hbs/index.js';
+import { HandlebarsLite } from '../logger/hbs/index.js';
 import { MCPHTTPHandler } from '../mcp/http-handler.js';
 
 export interface DevServerOptions {
