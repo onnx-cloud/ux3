@@ -15,20 +15,20 @@ Views are the top-level UI containers in UX3. Each view is an FSM (state machine
 
 ## View YAML Structure
 
-Views are declared in `ux/view/*.yaml`:
+Widgets are declared in `ux/widget/*.yaml`:
 
 ```yaml
-# ux/view/login.yaml
+# ux/widget/login.yaml
 initial: idle
 
 states:
   idle:
-    template: 'view/login/idle.html'
+    template: 'widget/login/idle.html'
     on:
       SUBMIT: submitting
   
   submitting:
-    template: 'view/login/submitting.html'
+    template: 'widget/login/submitting.html'
     invoke:
       src: submitLogin
       input: { email: 'this.email', password: 'this.password' }
@@ -37,12 +37,12 @@ states:
       ERROR: error
   
   success:
-    template: 'view/login/success.html'
+    template: 'widget/login/success.html'
     on:
       CONTINUE: idle
   
   error:
-    template: 'view/login/error.html'
+    template: 'widget/login/error.html'
     on:
       RETRY: idle
 ```
@@ -67,7 +67,7 @@ functions matching the names used here.  See the logic patterns guide for detail
 Templates are HTML files with UX3 directives:
 
 ```html
-<!-- ux/view/login/idle.html -->
+<!-- ux/widget/login/idle.html -->
 <form ux-event="SUBMIT">
   <fieldset>
     <label>
@@ -412,5 +412,5 @@ test('login flow', async ({ page }) => {
 - Compiler: [src/build/view-compiler.ts](src/build/view-compiler.ts)
 - ViewComponent: [src/ui/view-component.ts](src/ui/view-component.ts)
 - FSM Core: [docs/fsm-core.md](docs/fsm-core.md)
-- Example: [examples/iam/ux/view/](examples/iam/ux/view/)
+- Example: [examples/iam/ux/widget/](examples/iam/ux/widget/)
 - Validator: [src/build/validator.ts](src/build/validator.ts)

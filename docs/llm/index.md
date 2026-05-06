@@ -9,7 +9,7 @@ This document gives terse prompts and patterns for language models to assist wit
 
 ## Common LLM Tasks
 1. **Understand a new view YAML**:
-   - Look in `src/ux/view`, read corresponding HTML.
+   - Look in `src/ux/widget`, read corresponding HTML.
    - Check schema in `schema/view.schema.json`.
 2. **Add or modify config**:
    - Describe: "create new view/state" or "update tokens".

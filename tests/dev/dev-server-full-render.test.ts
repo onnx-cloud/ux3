@@ -38,7 +38,7 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), viewHtml);
 
     // index.yaml referencing the view and declaring the layout
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server.ts');
     const port = 3690;

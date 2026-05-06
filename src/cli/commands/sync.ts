@@ -63,20 +63,20 @@ function reportWritten(written: string[], cwd: string, dryRun: boolean, label: s
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve a template path reference (from a view YAML) to an absolute file path.
- * Supports:  view/foo/bar.html  →  <root>/ux/view/foo/bar.html
- *            ux/view/foo/bar.html  →  <root>/ux/view/foo/bar.html
- *            bar.html (bare)      →  <root>/ux/view/<viewName>/bar.html
+ * Resolve a template path reference (from a widget YAML) to an absolute file path.
+ * Supports:  widget/foo/bar.html  →  <root>/ux/widget/foo/bar.html
+ *            ux/widget/foo/bar.html  →  <root>/ux/widget/foo/bar.html
+ *            bar.html (bare)      →  <root>/ux/widget/<widgetName>/bar.html
  */
 function resolveTemplatePath(templateRef: string, projectRoot: string, viewName: string): string {
-  if (templateRef.startsWith('ux/view/') || templateRef.startsWith('ux\\view\\')) {
+  if (templateRef.startsWith('ux/widget/') || templateRef.startsWith('ux\\widget\\')) {
     return path.join(projectRoot, templateRef);
   }
-  if (templateRef.startsWith('view/') || templateRef.startsWith('view\\')) {
+  if (templateRef.startsWith('widget/') || templateRef.startsWith('widget\\')) {
     return path.join(projectRoot, 'ux', templateRef);
   }
-  // bare filename — place next to other templates for this view
-  return path.join(projectRoot, 'ux', 'view', viewName, templateRef);
+  // bare filename — place next to other templates for this widget
+  return path.join(projectRoot, 'ux', 'widget', viewName, templateRef);
 }
 
 /** Return all template refs from a parsed view YAML (flat or nested states). */
@@ -107,7 +107,7 @@ function stubHtml(viewName: string, stateName: string): string {
 
 async function syncView(projectRoot: string, options: SyncOptions): Promise<string[]> {
   const written: string[] = [];
-  const viewsDir = path.join(projectRoot, 'ux', 'view');
+  const viewsDir = path.join(projectRoot, 'ux', 'widget');
   const yamlFiles = walkFiles(viewsDir, ['.yaml', '.yml']);
 
   for (const yamlFile of yamlFiles) {

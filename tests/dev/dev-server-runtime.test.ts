@@ -22,7 +22,7 @@ describe('DevServer runtime asset injection', () => {
     // minimal index.yaml
     await fs.writeFile(
       path.join(temp, 'ux', 'view', 'index.yaml'),
-      `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\n`
+      `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\n`
     );
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="app">HELLO</div>`);

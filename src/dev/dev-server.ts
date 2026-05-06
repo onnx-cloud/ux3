@@ -115,6 +115,55 @@ function buildNavConfig(
   };
 }
 
+function resolveLocaleI18n(
+  i18nConfig: Record<string, any> = {},
+  preferredLocale: string = 'en'
+): Record<string, any> {
+  if (!i18nConfig || typeof i18nConfig !== 'object') {
+    return {};
+  }
+
+  const preferred = i18nConfig[preferredLocale];
+  if (preferred && typeof preferred === 'object' && !Array.isArray(preferred)) {
+    return preferred as Record<string, any>;
+  }
+
+  const fallbackEn = i18nConfig.en;
+  if (fallbackEn && typeof fallbackEn === 'object' && !Array.isArray(fallbackEn)) {
+    return fallbackEn as Record<string, any>;
+  }
+
+  const firstLocaleObject = Object.values(i18nConfig).find(
+    (entry) => entry && typeof entry === 'object' && !Array.isArray(entry)
+  );
+
+  // If no locale map shape is detected, assume i18nConfig is already a locale payload.
+  return (firstLocaleObject as Record<string, any> | undefined) || i18nConfig;
+}
+
+function requireI18nSiteMetadata(i18n: Record<string, any>): void {
+  const title = i18n?.site?.title;
+  const description = i18n?.site?.description;
+
+  if (typeof title !== 'string' || title.trim().length === 0) {
+    throw new Error('Missing required i18n key: site.title');
+  }
+
+  if (typeof description !== 'string' || description.trim().length === 0) {
+    throw new Error('Missing required i18n key: site.description');
+  }
+}
+
+function getRuntimeI18n(
+  manifest: ServerManifest | null,
+  preferredLocale: string = 'en'
+): Record<string, any> {
+  const i18nConfig = ((manifest?.config as any)?.i18n || {}) as Record<string, any>;
+  const i18n = resolveLocaleI18n(i18nConfig, preferredLocale);
+  requireI18nSiteMetadata(i18n);
+  return i18n;
+}
+
 async function getShellLayout(projectDir: string, view: any): Promise<{ chromeWrapperHtml: string, viewLayoutHtml: string }> {
   const viewLayoutName = (view && view.layout) ? String(view.layout) : '_';
   
@@ -282,9 +331,9 @@ export class DevServer {
         }
 
         // Serve application front page
-        // Priority: project ux3.yaml -> ux/view/index.yaml -> public/index.html -> fallback message
+        // Priority: project ux3.yaml -> ux/widget/index.yaml -> public/index.html -> fallback message
         if (pathname === '/') {
-          const i18n = (this.manifest?.config as any)?.i18n || {};
+          const i18n = getRuntimeI18n(this.manifest);
           
           // First, try loading root ux3.yaml to get the most accurate site settings for front page
           
@@ -292,9 +341,9 @@ export class DevServer {
           const site = await getSiteConfig(this.projectDir, this.manifest);
 
 
-          // First, try fallback: ux/view/index.yaml (if any)
+          // First, try fallback: ux/widget/index.yaml (if any)
           try {
-            const defaultIndexPath = path.join(this.projectDir, 'ux', 'view', 'index.yaml');
+            const defaultIndexPath = path.join(this.projectDir, 'ux', 'widget', 'index.yaml');
             if (fsExtra.existsSync(defaultIndexPath)) {
               const viewYaml = await fsp.readFile(defaultIndexPath, 'utf-8');
               let view: any = {};
@@ -312,12 +361,7 @@ export class DevServer {
 
               // Prefer compiled templates from in-memory manifest when available, otherwise read source file
               try {
-                // Support both 'view/home/index.html' and 'home/index.html' formats
-                let m = String(templateRel).match(/^view\/([^\/]+)(?:\/(.*))?$/);
-                if (!m) {
-                  // Try without the view/ prefix
-                  m = String(templateRel).match(/^([^\/]+)(?:\/(.*))?$/);
-                }
+                const m = String(templateRel).match(/^widget\/([^\/]+)(?:\/(.*))?$/);
                 const viewName = m ? m[1] : null;
                 const stateName = m && m[2] ? m[2].replace(/\.html$/, '') : undefined;
 
@@ -359,13 +403,13 @@ export class DevServer {
 
               // If still missing, instruct developer to compile (fail-fast, don't guess)
               if (!templateHtml) {
-                templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
+                templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing widget template</h2><p>The index widget references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate widget artifacts, then refresh.</p></div>`;
               }
               // Build nav config
               const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
               const nav = buildNavConfig(pathname, routes, i18n);
               
-              // Final fallback to project-specific index view logic
+              // Final fallback to project-specific index widget logic
               const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
 
               const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
@@ -391,11 +435,11 @@ export class DevServer {
               let uxConfig: any = {};
               try { uxConfig = YAML.parse(ux3Content); } catch { /* ignore */ }
 
-              const i18n = (this.manifest?.config as any)?.i18n || {};
+              const i18n = getRuntimeI18n(this.manifest);
               const site = await getSiteConfig(this.projectDir, this.manifest);
 
 
-              const indexSpec: string = uxConfig.index || 'view/index.yaml';
+              const indexSpec: string = uxConfig.index || 'widget/index.yaml';
               const indexPath = path.join(this.projectDir, 'ux', indexSpec.replace(/^\//, ''));
 
               if (fsExtra.existsSync(indexPath)) {
@@ -416,7 +460,7 @@ export class DevServer {
 
                 // Prefer manifest template first (compiled output), otherwise read source file
                 try {
-                  const m = String(templateRel).match(/^view\/([^\/]+)(?:\/(.*))?$/);
+                  const m = String(templateRel).match(/^widget\/([^\/]+)(?:\/(.*))?$/);
                   let viewName: string | null = null;
                   let stateName: string | null = null;
                   if (m) {
@@ -451,10 +495,10 @@ export class DevServer {
 
                 // If still missing, instruct developer to run compilation (fail-fast, don't guess)
                 if (!templateHtml) {
-                  const msg = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
+                  const msg = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing widget template</h2><p>The index widget references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate widget artifacts, then refresh.</p></div>`;
                   templateHtml = msg;
                   // Note: do not throw or attempt additional fs guessing — stay within architecture contract
-                  console.warn(`[DevServer] Missing template: ${templateRel}. compile generated views.`);
+                  console.warn(`[DevServer] Missing template: ${templateRel}. compile generated widgets.`);
                 }
 
                 // Render the template into layout, resolving layoutName/title similar to other index path
@@ -520,13 +564,13 @@ export class DevServer {
           const match = routes.find(r => this.pathMatches(r.path, pathname));
           if (match) {
             const viewName = match.view;
-            const viewYamlPath = path.join(this.projectDir, 'ux', 'view', `${viewName}.yaml`);
+            const viewYamlPath = path.join(this.projectDir, 'ux', 'widget', `${viewName}.yaml`);
             if (fsExtra.existsSync(viewYamlPath)) {
               const viewYaml = await fsp.readFile(viewYamlPath, 'utf-8');
               let view: any = {};
               try { view = YAML.parse(viewYaml); } catch {}
 
-              const i18n = (this.manifest?.config as any)?.i18n || {};
+              const i18n = getRuntimeI18n(this.manifest);
               const site = await getSiteConfig(this.projectDir, this.manifest);
 
               // Resolve template path from top-level field OR from the initial/first state
@@ -557,8 +601,8 @@ export class DevServer {
                   // Try multiple resolution paths for bare filenames
                   const tplCandidates = [
                     path.join(this.projectDir, 'ux', templateRel.replace(/^\//,'')),
-                    path.join(this.projectDir, 'ux', 'view', templateRel.replace(/^\//,'')),
-                    path.join(this.projectDir, 'ux', 'view', viewName, templateRel.replace(/^\//,'')),
+                    path.join(this.projectDir, 'ux', 'widget', templateRel.replace(/^\//,'')),
+                    path.join(this.projectDir, 'ux', 'widget', viewName, templateRel.replace(/^\//,'')),
                   ];
                   for (const tp of tplCandidates) {
                     if (fsExtra.existsSync(tp)) {

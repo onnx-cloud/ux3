@@ -14,7 +14,7 @@ describe('DevServer manifest preference', () => {
     // create index.yaml referencing view/home/index.html
     await fs.writeFile(
       path.join(temp, 'ux', 'view', 'index.yaml'),
-      `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\n`
+      `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\n`
     );
 
     // create source template that should be *ignored* when manifest exists
@@ -48,7 +48,7 @@ describe('DevServer manifest preference', () => {
     // create view yaml and source template
     await fs.writeFile(
       path.join(temp, 'ux', 'view', 'home.yaml'),
-      `template: 'view/home/index.html'\n`
+      `template: 'widget/home/index.html'\n`
     );
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">FS</div>`);

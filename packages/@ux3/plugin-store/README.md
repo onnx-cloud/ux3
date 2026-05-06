@@ -41,7 +41,7 @@ services:
 ```yaml
 states:
   loading:
-    template: 'view/loading.html'
+    template: 'widget/loading.html'
     invoke:
       service: store.local
       method: find
@@ -321,7 +321,7 @@ await store.connect();
 ### Loading Data on View Entry
 
 ```yaml
-# ux/view/tasks.yaml
+# ux/widget/tasks.yaml
 initial: loading
 
 context:
@@ -330,7 +330,7 @@ context:
 
 states:
   loading:
-    template: 'view/tasks/loading.html'
+    template: 'widget/tasks/loading.html'
     invoke:
       service: store.local
       method: find
@@ -343,14 +343,14 @@ states:
       ERROR: error
 
   ready:
-    template: 'view/tasks/list.html'
+    template: 'widget/tasks/list.html'
     on:
       CREATE: creating
       UPDATE: { target: updating, actions: [selectTask] }
       DELETE: deleting
 
   creating:
-    template: 'view/tasks/form.html'
+    template: 'widget/tasks/form.html'
     on:
       SUBMIT: { target: saveCreate }
       CANCEL: ready

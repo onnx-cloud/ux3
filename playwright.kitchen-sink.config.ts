@@ -3,13 +3,13 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: ['**/kitchen-sink.spec.ts'],
-  outputDir: 'playwright-report/kitchen-sink',
+  outputDir: 'test-results/playwright/kitchen-sink/artifacts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: [
-    ['html', { outputFolder: 'playwright-report-html/kitchen-sink' }],
+    ['html', { outputFolder: 'test-results/playwright/kitchen-sink/html' }],
     ['list'],
   ],
   use: {

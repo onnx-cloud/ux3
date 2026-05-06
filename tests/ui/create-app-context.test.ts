@@ -26,10 +26,10 @@ describe('createAppContext development logging', () => {
     expect(typeof (window as any).__ux3Telemetry).toBe('function');
   });
 
-  it('should expose inspector on window when enabled', async () => {
+  it('does not expose legacy inspector on window when enabled', async () => {
     const cfg = { ...baseConfig, development: { inspector: true } };
-    const ctx = await createAppContext(cfg as any);
-    expect((window as any).__ux3Inspector).toBe(ctx);
+    await createAppContext(cfg as any);
+    expect((window as any).__ux3Inspector).toBeUndefined();
   });
 
   it('should expose browser context on app context', async () => {
@@ -40,45 +40,28 @@ describe('createAppContext development logging', () => {
     expect((ctx.ui as any).browser).toBeTruthy();
   });
 
-  it('should mount a <ux3-inspector> widget to the body', async () => {
+  it('does not mount the legacy <ux3-inspector> widget to the body', async () => {
     const cfg = { ...baseConfig, development: { inspector: true } };
     await createAppContext(cfg as any);
-    const el = document.body.querySelector('ux3-inspector');
-    expect(el).toBeInstanceOf(HTMLElement);
-    // shadow DOM with shell structure
-    const header = el!.shadowRoot?.querySelector('#header');
-    expect(header).toBeTruthy();
-    // at least three window-control buttons (minimize, maximize, iconify)
-    const buttons = el!.shadowRoot?.querySelectorAll('button.hbtn');
-    expect(buttons!.length).toBeGreaterThanOrEqual(3);
-    // tab bar with 10 tabs
-    const tabs = el!.shadowRoot?.querySelectorAll('.tab');
-    expect(tabs!.length).toBe(10);
-    // iconify button sets data-wstate to iconified (widget stays in DOM)
-    const iconifyBtn = Array.from(buttons!).find(b => (b as HTMLButtonElement).title === 'Iconify') as HTMLButtonElement;
-    iconifyBtn?.dispatchEvent(new MouseEvent('click'));
-    expect(el!.getAttribute('data-wstate')).toBe('iconified');
-    // widget remains in DOM after iconify
-    expect(document.body.querySelector('ux3-inspector')).toBeInstanceOf(HTMLElement);
+    expect(document.body.querySelector('ux3-inspector')).toBeNull();
   });
 
-  it('inspector widget should update when machine state changes', async () => {
+  it('auto-installs dev tools plugin in development mode', async () => {
+    const cfg = { ...baseConfig, development: { devTools: true } };
+    const ctx: any = await createAppContext(cfg as any);
+    expect(ctx.services.devTools).toBeTruthy();
+    expect(ctx.utils.devTools).toBeTruthy();
+    expect(typeof ctx.utils.devTools.getSnapshot).toBe('function');
+  });
+
+  it('tracks installed plugins through the dev tools service', async () => {
     const cfg: any = {
       ...baseConfig,
-      machines: {
-        test: { id: 'test', initial: 'a', states: { a: { on: { NEXT: 'b' } }, b: {} } },
-      },
       development: { inspector: true },
     };
     const ctx = await createAppContext(cfg);
-    const widget = document.body.querySelector('ux3-inspector') as HTMLElement;
-    expect(widget).toBeTruthy();
-    // widget mounts with correct initial window state attribute
-    expect(widget.getAttribute('data-wstate')).toBeTruthy();
-    // machines are accessible and transitions work
-    ctx.machines['test'].send('NEXT');
-    await new Promise((r) => setTimeout(r, 0));
-    expect(ctx.machines['test'].getState()).toBe('b');
+    const snapshot = (ctx as any).utils.devTools.getSnapshot();
+    expect(snapshot.plugins.some((plugin: any) => plugin.name === '@ux3/plugin-dev-tools')).toBe(true);
   });
 });
 

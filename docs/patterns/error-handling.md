@@ -83,7 +83,7 @@ export const userService = {
 };
 ```
 
-**View FSM** (in `ux/view/user-profile/profile.yaml`):
+**Widget FSM** (in `ux/widget/user-profile/profile.yaml`):
 ```yaml
 name: profile
 initial: idle
@@ -297,7 +297,7 @@ states:
 
 Form validation produces multiple errors that should guide user correction:
 
-**View FSM** (in `ux/view/auth/register.yaml`):
+**Widget FSM** (in `ux/widget/auth/register.yaml`):
 ```yaml
 name: register
 initial: idle
@@ -513,7 +513,7 @@ states:
       RETRY: loading
 ```
 
-**Child View FSM** (in `ux/view/user-list.yaml`):
+**Child Widget FSM** (in `ux/widget/user-list.yaml`):
 ```yaml
 name: userList
 initial: idle

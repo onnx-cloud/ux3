@@ -73,7 +73,7 @@ npx ux3 check --logic
 You can also generate manifests as part of compilation using `--logic-manifest`:
 
 ```bash
-npx ux3 compile --views ux/view --output generated --logic-manifest
+npx ux3 compile --views ux/widget --output generated --logic-manifest
 ```
 
 ## Migration notes

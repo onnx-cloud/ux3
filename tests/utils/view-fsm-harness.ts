@@ -132,7 +132,7 @@ export function buildStateMachine(
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve a template reference (e.g. `'view/home/index.html'`) to an absolute
+ * Resolve a template reference (e.g. `'widget/home/index.html'`) to an absolute
  * path under the project `ux/` directory.
  */
 export function resolveTemplatePath(uxDir: string, templateRef: string): string {

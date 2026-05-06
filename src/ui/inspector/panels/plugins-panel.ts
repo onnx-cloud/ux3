@@ -1,28 +1,31 @@
 /**
- * Plugins Panel — driven from window.__pluginInspector registry.
+ * Plugins Panel — driven from the plugin-owned devTools snapshot.
  */
 
-declare global {
-  interface Window {
-    __pluginInspector?: Array<{
-      name: string;
-      version?: string;
-      hooks?: string[];
-      status?: string;
-    }>;
-  }
-}
+type DevToolsBridgePlugin = {
+  name: string;
+  version?: string;
+  hooks?: string[];
+  status?: string;
+};
+
+type DevToolsBridgeApi = {
+  getSnapshot(): {
+    plugins: readonly DevToolsBridgePlugin[];
+  };
+};
 
 export function createPluginsPanel(): HTMLElement {
   const root = document.createElement('div');
   root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;';
 
-  const plugins = window.__pluginInspector ?? [];
+  const devTools = (window as any).__ux3DevTools as DevToolsBridgeApi | undefined;
+  const plugins = devTools?.getSnapshot().plugins ?? [];
 
   if (plugins.length === 0) {
     const empty = document.createElement('div');
     empty.style.color = '#888';
-    empty.textContent = 'No plugins registered via window.__pluginInspector.';
+    empty.textContent = 'No plugins registered in the dev tools snapshot.';
     root.appendChild(empty);
     return root;
   }

@@ -19,6 +19,25 @@ __pluginInspector.loggerEntries(); // view captured log entries
 Call `installInspector(app.pluginRegistry)` during app initialization to enable
 this feature in development builds.
 
+## Dev Tools Plugin (preferred)
+
+Use `@ux3/plugin-dev-tools` as the default development tooling path.
+
+What it provides now:
+
+- `app.utils.devTools` service API (`getSnapshot`, `subscribe`, `emit`, `open`, `close`)
+- `devTools` registered service for plugin/runtime consumers
+- Optional global bridge `window.__ux3DevTools` when enabled by plugin config
+- Inspector compatibility mount path when `development.inspector` is enabled
+
+How to enable auto-install in development:
+
+1. Set `development.devTools: true` in `ux3.yaml`, or
+2. Enable `development.inspector: true` (auto-installs dev tools plugin and mounts inspector compatibility UI)
+
+The long-term target is to render all dev-tooling UI from UX3 declarative assets
+instead of imperative DOM strings.
+
 ## Console Helpers
 
 The IAM example already exposes several helpers on `window.__iam` and

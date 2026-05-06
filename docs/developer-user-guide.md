@@ -147,7 +147,7 @@ Recommended split:
 
 ## 6. Recommended Folder Responsibilities
 
-- `ux/view`: view FSMs and view templates
+- `ux/widget`: widget FSMs and widget templates
 - `ux/style`: style compositions and visual contracts
 - `ux/i18n`: localized UI strings
 - `content`: markdown/frontmatter authored pages

@@ -18,7 +18,7 @@ the `@ux3` scope:
 * `@ux3/plugin-charts-js` – sample charting integration with lazy service and CDN asset
 * `@ux3/plugin-stripe` – sample payments integration demonstrating conditional asset injection
 * `@ux3/plugin-oidc` – OIDC/OAuth2 integration with presets for Google, Okta, Auth0, and Cognito
-* `@ux3/plugin-tailwind-plus` – styling helper with FSM/view/route demo and utility hooks
+* `@ux3/plugin-tailwind-plus` – official Tailwind Plus widget integration with strict source validation and predictable registration helpers
 
 For configuration examples and provider adapter patterns, see
 [Telemetry and Analytics](telemetry-analytics.md).
@@ -69,9 +69,9 @@ code: `registerAsset`, `registerService`, `registerComponent`,
 `registerView`, `registerRoute`, `registerMachine` and `registerPlugin` itself.
 Using these instead of mutating configuration objects directly ensures that
 runtime metadata stays consistent and allows the core to emit telemetry or
-validation warnings.  The `@ux3/plugin-tailwind-plus` package serves as a
-cookbook for these APIs; check its `src/index.ts` for examples of FSM,
-view and route registration.
+validation warnings.  The `@ux3/plugin-tailwind-plus` package demonstrates a
+production-safe registration flow that only accepts explicit,
+official-source widget definitions.
 
 ## Using the CLI Loader
 

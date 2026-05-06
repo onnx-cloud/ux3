@@ -85,28 +85,28 @@ This allows views to reference layouts by name in their FSM configuration.
 
 ## View Compiler
 
-Converts `ux/view/*.yaml` + HTML templates into ViewComponent classes.
+Converts `ux/widget/*.yaml` + HTML templates into ViewComponent classes.
 
 ### Input
 
 ```yaml
-# ux/view/login.yaml
+# ux/widget/login.yaml
 initial: idle
 layout: auth  # Reference to layout template
 states:
   idle:
-    template: 'view/login/idle.html'
+    template: 'widget/login/idle.html'
     on:
       SUBMIT: submitting
   submitting:
-    template: 'view/login/submitting.html'
+    template: 'widget/login/submitting.html'
     invoke:
       service: auth
       method: submit
 ```
 
 ```html
-<!-- ux/view/login/idle.html -->
+<!-- ux/widget/login/idle.html -->
 <form ux-event="SUBMIT">
   <input type="email" />
   <button>Login</button>
@@ -207,9 +207,9 @@ Verifies all template paths exist:
 ```yaml
 states:
   idle:
-    template: 'view/login/idle.html'  # ✓ Exists
+    template: 'widget/login/idle.html'  # ✓ Exists
   missing:
-    template: 'view/login/missing.html'  # ✗ Not found
+    template: 'widget/login/missing.html'  # ✗ Not found
 ```
 
 #### i18n Completeness
@@ -285,7 +285,7 @@ Options:
 Compile only (skip validation):
 
 ```bash
-npx ux3 compile --views ./ux/view --output ./generated
+npx ux3 compile --views ./ux/widget --output ./generated
 ```
 
 Options:
@@ -318,7 +318,7 @@ Project-level configuration:
 ```json
 {
   "projectDir": "./examples/iam",
-  "viewsDir": "./ux/view",
+  "viewsDir": "./ux/widget",
   "outputDir": "./generated",
   "schemasDir": "./schema",
   "enableAdvancedValidation": true,
@@ -460,7 +460,7 @@ Template file doesn't exist at specified path:
 ```yaml
 states:
   idle:
-    template: 'view/login/idle.html'  # Check file exists
+    template: 'widget/login/idle.html'  # Check file exists
 ```
 
 **Fix:** Create the file or correct the path

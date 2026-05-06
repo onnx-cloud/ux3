@@ -217,24 +217,55 @@ const DEFAULT_TAILWIND_CDN = 'https://cdn.tailwindcss.com';
 
 const { version: _cssVersion } = require('../package.json') as { version: string };
 
+function resolvePluginConfig(app: AppContext): Record<string, unknown> {
+  const plugins = (app.config as any)?.plugins;
+
+  if (Array.isArray(plugins)) {
+    const listEntry = plugins.find((entry: any) => entry?.name === '@ux3/plugin-tailwind-css');
+    if (listEntry && typeof listEntry.config === 'object' && listEntry.config !== null) {
+      return listEntry.config as Record<string, unknown>;
+    }
+  }
+
+  if (plugins && typeof plugins === 'object' && plugins['tailwind-css']) {
+    return plugins['tailwind-css'] as Record<string, unknown>;
+  }
+
+  return {};
+}
+
 export const TailwindCssPlugin: Plugin = {
   name: '@ux3/plugin-tailwind-css',
   version: _cssVersion,
   description: 'Lightweight Tailwind CSS integration for UX3',
 
   async install(app) {
-    // Get configuration from app
-    const config = app.config.plugins?.['tailwind-css'] || {};
-    const cdnUrl = config.cdn || DEFAULT_TAILWIND_CDN;
+    // Get configuration from app (supports both plugin list and keyed configs)
+    const config = resolvePluginConfig(app) as {
+      cdn?: string | false;
+      css?: string | false;
+      customProperties?: boolean;
+    };
+    const assetUrl = config.css || config.cdn || DEFAULT_TAILWIND_CDN;
+    const isScriptAsset =
+      typeof assetUrl === 'string' &&
+      (assetUrl.includes('@tailwindcss/browser') || assetUrl.includes('cdn.tailwindcss.com') || assetUrl.endsWith('.js'));
 
-    // Register CDN stylesheet if configured
-    if (config.cdn !== false) {
-      app.registerAsset?.({
-        type: 'style',
-        href: cdnUrl,
-        async: true,
-        defer: true
-      });
+    // Register configured stylesheet/script if enabled
+    if (config.cdn !== false && config.css !== false && typeof assetUrl === 'string' && assetUrl.length > 0) {
+      if (isScriptAsset) {
+        app.registerAsset?.({
+          type: 'script',
+          src: assetUrl,
+          async: true,
+          defer: true,
+        });
+      } else {
+        app.registerAsset?.({
+          type: 'style',
+          href: assetUrl,
+        });
+      }
     }
 
     // Register utility functions on app context

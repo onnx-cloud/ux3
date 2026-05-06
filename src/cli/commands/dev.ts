@@ -94,8 +94,8 @@ export const devCommand = new Command()
           });
           const validation = await validator.validate();
 
-          // Compile views from ux/view YAML → generated/views TS
-          const viewsDir = path.join(projectDir, 'ux', 'view');
+          // Compile widgets from ux/widget YAML → generated/views TS
+          const viewsDir = path.join(projectDir, 'ux', 'widget');
           const viewsOutputDir = path.join(generatedDir, 'views');
           if (fs.existsSync(viewsDir)) {
             const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir, projectDir);

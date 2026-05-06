@@ -23,7 +23,7 @@ describe('DevServer layout selection priority', () => {
     // create a source view
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3630, 'localhost');
@@ -46,7 +46,7 @@ describe('DevServer layout selection priority', () => {
 
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3631, 'localhost');
@@ -68,7 +68,7 @@ describe('DevServer layout selection priority', () => {
 
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3632, 'localhost');
@@ -89,7 +89,7 @@ describe('DevServer layout selection priority', () => {
 
     await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">VIEW</div>`);
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const server = new DevServer(temp, 3633, 'localhost');

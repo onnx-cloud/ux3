@@ -44,7 +44,7 @@ export class ToolRegistry {
     this.projectDir = projectDir;
     this.validator = new Validator({ projectDir });
     
-    // Support both src/ux/view (new projects) and ux/view (examples)
+    // Support both src/ux/widget (new projects) and ux/widget (examples)
     const srcUxPath = path.join(projectDir, 'src', 'ux');
     const uxPath = path.join(projectDir, 'ux');
     this.uxDir = fs.existsSync(uxPath) ? uxPath : srcUxPath;

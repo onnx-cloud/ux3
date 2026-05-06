@@ -69,17 +69,17 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 
 3. **Add or modify a view**
 
-   The project generator creates a sample view (`ux/view/hello.yaml`).
+   The project generator creates a sample widget (`ux/widget/hello.yaml`).
    You can open that file, edit it, or add new YAML views. A simple
    login view might look like this:
 
    ```yaml
-   # ux/view/login.yaml
+   # ux/widget/login.yaml
    initial: idle
    states:
-     idle: 'view/login/idle.html'
+     idle: 'widget/login/idle.html'
      submitting:
-       template: 'view/login/submitting.html'
+       template: 'widget/login/submitting.html'
        invoke:
          src: submitLogin
        on:
@@ -90,7 +90,7 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 4. **Compile & build**
 
    ```bash
-   npx ux3 compile --views ./ux/view --output ./src/generated
+   npx ux3 compile --views ./ux/widget --output ./src/generated
    npm run build
    ```
 
@@ -104,7 +104,7 @@ The `ux3` CLI drives the core workflow. After installing globally with `npm inst
 go straight to `ux3` in any shell; otherwise prefix with `npx` from your project directory (e.g. `npx ux3 compile`).
 
 * `ux3 build` – full pipeline (validate → compile → emit code). Equivalent to `npm run build`.
-* `ux3 compile` – compile sources only. Useful during development: `ux3 compile --views ./ux/view --output ./src/generated`.
+* `ux3 compile` – compile sources only. Useful during development: `ux3 compile --views ./ux/widget --output ./src/generated`.
 * `ux3 validate` – run the schema/logic validator without generating code.
 
 Each command accepts a `--config` flag pointing at a `ux3.config.json` file, or you can supply paths individually (`--views`, `--output`, etc.).

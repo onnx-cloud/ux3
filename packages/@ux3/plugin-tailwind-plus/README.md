@@ -1,65 +1,47 @@
-# @ux3/plugin-tailwind-plus (sample package)
+# @ux3/plugin-tailwind-plus
 
-Styling helper plus a tiny UI demonstration that hooks into FSMs, views and
-routes. This package is the richest of the three and serves as a cookbook for
-using core framework features inside a plugin.
+Production plugin for integrating official Tailwind Plus widgets into UX3.
+This package does not ship demo widgets, placeholder templates, or hardcoded
+FSM/view/route assumptions.
 
 ## Features
 
-* Build‑time Tailwind configuration (described in comments, not implemented
-  here).
-* Runtime stylesheet registration via `app.registerAsset()` – path comes from
-  `config.plugins['tailwind-plus'].css`.
-* Adds a `useStyle` utility method into `app.utils` for class merging.
-* **FSM/View/Route demo**
-  * Registers a `dropdown` FSM using `FSMRegistry.register`.
-  * Adds a view template `dropdown-demo` with inline `ux-state` binding.
-  * Registers a `/dropdown` route programmatically with
-    `app.registerRoute`.
-  * Supplies a simple `DropdownButton` widget in `src/widget` which interacts
-    with the FSM (toggle open/closed).
-  * Also includes a `modal` FSM/view which mounts a full‑screen overlay on
-    `/modal` – demonstrates a second, independent UI block using the same
-    APIs.
+* Registers optional Tailwind browser/style asset from plugin config.
+* Exposes deterministic helper utilities in `app.utils.tailwindPlus`:
+  * `mergeClasses`
+  * `isOfficialTailwindPlusSource`
+  * `normalizeTailwindPlusWidgets`
+  * `registerOfficialTailwindPlusWidgets`
+* Registers only explicitly configured widgets whose `source` is an official
+  Tailwind Plus URL (`https://tailwindcss.com/plus/...`).
 
-### Declarative vs programmatic
-
-The same behaviour could be achieved entirely from the host project by
-placing the FSM definition, template and route in the generated config or
-`ux3.yaml`:
+## Configuration
 
 ```yaml
-machines:
-  dropdown:
-    id: dropdown
-    initial: closed
-    context: { open: false }
-    states:
-      closed:
-        on: { TOGGLE: open }
-      open:
-        on: { TOGGLE: closed, CLOSE: closed }
-        entry: [openAction]
-        exit: [closeAction]
-
-routes:
-  - path: /dropdown
-    view: dropdown-demo
-
-views:
-  dropdown-demo: |
-    <div ux-state="dropdown">…</div>
+plugins:
+  - name: '@ux3/plugin-tailwind-plus'
+    config:
+      css: 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4'
+      widgets:
+        - id: marketing.hero.centered
+          source: 'https://tailwindcss.com/plus/ui-blocks/marketing/sections/heroes'
+          template: |
+            <section class="bg-white">
+              <div class="mx-auto max-w-7xl px-6 py-24">...</div>
+            </section>
+          route: '/marketing/hero'
 ```
 
-Plugins generally use the programmatic API when they need to compute values or
-when they provide helpers for the host to consume. The tailwind-plus sample
-shows both approaches in its README and code.
+Widget fields:
+
+* `id`: stable identifier used to derive default view name.
+* `source`: must be official Tailwind Plus URL.
+* `template`: UX3 template copied/adapted from the official block.
+* `view` (optional): explicit view name. Defaults to `tailwind-plus-<id>`.
+* `route` (optional): route path to map to the widget view.
 
 ### Installation
 
 ```bash
 npm install @ux3/plugin-tailwind-plus
 ```
-
-Then configure CSS output and optionally add the route/view in your own
-`ux3.yaml`, although the plugin does it automatically when installed.

@@ -28,7 +28,7 @@ services:
 
 ### 2. Use in Views
 
-File: `ux/view/tasks.yaml`
+File: `ux/widget/tasks.yaml`
 
 ```yaml
 initial: loading
@@ -46,7 +46,7 @@ states:
       ERROR: error
 
   ready:
-    template: 'view/tasks-list.html'
+    template: 'widget/tasks-list.html'
 ```
 
 ### 3. Access in Logic

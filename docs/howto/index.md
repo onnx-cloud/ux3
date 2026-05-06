@@ -22,7 +22,7 @@ This section provides terse, actionable instructions for humans to perform commo
 - Avoid editing generated files directly.
 
 ## Adding a View
-1. Create a YAML machine in `src/ux/view/<name>.yaml`.
+1. Create a YAML machine in `src/ux/widget/<name>.yaml`.
 2. Add corresponding HTML template in same folder.
 3. Update schema if needed (see `schema/`).
 4. Rebuild and test UI with `npm run dev`.

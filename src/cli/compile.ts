@@ -2,7 +2,7 @@
  * UX3 Compiler CLI
  * 
  * Usage:
- * ux3 compile --views ./src/ux/view --output ./src/generated
+ * ux3 compile --views ./src/ux/widget --output ./src/generated
  * ux3 compile --config ./ux3.config.json
  */
 
@@ -37,7 +37,7 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   // resolve directories relative to current working directory (useful for tests that override cwd)
   const viewsDir = config.views ? path.resolve(process.cwd(), config.views) : '';
   const outputDir = config.output ? path.resolve(process.cwd(), config.output) : '';
-  // Project dir is typically 2 levels up from views dir (ux/view -> project root)
+  // Project dir is typically 2 levels up from widget dir (ux/widget -> project root)
   // but can be overridden with baseDir if needed
   const projectDir = config.baseDir ? path.resolve(process.cwd(), config.baseDir) : path.dirname(path.dirname(viewsDir));
 
@@ -56,7 +56,7 @@ async function runCompiler(config: CompilerConfig): Promise<void> {
   // Compile views
   if (viewsDir) {
     try {
-      // `compileAllViews` now accepts projectDir for markdown and resource resolution
+      // `compileAllViews` now accepts projectDir for widget and resource resolution
       await compileAllViews(viewsDir, outputDir, projectDir);
     } catch (e) {
       console.error('✗ View compilation failed:', e);

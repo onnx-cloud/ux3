@@ -75,7 +75,7 @@ export const config = {
 
 For values that change without rebuild, inject into HTML:
 
-**In html/index.html**:
+**In your deployment entry HTML (for example, `dist/index.html`)**:
 ```html
 <script>
   window.UX3_CONFIG = {

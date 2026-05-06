@@ -62,7 +62,7 @@ context:
 
 states:
   idle:
-    template: 'view/login/idle.html'
+    template: 'widget/login/idle.html'
   submitting:
     invoke:
       service: auth
@@ -264,7 +264,7 @@ Labels and error messages are auto-inferred from i18n keys:
 ```yaml
 states:
   step1:
-    template: 'view/checkout/step1.html'
+    template: 'widget/checkout/step1.html'
     on:
       NEXT:
         guard: |
@@ -272,7 +272,7 @@ states:
         target: step2
 
   step2:
-    template: 'view/checkout/step2.html'
+    template: 'widget/checkout/step2.html'
     on:
       PREVIOUS: step1
       SUBMIT: submitting
@@ -437,7 +437,7 @@ Available for transition guards:
 
 ## Examples
 
-See [examples/iam/ux/view/register/](../../examples/iam/ux/view/register/) for a complete register form example.
+See [examples/iam/ux/widget/register/](../../examples/iam/ux/widget/register/) for a complete register form example.
 
 ## Contributing
 

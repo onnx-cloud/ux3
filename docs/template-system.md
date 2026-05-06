@@ -358,4 +358,4 @@ console.log(code);
 - Parser: [src/hbs/parser.ts](src/hbs/parser.ts)
 - Compiler: [src/hbs/compiler.ts](src/hbs/compiler.ts)
 - Types: [src/hbs/types.ts](src/hbs/types.ts)
-- Example: [examples/iam/ux/view/](examples/iam/ux/view/)
+- Example: [examples/iam/ux/widget/](examples/iam/ux/widget/)

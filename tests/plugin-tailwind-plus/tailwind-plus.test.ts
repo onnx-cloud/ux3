@@ -1,16 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  createDropdownFSM,
-  createAccordionFSM,
-  createTabsFSM,
-  createModalFSM,
-  createToastFSM,
-  createNavbarFSM,
-  colorUtilities,
-  sizeUtilities,
-  spacingUtilities,
+  isOfficialTailwindPlusSource,
+  normalizeTailwindPlusWidgets,
+  registerOfficialTailwindPlusWidgets,
   mergeClasses,
-  getButtonClass,
   TailwindPlusPlugin
 } from '../../packages/@ux3/plugin-tailwind-plus/src/index';
 
@@ -25,87 +18,11 @@ describe('TailwindPlusPlugin', () => {
     it('should export the correct plugin name and version', () => {
       expect(TailwindPlusPlugin.name).toBe('@ux3/plugin-tailwind-plus');
       expect(TailwindPlusPlugin.version).toBe('0.1.0');
-      expect(TailwindPlusPlugin.description).toContain('Tailwind CSS');
+      expect(TailwindPlusPlugin.description).toContain('Official Tailwind Plus');
     });
   });
 
-  // ========== FSM Factories ==========
-  describe('FSM Factories', () => {
-    it('should export FSM-driven dropdown component factory', () => {
-      const fsm = createDropdownFSM();
-      expect(fsm).toBeDefined();
-      expect(fsm.id).toBe('dropdown');
-      expect(fsm.current).toContain('closed');
-      expect(fsm.context).toHaveProperty('open', false);
-    });
-
-    it('should export accordion FSM factory', () => {
-      const fsm = createAccordionFSM();
-      expect(fsm).toBeDefined();
-      expect(fsm.id).toBe('accordion');
-      expect(fsm.current).toContain('collapsed');
-      expect(fsm.context).toHaveProperty('expanded', false);
-    });
-
-    it('should export tabs FSM factory', () => {
-      const fsm = createTabsFSM();
-      expect(fsm).toBeDefined();
-      expect(fsm.id).toBe('tabs');
-      expect(fsm.context).toHaveProperty('activeTab');
-    });
-
-    it('should export modal FSM factory', () => {
-      const fsm = createModalFSM();
-      expect(fsm).toBeDefined();
-      expect(fsm.id).toBe('modal');
-      expect(fsm.current).toContain('hidden');
-      expect(fsm.context).toHaveProperty('visible', false);
-    });
-
-    it('should export toast FSM factory', () => {
-      const fsm = createToastFSM();
-      expect(fsm).toBeDefined();
-      expect(fsm.id).toBe('toast');
-      expect(fsm.context).toHaveProperty('visible', false);
-    });
-
-    it('should export navbar FSM factory', () => {
-      const fsm = createNavbarFSM();
-      expect(fsm).toBeDefined();
-      expect(fsm.id).toBe('navbar');
-      expect(fsm.context).toHaveProperty('mobileMenuOpen', false);
-    });
-  });
-
-  // ========== Utility Classes ==========
-  describe('Utility Classes', () => {
-    it('should export color utilities', () => {
-      expect(colorUtilities).toHaveProperty('primary');
-      expect(colorUtilities).toHaveProperty('secondary');
-      expect(colorUtilities).toHaveProperty('success');
-      expect(colorUtilities).toHaveProperty('danger');
-      expect(colorUtilities.primary).toContain('bg-blue-500');
-      expect(colorUtilities.success).toContain('bg-green-500');
-    });
-
-    it('should export size utilities', () => {
-      expect(sizeUtilities).toHaveProperty('xs');
-      expect(sizeUtilities).toHaveProperty('sm');
-      expect(sizeUtilities).toHaveProperty('md');
-      expect(sizeUtilities).toHaveProperty('lg');
-      expect(sizeUtilities.md).toContain('px-4');
-    });
-
-    it('should export spacing utilities', () => {
-      expect(spacingUtilities).toHaveProperty('compact');
-      expect(spacingUtilities).toHaveProperty('comfortable');
-      expect(spacingUtilities).toHaveProperty('spacious');
-      expect(spacingUtilities.compact).toContain('gap-1');
-    });
-  });
-
-  // ========== Helper Functions ==========
-  describe('Helper Functions', () => {
+  describe('Utility Helpers', () => {
     it('should merge multiple class strings correctly', () => {
       const result = mergeClasses('px-4 py-2', 'bg-blue-500', 'hover:bg-blue-600');
       expect(result).toBe('px-4 py-2 bg-blue-500 hover:bg-blue-600');
@@ -116,117 +33,140 @@ describe('TailwindPlusPlugin', () => {
       expect(result).toBe('px-4 py-2');
     });
 
-    it('should create complete button classes with getButtonClass', () => {
-      const result = getButtonClass('primary', 'md', 'custom-class');
-      expect(result).toContain('rounded');
-      expect(result).toContain('font-semibold');
-      expect(result).toContain('bg-blue-500');
-      expect(result).toContain('px-4 py-2');
-      expect(result).toContain('custom-class');
+    it('should validate official Tailwind Plus URLs only', () => {
+      expect(isOfficialTailwindPlusSource('https://tailwindcss.com/plus/ui-blocks/marketing/sections/heroes')).toBe(true);
+      expect(isOfficialTailwindPlusSource('https://www.tailwindcss.com/plus/application-ui/forms/sign-in-forms')).toBe(true);
+      expect(isOfficialTailwindPlusSource('https://tailwindcss.com/docs')).toBe(false);
+      expect(isOfficialTailwindPlusSource('https://example.com/plus/ui-blocks')).toBe(false);
+      expect(isOfficialTailwindPlusSource('not-a-url')).toBe(false);
     });
   });
 
-  it('should support Tailwind utility classes', () => {
-    const element = document.createElement('div');
-    element.className = 'flex items-center justify-between p-4 bg-blue-500';
-    document.body.appendChild(element);
-    
-    expect(element.classList.contains('flex')).toBe(true);
-    expect(element.classList.contains('items-center')).toBe(true);
-    expect(element.classList.contains('bg-blue-500')).toBe(true);
+  describe('Widget Normalization', () => {
+    it('should keep only valid official widget definitions', () => {
+      const widgets = normalizeTailwindPlusWidgets([
+        {
+          id: 'hero.centered',
+          source: 'https://tailwindcss.com/plus/ui-blocks/marketing/sections/heroes',
+          template: '<section>Official Hero</section>',
+          route: '/hero'
+        },
+        {
+          id: 'fake.widget',
+          source: 'https://example.com/plus/ui-blocks/marketing/sections/heroes',
+          template: '<section>Should be filtered</section>'
+        },
+        {
+          id: 'missing.template',
+          source: 'https://tailwindcss.com/plus/ui-blocks/marketing/sections/heroes'
+        }
+      ]);
+
+      expect(widgets).toHaveLength(1);
+      expect(widgets[0]?.id).toBe('hero.centered');
+    });
   });
 
-  it('should handle responsive breakpoints', () => {
-    const element = document.createElement('div');
-    element.className = 'md:flex lg:grid xl:pb-8';
-    document.body.appendChild(element);
-    
-    expect(element.classList.contains('md:flex')).toBe(true);
-    expect(element.classList.contains('lg:grid')).toBe(true);
-    expect(element.classList.contains('xl:pb-8')).toBe(true);
+  describe('Widget Registration', () => {
+    it('should register views and optional routes for official widgets only', () => {
+      const registeredViews: Array<{ name: string; template: string }> = [];
+      const registeredRoutes: Array<{ path: string; view: string }> = [];
+
+      const app = {
+        registerView: (name: string, template: string) => registeredViews.push({ name, template }),
+        registerRoute: (path: string, view: string) => registeredRoutes.push({ path, view })
+      } as any;
+
+      const result = registerOfficialTailwindPlusWidgets(app, [
+        {
+          id: 'hero.centered',
+          source: 'https://tailwindcss.com/plus/ui-blocks/marketing/sections/heroes',
+          template: '<section>Official Hero</section>',
+          route: '/hero'
+        }
+      ]);
+
+      expect(result.registered).toBe(1);
+      expect(registeredViews).toHaveLength(1);
+      expect(registeredViews[0]?.name).toBe('tailwind-plus-hero-centered');
+      expect(registeredRoutes).toHaveLength(1);
+      expect(registeredRoutes[0]?.path).toBe('/hero');
+      expect(registeredRoutes[0]?.view).toBe('tailwind-plus-hero-centered');
+    });
   });
 
-  it('should support hover and state pseudoclasses', () => {
-    const button = document.createElement('button');
-    button.className = 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700';
-    document.body.appendChild(button);
-    
-    expect(button.classList.contains('hover:bg-blue-600')).toBe(true);
-    expect(button.classList.contains('active:bg-blue-700')).toBe(true);
-  });
+  describe('Plugin Install', () => {
+    it('should not register arbitrary demo views or routes by default', async () => {
+      const registeredViews: Array<{ name: string; template: string }> = [];
+      const registeredRoutes: Array<{ path: string; view: string }> = [];
+      const registeredAssets: Array<{ type: string; src?: string; href?: string }> = [];
 
-  it('should support dark mode classes', () => {
-    const element = document.createElement('div');
-    element.className = 'bg-white dark:bg-slate-900';
-    document.body.appendChild(element);
-    
-    expect(element.classList.contains('dark:bg-slate-900')).toBe(true);
-  });
+      const app = {
+        config: {
+          plugins: [
+            {
+              name: '@ux3/plugin-tailwind-plus',
+              config: {
+                css: 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4'
+              }
+            }
+          ]
+        },
+        registerView: (name: string, template: string) => registeredViews.push({ name, template }),
+        registerRoute: (path: string, view: string) => registeredRoutes.push({ path, view }),
+        registerAsset: (asset: { type: string; src?: string; href?: string }) => registeredAssets.push(asset),
+        utils: {}
+      } as any;
 
-  // ========== FSM Transitions ==========
-  describe('FSM Transitions', () => {
-    it('dropdown FSM should transition between states on TOGGLE', () => {
-      const fsm = createDropdownFSM();
-      const initialState = fsm.current;
-      expect(initialState).toContain('closed');
-      
-      fsm.send('TOGGLE');
-      const afterToggle = fsm.current;
-      expect(afterToggle).toContain('open');
-      
-      fsm.send('TOGGLE');
-      const afterClose = fsm.current;
-      expect(afterClose).toContain('closed');
+      await TailwindPlusPlugin.install?.(app);
+
+      expect(registeredViews).toHaveLength(0);
+      expect(registeredRoutes).toHaveLength(0);
+      expect(registeredAssets).toHaveLength(1);
+      expect(registeredAssets[0]?.type).toBe('script');
+      expect(registeredAssets[0]?.src).toContain('@tailwindcss/browser');
+      expect(app.utils.tailwindPlus).toBeDefined();
     });
 
-    it('accordion FSM should expand and collapse', () => {
-      const fsm = createAccordionFSM();
-      expect(fsm.current).toContain('collapsed');
-      
-      fsm.send('EXPAND');
-      expect(fsm.current).toContain('expanded');
-      expect(fsm.context.expanded).toBe(true);
-      
-      fsm.send('COLLAPSE');
-      expect(fsm.current).toContain('collapsed');
-    });
+    it('should register only official configured widgets and warn for rejected ones', async () => {
+      const registeredViews: Array<{ name: string; template: string }> = [];
+      const registeredRoutes: Array<{ path: string; view: string }> = [];
+      const warnings: string[] = [];
 
-    it('modal FSM should show and hide', () => {
-      const fsm = createModalFSM();
-      expect(fsm.current).toContain('hidden');
-      
-      fsm.send('SHOW');
-      expect(fsm.current).toContain('visible');
-      expect(fsm.context.visible).toBe(true);
-      
-      fsm.send('HIDE');
-      expect(fsm.current).toContain('hidden');
-    });
+      const app = {
+        config: {
+          plugins: [
+            {
+              name: '@ux3/plugin-tailwind-plus',
+              config: {
+                widgets: [
+                  {
+                    id: 'hero.centered',
+                    source: 'https://tailwindcss.com/plus/ui-blocks/marketing/sections/heroes',
+                    template: '<section>Official Hero</section>',
+                    route: '/hero'
+                  },
+                  {
+                    id: 'fake',
+                    source: 'https://example.com/plus/ui-blocks',
+                    template: '<section>Fake</section>'
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        registerView: (name: string, template: string) => registeredViews.push({ name, template }),
+        registerRoute: (path: string, view: string) => registeredRoutes.push({ path, view }),
+        logger: { warn: (msg: string) => warnings.push(msg) },
+        utils: {}
+      } as any;
 
-    it('tabs FSM should navigate between tabs', () => {
-      const fsm = createTabsFSM();
-      expect(fsm.current).toContain('tab1');
-      
-      fsm.send('SELECT_TAB_2');
-      expect(fsm.current).toContain('tab2');
-      
-      fsm.send('SELECT_TAB_3');
-      expect(fsm.current).toContain('tab3');
-      
-      fsm.send('SELECT_TAB_1');
-      expect(fsm.current).toContain('tab1');
-    });
+      await TailwindPlusPlugin.install?.(app);
 
-    it('navbar FSM should handle menu toggle', () => {
-      const fsm = createNavbarFSM();
-      expect(fsm.current).toContain('closed');
-      
-      fsm.send('TOGGLE_MENU');
-      expect(fsm.current).toContain('open');
-      expect(fsm.context.mobileMenuOpen).toBe(true);
-      
-      fsm.send('TOGGLE_MENU');
-      expect(fsm.current).toContain('closed');
+      expect(registeredViews).toHaveLength(1);
+      expect(registeredRoutes).toHaveLength(1);
+      expect(warnings.length).toBe(1);
     });
   });
 });

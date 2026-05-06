@@ -21,7 +21,7 @@ describe('DevServer index layout resolution', () => {
     await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">HELLO</div>`);
 
     // create index.yaml that references the view and declares layout: default
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'view/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server.ts');
     const server = new DevServer(temp, 3610, 'localhost');

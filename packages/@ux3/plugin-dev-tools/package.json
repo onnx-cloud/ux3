@@ -1,0 +1,12 @@
+{
+  "name": "@ux3/plugin-dev-tools",
+  "version": "1.0.0",
+  "description": "Development tooling plugin for UX3 (inspector, diagnostics, event stream)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "sideEffects": false
+}

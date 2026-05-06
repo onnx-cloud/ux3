@@ -35,7 +35,7 @@ export const posts = {
 };
 ```
 
-**View FSM** (in `ux/view/post-detail/detail.yaml`):
+**Widget FSM** (in `ux/widget/post-detail/detail.yaml`):
 ```yaml
 name: postDetail
 initial: loading

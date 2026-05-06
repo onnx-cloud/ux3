@@ -3,7 +3,7 @@
 UX3 is a compile‑first SPA framework: views, styles, validation, and i18n are declared in YAML/HTML/JSON and compiled into typed runtime artifacts.
 
 ## Big picture
-- **FSM‑driven UI**: every view is a finite‑state machine (FSM). Config lives in `src/ux/view/**/*.yaml`, templates in adjacent HTML. Runtime FSMs are registered via `src/fsm/registry.ts` and implemented in `src/fsm/state-machine.ts`.
+- **FSM‑driven UI**: every widget is a finite‑state machine (FSM). Config lives in `src/ux/widget/**/*.yaml`, templates in adjacent HTML. Runtime FSMs are registered via `src/fsm/registry.ts` and implemented in `src/fsm/state-machine.ts`.
 - **Compile pipeline**: `src/build/` validates schema, reachability, i18n keys, and templates, then emits generated types to `src/generated/` (never edit by hand).
 - **Reactive core**: `reactive`, `effect`, `computed`, `batch` in `src/state/reactive.ts` power fine‑grained updates.
 - **Services & side‑effects**: declared in YAML, invoked from view FSMs using `invoke` entries like `{ src: 'localFn' }` or `{ service: 'user', method: 'login' }` (see `src/services/`).

@@ -102,17 +102,17 @@ When the `auth` FSM transitions states (idle → loading → authenticated), the
 The compiler generates ViewComponent subclasses from YAML + HTML:
 
 ```yaml
-# ux/view/login.yaml
+# ux/widget/login.yaml
 name: login
 initial: idle
 states:
-  idle: 'view/login/idle.html'
-  loading: 'view/login/loading.html'
-  error: 'view/login/error.html'
+  idle: 'widget/login/idle.html'
+  loading: 'widget/login/loading.html'
+  error: 'widget/login/error.html'
 ```
 
 ```html
-<!-- ux/view/login/idle.html -->
+<!-- ux/widget/login/idle.html -->
 <form ux-event="SUBMIT">
   <input type="email" placeholder="Email" />
   <button type="submit">Login</button>
@@ -155,7 +155,7 @@ export class LoginView extends ViewComponent {
 Layout names are declared in view YAML and resolved at runtime:
 
 ```yaml
-# ux/view/dashboard.yaml
+# ux/widget/dashboard.yaml
 layout: default  # Resolved to config.templates["default"]
 initial: loading
 states:
@@ -367,34 +367,34 @@ ux-login[data-state="authenticated"] {
 ## Example: Complete Todo View
 
 ```yaml
-# ux/view/todolist.yaml
+# ux/widget/todolist.yaml
 initial: idle
 states:
   idle:
-    template: 'view/todolist/idle.html'
+    template: 'widget/todolist/idle.html'
     on:
       LOAD: loading
   loading:
-    template: 'view/todolist/loading.html'
+    template: 'widget/todolist/loading.html'
     invoke:
       src: loadTodos
     on:
       SUCCESS: loaded
       ERROR: error
   loaded:
-    template: 'view/todolist/loaded.html'
+    template: 'widget/todolist/loaded.html'
     on:
       ADD: loaded
       REMOVE: loaded
       TOGGLE: loaded
   error:
-    template: 'view/todolist/error.html'
+    template: 'widget/todolist/error.html'
     on:
       RETRY: loading
 ```
 
 ```html
-<!-- ux/view/todolist/loaded.html -->
+<!-- ux/widget/todolist/loaded.html -->
 <div>
   <button ux-event="LOAD">Reload</button>
   

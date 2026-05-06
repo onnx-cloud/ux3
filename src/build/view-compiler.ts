@@ -1,5 +1,5 @@
 /**
- * View Compiler - Converts ux/view/*.yaml + templates → generated/views/*.ts
+ * View Compiler - Converts ux/widget/*.yaml + templates → generated/views/*.ts
  * Synthesizes FSM configs, layouts, templates, and bindings into ViewComponent classes
  */
 
@@ -95,10 +95,10 @@ export class ViewCompiler {
   private projectDir: string;
   private diagnostics: string[] = [];
 
-  constructor(srcDir: string = './ux/view', destDir: string = './generated/views', projectDir?: string) {
+  constructor(srcDir: string = './ux/widget', destDir: string = './generated/views', projectDir?: string) {
     this.srcDir = srcDir;
     this.destDir = destDir;
-    // If projectDir is not provided, derive it from srcDir (go up 2 levels from ux/view)
+    // If projectDir is not provided, derive it from srcDir (go up 2 levels from ux/widget)
     this.projectDir = projectDir || path.resolve(path.dirname(path.dirname(srcDir)));
   }
 
@@ -163,10 +163,10 @@ export class ViewCompiler {
     const stateConfigs = parsed.states || {};
     const normalizedSrcDir = path.resolve(this.srcDir);
     const strictTemplateMissing =
-      path.basename(normalizedSrcDir) === 'view' &&
+      path.basename(normalizedSrcDir) === 'widget' &&
       path.basename(path.dirname(normalizedSrcDir)) === 'ux';
 
-    // Load layout HTML - layouts live in ux/layout/, not ux/view/
+    // Load layout HTML - layouts live in ux/layout/, not ux/widget/
     const layoutDir = path.join(this.srcDir, '..', 'layout');
     const layoutPath = path.join(layoutDir, `${layoutName}.html`);
     const fallbackLayoutPath = path.join(layoutDir, '_.html');
@@ -190,7 +190,7 @@ export class ViewCompiler {
     // Load state templates (supports both short-form and long-form state definitions)
     const templates: Record<string, string> = {};
 
-    // Resolve template paths across both canonical ux/view and ad-hoc test dirs.
+    // Resolve template paths across both canonical ux/widget and ad-hoc test dirs.
     const resolveTemplateCandidates = (relPath: string): string[] => {
       const normalized = relPath.replace(/\\/g, '/').replace(/^\.\//, '');
       const candidates: string[] = [];
@@ -199,11 +199,11 @@ export class ViewCompiler {
         return [normalized];
       }
 
-      if (normalized.startsWith('view/')) {
-        // Canonical project form: ux/view/... (srcDir is usually ux/view)
+      if (normalized.startsWith('widget/')) {
+        // Canonical project form: ux/widget/... (srcDir is usually ux/widget)
         candidates.push(path.join(this.srcDir, '..', normalized));
-        // Test-friendly form when srcDir itself is the view root.
-        candidates.push(path.join(this.srcDir, normalized.slice('view/'.length)));
+        // Test-friendly form when srcDir itself is the widget root.
+        candidates.push(path.join(this.srcDir, normalized.slice('widget/'.length)));
       } else {
         candidates.push(path.join(this.srcDir, normalized));
       }
@@ -421,7 +421,7 @@ export class ViewCompiler {
 
     // detect whether a logic module exists for this view
     // logic modules live alongside view definitions under ux/logic
-    // srcDir is typically './ux/view', so '../logic' resolves to './ux/logic'
+    // srcDir is typically './ux/widget', so '../logic' resolves to './ux/logic'
     const logicPath = path.join(this.srcDir, '..', 'logic', `${viewName}.ts`);
     const logicExists = fs.existsSync(path.resolve(logicPath));
 

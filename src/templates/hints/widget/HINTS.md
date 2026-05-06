@@ -2,12 +2,12 @@
 
 Use `ux3 generate view <name>` to scaffold a new view quickly.
 
-`ux/view/` defines screen-level finite-state machines (FSMs).
+`ux/widget/` defines screen-level finite-state machines (FSMs).
 
 ## What belongs here
 
-- One YAML file per view (`ux/view/<view>.yaml`) that defines state transitions.
-- One folder per view (`ux/view/<view>/`) containing the HTML template for each state.
+- One YAML file per widget (`ux/widget/<widget>.yaml`) that defines state transitions.
+- One folder per widget (`ux/widget/<widget>/`) containing the HTML template for each state.
 
 ## How a view works
 

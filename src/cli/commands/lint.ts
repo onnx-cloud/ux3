@@ -10,7 +10,7 @@ function resolveProjectRoot(project?: string): string {
 }
 
 function countViewArtifacts(projectDir: string): number {
-	const viewsDir = path.join(projectDir, 'ux', 'view');
+	const viewsDir = path.join(projectDir, 'ux', 'widget');
 	if (!fs.existsSync(viewsDir)) return 0;
 
 	const stack = [viewsDir];
@@ -95,7 +95,7 @@ export const checkCommand = new Command()
 			if (options.logic) {
 				const unused = lintLogicModules({
 					logicDir: path.join(projectDir, 'ux', 'logic'),
-					viewsDir: path.join(projectDir, 'ux', 'view'),
+					viewsDir: path.join(projectDir, 'ux', 'widget'),
 				});
 				if (unused > 0) {
 					process.exit(1);

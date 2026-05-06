@@ -31,7 +31,7 @@ describe('compile CLI', () => {
   });
 
   it('runCompiler generates output from a simple view', async () => {
-    // prepare a minimal ux/view structure
+    // prepare a minimal ux/widget structure
     const viewsDir = path.join(tmp, 'ux', 'view');
     await fs.ensureDir(viewsDir);
     const yaml = `name: myview\nstates:\n  idle: idle.html\n`;

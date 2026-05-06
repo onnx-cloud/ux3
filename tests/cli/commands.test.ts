@@ -235,7 +235,7 @@ describe('UX3 CLI commands', () => {
 
     const exit = await runCommand(
       compileCommand,
-      ['--views', 'ux/view', '--output', 'generated'],
+      ['--views', 'ux/widget', '--output', 'generated'],
       project
     );
     expect(exit).toBe(0);

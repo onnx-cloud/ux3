@@ -128,15 +128,15 @@ examples/iam/
 ### 1. Authentication Flow
 
 ```yaml
-# ux/view/login.yaml
+# ux/widget/login.yaml
 initial: idle
 states:
   idle:
-    template: 'view/login/idle.html'
+    template: 'widget/login/idle.html'
     on:
       SUBMIT: authenticating
   authenticating:
-    template: 'view/login/authenticating.html'
+    template: 'widget/login/authenticating.html'
     invoke:
       src: submitLogin
       input: { email: 'this.email', password: 'this.password' }
@@ -144,9 +144,9 @@ states:
       SUCCESS: authenticated
       FAILURE: error
   authenticated:
-    template: 'view/login/authenticated.html'
+    template: 'widget/login/authenticated.html'
   error:
-    template: 'view/login/error.html'
+    template: 'widget/login/error.html'
     on:
       RETRY: idle
 ```
@@ -370,7 +370,7 @@ Ensure all templates exist:
 
 ```bash
 # Check template files
-ls ux/view/*/
+ls ux/widget/*/
 
 # Should have matching .html files for each state
 ```
@@ -418,6 +418,6 @@ When modifying IAM:
 ## Reference
 
 - IAM App: [examples/iam/](../examples/iam/)
-- Views: [examples/iam/ux/view/](../examples/iam/ux/view/)
+- Widgets: [examples/iam/ux/widget/](../examples/iam/ux/widget/)
 - Services: [examples/iam/ux/service/](../examples/iam/ux/service/)
 - README: [examples/iam/README.md](../examples/iam/README.md)

@@ -20,20 +20,20 @@ The dev server starts at `http://localhost:5173` by default. Open it and you'll 
 
 ## 2. Inspect the view structure
 
-Views live in `ux/view/**/*.yaml`. Open `ux/view/login.yaml`:
+Widgets live in `ux/widget/**/*.yaml`. Open `ux/widget/login.yaml`:
 
 ```yaml
-# ux/view/login.yaml
+# ux/widget/login.yaml
 name: Login
 layout: default
 initial: idle
 states:
   idle:
-    template: 'view/login/idle.html'
+    template: 'widget/login/idle.html'
     on:
       SUBMIT: validating
   validating:
-    template: 'view/login/validating.html'
+    template: 'widget/login/validating.html'
     invoke:
       service: auth
       method: login
@@ -41,17 +41,17 @@ states:
       SUCCESS: success
       ERROR: error
   success:
-    template: 'view/login/success.html'
+    template: 'widget/login/success.html'
   error:
-    template: 'view/login/error.html'
+    template: 'widget/login/error.html'
     on:
       RETRY: idle
 ```
 
-Each state specifies a `template:` file path (relative to `ux/view/`) and optionally `on:` transitions and `invoke:` service calls. Templates live in `ux/view/login/` subdirectories:
+Each state specifies a `template:` file path (relative to `ux/widget/`) and optionally `on:` transitions and `invoke:` service calls. Templates live in `ux/widget/login/` subdirectories:
 
 ```html
-<!-- ux/view/login/idle.html -->
+<!-- ux/widget/login/idle.html -->
 <form ux-event="SUBMIT">
   <input name="email" type="email" required />
   <button type="submit">Login</button>

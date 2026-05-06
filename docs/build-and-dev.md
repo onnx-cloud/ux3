@@ -76,7 +76,7 @@ Checks:
 ### 2. Code Generation
 
 ```bash
-npx ux3 compile --views ./ux/view --output ./generated
+npx ux3 compile --views ./ux/widget --output ./generated
 ```
 
 **ConfigGenerator generates `config.ts` with:**

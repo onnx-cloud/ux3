@@ -1,0 +1,18 @@
+{
+  "devTools": {
+    "dashboard": {
+      "title": "UX3 Dev Server",
+      "projectStatus": "Project Status",
+      "projectLabel": "Project:",
+      "pathLabel": "Path:",
+      "buildTimeLabel": "Build Time:",
+      "manifestSummary": "Manifest Summary",
+      "availableViews": "Available Views",
+      "emptyViews": "No views are available yet."
+    },
+    "hotReload": {
+      "overlayTitle": "Build Error",
+      "overlayHint": "Fix the error and save to reload automatically."
+    }
+  }
+}

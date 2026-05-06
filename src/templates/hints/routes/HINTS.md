@@ -10,7 +10,7 @@
 ## Core rules
 
 - Every route needs `path` and `view`.
-- `view` should match a view slug under `ux/view/`.
+- `view` should match a widget slug under `ux/widget/`.
 - Prefer stable, human-readable paths and avoid embedding business logic in route names.
 - Dynamic segments use `:param` (for example, `/users/:id`).
 

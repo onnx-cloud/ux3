@@ -35,7 +35,7 @@ npx ux3 validate --projectDir ./examples/iam
 **Example error:**
 
 ```
-[ERROR] ux/view/login.yaml
+[ERROR] ux/widget/login.yaml
   - Missing required field: "initial"
   - "submitting" state references undefined target "unknown"
   - Suggestion: Define "unknown" state or use valid target
@@ -70,7 +70,7 @@ import { TemplateRefsValidator } from '@ux3/build/validators';
 
 const validator = new TemplateRefsValidator();
 const errors = validator.validate({
-  views: { login: { template: 'view/login.html' } }
+  views: { login: { template: 'widget/login.html' } }
 });
 ```
 
@@ -239,7 +239,7 @@ const isValid = validator.isValidExpression('(ctx) => ctx.count > 0');
 Build fails, deployment blocked:
 
 ```
-[ERROR] ux/view/login.yaml - Missing required field "initial"
+[ERROR] ux/widget/login.yaml - Missing required field "initial"
 ```
 
 ### Warning
@@ -247,7 +247,7 @@ Build fails, deployment blocked:
 Build succeeds, but issues should be addressed:
 
 ```
-[WARNING] ux/view/login.yaml - Unused state "orphan"
+[WARNING] ux/widget/login.yaml - Unused state "orphan"
 ```
 
 **Promote warnings to errors:**
@@ -306,7 +306,7 @@ class MyValidator extends CustomRuleValidator {
     for (const [name, view] of Object.entries(config.views || {})) {
       if (!view.states?.error) {
         errors.push({
-          file: `ux/view/${name}.yaml`,
+          file: `ux/widget/${name}.yaml`,
           message: `View must have an "error" state`,
           severity: 'warning'
         });

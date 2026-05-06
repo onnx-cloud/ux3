@@ -10,18 +10,17 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: ['**/kitchen-sink.spec.ts', '**/navigation.spec.ts'],
-  // put all generated artifacts in a separate folder so the html reporter
-  // doesn't clobber the top‑level test-results directory
-  outputDir: 'playwright-report',
+  // keep all generated artifacts under test-results
+  outputDir: 'test-results/playwright/artifacts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 1,
 
   reporter: [
-    ['html', { outputFolder: 'playwright-report-html' }],
-    ['json', { outputFile: 'playwright-report/results.json' }],
-    ['junit', { outputFile: 'playwright-report/results.xml' }],
+    ['html', { outputFolder: 'test-results/playwright/html' }],
+    ['json', { outputFile: 'test-results/playwright/results.json' }],
+    ['junit', { outputFile: 'test-results/playwright/results.xml' }],
     ['list'],
   ],
 
