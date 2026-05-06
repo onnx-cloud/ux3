@@ -555,6 +555,16 @@ export class ViewCompiler {
 
     // helper to convert config object into JS code with logic references
     const stringifyConfig = (obj: any, depth = 2): string => {
+      const extractLogicRef = (value: unknown): string | null => {
+        if (typeof value === 'string') {
+          return value;
+        }
+        if (value && typeof value === 'object' && typeof (value as { src?: unknown }).src === 'string') {
+          return (value as { src: string }).src;
+        }
+        return null;
+      };
+
       if (Array.isArray(obj)) {
         const items = obj.map((v) => stringifyConfig(v, depth + 2));
         return `[
@@ -583,21 +593,35 @@ ${' '.repeat(depth)}]`;
             }
           };
 
-          if ((k === 'guard' || k === 'src') && typeof v === 'string') {
-            checkRef(v, k === 'guard' ? 'guard' : 'src');
-            valCode = makeRef(v);
+          const logicRef = extractLogicRef(v);
+
+          if ((k === 'guard' || k === 'src') && typeof logicRef === 'string') {
+            checkRef(logicRef, k === 'guard' ? 'guard' : 'src');
+            valCode = makeRef(logicRef);
           } else if (k === 'actions' && Array.isArray(v)) {
-            v.forEach((n: string) => checkRef(n, 'actions'));
             valCode = `[${v
-              .map((n: string) => makeRef(n))
+              .map((item: unknown) => {
+                const actionRef = extractLogicRef(item);
+                if (typeof actionRef === 'string') {
+                  checkRef(actionRef, 'actions');
+                  return makeRef(actionRef);
+                }
+                return stringifyConfig(item, depth + 2);
+              })
               .join(', ')}]`;
-          } else if ((k === 'entry' || k === 'exit') && typeof v === 'string') {
-            checkRef(v, k);
-            valCode = makeRef(v);
+          } else if ((k === 'entry' || k === 'exit') && typeof logicRef === 'string') {
+            checkRef(logicRef, k);
+            valCode = makeRef(logicRef);
           } else if ((k === 'entry' || k === 'exit') && Array.isArray(v)) {
-            v.forEach((n: string) => checkRef(n, k));
             valCode = `[${v
-              .map((n: string) => makeRef(n))
+              .map((item: unknown) => {
+                const entryExitRef = extractLogicRef(item);
+                if (typeof entryExitRef === 'string') {
+                  checkRef(entryExitRef, k);
+                  return makeRef(entryExitRef);
+                }
+                return stringifyConfig(item, depth + 2);
+              })
               .join(', ')}]`;
           } else {
             valCode = stringifyConfig(v, depth + 2);

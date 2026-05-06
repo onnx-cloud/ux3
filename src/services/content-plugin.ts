@@ -1,4 +1,3 @@
-import { createRequire } from 'module';
 import type { Plugin } from '../plugin/registry';
 
 // A simple plugin that registers a `content` service using configuration
@@ -6,8 +5,7 @@ import type { Plugin } from '../plugin/registry';
 // looks up an entry by slug or path and returns the pre-rendered HTML and
 // frontmatter data.
 
-const _require = createRequire(import.meta.url);
-const { version: _version } = _require('../../package.json') as { version: string };
+const _version = '0.2.1';
 
 export const ContentPlugin: Plugin = {
   name: '@ux3/content-plugin',

@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+
+set -eu
+
+PORT="${UX3_PORT:-1337}"
+PATTERN='tsx .*/src/cli/cli\.ts dev|bin/ux3 dev|src/cli/cli\.ts dev'
+found=0
+
+kill_matching_processes() {
+  if ! command -v pgrep >/dev/null 2>&1; then
+    return
+  fi
+
+  pids="$(pgrep -f "$PATTERN" || true)"
+  if [ -z "$pids" ]; then
+    return
+  fi
+
+  found=1
+  kill -TERM $pids 2>/dev/null || true
+
+  remaining_pids="$(pgrep -f "$PATTERN" || true)"
+  if [ -n "$remaining_pids" ]; then
+    kill -KILL $remaining_pids 2>/dev/null || true
+  fi
+}
+
+kill_port_listener() {
+  if command -v fuser >/dev/null 2>&1; then
+    if fuser -s "${PORT}/tcp" 2>/dev/null; then
+      found=1
+      fuser -k -TERM "${PORT}/tcp" >/dev/null 2>&1 || true
+      if fuser -s "${PORT}/tcp" 2>/dev/null; then
+        fuser -k -KILL "${PORT}/tcp" >/dev/null 2>&1 || true
+      fi
+    fi
+    return
+  fi
+
+  if command -v lsof >/dev/null 2>&1; then
+    port_pids="$(lsof -ti tcp:"$PORT" || true)"
+    if [ -n "$port_pids" ]; then
+      found=1
+      kill -TERM $port_pids 2>/dev/null || true
+      remaining_port_pids="$(lsof -ti tcp:"$PORT" || true)"
+      if [ -n "$remaining_port_pids" ]; then
+        kill -KILL $remaining_port_pids 2>/dev/null || true
+      fi
+    fi
+  fi
+}
+
+kill_matching_processes
+kill_port_listener
+
+if [ "$found" -eq 1 ]; then
+  echo "Stopped UX3 instances"
+else
+  echo "No running UX3 instances found"
+fi

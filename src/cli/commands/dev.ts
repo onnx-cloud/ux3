@@ -120,19 +120,15 @@ export const devCommand = new Command()
             fs.mkdirSync(outputDir, { recursive: true });
           }
 
-          try {
-            const bundler = new Bundler({
-              projectDir,
-              generatedDir,
-              outputDir,
-              minify: false,
-              sourcemaps: true,
-            });
-            const bundlePath = await bundler.bundle();
-            bundleRel = path.relative(projectDir, bundlePath).replace(/\\/g, '/');
-          } catch (e) {
-            // bundling failed or skipped; continue gracefully
-          }
+          const bundler = new Bundler({
+            projectDir,
+            generatedDir,
+            outputDir,
+            minify: false,
+            sourcemaps: true,
+          });
+          const bundlePath = await bundler.bundle();
+          bundleRel = path.relative(projectDir, bundlePath).replace(/\\/g, '/');
 
           if (bundleRel) {
             // collect css files

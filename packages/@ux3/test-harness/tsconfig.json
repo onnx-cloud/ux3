@@ -4,7 +4,7 @@
     "module": "ES2020",
     "lib": ["ES2020", "DOM"],
     "declaration": true,
-    "outDir": "dist",
+    "outDir": "../../../tmp/tsc/packages/ux3/test-harness",
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,

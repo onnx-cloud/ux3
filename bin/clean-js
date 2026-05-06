@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MODE="clean"
+
+if [[ "${1:-}" == "--check" ]]; then
+  MODE="check"
+elif [[ -n "${1:-}" ]]; then
+  echo "Usage: ./bin/clean-js [--check]" >&2
+  exit 2
+fi
+
+cd "$ROOT_DIR"
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "git is required" >&2
+  exit 1
+fi
+
+status_output="$(git status --porcelain=v1 --ignored=matching --untracked-files=all -- src)"
+
+artifacts=()
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+
+  status="${line:0:2}"
+  candidate="${line:3}"
+
+  if [[ "$status" != '??' && "$status" != '!!' ]]; then
+    continue
+  fi
+
+  if [[ "$candidate" =~ ^src/.*\.(js|js\.map|d\.ts|d\.ts\.map)$ ]]; then
+    artifacts+=("$candidate")
+  fi
+done <<< "$status_output"
+
+if [[ ${#artifacts[@]} -eq 0 ]]; then
+  if [[ "$MODE" == "check" ]]; then
+    echo "No stray JS artifacts found in src/"
+  else
+    echo "No stray JS artifacts to remove from src/"
+  fi
+  exit 0
+fi
+
+printf '%s\n' "${artifacts[@]}"
+
+if [[ "$MODE" == "check" ]]; then
+  echo "Stray JS artifacts found in src/"
+  exit 1
+fi
+
+rm -f -- "${artifacts[@]}"
+echo "Removed stray JS artifacts from src/"

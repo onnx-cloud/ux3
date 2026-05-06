@@ -2,7 +2,7 @@
 	"extends": "../../../tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "../../..",
-		"outDir": "./dist"
+		"outDir": "../../../tmp/tsc/packages/ux3/plugin-search-lunr"
 	},
 	"include": ["src/**/*.ts"]
 }
