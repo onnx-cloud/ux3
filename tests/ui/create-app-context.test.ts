@@ -2,6 +2,19 @@ import { describe, it, expect } from 'vitest';
 import { createAppContext } from '../../src/ui/context-builder.ts';
 import { defaultLogger } from '../../src/security/observability.ts';
 
+function waitFor<T>(fn: () => T | null, timeout = 2000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      const result = fn();
+      if (result) return resolve(result);
+      if (Date.now() - start > timeout) return reject(new Error('waitFor timeout'));
+      setTimeout(check, 10);
+    };
+    check();
+  });
+}
+
 // simple generated config stub
 const baseConfig = {
   routes: [],
@@ -52,10 +65,12 @@ describe('createAppContext development logging', () => {
       plugins: [{ name: '@ux3/plugin-dev-tools', config: { enabled: true } }],
     };
     await createAppContext(cfg);
-    expect(document.getElementById('ux3-devtools-inspector')).toBeTruthy();
+    // Inspector mounts asynchronously via dynamic import; poll briefly.
+    const el = await waitFor(() => document.getElementById('ux3-devtools-inspector'));
+    expect(el).toBeTruthy();
   });
 
-  it('starts inspector minimized with reduced opacity', async () => {
+  it('starts inspector with tab bar and minimized style', async () => {
     const existing = document.getElementById('ux3-devtools-inspector');
     existing?.remove();
 
@@ -65,14 +80,15 @@ describe('createAppContext development logging', () => {
     };
     await createAppContext(cfg);
 
-    const inspector = document.getElementById('ux3-devtools-inspector') as HTMLElement | null;
+    const inspector = await waitFor(() => document.getElementById('ux3-devtools-inspector') as HTMLElement | null);
     expect(inspector).toBeTruthy();
-    const body = inspector?.querySelector('pre') as HTMLElement | null;
-    const toggleButton = Array.from(inspector?.querySelectorAll('button') ?? []).find((btn) => btn.textContent === 'Expand');
-
-    expect(body?.style.display).toBe('none');
-    expect(inspector?.style.opacity).toBe('0.5');
-    expect(toggleButton).toBeTruthy();
+    // Tab bar exists
+    expect(inspector?.querySelector('.ux3-inspector-tabbar')).toBeTruthy();
+    // Panel host hidden when minimized
+    const host = inspector?.querySelector('.ux3-inspector-panel-host') as HTMLElement | null;
+    expect(host?.style.display).toBe('none');
+    // Opacity at minimized level (0.5 or '')
+    expect(parseFloat(inspector?.style.opacity || '')).toBeCloseTo(0.5, 1);
   });
 
   it('auto-installs dev tools plugin in development mode', async () => {

@@ -16,6 +16,7 @@ import { componentCommand } from './commands/component.js';
 import { styleCommand } from './commands/style.js';
 import { generateCommand } from './commands/generate.js';
 import { syncCommand } from './commands/sync.js';
+import { translateCommand } from './commands/translate.js';
 import { createRequire } from 'module';
 
 const _require = createRequire(import.meta.url);
@@ -38,6 +39,7 @@ program.addCommand(componentCommand);
 program.addCommand(styleCommand);
 program.addCommand(generateCommand);
 program.addCommand(syncCommand);
+program.addCommand(translateCommand);
 
 program.parse(process.argv);
 

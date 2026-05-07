@@ -95,27 +95,13 @@ export class ServiceFactory {
     const pluginError = new Error(
       `Plugin service '${name}' is not installed yet; install the plugin that provides it before invoking.`
     );
-    return Object.assign(
-      (async () => {
-        throw pluginError;
-      }) as any,
-      {
-        async fetch() {
-          throw pluginError;
-        },
-        async call() {
-          throw pluginError;
-        },
-        async update() {
-          throw pluginError;
-        },
-        async find() {
-          throw pluginError;
-        },
-        subscribe() {
-          return { unsubscribe: () => {} };
-        },
-      }
-    ) as any;
+    return {
+      name,
+      async fetch() { throw pluginError; },
+      async call() { throw pluginError; },
+      async update() { throw pluginError; },
+      async find() { throw pluginError; },
+      subscribe() { return { unsubscribe: () => {} }; },
+    } as any;
   }
 }

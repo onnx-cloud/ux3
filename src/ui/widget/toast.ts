@@ -12,6 +12,7 @@
  */
 
 import { LifecycleComponent } from '../lifecycle-component.js';
+import { escapeHtml } from '../../security/sanitizer.js';
 
 export interface ToastConfig {
   message: string;
@@ -125,7 +126,7 @@ export class UxToastContainer extends LifecycleComponent {
 /**
  * Individual toast notification component
  */
-class UxToast extends LifecycleComponent {
+export class UxToast extends LifecycleComponent {
   private toastId: string;
   private config: ToastConfig;
 
@@ -297,7 +298,7 @@ class UxToast extends LifecycleComponent {
     const html = `
       <div class="toast ${type}" role="alert">
         <span class="toast-icon">${icon}</span>
-        <div class="toast-content">${message}</div>
+        <div class="toast-content">${escapeHtml(message)}</div>
         ${this.config.action ? `
           <div class="toast-action">
             <button>${this.config.action.labelKey ? `{{i18n.toast.${this.config.action.labelKey}}}` : this.config.action.label}</button>

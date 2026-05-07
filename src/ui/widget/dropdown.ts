@@ -23,6 +23,7 @@
  * </ux-dropdown>
  */
 import { LifecycleComponent } from '../lifecycle-component.js';
+import { escapeHtml } from '../../security/sanitizer.js';
 
 export class UxDropdown extends LifecycleComponent {
   static formAssociated = true;
@@ -124,7 +125,7 @@ export class UxDropdown extends LifecycleComponent {
            aria-selected="${this.selectedValues.has(opt.value)}"
            tabindex="${idx === this.highlightedIndex ? 0 : -1}">
         ${this.multiple ? `<input type="checkbox" ${this.selectedValues.has(opt.value) ? 'checked' : ''} />` : ''}
-        <span>${opt.label}</span>
+        <span>${escapeHtml(opt.label)}</span>
       </div>
     `).join('');
 

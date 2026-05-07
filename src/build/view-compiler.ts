@@ -553,7 +553,7 @@ export class ViewCompiler {
     }
 
     // build logic import path relative to generated/views output
-    // assume views are emitted under '<root>/generated/views', so import path should be '../../ux/logic'
+    // assume views are emitted under '<root>/src/generated', so import path should be '../../ux/logic'
     const logicImportPath = '../../ux/logic/' + viewName;
 
     // helper to convert config object into JS code with logic references
@@ -661,7 +661,7 @@ import { ViewComponent } from '@ux3/ui';
 import type { StateConfig } from '../fsm/types.js';
 // logic helpers (view-specific + shared)
 ${logicExists ? `import * as logic from '${logicImportPath}';` : ''}
-import * as shared from '../../../ux/logic/shared';
+import * as shared from '../../ux/logic/shared';
 
 /**
  * ${className} - ${viewName} view component

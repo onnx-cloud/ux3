@@ -66,8 +66,8 @@ function readUx3Version(): string {
       }
       dir = path.dirname(dir);
     }
-  } catch {
-    // ignore
+  } catch (e) {
+    console.warn('[TemplateEngine] could not read ux3 version', e instanceof Error ? e.message : String(e));
   }
   return 'unknown';
 }

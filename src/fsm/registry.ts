@@ -158,7 +158,7 @@ export class FSMRegistry {
       try {
         sub(normalized);
       } catch (_e) {
-        // swallow
+        console.warn('[FSMRegistry] global subscriber error', _e instanceof Error ? _e.message : String(_e));
       }
     });
   }

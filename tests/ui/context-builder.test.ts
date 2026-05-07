@@ -216,7 +216,7 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
 
       const app = builder.build();
       expect(app.services['storeService']).toBeDefined();
-      await expect((app.services['storeService'] as any)()).rejects.toThrow(
+      await expect((app.services['storeService'] as any).fetch()).rejects.toThrow(
         'Plugin service \'storeService\' is not installed yet'
       );
     });

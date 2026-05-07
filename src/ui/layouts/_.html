@@ -6,10 +6,43 @@
     <meta name="title" content="{{ i18n.site.title }}" />
     <title>{{ i18n.site.title }}</title>
     {{{ site.head }}}
+    <style>
+        #ux-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+        #ux-loading.ux-ready {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
+    <div id="ux-loading"></div>
     {{ >layout }}
     {{{ site.scripts }}}
+    <script>
+        (function(){
+            var el = document.getElementById('ux-loading');
+            if (!el) return;
+            var tries = 0;
+            var check = setInterval(function(){
+                if (window.__ux3App || ++tries > 40) {
+                    clearInterval(check);
+                    el.classList.add('ux-ready');
+                    setTimeout(function(){ el.remove(); }, 350);
+                }
+            }, 100);
+        })();
+    </script>
 </body>
 
 </html>

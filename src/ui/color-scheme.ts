@@ -6,9 +6,11 @@
  *   setColorScheme('dark');
  */
 
+import { DEFAULTS } from '../config/defaults.js';
+
 export type ColorScheme = 'light' | 'dark' | "system" | "sepia";
 
-const STORAGE_KEY = 'ux3.color.scheme';
+const STORAGE_KEY = DEFAULTS.colorSchemeStorageKey;
 
 /**
  * Read the current scheme preference from localStorage or the OS media query.

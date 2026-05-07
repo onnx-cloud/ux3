@@ -1,3 +1,5 @@
+import { DEFAULTS } from '../config/defaults.js';
+
 export type Reliability = 'high' | 'medium' | 'low';
 
 export interface BrowserContext {
@@ -369,7 +371,7 @@ export function observeBrowserContext(
     return () => undefined;
   }
 
-  const debounceMs = options.debounceMs ?? 120;
+  const debounceMs = options.debounceMs ?? DEFAULTS.browserContextDebounceMs;
   const mediaQueries = [
     '(prefers-color-scheme: dark)',
     '(prefers-color-scheme: light)',

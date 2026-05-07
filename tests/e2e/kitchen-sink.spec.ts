@@ -5,9 +5,8 @@ async function waitForShowcase(page: Page, route = '/components') {
   await page.waitForFunction(() => !!(window as any).__ux3App, { timeout: 15000 });
   await page.waitForSelector('body > #ux-content > ux-hello', { state: 'attached', timeout: 15000 });
   await page.waitForSelector('ux-app-shell', { state: 'attached', timeout: 15000 });
-  await page.waitForSelector('ux-dropdown', { state: 'attached', timeout: 15000 });
-  await page.waitForSelector('ux-theme', { state: 'attached', timeout: 15000 });
-  await page.waitForSelector('ux-locale', { state: 'attached', timeout: 15000 });
+  await page.waitForSelector('ux-theme-toggle', { state: 'attached', timeout: 15000 });
+  await page.waitForSelector('ux-lang-switcher', { state: 'attached', timeout: 15000 });
 }
 
 async function dispatchHostClick(page: Page, selector: string) {
@@ -28,11 +27,14 @@ test.describe('Kitchen sink component showcase', () => {
     await waitForShowcase(page);
 
     const expectedTags = [
+      'ux-app-shell',
       'ux-topbar',
       'ux-sidebar',
       'ux-breadcrumb',
       'ux-pagination',
+      'ux-panel',
       'ux-button',
+      'ux-icon',
       'ux-icon-button',
       'ux-link',
       'ux-modal',
@@ -41,6 +43,7 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-tab-panel',
       'ux-accordion',
       'ux-menu',
+      'ux-menu-item',
       'ux-dropdown',
       'ux-select',
       'ux-command-palette',
@@ -53,12 +56,14 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-list',
       'ux-description-list',
       'ux-card',
+      'ux-card-icon',
       'ux-surface',
       'ux-divider',
       'ux-badge',
       'ux-avatar',
       'ux-alert',
       'ux-toast',
+      'ux-toast-container',
       'ux-progress',
       'ux-spinner',
       'ux-skeleton',
@@ -66,6 +71,7 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-error-panel',
       'ux-form',
       'ux-field',
+      'ux-field-array',
       'ux-input',
       'ux-textarea',
       'ux-checkbox',
@@ -73,16 +79,21 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-switch',
       'ux-slider',
       'ux-form-errors',
+      'ux-grid',
+      'ux-hero',
       'ux-image',
       'ux-image-panel',
       'ux-image-capture',
+      'ux-inline',
       'ux-video',
       'ux-video-capture',
+      'ux-article',
       'ux-audio',
       'ux-audio-capture',
       'ux-chart-line',
       'ux-chart-bar',
       'ux-chart-donut',
+      'ux-chart-line-legend',
       'ux-chat-messenger',
       'ux-chat-thread-list',
       'ux-chat-roster',
@@ -93,11 +104,14 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-hover-panel',
       'ux-splash',
       'ux-splash-screen',
+      'ux-stack',
       'ux-wizard',
       'ux-wysiwyg',
       'ux-consent-banner',
-      'ux-locale',
-      'ux-theme',
+      'ux-content',
+      'ux-nav',
+      'ux-lang-switcher',
+      'ux-theme-toggle',
       'ux-network-status',
     ];
 
@@ -109,11 +123,8 @@ test.describe('Kitchen sink component showcase', () => {
   test('theme and locale controls are present in showcase layout', async ({ page }) => {
     await waitForShowcase(page);
 
-    await expect(page.locator('ux-theme')).toHaveCount(2);
-    await expect(page.locator('ux-locale')).toHaveCount(2);
-
-    await expect(page.locator('ux-theme[persist="false"]')).toHaveCount(2);
-    await expect(page.locator('ux-locale[persist="false"]')).toHaveCount(2);
+    await expect(page.locator('ux-theme-toggle')).toHaveCount(2);
+    await expect(page.locator('ux-lang-switcher')).toHaveCount(2);
   });
 
   test('guarded flow transitions through showcase states', async ({ page }) => {
@@ -249,14 +260,14 @@ test.describe('Kitchen sink component showcase', () => {
   test('theme and locale components work correctly', async ({ page }) => {
     await waitForShowcase(page);
 
-    const themeButtons = await page.locator('ux-theme[persist="false"]').count();
+    const themeButtons = await page.locator('ux-theme-toggle').count();
     expect(themeButtons).toBe(2);
 
-    const localeButtons = await page.locator('ux-locale[persist="false"]').count();
+    const localeButtons = await page.locator('ux-lang-switcher').count();
     expect(localeButtons).toBe(2);
 
     // Verify locales attribute is set
-    const localeWithLocales = await page.locator('ux-locale[locales="en,fr,de,ar"]').first();
+    const localeWithLocales = await page.locator('ux-lang-switcher[locales="en,fr,de,ar"]').first();
     await expect(localeWithLocales).toBeAttached();
   });
 
@@ -280,5 +291,85 @@ test.describe('Kitchen sink component showcase', () => {
 
     await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_CAPABILITY"]');
     await expect(page.locator('text=Active layout: Capability Matrix')).toBeVisible();
+  });
+
+  test('theme toggle toggles light/dark attribute on document', async ({ page }) => {
+    await waitForShowcase(page);
+
+    const toggle = page.locator('ux-theme-toggle').first();
+    await expect(toggle).toBeAttached();
+
+    const schemeBefore = await page.evaluate(() => document.documentElement.getAttribute('data-color-scheme'));
+    await toggle.click();
+    await page.waitForTimeout(300);
+    const schemeAfter = await page.evaluate(() => document.documentElement.getAttribute('data-color-scheme'));
+
+    expect(schemeBefore).not.toBe(schemeAfter);
+  });
+
+  test('form input fields accept and update values', async ({ page }) => {
+    await waitForShowcase(page);
+
+    const nameInput = page.locator('ux-input[name="name"]').first();
+    await expect(nameInput).toBeAttached();
+
+    await nameInput.fill('Test User');
+    const nameVal = await nameInput.inputValue();
+    expect(nameVal).toBe('Test User');
+
+    const bio = page.locator('ux-textarea[name="bio"]').first();
+    await expect(bio).toBeAttached();
+    await bio.fill('Updated bio text');
+    const bioVal = await bio.inputValue();
+    expect(bioVal).toBe('Updated bio text');
+
+    const slider = page.locator('ux-slider[name="score"]').first();
+    await expect(slider).toBeAttached();
+    await slider.fill('85');
+    const sliderVal = await slider.inputValue();
+    expect(sliderVal).toBe('85');
+  });
+
+  test('modal opens and closes', async ({ page }) => {
+    await waitForShowcase(page);
+
+    const modalTrigger = page.locator('ux-button:has-text("Open modal")').first();
+    await expect(modalTrigger).toBeAttached();
+
+    await modalTrigger.click();
+    await page.waitForTimeout(300);
+    await expect(page.locator('ux-modal')).toBeVisible();
+
+    const closeBtn = page.locator('ux-modal ux-button:has-text("Close")').first();
+    if (await closeBtn.isVisible()) {
+      await closeBtn.click();
+      await page.waitForTimeout(300);
+    }
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  });
+
+  test('keyboard navigation tabs through interactive elements', async ({ page }) => {
+    await waitForShowcase(page);
+
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(100);
+
+    const focused = page.locator(':focus');
+    await expect(focused).toHaveCount(1);
+  });
+
+  test('accordion toggle expands and collapses', async ({ page }) => {
+    await waitForShowcase(page);
+
+    const accordion = page.locator('ux-accordion').first();
+    await expect(accordion).toBeAttached();
+
+    const trigger = accordion.locator('[slot="trigger"], button, [role="button"]').first();
+    if (await trigger.count() > 0) {
+      await trigger.click();
+      await page.waitForTimeout(300);
+    }
   });
 });

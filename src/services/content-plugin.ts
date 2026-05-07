@@ -44,7 +44,9 @@ export const ContentPlugin: Plugin = {
         try {
           app.registerRoute(routePath, 'content');
         } catch (_e) {
-          // swallow; route may already exist
+          if (_e instanceof Error && !String(_e.message).includes('already')) {
+            console.warn('[ContentPlugin] route registration failed', _e.message);
+          }
         }
       }
     }

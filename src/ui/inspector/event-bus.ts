@@ -64,7 +64,7 @@ class InspectorEventBus {
     }
     this.buffer.push(evt);
     this.handlers.forEach(h => {
-      try { h(evt); } catch { /* noop */ }
+      try { h(evt); } catch { console.warn('[InspectorEventBus] handler error', evt.type); }
     });
   }
 
@@ -79,7 +79,7 @@ class InspectorEventBus {
           try {
             handler(event);
           } catch {
-            // noop
+            console.warn('[InspectorEventBus] subscriber handler error');
           }
         });
       });

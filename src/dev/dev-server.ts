@@ -1,12 +1,15 @@
 import * as http from 'http';
 import * as path from 'path';
 import { promises as fsp } from 'fs';
+import { fileURLToPath } from 'url';
 import fsExtra from 'fs-extra';
 import YAML from 'yaml';
 import { processAssets } from './asset-processor';
 import { renderDashboard } from './dashboard';
 import { HandlebarsLite } from '../logger/hbs/index.js';
 import { MCPHTTPHandler } from '../mcp/http-handler.js';
+
+const frameworkRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export interface DevServerOptions {
   verbose?: boolean;
@@ -39,7 +42,7 @@ async function getSiteConfig(projectDir: string, manifest: ServerManifest | null
     const legacyUx3 = path.join(projectDir, 'ux', 'ux3.yaml');
     const ux3Content = fsExtra.existsSync(rootUx3) ? await fsp.readFile(rootUx3, 'utf-8') : (fsExtra.existsSync(legacyUx3) ? await fsp.readFile(legacyUx3, 'utf-8') : '');
     if (ux3Content) ux3Config = YAML.parse(ux3Content);
-  } catch {}
+  } catch (e) { console.warn('[DevServer] could not read ux3 config', e instanceof Error ? e.message : String(e)); }
 
   const siteFromManifest = (manifest?.config as any)?.site || {};
   const siteFields = {
@@ -174,7 +177,7 @@ async function getShellLayout(projectDir: string, view: any): Promise<{ chromeWr
   const candidateLayoutA = path.join(projectDir, 'ux', 'layout', `${viewLayoutName}.html`);
   const candidateLayoutB = path.join(projectDir, 'ux', 'layout', viewLayoutName, '_.html');
   const projectDefaultLayout = path.join(projectDir, 'ux', 'layout', '_.html');
-  const frameworkDefaultPath = path.join(process.cwd(), 'src', 'ui', 'layouts', '_.html');
+  const frameworkDefaultPath = path.join(frameworkRoot, 'src', 'ui', 'layouts', '_.html');
   const chromeWrapperPath = path.join(projectDir, 'ux', 'layout', 'chrome', 'wrapper.html');
 
   let projectLayoutPath = '';
@@ -229,7 +232,37 @@ async function resolveAndRenderLayout(
                                  .replace(/\{\{\s*site\.template\s*\}\}/g, tempHtml);
   }
 
-  return renderFn(finalHtml, context);
+  const rendered = renderFn(finalHtml, context);
+
+  const styleMap: Record<string, string> | undefined = (context?.manifest?.config as any)?.styles;
+  return styleMap ? injectStyleClasses(rendered, styleMap) : rendered;
+}
+
+function injectStyleClasses(html: string, styleMap: Record<string, string>): string {
+  return html.replace(
+    /<([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/gs,
+    (tagMatch: string, tagName: string, attrs: string) => {
+      const styleAttr = attrs.match(/\s(ux-style|data-style)="([^"]+)"/);
+      if (!styleAttr) return tagMatch;
+
+      const key = styleAttr[2];
+      const resolved = styleMap[key];
+      if (!resolved) return tagMatch;
+
+      const classMatch = attrs.match(/\sclass="([^"]*)"/);
+      if (classMatch) {
+        const newAttrs = attrs.replace(
+          classMatch[0],
+          classMatch[0].replace(classMatch[1], `${resolved} ${classMatch[1]}`)
+        );
+        return `<${tagName}${newAttrs}>`;
+      }
+
+      const insertIdx = attrs.indexOf(styleAttr[0]);
+      const newAttrs = attrs.slice(0, insertIdx) + ` class="${resolved}"` + attrs.slice(insertIdx);
+      return `<${tagName}${newAttrs}>`;
+    }
+  );
 }
 
 export class DevServer {
@@ -354,7 +387,7 @@ export class DevServer {
             if (fsExtra.existsSync(defaultIndexPath)) {
               const viewYaml = await fsp.readFile(defaultIndexPath, 'utf-8');
               let view: any = {};
-              try { view = YAML.parse(viewYaml); } catch {}
+              try { view = YAML.parse(viewYaml); } catch (e) { console.warn('[DevServer] could not parse view YAML', e instanceof Error ? e.message : String(e)); }
 
               // Resolve view template path (handle top-level and nested states for index fallback)
               let templateRel = '';
@@ -401,7 +434,7 @@ export class DevServer {
                   }
 
                   try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) {
-                    /* could not read template at path */
+                    console.warn('[DevServer] could not read template at path', templatePath, e instanceof Error ? e.message : String(e));
                   }
                 }
                   if (!templateHtml) {
@@ -457,7 +490,7 @@ export class DevServer {
             if (ux3Path) {
               const ux3Content = await fsp.readFile(ux3Path, 'utf-8');
               let uxConfig: any = {};
-              try { uxConfig = YAML.parse(ux3Content); } catch { /* ignore */ }
+              try { uxConfig = YAML.parse(ux3Content); } catch (e) { console.warn('[DevServer] could not parse ux3.yaml', e instanceof Error ? e.message : String(e)); }
 
               const i18n = getRuntimeI18n(this.manifest);
               const site = await getSiteConfig(this.projectDir, this.manifest);
@@ -470,7 +503,7 @@ export class DevServer {
                 // Load view YAML
                 const viewYaml = await fsp.readFile(indexPath, 'utf-8');
                 let view: any = {};
-                try { view = YAML.parse(viewYaml); } catch {}
+                try { view = YAML.parse(viewYaml); } catch (e) { console.warn('[DevServer] could not parse view YAML', e instanceof Error ? e.message : String(e)); }
 
                 // Resolve view template path (handle top-level and nested states)
                 let templateRel = '';
@@ -511,10 +544,10 @@ export class DevServer {
 
                     // DEBUG: show paths and existence
                     /* index path debug removed */
-                    try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) { /* could not read template at path */ }
+                    try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) { console.warn('[DevServer] could not read template at path', templatePath, e instanceof Error ? e.message : String(e)); }
                   }
                 } catch (err) {
-                  /* manifest template lookup failed */
+                  console.warn('[DevServer] manifest template lookup failed', err instanceof Error ? err.message : String(err));
                 }
 
                 // If still missing, instruct developer to run compilation (fail-fast, don't guess)
@@ -592,7 +625,7 @@ export class DevServer {
             if (fsExtra.existsSync(viewYamlPath)) {
               const viewYaml = await fsp.readFile(viewYamlPath, 'utf-8');
               let view: any = {};
-              try { view = YAML.parse(viewYaml); } catch {}
+              try { view = YAML.parse(viewYaml); } catch (e) { console.warn('[DevServer] could not parse view YAML', e instanceof Error ? e.message : String(e)); }
 
               const i18n = getRuntimeI18n(this.manifest);
               const site = await getSiteConfig(this.projectDir, this.manifest);
@@ -635,7 +668,7 @@ export class DevServer {
                     }
                   }
                 }
-              } catch (e) {}
+              } catch (e) { console.warn('[DevServer] template resolution failed', e instanceof Error ? e.message : String(e)); }
 
               // For content views, look up the matching content item and expose it as `this`
               const contentManifest: any = (this.manifest?.config as any)?.content;

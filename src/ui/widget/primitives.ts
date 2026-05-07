@@ -8,7 +8,7 @@
  */
 import { LifecycleComponent } from '../lifecycle-component.js';
 
-type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'lang-switcher' | 'theme-toggle' | 'network-status' | 'image' | 'video' | 'audio' | 'wysiwyg';
+type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'image' | 'video' | 'audio' | 'wysiwyg' | 'tabs' | 'accordion' | 'popover' | 'tooltip' | 'drawer' | 'wizard' | 'capture' | 'progress';
 
 interface PrimitiveDefinition {
   tag: string;
@@ -27,15 +27,16 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-pagination', role: 'navigation', kind: 'value' },
   { tag: 'ux-icon-button', role: 'button', kind: 'toggle', stateAttr: 'pressed' },
   { tag: 'ux-link', role: 'link', kind: 'region' },
-  { tag: 'ux-drawer', role: 'dialog', kind: 'toggle', stateAttr: 'open' },
-  { tag: 'ux-tabs', role: 'tablist', kind: 'value' },
+  { tag: 'ux-drawer', role: 'dialog', kind: 'drawer', stateAttr: 'open' },
+  { tag: 'ux-tabs', role: 'tablist', kind: 'tabs' },
   { tag: 'ux-tab-panel', role: 'tabpanel', kind: 'region' },
-  { tag: 'ux-accordion', role: 'group', kind: 'toggle', stateAttr: 'open' },
+  { tag: 'ux-accordion', role: 'group', kind: 'accordion', stateAttr: 'open' },
+  { tag: 'ux-wizard', role: 'group', kind: 'wizard' },
+  { tag: 'ux-tooltip', role: 'tooltip', kind: 'tooltip', stateAttr: 'open' },
   { tag: 'ux-menu', role: 'menu', kind: 'value' },
   { tag: 'ux-menu-item', role: 'menuitem', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-select', role: 'listbox', kind: 'value' },
   { tag: 'ux-command-palette', role: 'dialog', kind: 'toggle', stateAttr: 'open' },
-  { tag: 'ux-tooltip', role: 'tooltip', kind: 'toggle', stateAttr: 'open' },
   { tag: 'ux-search-input', role: 'searchbox', kind: 'input' },
   { tag: 'ux-search-tags', role: 'list', kind: 'value' },
   { tag: 'ux-search-results', role: 'list', kind: 'region' },
@@ -56,7 +57,7 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-hero', role: 'region', kind: 'region' },
   { tag: 'ux-article', role: 'article', kind: 'region' },
   { tag: 'ux-alert', role: 'alert', kind: 'region' },
-  { tag: 'ux-progress', role: 'progressbar', kind: 'value' },
+  { tag: 'ux-progress', role: 'progressbar', kind: 'progress' },
   { tag: 'ux-spinner', role: 'status', kind: 'region' },
   { tag: 'ux-skeleton', role: 'status', kind: 'region' },
   { tag: 'ux-empty-state', role: 'status', kind: 'region' },
@@ -71,11 +72,11 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-form-errors', role: 'alert', kind: 'region' },
   { tag: 'ux-image', role: 'img', kind: 'image' },
   { tag: 'ux-image-panel', role: 'img', kind: 'toggle', stateAttr: 'open' },
-  { tag: 'ux-image-capture', role: 'group', kind: 'region' },
+  { tag: 'ux-image-capture', role: 'button', kind: 'capture' },
   { tag: 'ux-video', role: 'group', kind: 'video' },
-  { tag: 'ux-video-capture', role: 'group', kind: 'region' },
+  { tag: 'ux-video-capture', role: 'button', kind: 'capture' },
   { tag: 'ux-audio', role: 'group', kind: 'audio' },
-  { tag: 'ux-audio-capture', role: 'group', kind: 'region' },
+  { tag: 'ux-audio-capture', role: 'button', kind: 'capture' },
   { tag: 'ux-chart-line', role: 'img', kind: 'region' },
   { tag: 'ux-chart-bar', role: 'img', kind: 'region' },
   { tag: 'ux-chart-donut', role: 'img', kind: 'region' },
@@ -85,21 +86,14 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-chat-bubble', role: 'article', kind: 'region' },
   { tag: 'ux-chat-composer', role: 'form', kind: 'form' },
   { tag: 'ux-chat-roster', role: 'list', kind: 'region' },
-  { tag: 'ux-popover', role: 'dialog', kind: 'toggle', stateAttr: 'open' },
-  { tag: 'ux-hover-panel', role: 'dialog', kind: 'toggle', stateAttr: 'open' },
+  { tag: 'ux-popover', role: 'dialog', kind: 'popover', stateAttr: 'open' },
+  { tag: 'ux-hover-panel', role: 'dialog', kind: 'tooltip', stateAttr: 'open' },
   { tag: 'ux-splash', role: 'status', kind: 'region' },
   { tag: 'ux-splash-screen', role: 'status', kind: 'region' },
-  { tag: 'ux-wizard', role: 'group', kind: 'value' },
   { tag: 'ux-wysiwyg', role: 'textbox', kind: 'wysiwyg' },
-  { tag: 'ux-consent', role: 'region', kind: 'region' },
-  { tag: 'ux-consent-banner', role: 'region', kind: 'region' },
   { tag: 'ux-content', role: 'region', kind: 'region' },
   { tag: 'ux-chart-line-legend', role: 'list', kind: 'region' },
-  { tag: 'ux-locale', role: 'group', kind: 'lang-switcher' },
-  { tag: 'ux-theme', role: 'switch', kind: 'theme-toggle', stateAttr: 'checked' },
-  { tag: 'ux-lang-switcher', role: 'group', kind: 'lang-switcher' },
-  { tag: 'ux-theme-toggle', role: 'switch', kind: 'theme-toggle', stateAttr: 'checked' },
-  { tag: 'ux-network-status', role: 'status', kind: 'network-status' },
+  { tag: 'ux-network-status', role: 'status', kind: 'region' },
 ];
 
 const DEF_BY_TAG = new Map(PRIMITIVES.map((def) => [def.tag, def]));
@@ -855,6 +849,7 @@ class UxPrimitiveWysiwyg extends UxPrimitiveBase {
 
   private render(): void {
     if (!this.shadowRoot) return;
+    const initialValue = this.getAttribute('value') || this.innerHTML || '';
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; }
@@ -893,31 +888,328 @@ class UxPrimitiveWysiwyg extends UxPrimitiveBase {
         .editor:focus { outline: 2px solid var(--ux-color-accent, #2563eb); outline-offset: -1px; }
       </style>
       <div class="toolbar" part="toolbar">
-        <button type="button" title="Bold" onmousedown="event.preventDefault(); document.execCommand('bold')"><strong>B</strong></button>
-        <button type="button" title="Italic" onmousedown="event.preventDefault(); document.execCommand('italic')"><em>I</em></button>
-        <button type="button" title="Underline" onmousedown="event.preventDefault(); document.execCommand('underline')"><u>U</u></button>
-        <button type="button" title="Ordered list" onmousedown="event.preventDefault(); document.execCommand('insertOrderedList')">OL</button>
-        <button type="button" title="Unordered list" onmousedown="event.preventDefault(); document.execCommand('insertUnorderedList')">UL</button>
+        <button type="button" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+        <button type="button" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+        <button type="button" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button type="button" data-cmd="insertOrderedList" title="Ordered list">OL</button>
+        <button type="button" data-cmd="insertUnorderedList" title="Unordered list">UL</button>
       </div>
-      <div class="editor" contenteditable="true" part="editor" role="textbox" aria-multiline="true"><slot></slot></div>
+      <div class="editor" contenteditable="true" part="editor" role="textbox" aria-multiline="true"></div>
     `;
 
     const editor = this.shadowRoot.querySelector('.editor') as HTMLDivElement;
-    if (editor) {
-      editor.addEventListener('input', () => {
-        this.setAttribute('value', editor.innerHTML);
-        this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: editor.innerHTML } }));
+    if (!editor) return;
+
+    // Set initial content
+    if (initialValue) editor.innerHTML = initialValue;
+
+    const emitChange = () => {
+      const html = editor.innerHTML;
+      this.setAttribute('value', html);
+      this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: html } }));
+    };
+
+    editor.addEventListener('input', emitChange);
+
+    // Toolbar buttons — focus editor first, then execute command
+    const toolbar = this.shadowRoot.querySelector('.toolbar')!;
+    toolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        editor.focus();
+        document.execCommand((btn as HTMLElement).dataset.cmd || '');
+        emitChange();
       });
+    });
+
+    // Keyboard shortcuts
+    editor.addEventListener('keydown', (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      let cmd = '';
+      switch (e.key) {
+        case 'b': cmd = 'bold'; break;
+        case 'i': cmd = 'italic'; break;
+        case 'u': cmd = 'underline'; break;
+      }
+      if (cmd) {
+        e.preventDefault();
+        document.execCommand(cmd);
+        emitChange();
+      }
+    });
+  }
+}
+
+/** Tablist — <ux-tabs> — Arrow-key navigation and tab selection */
+class UxPrimitiveTabs extends UxPrimitiveBase {
+  private tabs: HTMLElement[] = [];
+  private panels: HTMLElement[] = [];
+
+  protected onConnected(): void {
+    super.onConnected();
+    this.setAttribute('role', 'tablist');
+    this.collectChildren();
+    this.addEventListener('click', this.onTabClick);
+    this.addEventListener('keydown', this.onTabKeyDown);
+  }
+
+  protected onDisconnected(): void {
+    this.removeEventListener('click', this.onTabClick);
+    this.removeEventListener('keydown', this.onTabKeyDown);
+    super.onDisconnected();
+  }
+
+  private collectChildren() {
+    this.tabs = Array.from(this.querySelectorAll('[role="tab"], ux-tab, [ux-role="tab"]'));
+    this.panels = Array.from(this.querySelectorAll('[role="tabpanel"], ux-tab-panel'));
+    if (this.tabs.length > 0 && !this.tabs.find((t) => t.getAttribute('aria-selected') === 'true')) {
+      this.selectTab(0);
     }
+  }
+
+  private readonly onTabClick = (e: Event) => {
+    const tab = (e.target as HTMLElement).closest('[role="tab"], ux-tab') as HTMLElement;
+    if (!tab) return;
+    const idx = this.tabs.indexOf(tab);
+    if (idx >= 0) this.selectTab(idx);
+    this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { selectedIndex: idx } }));
+  };
+
+  private readonly onTabKeyDown = (e: KeyboardEvent) => {
+    const current = this.tabs.findIndex((t) => t.matches(':focus, :focus-within'));
+    let next = current;
+    if (e.key === 'ArrowRight') next = (current + 1) % this.tabs.length;
+    else if (e.key === 'ArrowLeft') next = (current - 1 + this.tabs.length) % this.tabs.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = this.tabs.length - 1;
+    else return;
+    e.preventDefault();
+    this.selectTab(next);
+    this.tabs[next]?.focus();
+  };
+
+  private selectTab(index: number) {
+    this.tabs.forEach((t, i) => {
+      t.setAttribute('aria-selected', String(i === index));
+      t.setAttribute('tabindex', i === index ? '0' : '-1');
+    });
+    this.panels.forEach((p, i) => {
+      p.style.display = i === index ? '' : 'none';
+    });
+  }
+}
+
+/** Accordion — <ux-accordion> — Single-open behavior */
+class UxPrimitiveAccordion extends UxPrimitiveToggle {
+  protected onConnected(): void {
+    super.onConnected();
+    this.querySelectorAll('[ux-accordion-item], details').forEach((item) => {
+      item.addEventListener('toggle', this.onItemToggle as EventListener);
+    });
+  }
+
+  private readonly onItemToggle = (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (!target.hasAttribute('open')) return;
+    // Close all other items
+    this.querySelectorAll('[ux-accordion-item][open], details[open]').forEach((item) => {
+      if (item !== target) item.removeAttribute('open');
+    });
+  };
+}
+
+/** Popover — <ux-popover> — Click outside to dismiss */
+class UxPrimitivePopover extends UxPrimitiveToggle {
+  private boundClickOutside: ((e: Event) => void) | null = null;
+
+  protected onConnected(): void {
+    super.onConnected();
+    const stateAttr = this.getStateAttr();
+    this.boundClickOutside = (e: Event) => {
+      if (!this.hasAttribute(stateAttr)) return;
+      const target = e.target as HTMLElement;
+      if (!this.contains(target)) {
+        this.removeAttribute(stateAttr);
+        this.applyAriaState(false);
+        this.dispatchEvent(new CustomEvent('ux:close', { bubbles: true }));
+      }
+    };
+    document.addEventListener('click', this.boundClickOutside);
+  }
+
+  protected onDisconnected(): void {
+    if (this.boundClickOutside) {
+      document.removeEventListener('click', this.boundClickOutside);
+    }
+    super.onDisconnected();
+  }
+}
+
+/** Tooltip / Hover panel — <ux-tooltip>, <ux-hover-panel> — Hover to show */
+class UxPrimitiveTooltip extends UxPrimitiveToggle {
+  private trigger: HTMLElement | null = null;
+
+  protected onConnected(): void {
+    super.onConnected();
+    const stateAttr = this.getStateAttr();
+    this.trigger = this.querySelector('[ux-tooltip-trigger]') || this.previousElementSibling as HTMLElement;
+    if (this.trigger) {
+      this.trigger.addEventListener('mouseenter', () => this.setAttribute(stateAttr, ''));
+      this.trigger.addEventListener('mouseleave', () => this.removeAttribute(stateAttr));
+      this.trigger.addEventListener('focus', () => this.setAttribute(stateAttr, ''));
+      this.trigger.addEventListener('blur', () => this.removeAttribute(stateAttr));
+    }
+  }
+}
+
+/** Drawer — <ux-drawer> — Escape to close */
+class UxPrimitiveDrawer extends UxPrimitiveToggle {
+  protected onConnected(): void {
+    super.onConnected();
+    this.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && this.hasAttribute('open')) {
+        this.removeAttribute('open');
+        this.applyAriaState(false);
+        this.dispatchEvent(new CustomEvent('ux:close', { bubbles: true }));
+      }
+    });
+  }
+}
+
+/** Wizard — <ux-wizard> — Step navigation */
+class UxPrimitiveWizard extends UxPrimitiveValue {
+  private steps: HTMLElement[] = [];
+  private currentStep = 0;
+
+  protected onConnected(): void {
+    super.onConnected();
+    this.steps = Array.from(this.querySelectorAll('[ux-wizard-step]'));
+    this.goToStep(Number(this.getAttribute('value')) || 0);
+
+    this.addEventListener('click', (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.matches('[ux-wizard-next]')) { this.next(); }
+      else if (target.matches('[ux-wizard-prev]')) { this.prev(); }
+    });
+  }
+
+  private goToStep(index: number) {
+    if (index < 0 || index >= this.steps.length) return;
+    this.currentStep = index;
+    this.steps.forEach((s, i) => {
+      s.style.display = i === index ? '' : 'none';
+    });
+    this.setAttribute('value', String(index));
+    this.dispatchEvent(new CustomEvent('ux:change', {
+      bubbles: true,
+      detail: { step: index, total: this.steps.length },
+    }));
+  }
+
+  next() { this.goToStep(this.currentStep + 1); }
+  prev() { this.goToStep(this.currentStep - 1); }
+}
+
+/** Media capture — <ux-image-capture>, <ux-video-capture>, <ux-audio-capture> */
+class UxPrimitiveCapture extends UxPrimitiveBase {
+  private mediaStream: MediaStream | null = null;
+
+  protected onConnected(): void {
+    super.onConnected();
+    this.setAttribute('tabindex', '0');
+    this.addEventListener('click', this.startCapture);
+    this.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.startCapture(); }
+    });
+  }
+
+  private async startCapture() {
+    const tag = this.localName;
+    try {
+      let constraints: MediaStreamConstraints = {};
+      if (tag === 'ux-image-capture') {
+        constraints = { video: { facingMode: 'user' } };
+      } else if (tag === 'ux-video-capture') {
+        constraints = { video: true, audio: true };
+      } else if (tag === 'ux-audio-capture') {
+        constraints = { audio: true };
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.mediaStream = stream;
+      this.dispatchEvent(new CustomEvent('ux:capture', {
+        bubbles: true,
+        detail: { stream, kind: tag.replace('ux-', '').replace('-capture', '') },
+      }));
+    } catch (e) {
+      this.dispatchEvent(new CustomEvent('ux:capture-error', {
+        bubbles: true,
+        detail: { error: e instanceof Error ? e.message : String(e) },
+      }));
+    }
+  }
+
+  protected onDisconnected(): void {
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach((t) => t.stop());
+      this.mediaStream = null;
+    }
+    super.onDisconnected();
+  }
+}
+
+/** Progress bar — <ux-progress> — visual progress rendering */
+class UxPrimitiveProgress extends UxPrimitiveValue {
+  protected onConnected(): void {
+    super.onConnected();
+    this.renderProgress();
+  }
+
+  protected onAttributeChanged(name: string, _oldValue: string | null, _newValue: string | null): void {
+    if (name === 'value') this.renderProgress();
+  }
+
+  private renderProgress(): void {
+    const val = Math.min(100, Math.max(0, Number(this.getAttribute('value')) || 0));
+    const label = this.textContent?.trim() || `${val}%`;
+    this.innerHTML = '';
+    this.setAttribute('role', 'progressbar');
+    this.setAttribute('aria-valuenow', String(val));
+    this.setAttribute('aria-valuemin', '0');
+    this.setAttribute('aria-valuemax', '100');
+    this.setAttribute('aria-label', label);
+
+    const track = document.createElement('div');
+    track.style.cssText = 'width:100%;height:0.5rem;background:var(--ux-color-border,#e2e8f0);border-radius:999px;overflow:hidden;';
+
+    const fill = document.createElement('div');
+    fill.style.cssText = `width:${val}%;height:100%;background:var(--ux-color-accent,#2563eb);border-radius:999px;transition:width 0.3s ease;`;
+
+    track.appendChild(fill);
+    this.appendChild(track);
   }
 }
 
 function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
     case 'toggle':
+      return UxPrimitiveToggle;
     case 'checkbox':
     case 'switch':
       return UxPrimitiveToggle;
+    case 'tabs':
+      return UxPrimitiveTabs;
+    case 'accordion':
+      return UxPrimitiveAccordion;
+    case 'popover':
+      return UxPrimitivePopover;
+    case 'tooltip':
+      return UxPrimitiveTooltip;
+    case 'drawer':
+      return UxPrimitiveDrawer;
+    case 'wizard':
+      return UxPrimitiveWizard;
     case 'value':
       return UxPrimitiveValue;
     case 'input':
@@ -928,12 +1220,6 @@ function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
       return UxPrimitiveSlider;
     case 'form':
       return UxPrimitiveForm;
-    case 'lang-switcher':
-      return UxLangSwitcher;
-    case 'theme-toggle':
-      return UxThemeToggle;
-    case 'network-status':
-      return UxNetworkStatus;
     case 'image':
       return UxPrimitiveImage;
     case 'video':
@@ -942,6 +1228,10 @@ function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
       return UxPrimitiveAudio;
     case 'wysiwyg':
       return UxPrimitiveWysiwyg;
+    case 'capture':
+      return UxPrimitiveCapture;
+    case 'progress':
+      return UxPrimitiveProgress;
     default:
       return UxPrimitiveRegion;
   }

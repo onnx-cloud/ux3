@@ -16,7 +16,7 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 
 ## Why UX3?
 
-* **Zero runtime dependencies** – the framework ships as a handful of kilobytes and works with plain HTML and TypeScript.
+* **Zero runtime dependencies** – the framework ships as a handful of kiloclebytes and works with plain HTML and TypeScript.
 * **Config over code** – define UI, validation, styles, and text in declarative files; write behavioral code only when necessary.
 * **Compile‑time guarantees** – schemas, widget definitions, and templates are validated and type‑checked during build.
 * **Modular by design** – organise your project by concern (`widget`, `style`, `i18n`, etc.), not by feature, making it easy to scale and collaborate.

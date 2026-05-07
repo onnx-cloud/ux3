@@ -53,11 +53,18 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   private onLocaleChange: (() => void) | null = null;
   private templateEventDisposers: Array<() => void> = [];
   private logger = new StructuredLogger('ViewComponent');
+  private maxRetries = 10;
+  private retryDelay = 50;
 
   /**
    * Lifecycle: element inserted into DOM
    */
   protected onConnected(): void {
+    if (!window.__ux3App && this.maxRetries > 0) {
+      this.maxRetries--;
+      setTimeout(() => this.onConnected(), this.retryDelay);
+      return;
+    }
     try {
       // 1. Get app context from window (typed above)
       this.app = window.__ux3App as AppContext<Context>;
@@ -78,7 +85,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       if (!machine) {
         machine = this.app.machines[`${fsmName}FSM`];
         if (machine) {
-          this.logger.warn('fsm.fallback', { fsmName, fallback: `${fsmName}FSM` });
+          this.logger.debug('fsm.fallback', { fsmName, fallback: `${fsmName}FSM` });
         }
       }
       this.fsm = machine as any;
@@ -195,7 +202,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         : cfgMachine.getStateConfig?.(undefined);
 
     if (!fsmConfig.states) {
-      this.logger.warn('fsm.no_states', { fsmName });
+      this.logger.debug('fsm.no_states', { fsmName });
       return;
     }
 
@@ -211,17 +218,28 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   }
 
   /**
-   * Mount layout to shadow DOM
+   * Mount layout to shadow DOM.
+   *
+   * When the view element is already contained within a light DOM
+   * #ux-content that has the full layout rendered by the server, use a
+   * minimal wrapper (<main id="ux-content">) to avoid duplicating chrome
+   * (topbar, header, footer, etc.) inside the shadow root.
    */
   private mountLayout(): void {
     const shadow = this.shadowRoot!;
 
-    // Create container with layout
     const layoutEl = document.createElement('div');
     layoutEl.id = 'ux-layout';
     
-    // Render layout through app's render function to process Handlebars templates
-    const renderedLayout = this.app?.render?.(this.layout) || this.layout;
+    const lightContentEl = typeof document !== 'undefined'
+      ? document.getElementById('ux-content')
+      : null;
+    const alreadyRendered = lightContentEl && lightContentEl.contains(this);
+
+    const renderedLayout = alreadyRendered
+      ? '<main id="ux-content" role="main">{{{content}}}</main>'
+      : (this.app?.render?.(this.layout) || this.layout);
+
     layoutEl.innerHTML = renderedLayout;
 
     this.normalizeLayoutMountPoint(layoutEl);
@@ -336,6 +354,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         display: flex;
         flex-direction: column;
         height: 100%;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #111827;
       }
       
       #ux-content {
@@ -657,11 +677,13 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     const contentArea = this.shadowRoot?.querySelector('#ux-content');
     if (!contentArea) return;
 
-    contentArea.innerHTML = `
-      <div class="ux-error">
-        <pre>${error.message}</pre>
-      </div>
-    `;
+    contentArea.innerHTML = '';
+    const errDiv = document.createElement('div');
+    errDiv.className = 'ux-error';
+    const pre = document.createElement('pre');
+    pre.textContent = error.message;
+    errDiv.appendChild(pre);
+    contentArea.appendChild(errDiv);
 
     this.emitTelemetry('view:error', {
       view: this.getAttribute('ux-view'),

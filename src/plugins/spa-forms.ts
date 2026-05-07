@@ -14,6 +14,7 @@ export class FormsService {
     try {
       return Object.fromEntries(new FormData(form) as any);
     } catch (e) {
+      console.warn('[SpaForms] form data extraction failed', e instanceof Error ? e.message : String(e));
       return {};
     }
   }
