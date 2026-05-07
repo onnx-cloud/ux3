@@ -1,4 +1,6 @@
 import type { GeneratedConfig } from '../../../../src/ui/context-builder.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface BuildTimeTranslateConfig {
   enabled?: boolean;
@@ -29,6 +31,38 @@ type TranslateFn = (
 
 const DEFAULT_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+let envLoaded = false;
+
+function loadDotEnvIfPresent(): void {
+  if (envLoaded) {
+    return;
+  }
+
+  envLoaded = true;
+  const envPath = path.join(process.cwd(), '.env');
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+
+  const contents = fs.readFileSync(envPath, 'utf8');
+  for (const line of contents.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    const separator = trimmed.indexOf('=');
+    if (separator < 0) {
+      continue;
+    }
+
+    const key = trimmed.slice(0, separator).trim();
+    const value = trimmed.slice(separator + 1).trim().replace(/^['"]|['"]$/g, '');
+    if (key && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
 
 async function callTranslationApi(
   text: string,
@@ -161,6 +195,8 @@ export async function applyBuildTimeTranslation(
   if (pluginConfig.enabled === false) {
     return null;
   }
+
+  loadDotEnvIfPresent();
 
   const i18n = (config.i18n || {}) as Record<string, Record<string, string>>;
   const sourceLocale = getSourceLocale(pluginConfig, i18n);

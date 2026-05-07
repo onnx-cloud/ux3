@@ -8,7 +8,7 @@ It allows you to declare the structure of your app in YAML and HTML while the fr
 
 Whether you’re building an internal dashboard, a customer portal, or a full‑fledged public web app, UX3 gives you the tools to stay productive without sacrificing control. 
 
-The core of UX3 is a small runtime coupled with a powerful compile‑time toolchain that generates strongly‑typed components, validators, and view logic — letting you catch errors before they reach the browser.
+The core of UX3 is a small runtime coupled with a powerful compile‑time toolchain that generates strongly‑typed components, validators, and widget logic — letting you catch errors before they reach the browser.
 
 [![ONNX.cloud](./onnx.cloud.logo.png)](https://onnx.cloud)
 
@@ -18,10 +18,10 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 
 * **Zero runtime dependencies** – the framework ships as a handful of kilobytes and works with plain HTML and TypeScript.
 * **Config over code** – define UI, validation, styles, and text in declarative files; write behavioral code only when necessary.
-* **Compile‑time guarantees** – schemas, view definitions, and templates are validated and type‑checked during build.
-* **Modular by design** – organise your project by concern (`view`, `style`, `i18n`, etc.), not by feature, making it easy to scale and collaborate.
-* **Built‑in state machines** – every view is an FSM; complex interactions are modelled declaratively and remain predictable.
-* **Fully typed** – generated TypeScript interfaces for validation rules, API responses, and view parameters keep you in the editor with autocomplete.
+* **Compile‑time guarantees** – schemas, widget definitions, and templates are validated and type‑checked during build.
+* **Modular by design** – organise your project by concern (`widget`, `style`, `i18n`, etc.), not by feature, making it easy to scale and collaborate.
+* **Built‑in state machines** – every widget is an FSM; complex interactions are modelled declaratively and remain predictable.
+* **Fully typed** – generated TypeScript interfaces for validation rules, API responses, and widget parameters keep you in the editor with autocomplete.
 
 ---
 
@@ -32,7 +32,7 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 * **Styles** – all visual rules live in `ux/style/` and are referenced by widget name; variants are data‑driven.
 * **Tokens** – design primitives (colors, spacing, typography) defined in YAML and consumed across styles.
 * **Validation** – rules in `ux/validation/` with messages kept separately in `ux/i18n/` for translations.
-* **i18n** – nested JSON files mirroring your route/view hierarchy; no strings in code.
+* **i18n** – nested JSON files mirroring your route/widget hierarchy; no strings in code.
 
 ---
 
@@ -64,14 +64,14 @@ The core of UX3 is a small runtime coupled with a powerful compile‑time toolch
 
    This creates a barebones SPA with `src/`, `public/`, `package.json`,
    and pre‑populated scripts that invoke `ux3 dev`, `build`, `check`, etc.
-   The generator also drops an example view and configuration so you can
+   The generator also drops an example widget and configuration so you can
    start editing immediately.
 
 3. **Add or modify a view**
 
    The project generator creates a sample widget (`ux/widget/hello.yaml`).
    You can open that file, edit it, or add new YAML views. A simple
-   login view might look like this:
+   login widget might look like this:
 
    ```yaml
    # ux/widget/login.yaml
