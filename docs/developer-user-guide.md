@@ -20,7 +20,7 @@ Create a view YAML with explicit states and transitions.
 initial: loading
 states:
   loading:
-    template: view/home/loading.html
+    template: widget/home/loading.html
     invoke:
       service: home
       method: fetch
@@ -28,11 +28,11 @@ states:
       SUCCESS: ready
       ERROR: error
   ready:
-    template: view/home/ready.html
+    template: widget/home/ready.html
     on:
       REFRESH: loading
   error:
-    template: view/home/error.html
+    template: widget/home/error.html
     on:
       RETRY: loading
 ```

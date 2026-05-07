@@ -1,5 +1,7 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import { createRequire } from 'module';
+export { applyBuildTimeTranslation } from './build-time.js';
+export type { BuildTimeTranslateConfig, BuildTimeTranslateResult } from './build-time.js';
 
 const _require = createRequire(import.meta.url);
 const { version } = _require('../package.json') as { version: string };

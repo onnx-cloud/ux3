@@ -125,7 +125,7 @@ describe('sync view', () => {
   it('creates stub HTML for missing state templates', async () => {
     await fs.writeFile(
       path.join(project, 'ux', 'view', 'login.yaml'),
-      'initial: idle\nstates:\n  idle:\n    template: view/login/idle.html\n  error:\n    template: view/login/error.html\n',
+      'initial: idle\nstates:\n  idle:\n    template: widget/login/idle.html\n  error:\n    template: widget/login/error.html\n',
       'utf-8',
     );
 
@@ -142,7 +142,7 @@ describe('sync view', () => {
     await fs.writeFile(path.join(project, 'ux', 'view', 'login', 'idle.html'), 'sentinel', 'utf-8');
     await fs.writeFile(
       path.join(project, 'ux', 'view', 'login.yaml'),
-      'initial: idle\nstates:\n  idle:\n    template: view/login/idle.html\n',
+      'initial: idle\nstates:\n  idle:\n    template: widget/login/idle.html\n',
       'utf-8',
     );
 
@@ -154,7 +154,7 @@ describe('sync view', () => {
   it('dry-run does not write files', async () => {
     await fs.writeFile(
       path.join(project, 'ux', 'view', 'login.yaml'),
-      'initial: idle\nstates:\n  idle:\n    template: view/login/idle.html\n',
+      'initial: idle\nstates:\n  idle:\n    template: widget/login/idle.html\n',
       'utf-8',
     );
 
@@ -166,7 +166,7 @@ describe('sync view', () => {
   it('handles shorthand state: template-string syntax', async () => {
     await fs.writeFile(
       path.join(project, 'ux', 'view', 'home.yaml'),
-      'initial: idle\nstates:\n  idle: view/home/idle.html\n',
+      'initial: idle\nstates:\n  idle: widget/home/idle.html\n',
       'utf-8',
     );
 

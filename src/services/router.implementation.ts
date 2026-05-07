@@ -99,4 +99,4 @@
 // 5. History & browser back/forward
 //    - popstate listeners send NAVIGATE events
 //    - Router updates window.history.pushState on navigation
-//    - Current path/view/params always reflect browser location
+//    - Current path/widget/params always reflect browser location

@@ -96,10 +96,12 @@ export class ViewCompiler {
   private diagnostics: string[] = [];
 
   constructor(srcDir: string = './ux/widget', destDir: string = './generated/views', projectDir?: string) {
-    this.srcDir = srcDir;
+    const preferredSrcDir = srcDir;
+    const fallbackSrcDir = preferredSrcDir.replace(/ux[\\/]widget$/, 'ux/view');
+    this.srcDir = fs.existsSync(preferredSrcDir) ? preferredSrcDir : fallbackSrcDir;
     this.destDir = destDir;
     // If projectDir is not provided, derive it from srcDir (go up 2 levels from ux/widget)
-    this.projectDir = projectDir || path.resolve(path.dirname(path.dirname(srcDir)));
+    this.projectDir = projectDir || path.resolve(path.dirname(path.dirname(this.srcDir)));
   }
 
   private toProjectRelativePath(targetPath: string): string {
@@ -163,7 +165,7 @@ export class ViewCompiler {
     const stateConfigs = parsed.states || {};
     const normalizedSrcDir = path.resolve(this.srcDir);
     const strictTemplateMissing =
-      path.basename(normalizedSrcDir) === 'widget' &&
+      (path.basename(normalizedSrcDir) === 'widget' || path.basename(normalizedSrcDir) === 'view') &&
       path.basename(path.dirname(normalizedSrcDir)) === 'ux';
 
     // Load layout HTML - layouts live in ux/layout/, not ux/widget/
@@ -199,11 +201,12 @@ export class ViewCompiler {
         return [normalized];
       }
 
-      if (normalized.startsWith('widget/')) {
+      if (normalized.startsWith('widget/') || normalized.startsWith('view/')) {
+        const stripPrefix = normalized.startsWith('widget/') ? 'widget/' : 'view/';
         // Canonical project form: ux/widget/... (srcDir is usually ux/widget)
         candidates.push(path.join(this.srcDir, '..', normalized));
         // Test-friendly form when srcDir itself is the widget root.
-        candidates.push(path.join(this.srcDir, normalized.slice('widget/'.length)));
+        candidates.push(path.join(this.srcDir, normalized.slice(stripPrefix.length)));
       } else {
         candidates.push(path.join(this.srcDir, normalized));
       }

@@ -59,7 +59,7 @@ export declare class Router {
      */
     addRoute(path: string, view: string): void;
     /**
-     * Update current path/view/params in NavConfig
+     * Update current path/widget/params in NavConfig
      */
     updateCurrent(pathname: string): void;
     /**

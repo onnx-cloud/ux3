@@ -33,7 +33,7 @@ describe('MCP stdio e2e', () => {
     }
   });
 
-  it('exposes and executes every MCP tool over stdio', async () => {
+    it('exposes and executes every MCP tool over stdio', async () => {
     const tempProjectDir = createTempProjectCopy('mcp-stdio-e2e');
     const transport = new StdioClientTransport({
       command: 'npx',
@@ -60,7 +60,7 @@ describe('MCP stdio e2e', () => {
     expect(jsonResult(await client.callTool({ name: 'entity.search', arguments: { kind: 'route', query: '/capabilities/mcp' } })).results.length).toBeGreaterThan(0);
 
     expect(jsonResult(await client.callTool({ name: 'view.get', arguments: { name: 'home' } })).yaml).toContain('initial: loading');
-    expect(jsonResult(await client.callTool({ name: 'views.search', arguments: { query: 'governance' } })).results.length).toBeGreaterThan(0);
+    expect(jsonResult(await client.callTool({ name: 'views.search', arguments: { query: 'capability' } })).results.length).toBeGreaterThan(0);
     expect(jsonResult(await client.callTool({ name: 'view.create', arguments: { name: 'SdkView', description: 'SDK view', initialState: 'idle' } })).success).toBe(true);
     expect(jsonResult(await client.callTool({ name: 'view.validate', arguments: { nameOrPath: 'home' } })).valid).toBeTypeOf('boolean');
 
@@ -97,8 +97,8 @@ describe('MCP stdio e2e', () => {
     expect(jsonResult(await client.callTool({ name: 'hints.list', arguments: {} })).hints.length).toBeGreaterThan(0);
     expect(jsonResult(await client.callTool({ name: 'hints.view', arguments: { section: 'view' } })).content).toContain('#');
 
-    expect(jsonResult(await client.callTool({ name: 'entity.create', arguments: { kind: 'view', name: 'SdkEntityView', content: 'name: SdkEntityView\ninitial: idle\nstates:\n  idle:\n    template: view/SdkEntityView/index.html\n', template: '<div>entity</div>\n' } })).success).toBe(true);
-    expect(jsonResult(await client.callTool({ name: 'entity.update', arguments: { kind: 'view', name: 'SdkEntityView', content: 'name: SdkEntityView\ninitial: done\nstates:\n  done:\n    template: view/SdkEntityView/index.html\n', template: '<div>entity updated</div>\n' } })).success).toBe(true);
+    expect(jsonResult(await client.callTool({ name: 'entity.create', arguments: { kind: 'view', name: 'SdkEntityView', content: 'name: SdkEntityView\ninitial: idle\nstates:\n  idle:\n    template: widget/SdkEntitywidget/index.html\n', template: '<div>entity</div>\n' } })).success).toBe(true);
+    expect(jsonResult(await client.callTool({ name: 'entity.update', arguments: { kind: 'view', name: 'SdkEntityView', content: 'name: SdkEntityView\ninitial: done\nstates:\n  done:\n    template: widget/SdkEntitywidget/index.html\n', template: '<div>entity updated</div>\n' } })).success).toBe(true);
     expect(jsonResult(await client.callTool({ name: 'entity.delete', arguments: { kind: 'view', name: 'SdkEntityView' } })).deleted).toBe(true);
 
     await transport.close();

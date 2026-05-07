@@ -42,7 +42,9 @@ export class ResourceRegistry {
     const uxPath = path.join(projectDir, 'ux');
     const srcUxPath = path.join(projectDir, 'src', 'ux');
     this.uxDir = fs.existsSync(uxPath) ? uxPath : srcUxPath;
-    this.viewsDir = path.join(this.uxDir, 'view');
+    this.viewsDir = fs.existsSync(path.join(this.uxDir, 'widget'))
+      ? path.join(this.uxDir, 'widget')
+      : path.join(this.uxDir, 'view');
     this.frameworkRoot =
       this.findFrameworkRoot(MODULE_DIR) ??
       this.findFrameworkRoot(process.cwd()) ??
@@ -185,11 +187,11 @@ You are a UX3 expert assistant. UX3 is a compile-first SPA framework where:
 initial: idle
 states:
   idle:
-    template: view/login/idle.html
+    template: widget/login/idle.html
     on:
       SUBMIT: submitting
   submitting:
-    template: view/login/submitting.html
+    template: widget/login/submitting.html
     invoke:
       src: handleLogin  # local function
       # or:
@@ -198,7 +200,7 @@ states:
     on:
       SUCCESS: done
       ERROR: idle
-  done: view/login/done.html
+  done: widget/login/done.html
 \`\`\`
 
 ## Available MCP Tools
@@ -301,9 +303,11 @@ states:
     let content = `# ${exampleName} Example\n\n`;
 
     // List views in the example
-    const viewsDir = fs.existsSync(path.join(examplePath, 'ux', 'view'))
-      ? path.join(examplePath, 'ux', 'view')
-      : path.join(examplePath, 'src', 'ux', 'view');
+    const viewsDir = fs.existsSync(path.join(examplePath, 'ux', 'widget'))
+      ? path.join(examplePath, 'ux', 'widget')
+      : fs.existsSync(path.join(examplePath, 'ux', 'view'))
+        ? path.join(examplePath, 'ux', 'view')
+        : path.join(examplePath, 'src', 'ux', 'view');
     if (fs.existsSync(viewsDir)) {
       const views = fs.readdirSync(viewsDir).filter((f) => !f.startsWith('.'));
       content += `## Views\n\n${views.map((v) => `- ${v}`).join('\n')}\n\n`;
@@ -328,7 +332,7 @@ states:
     let content = '# Project Structure\n\n';
 
     // Views
-    const viewsDir = path.join(this.uxDir, 'view');
+    const viewsDir = this.viewsDir;
     if (fs.existsSync(viewsDir)) {
       const views = fs.readdirSync(viewsDir).filter((f) => !f.startsWith('.'));
       content += `## Views (${views.length})\n\n${views.map((v) => `- ${v}`).join('\n')}\n\n`;
@@ -410,6 +414,11 @@ states:
         const fullPath = path.join(this.viewsDir, entry);
         const stats = fs.statSync(fullPath);
         if (stats.isDirectory()) {
+          const directYaml = path.join(fullPath, `${entry}.yaml`);
+          const siblingYaml = path.join(this.viewsDir, `${entry}.yaml`);
+          if (!fs.existsSync(directYaml) && !fs.existsSync(siblingYaml)) {
+            return;
+          }
           resources.push({
             uri: this.toResourceUri(RESOURCE_URIS.view(entry)),
             name: `${entry} View`,

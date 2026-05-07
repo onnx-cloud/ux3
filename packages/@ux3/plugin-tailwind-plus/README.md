@@ -2,7 +2,7 @@
 
 Production plugin for integrating official Tailwind Plus widgets into UX3.
 This package does not ship demo widgets, placeholder templates, or hardcoded
-FSM/view/route assumptions.
+FSM/widget/route assumptions.
 
 ## Features
 

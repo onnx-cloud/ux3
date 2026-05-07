@@ -355,6 +355,25 @@ function ensureOidcControlsElement(app: AppContext): void {
         return;
       }
 
+      const statusText = isAuthenticated ? `Connected to ${provider}` : `Not connected (${provider})`;
+      const tokenText = tokenHint;
+
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host { display: inline-flex; }
+          .oidc-controls { display: inline-flex; align-items: center; gap: 0.5rem; }
+          .oidc-status { font-size: 0.75rem; color: #475569; }
+          button { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; border-radius: 0.375rem; padding: 0.375rem 0.625rem; cursor: pointer; font-size: 0.8125rem; }
+          button:hover { background: #f8fafc; }
+        </style>
+        <div class="oidc-controls">
+          <span class="oidc-status">${statusText} · token ${tokenText}</span>
+          ${isAuthenticated
+            ? '<button type="button" data-action="logout">' + labelLogout + '</button>'
+            : '<button type="button" data-action="login">' + labelLogin + '</button>'}
+        </div>
+      `;
+
       this.shadowRoot.querySelector('[data-action="login"]')?.addEventListener('click', () => {
         const currentApp = getActiveApp();
         void (currentApp.utils as any).oidcLogin?.();

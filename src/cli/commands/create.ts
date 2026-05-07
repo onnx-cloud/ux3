@@ -49,10 +49,21 @@ export const createCommand = new Command()
 
     const ctx = buildContext(name, { version: options.version });
 
-    const written = await emitScaffold(section, ctx, projectDir, {
+    // Always scaffold the base project skeleton first; app-specific sections
+    // then layer on top to provide ux artifacts.
+    const writtenProject = await emitScaffold('project', ctx, projectDir, {
       dryRun: options.dryRun,
       force: false,
     });
+
+    const writtenSection = section === 'project'
+      ? []
+      : await emitScaffold(section, ctx, projectDir, {
+          dryRun: options.dryRun,
+          force: false,
+        });
+
+    const written = [...writtenProject, ...writtenSection];
 
     // Ensure extra empty directories exist (not representable as template files)
     if (!options.dryRun) {

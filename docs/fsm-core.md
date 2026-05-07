@@ -25,18 +25,18 @@ In UX3, your view YAML is the contract for those behaviors.
 initial: idle
 states:
   idle:
-    template: view/account/idle.html
+    template: widget/account/idle.html
     on:
       EDIT: editing
 
   editing:
-    template: view/account/editing.html
+    template: widget/account/editing.html
     on:
       CANCEL: idle
       SAVE: saving
 
   saving:
-    template: view/account/saving.html
+    template: widget/account/saving.html
     invoke:
       service: account
       method: update
@@ -45,7 +45,7 @@ states:
       ERROR: error
 
   error:
-    template: view/account/error.html
+    template: widget/account/error.html
     on:
       RETRY: saving
 ```

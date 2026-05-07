@@ -178,7 +178,7 @@ describe('UX3 CLI commands', () => {
 
     await fs.writeFile(
       path.join(project, 'ux', 'ux3.yaml'),
-      ['name: lint-summary', 'index: view/hello.yaml'].join('\n')
+      ['name: lint-summary', 'index: widget/hello.yaml'].join('\n')
     );
     await fs.writeFile(
       path.join(project, 'ux', 'view', 'hello.yaml'),

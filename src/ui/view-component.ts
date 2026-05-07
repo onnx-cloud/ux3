@@ -50,6 +50,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   };
 
   private unsubscribe: (() => void) | null = null;
+  private onLocaleChange: (() => void) | null = null;
   private templateEventDisposers: Array<() => void> = [];
   private logger = new StructuredLogger('ViewComponent');
 
@@ -131,6 +132,10 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         this.onFSMStateChange(state);
       });
 
+      // 8. Re-render on locale change so i18n-interpolated templates update
+      this.onLocaleChange = () => this.renderState(this.state);
+      window.addEventListener('languagechange', this.onLocaleChange);
+
       // Emit telemetry
       this.emitTelemetry('view:mount', {
         view: viewName || fsmName,
@@ -151,6 +156,12 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       if (this.unsubscribe) {
         this.unsubscribe();
         this.unsubscribe = null;
+      }
+
+      // Cleanup: locale change listener
+      if (this.onLocaleChange) {
+        window.removeEventListener('languagechange', this.onLocaleChange);
+        this.onLocaleChange = null;
       }
 
       // Cleanup: remove event listeners
@@ -219,8 +230,67 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     const style = document.createElement('style');
     style.textContent = this.getStyles();
     shadow.appendChild(style);
+    this.syncGlobalStylesIntoShadow(shadow);
 
     shadow.appendChild(layoutEl);
+    this.applyMappedStyles(shadow);
+
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => this.syncGlobalStylesIntoShadow(shadow));
+    }
+    setTimeout(() => this.syncGlobalStylesIntoShadow(shadow), 120);
+  }
+
+  private syncGlobalStylesIntoShadow(shadow: ShadowRoot): void {
+    if (typeof document === 'undefined' || !document.head) {
+      return;
+    }
+
+    const existingLinks = new Set(
+      Array.from(shadow.querySelectorAll('link[rel="stylesheet"]'))
+        .map((el) => el.getAttribute('href'))
+        .filter((href): href is string => Boolean(href))
+    );
+
+    for (const link of Array.from(document.head.querySelectorAll('link[rel="stylesheet"]'))) {
+      const href = link.getAttribute('href');
+      if (!href || existingLinks.has(href)) {
+        continue;
+      }
+      shadow.appendChild(link.cloneNode(true));
+      existingLinks.add(href);
+    }
+
+    const headStyles = Array.from(document.head.querySelectorAll('style'));
+    for (const [index, style] of headStyles.entries()) {
+      const key = style.getAttribute('data-ux3-shadow-key') || `head-style-${index}`;
+      if (shadow.querySelector(`style[data-ux3-shadow-key="${key}"]`)) {
+        continue;
+      }
+      const clone = style.cloneNode(true) as HTMLStyleElement;
+      clone.setAttribute('data-ux3-shadow-key', key);
+      shadow.appendChild(clone);
+    }
+  }
+
+  private applyMappedStyles(root: ParentNode): void {
+    const styleMap = (this.app as { styles?: Record<string, string> } | undefined)?.styles;
+    if (!styleMap) {
+      return;
+    }
+
+    root.querySelectorAll('[ux-style], [data-style]').forEach((el) => {
+      const key = el.getAttribute('ux-style') || el.getAttribute('data-style') || '';
+      const mapped = styleMap[key];
+      if (!mapped || typeof mapped !== 'string') {
+        return;
+      }
+
+      const node = el as HTMLElement;
+      const existing = node.className.split(/\s+/).filter(Boolean);
+      const incoming = mapped.split(/\s+/).filter(Boolean);
+      node.className = Array.from(new Set([...existing, ...incoming])).join(' ');
+    });
   }
 
   /**
@@ -334,6 +404,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     // Render template through app's render function to process Handlebars
     const renderedHtml = this.app.render ? this.app.render(template) : template;
     contentArea.innerHTML = renderedHtml;
+    this.applyMappedStyles(contentArea);
 
     // Rebind event listeners
     this.setupEventListeners();

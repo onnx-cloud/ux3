@@ -146,11 +146,15 @@ function requireI18nSiteMetadata(i18n: Record<string, any>): void {
   const description = i18n?.site?.description;
 
   if (typeof title !== 'string' || title.trim().length === 0) {
-    throw new Error('Missing required i18n key: site.title');
+    console.warn('[ux3 dev] Missing i18n key: site.title — add it to your locale file for proper <title> support');
+    if (!i18n.site) i18n.site = {};
+    i18n.site.title = '';
   }
 
   if (typeof description !== 'string' || description.trim().length === 0) {
-    throw new Error('Missing required i18n key: site.description');
+    console.warn('[ux3 dev] Missing i18n key: site.description — add it to your locale file');
+    if (!i18n.site) i18n.site = {};
+    i18n.site.description = '';
   }
 }
 
@@ -266,6 +270,9 @@ export class DevServer {
         // Construct URL with host as base to support relative req.url values
         const url = new URL(req.url, `http://${req.headers.host}`);
         const pathname = url.pathname;
+        const viewRootDir = fsExtra.existsSync(path.join(this.projectDir, 'ux', 'widget'))
+          ? path.join(this.projectDir, 'ux', 'widget')
+          : path.join(this.projectDir, 'ux', 'view');
 
         // CORS headers
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -343,7 +350,7 @@ export class DevServer {
 
           // First, try fallback: ux/widget/index.yaml (if any)
           try {
-            const defaultIndexPath = path.join(this.projectDir, 'ux', 'widget', 'index.yaml');
+            const defaultIndexPath = path.join(viewRootDir, 'index.yaml');
             if (fsExtra.existsSync(defaultIndexPath)) {
               const viewYaml = await fsp.readFile(defaultIndexPath, 'utf-8');
               let view: any = {};
@@ -361,7 +368,7 @@ export class DevServer {
 
               // Prefer compiled templates from in-memory manifest when available, otherwise read source file
               try {
-                const m = String(templateRel).match(/^widget\/([^\/]+)(?:\/(.*))?$/);
+                const m = String(templateRel).match(/^(?:widget|view)\/([^\/]+)(?:\/(.*))?$/);
                 const viewName = m ? m[1] : null;
                 const stateName = m && m[2] ? m[2].replace(/\.html$/, '') : undefined;
 
@@ -375,7 +382,7 @@ export class DevServer {
                     const currentViewName = (view && view.name) ? String(view.name) : 'index';
                     const currentTpl = tplMap[currentViewName] || {};
                     candidate = (stateName && currentTpl[stateName]) || Object.values(currentTpl)[0];
-                    if (candidate) { /* resolved template from manifest for current view/state */ }
+                    if (candidate) { /* resolved template from manifest for current widget/state */ }
                   } else {
                     /* resolved template from manifest */
                   }
@@ -397,13 +404,30 @@ export class DevServer {
                     /* could not read template at path */
                   }
                 }
+                  if (!templateHtml) {
+                    let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//, ''));
+                    if (!fsExtra.existsSync(templatePath)) {
+                      const alt = path.join(this.projectDir, templateRel.replace(/^\//, ''));
+                      if (fsExtra.existsSync(alt)) {
+                        templatePath = alt;
+                      } else if (/^(widget|view)\//.test(templateRel.replace(/^\//, ''))) {
+                        // widget/view prefix not found; try the other one (widget↔view fallback)
+                        const bare = templateRel.replace(/^\//, '').replace(/^(widget|view)\//, '');
+                        const viewFallback = path.join(this.projectDir, 'ux', 'view', bare);
+                        const widgetFallback = path.join(this.projectDir, 'ux', 'widget', bare);
+                        if (fsExtra.existsSync(viewFallback)) templatePath = viewFallback;
+                        else if (fsExtra.existsSync(widgetFallback)) templatePath = widgetFallback;
+                      }
+                    }
+                    try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) { /* could not read */ }
+                  }
               } catch (err) {
                 /* manifest/template resolution failed */
               }
 
               // If still missing, instruct developer to compile (fail-fast, don't guess)
               if (!templateHtml) {
-                templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing widget template</h2><p>The index widget references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate widget artifacts, then refresh.</p></div>`;
+                templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
               }
               // Build nav config
               const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
@@ -439,7 +463,7 @@ export class DevServer {
               const site = await getSiteConfig(this.projectDir, this.manifest);
 
 
-              const indexSpec: string = uxConfig.index || 'widget/index.yaml';
+              const indexSpec: string = uxConfig.index || `${path.basename(viewRootDir)}/index.yaml`;
               const indexPath = path.join(this.projectDir, 'ux', indexSpec.replace(/^\//, ''));
 
               if (fsExtra.existsSync(indexPath)) {
@@ -460,7 +484,7 @@ export class DevServer {
 
                 // Prefer manifest template first (compiled output), otherwise read source file
                 try {
-                  const m = String(templateRel).match(/^widget\/([^\/]+)(?:\/(.*))?$/);
+                  const m = String(templateRel).match(/^(?:widget|view)\/([^\/]+)(?:\/(.*))?$/);
                   let viewName: string | null = null;
                   let stateName: string | null = null;
                   if (m) {
@@ -495,7 +519,7 @@ export class DevServer {
 
                 // If still missing, instruct developer to run compilation (fail-fast, don't guess)
                 if (!templateHtml) {
-                  const msg = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing widget template</h2><p>The index widget references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate widget artifacts, then refresh.</p></div>`;
+                  const msg = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
                   templateHtml = msg;
                   // Note: do not throw or attempt additional fs guessing — stay within architecture contract
                   console.warn(`[DevServer] Missing template: ${templateRel}. compile generated widgets.`);
@@ -564,7 +588,7 @@ export class DevServer {
           const match = routes.find(r => this.pathMatches(r.path, pathname));
           if (match) {
             const viewName = match.view;
-            const viewYamlPath = path.join(this.projectDir, 'ux', 'widget', `${viewName}.yaml`);
+            const viewYamlPath = path.join(viewRootDir, `${viewName}.yaml`);
             if (fsExtra.existsSync(viewYamlPath)) {
               const viewYaml = await fsp.readFile(viewYamlPath, 'utf-8');
               let view: any = {};
@@ -601,8 +625,8 @@ export class DevServer {
                   // Try multiple resolution paths for bare filenames
                   const tplCandidates = [
                     path.join(this.projectDir, 'ux', templateRel.replace(/^\//,'')),
-                    path.join(this.projectDir, 'ux', 'widget', templateRel.replace(/^\//,'')),
-                    path.join(this.projectDir, 'ux', 'widget', viewName, templateRel.replace(/^\//,'')),
+                    path.join(viewRootDir, templateRel.replace(/^\//,'')),
+                    path.join(viewRootDir, viewName, templateRel.replace(/^\//,'')),
                   ];
                   for (const tp of tplCandidates) {
                     if (fsExtra.existsSync(tp)) {

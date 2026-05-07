@@ -206,10 +206,10 @@ export function alertClass(
 }
 
 // ============================================================================
-// CDN CONFIGURATION
+// ASSET CONFIGURATION
 // ============================================================================
 
-const DEFAULT_TAILWIND_CDN = 'https://cdn.tailwindcss.com';
+const DEFAULT_TAILWIND_CSS = '/tailwind.css';
 
 // ============================================================================
 // PLUGIN DEFINITION
@@ -246,13 +246,16 @@ export const TailwindCssPlugin: Plugin = {
       css?: string | false;
       customProperties?: boolean;
     };
-    const assetUrl = config.css || config.cdn || DEFAULT_TAILWIND_CDN;
+    const explicitCss = typeof config.css === 'string' && config.css.length > 0 ? config.css : undefined;
+    const explicitCdn = typeof config.cdn === 'string' && config.cdn.length > 0 ? config.cdn : undefined;
+    const assetUrl = explicitCss || explicitCdn || DEFAULT_TAILWIND_CSS;
+    const shouldRegisterAsset = config.css !== false && (explicitCss !== undefined || explicitCdn !== undefined || config.cdn !== false);
     const isScriptAsset =
       typeof assetUrl === 'string' &&
       (assetUrl.includes('@tailwindcss/browser') || assetUrl.includes('cdn.tailwindcss.com') || assetUrl.endsWith('.js'));
 
     // Register configured stylesheet/script if enabled
-    if (config.cdn !== false && config.css !== false && typeof assetUrl === 'string' && assetUrl.length > 0) {
+    if (shouldRegisterAsset && typeof assetUrl === 'string' && assetUrl.length > 0) {
       if (isScriptAsset) {
         app.registerAsset?.({
           type: 'script',

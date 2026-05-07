@@ -33,7 +33,7 @@ export const ChartsJsPlugin: Plugin = {
       };
     });
 
-    // register a simple demo view/route showing how to use the service.
+    // register a simple demo widget/route showing how to use the service.
     // Inline <script> tags are forbidden by the framework's CSP policy; wire
     // chart initialisation via ux-event instead.
     const chartTemplate = `<div class="p-4">

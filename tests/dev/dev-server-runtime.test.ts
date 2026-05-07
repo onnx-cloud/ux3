@@ -12,7 +12,7 @@ import os from 'os';
  */
 
 describe('DevServer runtime asset injection', () => {
-  it('appends runtime tags into head and scripts', async () => {
+  it('appends runtime tags into head and scripts', { timeout: 30000 }, async () => {
     const tmpRoot = path.join(process.cwd(), 'tmp');
     await fs.ensureDir(tmpRoot);
     const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
@@ -110,5 +110,5 @@ describe('DevServer runtime asset injection', () => {
 
     await server.stop();
     await fs.remove(temp);
-  }, { timeout: 30000 });
+    });
 });

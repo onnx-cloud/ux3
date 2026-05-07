@@ -48,7 +48,9 @@ export class ToolRegistry {
     const srcUxPath = path.join(projectDir, 'src', 'ux');
     const uxPath = path.join(projectDir, 'ux');
     this.uxDir = fs.existsSync(uxPath) ? uxPath : srcUxPath;
-    this.viewsDir = path.join(this.uxDir, 'view');
+    this.viewsDir = fs.existsSync(path.join(this.uxDir, 'widget'))
+      ? path.join(this.uxDir, 'widget')
+      : path.join(this.uxDir, 'view');
     this.layoutsDir = path.join(this.uxDir, 'layout');
     this.i18nDir = path.join(this.uxDir, 'i18n');
     this.servicesDir = path.join(this.uxDir, 'service');
@@ -689,7 +691,7 @@ export class ToolRegistry {
 
     // Parse states if provided, otherwise create a simple one
     const stateDefinitions = states && Array.isArray(states) ? states : [
-      { name: initialState, template: `view/${name}/${initialState}.html` }
+      { name: initialState, template: `widget/${name}/${initialState}.html` }
     ];
 
     // Build the FSM YAML structure
@@ -701,7 +703,7 @@ export class ToolRegistry {
 
     for (const state of stateDefinitions) {
       const stateName = typeof state === 'string' ? state : state.name || initialState;
-      const template = typeof state === 'object' ? state.template : `view/${name}/${stateName}.html`;
+      const template = typeof state === 'object' ? state.template : `widget/${name}/${stateName}.html`;
       
       // Build state entry
       if (typeof state === 'object' && (state.on || state.invoke)) {
@@ -1126,7 +1128,9 @@ ${Object.entries(strings)
     // Find the framework's template directory
     const frameworkRoot = path.resolve(path.dirname(this.projectDir), '..', 'ux3');
     const possiblePaths = [
+      path.join(frameworkRoot, 'src', 'templates', 'hints'),
       path.join(frameworkRoot, 'src', 'cli', 'templates'),
+      path.join(process.cwd(), 'src', 'templates', 'hints'),
       path.join(process.cwd(), 'src', 'cli', 'templates'),
     ];
 
@@ -1172,14 +1176,19 @@ ${Object.entries(strings)
   private async hintsList(args: any): Promise<any> {
     const { section } = args;
     const templateDir = this.findTemplateDir();
+    const sectionAliases: Record<string, string> = {
+      view: 'widget',
+      route: 'routes',
+    };
 
     const hints: Array<{ section: string; title: string; summary: string }> = [];
 
     const sections = section ? [section] : ['view', 'style', 'i18n', 'route', 'service', 'logic', 'validation'];
 
     for (const sec of sections) {
-      const hintsPath = path.join(templateDir, sec, 'HINTS.md');
-      const legacySpecPath = path.join(templateDir, sec, 'SPEC.md');
+      const resolvedSection = sectionAliases[sec] || sec;
+      const hintsPath = path.join(templateDir, resolvedSection, 'HINTS.md');
+      const legacySpecPath = path.join(templateDir, resolvedSection, 'SPEC.md');
       const hintFilePath = fs.existsSync(hintsPath)
         ? hintsPath
         : legacySpecPath;
@@ -1201,8 +1210,13 @@ ${Object.entries(strings)
   private async hintsView(args: any): Promise<any> {
     const { section } = args;
     const templateDir = this.findTemplateDir();
+    const sectionAliases: Record<string, string> = {
+      view: 'widget',
+      route: 'routes',
+    };
+    const resolvedSection = sectionAliases[section] || section;
 
-    const hintsPath = path.join(templateDir, section, 'HINTS.md');
+    const hintsPath = path.join(templateDir, resolvedSection, 'HINTS.md');
     const hintFound = fs.existsSync(hintsPath);
     if (!hintFound) {
       throw new Error(`Hints not found for section: ${section}`);
@@ -1393,7 +1407,7 @@ ${Object.entries(strings)
       case 'route':
         return `routes:\n  - path: /${name.toLowerCase()}\n    view: ${name}\n`;
       case 'view':
-        return `name: ${name}\ninitial: idle\nstates:\n  idle:\n    template: view/${name}/index.html\n`;
+        return `name: ${name}\ninitial: idle\nstates:\n  idle:\n    template: widget/${name}/index.html\n`;
     }
   }
 

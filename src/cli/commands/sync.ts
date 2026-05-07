@@ -29,6 +29,12 @@ function resolveProject(options: SyncOptions): string {
   return options.project ? path.resolve(options.project) : findProjectRoot();
 }
 
+function resolveViewsDir(projectRoot: string): string {
+  const widgetDir = path.join(projectRoot, 'ux', 'widget');
+  if (fsSync.existsSync(widgetDir)) return widgetDir;
+  return path.join(projectRoot, 'ux', 'view');
+}
+
 function walkFiles(dir: string, ext: string | string[]): string[] {
   if (!fsSync.existsSync(dir)) return [];
   const exts = Array.isArray(ext) ? ext : [ext];
@@ -63,20 +69,33 @@ function reportWritten(written: string[], cwd: string, dryRun: boolean, label: s
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve a template path reference (from a widget YAML) to an absolute file path.
- * Supports:  widget/foo/bar.html  →  <root>/ux/widget/foo/bar.html
- *            ux/widget/foo/bar.html  →  <root>/ux/widget/foo/bar.html
- *            bar.html (bare)      →  <root>/ux/widget/<widgetName>/bar.html
+ * Resolve a template path reference (from a view/widget YAML) to an absolute file path.
+ * Supports both legacy ux/view and canonical ux/widget roots.
  */
 function resolveTemplatePath(templateRef: string, projectRoot: string, viewName: string): string {
-  if (templateRef.startsWith('ux/widget/') || templateRef.startsWith('ux\\widget\\')) {
+  const viewsDir = resolveViewsDir(projectRoot);
+
+  if (
+    templateRef.startsWith('ux/widget/') ||
+    templateRef.startsWith('ux\\widget\\') ||
+    templateRef.startsWith('ux/view/') ||
+    templateRef.startsWith('ux\\view\\')
+  ) {
     return path.join(projectRoot, templateRef);
   }
-  if (templateRef.startsWith('widget/') || templateRef.startsWith('widget\\')) {
-    return path.join(projectRoot, 'ux', templateRef);
+
+  if (
+    templateRef.startsWith('widget/') ||
+    templateRef.startsWith('widget\\') ||
+    templateRef.startsWith('view/') ||
+    templateRef.startsWith('view\\')
+  ) {
+    const normalized = templateRef.replace(/^widget\//, '').replace(/^view\//, '');
+    return path.join(viewsDir, normalized);
   }
-  // bare filename — place next to other templates for this widget
-  return path.join(projectRoot, 'ux', 'widget', viewName, templateRef);
+
+  // bare filename — place next to other templates for this view/widget
+  return path.join(viewsDir, viewName, templateRef);
 }
 
 /** Return all template refs from a parsed view YAML (flat or nested states). */
@@ -107,7 +126,9 @@ function stubHtml(viewName: string, stateName: string): string {
 
 async function syncView(projectRoot: string, options: SyncOptions): Promise<string[]> {
   const written: string[] = [];
-  const viewsDir = path.join(projectRoot, 'ux', 'widget');
+  const viewsDir = fsSync.existsSync(path.join(projectRoot, 'ux', 'widget'))
+    ? path.join(projectRoot, 'ux', 'widget')
+    : path.join(projectRoot, 'ux', 'view');
   const yamlFiles = walkFiles(viewsDir, ['.yaml', '.yml']);
 
   for (const yamlFile of yamlFiles) {
@@ -145,11 +166,13 @@ async function syncView(projectRoot: string, options: SyncOptions): Promise<stri
 /** Extract all i18n keys referenced in HTML/YAML source files. */
 function collectI18nKeyUsages(projectRoot: string): Set<string> {
   const keys = new Set<string>();
-  const viewDir = path.join(projectRoot, 'ux', 'view');
+  const widgetDir = path.join(projectRoot, 'ux', 'widget');
+  const legacyViewDir = path.join(projectRoot, 'ux', 'view');
   const layoutDir = path.join(projectRoot, 'ux', 'layout');
 
   const htmlFiles = [
-    ...walkFiles(viewDir, '.html'),
+    ...walkFiles(widgetDir, '.html'),
+    ...walkFiles(legacyViewDir, '.html'),
     ...walkFiles(layoutDir, '.html'),
   ];
 
@@ -168,7 +191,12 @@ function collectI18nKeyUsages(projectRoot: string): Set<string> {
     while ((m = callPattern.exec(content)) !== null) keys.add(m[1]);
   }
 
-  for (const file of walkFiles(viewDir, ['.yaml', '.yml'])) {
+  const yamlFiles = [
+    ...walkFiles(widgetDir, ['.yaml', '.yml']),
+    ...walkFiles(legacyViewDir, ['.yaml', '.yml']),
+  ];
+
+  for (const file of yamlFiles) {
     const content = fsSync.readFileSync(file, 'utf-8');
     let m: RegExpExecArray | null;
     yamlPattern.lastIndex = 0;

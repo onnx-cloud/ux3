@@ -131,6 +131,30 @@ describe('StateMachine', () => {
     expect(fsm.getContext()).toEqual({ foo: 2, bar: 'hello' });
   });
 
+  it('ignores non-function guard and actions without throwing', () => {
+    const config: StateConfig<any> = {
+      id: 'invalid-transition-logic',
+      initial: 'idle',
+      context: { ok: true },
+      states: {
+        idle: {
+          on: {
+            GO: {
+              target: 'done',
+              guard: 'isAllowed' as any,
+              actions: ['track'] as any,
+            },
+          },
+        },
+        done: {},
+      },
+    };
+
+    const fsm = new StateMachine(config);
+    expect(() => fsm.send('GO')).not.toThrow();
+    expect(fsm.getState()).toBe('done');
+  });
+
   it('should handle complex state config (nested/parallel not supported yet by current impl but checking basic structure)', () => {
     // Current implementation seems to be a flat FSM based on the code read.
     const config: StateConfig<any> = {

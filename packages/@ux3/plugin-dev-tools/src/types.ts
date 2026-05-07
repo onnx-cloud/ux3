@@ -39,7 +39,9 @@ export interface DevToolsApi {
 }
 
 export interface DevToolsPluginConfig {
+  enabled?: boolean;
   inspector?: boolean;
+  devTools?: boolean;
   exposeGlobal?: boolean;
   maxEvents?: number;
 }

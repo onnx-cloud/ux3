@@ -28,7 +28,7 @@ describe('renderDashboard', () => {
     expect(html).toContain('UX3 Dev Server - demo-app');
     expect(html).toContain('Project Status');
     expect(html).toContain('Available Views');
-    expect(html).toContain('href="/view/alpha"');
-    expect(html).toContain('href="/view/beta"');
+    expect(html).toContain('href="/widget/alpha"');
+    expect(html).toContain('href="/widget/beta"');
   });
 });

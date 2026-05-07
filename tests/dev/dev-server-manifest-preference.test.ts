@@ -11,7 +11,7 @@ describe('DevServer manifest preference', () => {
     await fs.ensureDir(temp);
     await fs.ensureDir(path.join(temp, 'ux', 'view'));
 
-    // create index.yaml referencing view/home/index.html
+    // create index.yaml referencing widget/home/index.html
     await fs.writeFile(
       path.join(temp, 'ux', 'view', 'index.yaml'),
       `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\n`

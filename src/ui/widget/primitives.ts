@@ -8,7 +8,7 @@
  */
 import { LifecycleComponent } from '../lifecycle-component.js';
 
-type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'lang-switcher' | 'theme-toggle' | 'network-status';
+type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'lang-switcher' | 'theme-toggle' | 'network-status' | 'image' | 'video' | 'audio' | 'wysiwyg';
 
 interface PrimitiveDefinition {
   tag: string;
@@ -69,12 +69,12 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-switch', role: 'switch', kind: 'switch', stateAttr: 'checked' },
   { tag: 'ux-slider', role: 'slider', kind: 'slider' },
   { tag: 'ux-form-errors', role: 'alert', kind: 'region' },
-  { tag: 'ux-image', role: 'img', kind: 'region' },
+  { tag: 'ux-image', role: 'img', kind: 'image' },
   { tag: 'ux-image-panel', role: 'img', kind: 'toggle', stateAttr: 'open' },
   { tag: 'ux-image-capture', role: 'group', kind: 'region' },
-  { tag: 'ux-video', role: 'group', kind: 'region' },
+  { tag: 'ux-video', role: 'group', kind: 'video' },
   { tag: 'ux-video-capture', role: 'group', kind: 'region' },
-  { tag: 'ux-audio', role: 'group', kind: 'region' },
+  { tag: 'ux-audio', role: 'group', kind: 'audio' },
   { tag: 'ux-audio-capture', role: 'group', kind: 'region' },
   { tag: 'ux-chart-line', role: 'img', kind: 'region' },
   { tag: 'ux-chart-bar', role: 'img', kind: 'region' },
@@ -90,7 +90,7 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-splash', role: 'status', kind: 'region' },
   { tag: 'ux-splash-screen', role: 'status', kind: 'region' },
   { tag: 'ux-wizard', role: 'group', kind: 'value' },
-  { tag: 'ux-wysiwyg', role: 'textbox', kind: 'region' },
+  { tag: 'ux-wysiwyg', role: 'textbox', kind: 'wysiwyg' },
   { tag: 'ux-consent', role: 'region', kind: 'region' },
   { tag: 'ux-consent-banner', role: 'region', kind: 'region' },
   { tag: 'ux-content', role: 'region', kind: 'region' },
@@ -256,8 +256,16 @@ class UxPrimitiveInput extends UxPrimitiveBase {
     emitReadyOnce(this);
   }
 
-  protected onAttributeChanged(): void {
+  protected onAttributeChanged(name: string): void {
     if (!this.isConnected) {
+      return;
+    }
+    if (name === 'value') {
+      // Avoid full re-render on value changes — it destroys the focused input.
+      // Only sync value to the input element if it is not currently active.
+      if (this.inputEl && this.inputEl !== this.shadowRoot?.activeElement) {
+        this.inputEl.value = this.getAttribute('value') ?? '';
+      }
       return;
     }
     this.render();
@@ -325,8 +333,15 @@ class UxPrimitiveTextarea extends UxPrimitiveBase {
     emitReadyOnce(this);
   }
 
-  protected onAttributeChanged(): void {
+  protected onAttributeChanged(name: string): void {
     if (!this.isConnected) {
+      return;
+    }
+    if (name === 'value') {
+      // Avoid full re-render on value changes — it destroys the focused textarea.
+      if (this.textareaEl && this.textareaEl !== this.shadowRoot?.activeElement) {
+        this.textareaEl.value = this.getAttribute('value') ?? '';
+      }
       return;
     }
     this.render();
@@ -603,10 +618,12 @@ class UxThemeToggle extends UxPrimitiveBase {
 
   private applyTheme(theme: 'light' | 'dark'): void {
     document.documentElement.dataset.theme = theme;
+    // Toggle 'dark' class for Tailwind CSS dark: variant support
+    document.documentElement.classList.toggle('dark', theme === 'dark');
     this.setAttribute('theme', theme);
     this.toggleAttribute('checked', theme === 'dark');
     if (this.buttonEl) {
-      this.buttonEl.textContent = theme === 'dark' ? 'Dark mode' : 'Light mode';
+      this.buttonEl.textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light';
       this.buttonEl.setAttribute('aria-pressed', String(theme === 'dark'));
     }
   }
@@ -728,6 +745,173 @@ function escapeText(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
+/** Renders an <img> from src/alt attributes */
+class UxPrimitiveImage extends UxPrimitiveBase {
+  static get observedAttributes(): string[] {
+    return ['src', 'alt', 'width', 'height'];
+  }
+
+  protected onConnected(): void {
+    super.onConnected();
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+  }
+
+  protected onAttributeChanged(): void {
+    if (this.isConnected) this.render();
+  }
+
+  private render(): void {
+    if (!this.shadowRoot) return;
+    const src = escapeAttr(this.getAttribute('src') ?? '');
+    const alt = escapeAttr(this.getAttribute('alt') ?? this.textContent?.trim() ?? '');
+    const width = this.getAttribute('width') ? `width="${escapeAttr(this.getAttribute('width')!)}"` : '';
+    const height = this.getAttribute('height') ? `height="${escapeAttr(this.getAttribute('height')!)}"` : '';
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: inline-block; }
+        img { max-width: 100%; height: auto; border-radius: 0.375rem; display: block; }
+      </style>
+      ${src ? `<img src="${src}" alt="${alt}" ${width} ${height} part="img" />` : `<slot></slot>`}
+    `;
+  }
+}
+
+/** Renders a <video> element from src/controls/muted/loop attributes */
+class UxPrimitiveVideo extends UxPrimitiveBase {
+  static get observedAttributes(): string[] {
+    return ['src', 'controls', 'muted', 'loop', 'autoplay', 'width', 'height'];
+  }
+
+  protected onConnected(): void {
+    super.onConnected();
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+  }
+
+  protected onAttributeChanged(): void {
+    if (this.isConnected) this.render();
+  }
+
+  private render(): void {
+    if (!this.shadowRoot) return;
+    const src = escapeAttr(this.getAttribute('src') ?? '');
+    const controls = this.hasAttribute('controls') ? 'controls' : '';
+    const muted = this.hasAttribute('muted') ? 'muted' : '';
+    const loop = this.hasAttribute('loop') ? 'loop' : '';
+    const autoplay = this.hasAttribute('autoplay') ? 'autoplay' : '';
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; }
+        video { max-width: 100%; border-radius: 0.375rem; display: block; }
+      </style>
+      ${src
+        ? `<video src="${src}" ${controls} ${muted} ${loop} ${autoplay} part="video"></video>`
+        : `<slot></slot>`}
+    `;
+  }
+}
+
+/** Renders an <audio> element from src/controls attributes */
+class UxPrimitiveAudio extends UxPrimitiveBase {
+  static get observedAttributes(): string[] {
+    return ['src', 'controls', 'loop', 'autoplay'];
+  }
+
+  protected onConnected(): void {
+    super.onConnected();
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+  }
+
+  protected onAttributeChanged(): void {
+    if (this.isConnected) this.render();
+  }
+
+  private render(): void {
+    if (!this.shadowRoot) return;
+    const src = escapeAttr(this.getAttribute('src') ?? '');
+    const controls = this.hasAttribute('controls') ? 'controls' : '';
+    const loop = this.hasAttribute('loop') ? 'loop' : '';
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; min-width: 18rem; }
+        audio { width: 100%; }
+      </style>
+      ${src
+        ? `<audio src="${src}" ${controls} ${loop} part="audio"></audio>`
+        : `<slot></slot>`}
+    `;
+  }
+}
+
+/** Basic WYSIWYG / rich-text editor using contenteditable */
+class UxPrimitiveWysiwyg extends UxPrimitiveBase {
+  protected onConnected(): void {
+    super.onConnected();
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+  }
+
+  private render(): void {
+    if (!this.shadowRoot) return;
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; }
+        .toolbar {
+          display: flex;
+          gap: 0.25rem;
+          padding: 0.375rem 0.5rem;
+          border: 1px solid var(--ux-color-border, #cbd5e1);
+          border-bottom: none;
+          border-radius: 0.375rem 0.375rem 0 0;
+          background: var(--ux-color-surface-alt, #f8fafc);
+          flex-wrap: wrap;
+        }
+        button {
+          background: none;
+          border: 1px solid transparent;
+          border-radius: 0.25rem;
+          padding: 0.125rem 0.375rem;
+          cursor: pointer;
+          font: inherit;
+          font-size: 0.875rem;
+          color: var(--ux-color-text, #0f172a);
+        }
+        button:hover { background: var(--ux-color-surface, #fff); border-color: var(--ux-color-border, #cbd5e1); }
+        .editor {
+          min-height: 8rem;
+          padding: 0.625rem 0.75rem;
+          border: 1px solid var(--ux-color-border, #cbd5e1);
+          border-radius: 0 0 0.375rem 0.375rem;
+          background: var(--ux-color-surface, #fff);
+          color: var(--ux-color-text, #0f172a);
+          font: inherit;
+          line-height: 1.6;
+          outline: none;
+        }
+        .editor:focus { outline: 2px solid var(--ux-color-accent, #2563eb); outline-offset: -1px; }
+      </style>
+      <div class="toolbar" part="toolbar">
+        <button type="button" title="Bold" onmousedown="event.preventDefault(); document.execCommand('bold')"><strong>B</strong></button>
+        <button type="button" title="Italic" onmousedown="event.preventDefault(); document.execCommand('italic')"><em>I</em></button>
+        <button type="button" title="Underline" onmousedown="event.preventDefault(); document.execCommand('underline')"><u>U</u></button>
+        <button type="button" title="Ordered list" onmousedown="event.preventDefault(); document.execCommand('insertOrderedList')">OL</button>
+        <button type="button" title="Unordered list" onmousedown="event.preventDefault(); document.execCommand('insertUnorderedList')">UL</button>
+      </div>
+      <div class="editor" contenteditable="true" part="editor" role="textbox" aria-multiline="true"><slot></slot></div>
+    `;
+
+    const editor = this.shadowRoot.querySelector('.editor') as HTMLDivElement;
+    if (editor) {
+      editor.addEventListener('input', () => {
+        this.setAttribute('value', editor.innerHTML);
+        this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: editor.innerHTML } }));
+      });
+    }
+  }
+}
+
 function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
     case 'toggle':
@@ -750,6 +934,14 @@ function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
       return UxThemeToggle;
     case 'network-status':
       return UxNetworkStatus;
+    case 'image':
+      return UxPrimitiveImage;
+    case 'video':
+      return UxPrimitiveVideo;
+    case 'audio':
+      return UxPrimitiveAudio;
+    case 'wysiwyg':
+      return UxPrimitiveWysiwyg;
     default:
       return UxPrimitiveRegion;
   }

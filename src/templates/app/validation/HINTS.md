@@ -16,7 +16,7 @@
 
 ## Authoring conventions
 
-- Keep schema naming aligned with the view/form domain.
+- Keep schema naming aligned with the widget/form domain.
 - Use explicit field types (`string`, `number`, `email`, `url`, `date`, `boolean`).
 - Use `minLength`/`maxLength` for strings and `min`/`max` for numbers.
 - Use regex `pattern` sparingly and document intent in comments when complex.

@@ -214,6 +214,13 @@ export class WidgetFactory {
   }
 
   /**
+   * Backward-compatible alias for callers/tests that still use listWidgets().
+   */
+  listWidgets(): string[] {
+    return this.list();
+  }
+
+  /**
    * Clear cache (useful in tests or for memory management)
    * If a name is provided, clear only that widget from cache and loaders
    */

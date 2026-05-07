@@ -286,6 +286,21 @@ describe('@ux3/plugin-tailwind-css', () => {
 
   // ========== Plugin Installation ==========
   describe('Plugin Installation', () => {
+    it('should register local Tailwind CSS by default', async () => {
+      const mockApp: any = {
+        config: { plugins: { 'tailwind-css': {} } },
+        registerAsset: vi.fn(),
+        utils: {}
+      };
+
+      await TailwindCssPlugin.install(mockApp);
+
+      expect(mockApp.registerAsset).toHaveBeenCalledWith({
+        type: 'style',
+        href: '/tailwind.css'
+      });
+    });
+
     it('should have an async install method', async () => {
       // use any for simplicity; we only care about shape mutated by plugin
       const mockApp: any = {
@@ -314,6 +329,21 @@ describe('@ux3/plugin-tailwind-css', () => {
       expect(mockApp.utils.tailwind.typography).toBe(typography);
       expect(mockApp.utils.tailwind.layout).toBe(layout);
       expect(mockApp.utils.tailwind.components).toBe(components);
+    });
+
+    it('should prefer explicit css config even when cdn is disabled', async () => {
+      const mockApp: any = {
+        config: { plugins: { 'tailwind-css': { cdn: false, css: '/dist/tailwind.css' } } },
+        registerAsset: vi.fn(),
+        utils: {}
+      };
+
+      await TailwindCssPlugin.install(mockApp);
+
+      expect(mockApp.registerAsset).toHaveBeenCalledWith({
+        type: 'style',
+        href: '/dist/tailwind.css'
+      });
     });
 
     it('should skip CDN registration when configured', async () => {

@@ -50,16 +50,16 @@ In a view YAML, declare transitions in `on`:
 initial: idle
 states:
   idle:
-    template: view/profile/idle.html
+    template: widget/profile/idle.html
     on:
       EDIT: editing
   editing:
-    template: view/profile/editing.html
+    template: widget/profile/editing.html
     on:
       CANCEL: idle
       SAVE: saving
   saving:
-    template: view/profile/saving.html
+    template: widget/profile/saving.html
     invoke:
       service: profile
       method: update
@@ -67,7 +67,7 @@ states:
       SUCCESS: idle
       ERROR: error
   error:
-    template: view/profile/error.html
+    template: widget/profile/error.html
     on:
       RETRY: saving
 ```
@@ -128,7 +128,7 @@ This pattern makes behavior testable and consistent across views and components.
 
 ## Testing Events
 
-For each view/component:
+For each widget/component:
 
 - Verify user action triggers expected event
 - Verify FSM transition on event

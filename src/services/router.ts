@@ -179,7 +179,7 @@ export class Router {
   }
 
   /**
-   * Update current path/view/params in NavConfig
+   * Update current path/widget/params in NavConfig
    */
   updateCurrent(pathname: string): void {
     const match = this.matchRoute(pathname);

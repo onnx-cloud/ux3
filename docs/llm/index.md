@@ -12,7 +12,7 @@ This document gives terse prompts and patterns for language models to assist wit
    - Look in `src/ux/widget`, read corresponding HTML.
    - Check schema in `schema/view.schema.json`.
 2. **Add or modify config**:
-   - Describe: "create new view/state" or "update tokens".
+   - Describe: "create new widget/state" or "update tokens".
    - Emphasize running the build to validate.
 3. **Service implementation**:
    - Search `src/services` for similar examples.

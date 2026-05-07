@@ -46,6 +46,35 @@ describe('createAppContext development logging', () => {
     expect(document.body.querySelector('ux3-inspector')).toBeNull();
   });
 
+  it('mounts the inspector compatibility UI when plugin config enables dev tools', async () => {
+    const cfg: any = {
+      ...baseConfig,
+      plugins: [{ name: '@ux3/plugin-dev-tools', config: { enabled: true } }],
+    };
+    await createAppContext(cfg);
+    expect(document.getElementById('ux3-devtools-inspector')).toBeTruthy();
+  });
+
+  it('starts inspector minimized with reduced opacity', async () => {
+    const existing = document.getElementById('ux3-devtools-inspector');
+    existing?.remove();
+
+    const cfg: any = {
+      ...baseConfig,
+      development: { inspector: true },
+    };
+    await createAppContext(cfg);
+
+    const inspector = document.getElementById('ux3-devtools-inspector') as HTMLElement | null;
+    expect(inspector).toBeTruthy();
+    const body = inspector?.querySelector('pre') as HTMLElement | null;
+    const toggleButton = Array.from(inspector?.querySelectorAll('button') ?? []).find((btn) => btn.textContent === 'Expand');
+
+    expect(body?.style.display).toBe('none');
+    expect(inspector?.style.opacity).toBe('0.5');
+    expect(toggleButton).toBeTruthy();
+  });
+
   it('auto-installs dev tools plugin in development mode', async () => {
     const cfg = { ...baseConfig, development: { devTools: true } };
     const ctx: any = await createAppContext(cfg as any);

@@ -10,10 +10,12 @@ function resolveProjectRoot(project?: string): string {
 }
 
 function countViewArtifacts(projectDir: string): number {
-	const viewsDir = path.join(projectDir, 'ux', 'widget');
-	if (!fs.existsSync(viewsDir)) return 0;
+	const widgetDir = path.join(projectDir, 'ux', 'widget');
+	const viewDir = path.join(projectDir, 'ux', 'view');
+	const roots = [widgetDir, viewDir].filter((dir) => fs.existsSync(dir));
+	if (roots.length === 0) return 0;
 
-	const stack = [viewsDir];
+	const stack = [...roots];
 	let count = 0;
 	while (stack.length > 0) {
 		const current = stack.pop();
@@ -119,8 +121,15 @@ export const lintCommand = new Command()
 		try {
 			const projectDir = resolveProjectRoot(options.project);
 			const strict = options.strict ?? true;
+			const uxDir = path.join(projectDir, 'ux');
 
 			console.log(`[ux3 lint] project=${projectDir} strict=${strict}`);
+			if (!fs.existsSync(uxDir)) {
+				console.error('\nLint errors:');
+				console.error(`- ux - Missing required ux directory at ${uxDir}`);
+				process.exit(1);
+			}
+
 			const validator = new Validator({ projectDir, failOnWarnings: strict });
 			const result = await validator.validate();
 

@@ -89,7 +89,10 @@ export class UxPanel extends LifecycleComponent {
           ` : ''}
           
           <div class="panel-title-group">
-            <slot name="title"></slot >
+            <slot name="title">
+              ${this.title ? `<h3 class="panel-title">${this.escapeHtml(this.title)}</h3>` : ''}
+              ${this.subtitle ? `<p class="panel-subtitle">${this.escapeHtml(this.subtitle)}</p>` : ''}
+            </slot >
           </div>
 
           <div class="panel-actions">

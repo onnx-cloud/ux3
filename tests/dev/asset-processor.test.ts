@@ -139,5 +139,22 @@ describe('processAssets: bundle-pending regression', () => {
     const realBundle = processAssets(customFnManifest, '/proj');
     expect(realBundle.scripts).toContain('m.bootMyApp');
   });
+
+  it('injects hydration when only hydrationFn is configured', () => {
+    const hydrationOnlyManifest: any = {
+      config: {
+        site: {
+          assets: [],
+          runtime: { hydrationFn: 'initApp' },
+        },
+      },
+      runtime: { bundle: '/dist/bundle.ts', styles: [], version: '1', minified: false },
+    };
+
+    const site = processAssets(hydrationOnlyManifest, '/proj');
+    expect(site.scripts).toContain('data-ux3="hydration"');
+    expect(site.scripts).toContain("import('/dist/bundle.ts");
+    expect(site.scripts).toContain('m.initApp');
+  });
 });
 

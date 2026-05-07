@@ -47,9 +47,14 @@ const rawSite = (manifest?.config)?.site || {};
   // runtime injection (bundle + styles + hydration) based on manifest/runtime
   const runtime = (manifest)?.runtime;
   const runtimeConfig = (manifest)?.config?.site?.runtime || {};
-  // Trigger injection as soon as a bundleKey is declared in config; runtime.bundle
-  // is optional (may not exist yet if bundler hasn't run).
-  if (runtimeConfig?.bundleKey) {
+  // Trigger injection when runtime hydration is configured or a built bundle is
+  // present. bundleKey is legacy; newer projects may only declare hydrationFn.
+  const shouldInjectRuntime = !!(
+    runtimeConfig?.bundleKey ||
+    runtimeConfig?.hydrationFn ||
+    runtime?.bundle
+  );
+  if (shouldInjectRuntime) {
     // inject styles first (only available after bundler has run)
     for (const style of (runtime?.styles || [])) {
       headInjections.push(`<link rel="stylesheet" href="${style}" data-ux3="styles">`);

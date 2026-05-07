@@ -49,6 +49,36 @@ export default defineConfig({
         },
       },
 
+      // @ux3/hbs sub-path with .ts extension (e.g. '@ux3/hbs/lexer.ts')
+      {
+        find: /^@ux3\/hbs\/(.+)\.ts$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/hbs\/(.+)\.ts$/);
+          if (m) return path.resolve(__dirname, `src/logger/hbs/${m[1]}.ts`);
+          return id;
+        },
+      },
+      // @ux3/hbs sub-path with .js extension
+      {
+        find: /^@ux3\/hbs\/(.+)\.js$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/hbs\/(.+)\.js$/);
+          if (m) return path.resolve(__dirname, `src/logger/hbs/${m[1]}.ts`);
+          return id;
+        },
+      },
+      // @ux3/hbs sub-path without extension
+      {
+        find: /^@ux3\/hbs\/(.+)$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/hbs\/(.+)$/);
+          if (m) return path.resolve(__dirname, `src/logger/hbs/${m[1]}.ts`);
+          return id;
+        },
+      },
+      // @ux3/hbs root import
+      { find: /^@ux3\/hbs$/, replacement: path.resolve(__dirname, 'src/logger/hbs/index.ts') },
+
       // Handle @ux3/ imports with .js extensions
       {
         find: /^@ux3\/(.*)\.js$/,

@@ -1,9 +1,10 @@
-# Tailwind Usage — CDN + `ux-style` lookup
+# Tailwind Usage — Local Build + `ux-style` lookup
 
-Why CDN?
+Why local Tailwind?
 ---
-- For the example apps (IAM) we opt to load Tailwind via CDN during development and demos for fast iteration and to avoid build-time purge complications. The CDN provides a comprehensive set of utilities so we don't need to safelist generated classes.
-- For production builds, prefer producing a trimmed Tailwind bundle (via a build step) to reduce CSS size.
+- `cdn.tailwindcss.com` is not recommended for production.
+- UX3 now defaults `@ux3/plugin-tailwind-css` to a local stylesheet (`/tailwind.css`) so projects can use a normal build pipeline.
+- This aligns with Tailwind's installation guidance for local tooling (for example, Vite/PostCSS workflows).
 
 How styling is authored (no classes in templates)
 ---
@@ -43,17 +44,51 @@ How the compiler resolves `ux-style`
   - If an element has no `ux-style`, the compiler attempts to find a default composition for the tag name (e.g., `my-view` → `my.view`) and applies it as a default class. This keeps markup concise and predictable.
 - `class` attribute remains supported and wins over generated composition classes (consumer override precedence).
 
-Tailwind CDN usage
+Tailwind local setup (Vite-style workflow)
 ---
-- Dev include (HTML):
+- Install Tailwind tooling:
+
+```bash
+npm install -D tailwindcss @tailwindcss/vite vite
+```
+
+- Add Tailwind's Vite plugin:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  plugins: [tailwindcss()]
+});
+```
+
+- Import Tailwind in your CSS entrypoint:
+
+```css
+/* tailwind.css */
+@import "tailwindcss";
+```
+
+- Configure the UX3 plugin to point at your generated/local CSS file:
+
+```yaml
+plugins:
+  - name: '@ux3/plugin-tailwind-css'
+    config:
+      css: '/tailwind.css'
+```
+
+- Optional legacy fallback (discouraged for production):
 
 ```html
 <script src="https://cdn.tailwindcss.com"></script>
 ```
 
 - Notes:
-  - CDN includes nearly all utilities so purge/safelist is not needed for development or docs examples.
-  - For production, create a PostCSS/Tailwind build that scans your generated output for classes and produces a smaller CSS bundle.
+  - Use `config.css` for local assets and keep `config.cdn` only for temporary demos.
+  - If your local file is emitted into `public/tailwind.css`, the default `/tailwind.css` works without extra configuration.
 
 Tokens, CSS variables & theming
 ---

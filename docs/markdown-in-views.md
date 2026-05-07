@@ -31,7 +31,7 @@ Markdown files can be stored anywhere in your project. Common patterns:
 ```
 project/
 ├── ux/
-│   ├── view/          # View definitions
+│   ├── widget/          # View definitions
 │   ├── content/       # Markdown content files
 │   └── i18n/          # Translations
 └── docs/              # Alternative location for markdown

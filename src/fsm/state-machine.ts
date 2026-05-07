@@ -9,6 +9,10 @@ import { defaultLogger } from '../security/observability.js';
 
 type Listener<T> = (state: string, context: T) => void;
 
+function isFunction(value: unknown): value is (...args: any[]) => any {
+  return typeof value === 'function';
+}
+
 /**
  * Helper to calculate retry delay (exponential backoff)
  */
@@ -161,14 +165,17 @@ export class StateMachine<T extends Record<string, any>> {
 
     const transitionConfig = typeof transition === 'string' ? { target: transition } : transition;
 
-    // Check guard condition
-    if (transitionConfig.guard && !transitionConfig.guard(this.context)) {
+    // Check guard condition (ignore non-function guard declarations)
+    if (transitionConfig.guard && isFunction(transitionConfig.guard) && !transitionConfig.guard(this.context)) {
       return;
     }
 
     // Execute transition actions; allow functions to return partial context updates
-    if (transitionConfig.actions) {
+    if (Array.isArray(transitionConfig.actions)) {
       transitionConfig.actions.forEach((action) => {
+        if (!isFunction(action)) {
+          return;
+        }
         try {
           const result = action(this.context, event);
           if (result && typeof (result as Promise<unknown>).then === 'function') {
@@ -491,7 +498,7 @@ export class StateMachine<T extends Record<string, any>> {
 
     // Check guard condition if present
     const transitionConfig = typeof transition === 'string' ? {} : transition;
-    if (transitionConfig.guard && !transitionConfig.guard(this.context)) {
+    if (transitionConfig.guard && isFunction(transitionConfig.guard) && !transitionConfig.guard(this.context)) {
       return false;
     }
 

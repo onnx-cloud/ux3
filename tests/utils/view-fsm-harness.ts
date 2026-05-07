@@ -107,10 +107,34 @@ export function buildStateMachine(
 ): StateMachine<Record<string, unknown>> {
   const states: MachineConfig<Record<string, unknown>>['states'] = {};
 
+  const sanitizeOnTransitions = (
+    on: ViewStateRaw['on'],
+  ): MachineConfig<Record<string, unknown>>['states'][string]['on'] | undefined => {
+    if (!on) return undefined;
+    const sanitized: Record<string, any> = {};
+    for (const [eventName, transition] of Object.entries(on)) {
+      if (typeof transition === 'string') {
+        sanitized[eventName] = transition;
+        continue;
+      }
+
+      const next: Record<string, unknown> = {};
+      if (transition.target) next.target = transition.target;
+      if (typeof transition.guard === 'function') next.guard = transition.guard;
+      if (Array.isArray(transition.actions)) {
+        const fnActions = transition.actions.filter((action) => typeof action === 'function');
+        if (fnActions.length > 0) next.actions = fnActions;
+      }
+      sanitized[eventName] = next;
+    }
+    return sanitized;
+  };
+
   for (const [stateName, stateRaw] of Object.entries(raw.states)) {
     const { on, entry, exit, errorTarget } = stateRaw;
     const smState: Record<string, unknown> = {};
-    if (on) smState.on = on;
+    const sanitizedOn = sanitizeOnTransitions(on);
+    if (sanitizedOn) smState.on = sanitizedOn;
     if (entry) smState.entry = entry;
     if (exit) smState.exit = exit;
     if (errorTarget) smState.errorTarget = errorTarget;

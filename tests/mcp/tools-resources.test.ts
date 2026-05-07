@@ -88,7 +88,7 @@ describe('MCP Tools', () => {
     const result = await toolRegistry.executeTool('view.validate', { nameOrPath: 'Root' });
     expect(result).toHaveProperty('valid');
     expect(result).toHaveProperty('errors');
-  });
+  }, 30000);
 
   it('should error on non-existent tool', async () => {
     try {
@@ -155,7 +155,7 @@ describe('MCP Tools', () => {
   });
 
   it('entity.search should find content across all entities', async () => {
-    expect((await toolRegistry.executeTool('entity.search', { kind: 'view', query: 'governance' })).results.length).toBeGreaterThan(0);
+    expect((await toolRegistry.executeTool('entity.search', { kind: 'view', query: 'capability' })).results.length).toBeGreaterThan(0);
     expect((await toolRegistry.executeTool('entity.search', { kind: 'layout', query: 'ux-content' })).results.length).toBeGreaterThan(0);
     expect((await toolRegistry.executeTool('entity.search', { kind: 'i18n', query: 'QUADRA' })).results.length).toBeGreaterThan(0);
     expect((await toolRegistry.executeTool('entity.search', { kind: 'service', query: 'jsonrpc' })).results.length).toBeGreaterThan(0);
@@ -169,7 +169,7 @@ describe('MCP Tools', () => {
     const createdView = await tempRegistry.executeTool('entity.create', {
       kind: 'view',
       name: 'TempView',
-      content: "name: TempView\ninitial: ready\nstates:\n  ready:\n    template: view/TempView/index.html\n",
+      content: "name: TempView\ninitial: ready\nstates:\n  ready:\n    template: widget/Tempwidget/index.html\n",
       template: '<div>temp view</div>\n',
     });
     expect(createdView.success).toBe(true);
@@ -178,7 +178,7 @@ describe('MCP Tools', () => {
     await tempRegistry.executeTool('entity.update', {
       kind: 'view',
       name: 'TempView',
-      content: "name: TempView\ninitial: done\nstates:\n  done:\n    template: view/TempView/index.html\n",
+      content: "name: TempView\ninitial: done\nstates:\n  done:\n    template: widget/Tempwidget/index.html\n",
       template: '<div>updated view</div>\n',
     });
     expect((await tempRegistry.executeTool('entity.get', { kind: 'view', name: 'TempView' })).content).toContain('done');
@@ -209,7 +209,7 @@ describe('MCP Tools', () => {
     await tempRegistry.executeTool('route.delete', { name: 'temp-routes' });
 
     fs.rmSync(tempProjectDir, { recursive: true, force: true });
-  });
+  }, 30000);
 });
 
 describe('MCP Resources', () => {

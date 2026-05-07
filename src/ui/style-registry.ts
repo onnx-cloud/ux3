@@ -28,6 +28,38 @@ export interface StyleEntry {
 const styles: StyleMap = {};
 // full style objects (including variant metadata)
 const styleObjects: Record<string, StyleEntry | string> = {};
+let tailwindRefreshScheduled = false;
+
+function requestTailwindRefresh(): void {
+  if (typeof window === 'undefined' || tailwindRefreshScheduled) {
+    return;
+  }
+
+  const win = window as unknown as {
+    tailwind?: { refresh?: () => void };
+  };
+
+  if (!win.tailwind || typeof win.tailwind.refresh !== 'function') {
+    return;
+  }
+
+  tailwindRefreshScheduled = true;
+  const run = () => {
+    try {
+      win.tailwind?.refresh?.();
+    } catch {
+      // no-op: style application must not fail due to optional tailwind runtime hooks
+    } finally {
+      tailwindRefreshScheduled = false;
+    }
+  };
+
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => run());
+  } else {
+    setTimeout(run, 0);
+  }
+}
 
 // exported for read/write in tests or helpers
 export function getRegisteredStyles(): StyleMap {
@@ -136,6 +168,10 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
         console.warn(`[Ux3] unknown ux-style key: '${key}'`);
       }
     });
+
+    // Tailwind CDN runtime may need an explicit refresh after classes are
+    // injected dynamically from ux-style mappings.
+    requestTailwindRefresh();
   } catch (e) {
     console.warn('[Ux3] applyStyles failed', e);
   }
@@ -144,6 +180,51 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
 let patched = false;
 // P0-2: separate flag so the DOMContentLoaded listener is only added once
 let domListenerAdded = false;
+let mutationObserverAdded = false;
+let styleSweepScheduled = false;
+
+function applyStylesToOpenShadowRoots(): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  for (const node of Array.from(document.querySelectorAll('*'))) {
+    const host = node as HTMLElement & { shadowRoot?: ShadowRoot | null };
+    if (host.shadowRoot) {
+      applyStyles(host.shadowRoot);
+    }
+  }
+}
+
+function sweepDocumentStyles(): void {
+  if (typeof document === 'undefined' || !document.body) {
+    return;
+  }
+
+  applyStyles(document.body);
+  applyStylesToOpenShadowRoots();
+}
+
+function scheduleStyleSweep(): void {
+  if (styleSweepScheduled) {
+    return;
+  }
+
+  styleSweepScheduled = true;
+  const run = () => {
+    try {
+      sweepDocumentStyles();
+    } finally {
+      styleSweepScheduled = false;
+    }
+  };
+
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => run());
+  } else {
+    setTimeout(run, 0);
+  }
+}
 
 /**
  * Patches ViewComponent.prototype.mountLayout so that styles are applied
@@ -168,15 +249,30 @@ export function initStyleRegistry(): void {
   // P0-2: guard the DOMContentLoaded listener with its own flag
   if (!domListenerAdded && typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
-      applyStyles(document.body);
+      sweepDocumentStyles();
     });
     domListenerAdded = true;
+  }
+
+  if (!mutationObserverAdded && typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+    const observer = new MutationObserver(() => {
+      scheduleStyleSweep();
+    });
+    if (document.documentElement) {
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['ux-style', 'data-style', 'class'],
+      });
+      mutationObserverAdded = true;
+    }
   }
 
   // Hydration often runs after DOMContentLoaded has already fired, so apply
   // styles immediately as well to ensure server-rendered markup gets class
   // injection on first hydrate.
   if (typeof document !== 'undefined' && document.body) {
-    applyStyles(document.body);
+    sweepDocumentStyles();
   }
 }

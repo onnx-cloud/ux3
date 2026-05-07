@@ -367,7 +367,7 @@ const result = appContext.template(name);
 
 ```
 ux/
-├── view/
+├── widget/
 │   ├── login.yaml        (defines states: idle, submitting)
 │   ├── login/
 │   │   ├── idle.html     → compiled as template "login-idle"

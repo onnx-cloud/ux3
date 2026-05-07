@@ -9,7 +9,7 @@
 // @vitest-environment jsdom
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { StateMachine } from '../../../src/fsm/index.ts';
 import { config } from '../../../examples/tenant.saas/generated/config';
@@ -46,7 +46,9 @@ describe('Tenant SaaS user journeys', () => {
 
   it('should include all referenced layouts in generated Tenant SaaS templates', () => {
     const exampleRoot = resolve(__dirname, '../../../examples/tenant.saas');
-    const viewDir = resolve(exampleRoot, 'ux/view');
+    const widgetDir = resolve(exampleRoot, 'ux/widget');
+    const legacyViewDir = resolve(exampleRoot, 'ux/view');
+    const viewDir = existsSync(widgetDir) ? widgetDir : legacyViewDir;
     const layoutNames = new Set<string>();
 
     for (const viewFile of readdirSync(viewDir).filter((path) => path.endsWith('.yaml'))) {

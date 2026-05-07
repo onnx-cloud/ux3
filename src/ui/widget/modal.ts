@@ -45,8 +45,9 @@ export class UxModal extends LifecycleComponent {
           <div class="modal-header">
             <slot name="header">
             </slot>
-            <button class="modal-close-btn" type="button" aria-label="modal.close.label">
-            <slot name="close-button"></slot></button>
+            <button class="modal-close-btn" type="button" aria-label="Close dialog">
+              <slot name="close-button">&#x2715;</slot>
+            </button>
           </div>
           <div class="modal-body">
             <slot name="body"></slot>

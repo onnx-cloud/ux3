@@ -17,7 +17,9 @@ interface HintMapping {
 }
 
 const HINT_MAPPINGS: HintMapping[] = [
-  { section: 'view', targetSubdir: path.join('ux', 'view') },
+  // Source hints are stored under templates/widget, but we sync into ux/view
+  // for compatibility with projects and tests that still use ux/view.
+  { section: 'widget', targetSubdir: path.join('ux', 'view') },
   { section: 'routes', targetSubdir: path.join('ux', 'route') },
   { section: 'i18n', targetSubdir: path.join('ux', 'i18n') },
   { section: 'validation', targetSubdir: path.join('ux', 'validate') },
@@ -73,7 +75,7 @@ export async function syncHints(projectRoot: string, options: HintOptions): Prom
   const written: string[] = [];
 
   for (const mapping of HINT_MAPPINGS) {
-    const sectionRoot = resolveTemplateDir(mapping.section);
+    const sectionRoot = resolveTemplateDir(path.join('hints', mapping.section), projectRoot);
     if (!fsSync.existsSync(sectionRoot)) continue;
 
     const hints = await listMarkdownFiles(sectionRoot);

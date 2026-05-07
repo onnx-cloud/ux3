@@ -25,12 +25,45 @@ import type { GeneratedEntities } from '../build/entity-index.js';
 import type { Plugin } from '../plugin/registry.js';
 import { createDevToolsService } from '../../packages/@ux3/plugin-dev-tools/src/services/dev-tools.service.js';
 
+function extractDevToolsPluginConfig(entry: any): Record<string, unknown> | null {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    return entry === '@ux3/plugin-dev-tools' ? {} : null;
+  }
+  if (typeof entry === 'object' && entry.name === '@ux3/plugin-dev-tools') {
+    return (entry.config as Record<string, unknown>) || {};
+  }
+  return null;
+}
+
+function resolveDevToolsFlags(config: any): { inspector: boolean; devTools: boolean } {
+  const pluginEntries = Array.isArray(config?.plugins) ? config.plugins : [];
+
+  let pluginEnabled = false;
+  let pluginInspector = false;
+  let pluginDevTools = false;
+
+  for (const entry of pluginEntries) {
+    const pluginCfg = extractDevToolsPluginConfig(entry);
+    if (!pluginCfg) continue;
+    if (pluginCfg.enabled === true) pluginEnabled = true;
+    if (pluginCfg.inspector === true) pluginInspector = true;
+    if (pluginCfg.devTools === true) pluginDevTools = true;
+  }
+
+  return {
+    inspector: !!(config?.development?.inspector || pluginEnabled || pluginInspector),
+    devTools: !!(config?.development?.devTools || config?.development?.inspector || pluginEnabled || pluginDevTools),
+  };
+}
+
 const builtInDevToolsPlugin: Plugin = {
   name: '@ux3/plugin-dev-tools',
   version: 'workspace',
   description: 'UX3 development tools plugin (inspector, diagnostics, and event stream)',
   async install(app) {
     const service = createDevToolsService();
+    const flags = resolveDevToolsFlags(app.config);
 
     app.utils = app.utils || {};
     (app.utils as any).devTools = service;
@@ -41,8 +74,8 @@ const builtInDevToolsPlugin: Plugin = {
     }
 
     service.emit('system', 'dev-tools.installed', {
-      inspector: !!app.config?.development?.inspector,
-      devTools: !!app.config?.development?.devTools,
+      inspector: flags.inspector,
+      devTools: flags.devTools,
     });
   },
 };
@@ -55,6 +88,7 @@ export interface GeneratedConfig {
   services: Record<string, { type?: string; adapter?: string; config?: ServiceConfig; [key: string]: any }>;
   machines: Record<string, StateConfig<any>>;
   i18n: Record<string, Record<string, string>>;
+  tokens?: Record<string, unknown>;
   widgets: Record<string, { path: string; lazy?: boolean }>;
   styles: Record<string, string>;
   templates: Record<string, Record<string, string>>;
@@ -157,6 +191,8 @@ export class AppContextBuilder {
           defaultLogger.debug('service.spec', { name, spec: serviceSpec });
         });
         const service = ServiceFactory.create(name, serviceSpec);
+        // Attach name to service so hooks can identify it
+        (service as any).name = name;
         this.services.set(name, service);
         
         // Emit REGISTER lifecycle phase for this service
@@ -667,6 +703,250 @@ export async function createAppContext(
     });
   };
 
+  const mountInspectorCompatibilityUI = (appContext: AppContext): void => {
+    const flags = resolveDevToolsFlags(config);
+    if (!flags.inspector || typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const existing = document.getElementById('ux3-devtools-inspector');
+    if (existing) {
+      return;
+    }
+
+    const root = document.createElement('aside');
+    root.id = 'ux3-devtools-inspector';
+    root.style.cssText = [
+      'position:fixed',
+      'z-index:2147483647',
+      'width:min(460px,calc(100vw - 24px))',
+      'max-height:70vh',
+      'background:#0f172a',
+      'color:#e2e8f0',
+      'border:1px solid #334155',
+      'border-radius:10px',
+      'box-shadow:0 20px 50px rgba(15,23,42,0.45)',
+      'font:12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace',
+      'overflow:hidden',
+      'opacity:0.5',
+      'transition:opacity 140ms ease',
+    ].join(';');
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#111827;border-bottom:1px solid #334155;cursor:move;user-select:none;gap:8px;';
+
+    const title = document.createElement('strong');
+    title.textContent = 'UX3 Dev Inspector';
+    title.style.cssText = 'font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:#93c5fd;';
+
+    const summary = document.createElement('span');
+    summary.style.cssText = 'font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+
+    const controls = document.createElement('div');
+    controls.style.cssText = 'display:flex;gap:6px;align-items:center;';
+
+    const refreshBtn = document.createElement('button');
+    refreshBtn.type = 'button';
+    refreshBtn.textContent = 'Refresh';
+    refreshBtn.style.cssText = 'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;';
+
+    const dockSelect = document.createElement('select');
+    dockSelect.style.cssText = 'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 6px;cursor:pointer;';
+    dockSelect.innerHTML = [
+      '<option value="top-left">Dock TL</option>',
+      '<option value="top-right">Dock TR</option>',
+      '<option value="center">Dock Center</option>',
+      '<option value="bottom-left">Dock BL</option>',
+      '<option value="bottom-right" selected>Dock BR</option>',
+    ].join('');
+
+    const collapseBtn = document.createElement('button');
+    collapseBtn.type = 'button';
+    collapseBtn.textContent = 'Expand';
+    collapseBtn.style.cssText = 'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;';
+
+    controls.append(refreshBtn, dockSelect, collapseBtn);
+    header.append(title, summary, controls);
+
+    const body = document.createElement('pre');
+    body.style.cssText = 'margin:0;padding:10px;max-height:58vh;overflow:auto;white-space:pre-wrap;word-break:break-word;';
+
+    root.append(header, body);
+    document.body.appendChild(root);
+
+    type DockTarget = 'top-left' | 'top-right' | 'center' | 'bottom-left' | 'bottom-right' | 'custom';
+    const MARGIN = 16;
+    let dockTarget: DockTarget = 'bottom-right';
+    let minimized = true;
+
+    const setRootPosition = (left: number, top: number) => {
+      root.style.left = `${Math.max(MARGIN, Math.round(left))}px`;
+      root.style.top = `${Math.max(MARGIN, Math.round(top))}px`;
+      root.style.right = 'auto';
+      root.style.bottom = 'auto';
+    };
+
+    const applyDock = (target: Exclude<DockTarget, 'custom'>) => {
+      const rect = root.getBoundingClientRect();
+      const width = Math.max(280, rect.width || 460);
+      const height = Math.max(44, rect.height || 220);
+      const maxLeft = Math.max(MARGIN, window.innerWidth - width - MARGIN);
+      const maxTop = Math.max(MARGIN, window.innerHeight - height - MARGIN);
+      let left = maxLeft;
+      let top = maxTop;
+
+      if (target === 'top-left') {
+        left = MARGIN;
+        top = MARGIN;
+      } else if (target === 'top-right') {
+        left = maxLeft;
+        top = MARGIN;
+      } else if (target === 'bottom-left') {
+        left = MARGIN;
+        top = maxTop;
+      } else if (target === 'center') {
+        left = Math.max(MARGIN, (window.innerWidth - width) / 2);
+        top = Math.max(MARGIN, (window.innerHeight - height) / 2);
+      }
+
+      setRootPosition(left, top);
+      dockTarget = target;
+      dockSelect.value = target;
+    };
+
+    const updateMinimizedVisuals = () => {
+      body.style.display = minimized ? 'none' : 'block';
+      collapseBtn.textContent = minimized ? 'Expand' : 'Minimize';
+      root.style.opacity = minimized ? '0.5' : '1';
+      root.style.maxHeight = minimized ? 'none' : '70vh';
+      header.style.borderBottom = minimized ? 'none' : '1px solid #334155';
+    };
+
+    const onHoverIn = () => {
+      if (minimized) {
+        root.style.opacity = '0.9';
+      }
+    };
+    const onHoverOut = () => {
+      if (minimized) {
+        root.style.opacity = '0.5';
+      }
+    };
+
+    root.addEventListener('mouseenter', onHoverIn);
+    root.addEventListener('mouseleave', onHoverOut);
+    root.addEventListener('pointerenter', onHoverIn);
+    root.addEventListener('pointerleave', onHoverOut);
+
+    const gatherSnapshot = () => {
+      const machines = Object.entries((appContext.machines || {}) as Record<string, any>).reduce((acc, [name, machine]) => {
+        acc[name] = {
+          state: machine?.getState?.(),
+          context: machine?.getContext?.(),
+        };
+        return acc;
+      }, {} as Record<string, { state: unknown; context: unknown }>);
+
+      const devTools = (appContext.utils as any)?.devTools;
+      return {
+        timestamp: new Date().toISOString(),
+        flags,
+        routes: (appContext.nav?.routes || []).map((route: any) => ({ path: route.path, view: route.view })),
+        services: Object.keys(appContext.services || {}),
+        machines,
+        devTools: devTools?.getSnapshot?.() ?? null,
+      };
+    };
+
+    const render = () => {
+      const snap = gatherSnapshot();
+      const eventCount = snap.devTools?.events?.length ?? 0;
+      const routeCount = Array.isArray(snap.routes) ? snap.routes.length : 0;
+      const machineCount = Object.keys(snap.machines || {}).length;
+      const serviceCount = Array.isArray(snap.services) ? snap.services.length : 0;
+      const routeHint = typeof window !== 'undefined' ? window.location.pathname : '/';
+      summary.textContent = `Route ${routeHint} | Machines ${machineCount} | Services ${serviceCount} | Routes ${routeCount} | Events ${eventCount}`;
+      body.textContent = JSON.stringify(snap, null, 2);
+    };
+
+    const listeners: Array<() => void> = [];
+    const devTools = (appContext.utils as any)?.devTools;
+    if (devTools && typeof devTools.subscribe === 'function') {
+      listeners.push(devTools.subscribe(() => render()));
+    }
+
+    for (const machine of Object.values((appContext.machines || {}) as Record<string, any>)) {
+      if (machine && typeof machine.subscribe === 'function') {
+        listeners.push(machine.subscribe(() => render()));
+      }
+    }
+
+    const toggle = () => {
+      minimized = !minimized;
+      updateMinimizedVisuals();
+      if (!minimized && dockTarget !== 'custom') {
+        applyDock(dockTarget as Exclude<DockTarget, 'custom'>);
+      }
+    };
+
+    let dragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!dragging) {
+        return;
+      }
+      setRootPosition(event.clientX - dragOffsetX, event.clientY - dragOffsetY);
+    };
+
+    const stopDragging = () => {
+      dragging = false;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', stopDragging);
+    };
+
+    header.addEventListener('pointerdown', (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target || target.closest('button,select,input,textarea,a')) {
+        return;
+      }
+      const rect = root.getBoundingClientRect();
+      dragging = true;
+      dockTarget = 'custom';
+      dragOffsetX = event.clientX - rect.left;
+      dragOffsetY = event.clientY - rect.top;
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', stopDragging);
+    });
+
+    dockSelect.addEventListener('change', () => {
+      applyDock(dockSelect.value as Exclude<DockTarget, 'custom'>);
+    });
+
+    refreshBtn.addEventListener('click', render);
+    collapseBtn.addEventListener('click', toggle);
+
+    const onResize = () => {
+      if (dockTarget !== 'custom') {
+        applyDock(dockTarget as Exclude<DockTarget, 'custom'>);
+      }
+    };
+    window.addEventListener('resize', onResize);
+
+    const cleanup = () => {
+      listeners.forEach((dispose) => dispose());
+      stopDragging();
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('beforeunload', cleanup);
+    };
+    window.addEventListener('beforeunload', cleanup);
+
+    updateMinimizedVisuals();
+    applyDock('bottom-right');
+    render();
+  };
+
   // auto-install dev tools plugin in dev mode unless already declared explicitly
   const pluginEntries: any[] = Array.isArray(config.plugins) ? [...config.plugins] : [];
   const shouldAutoInstallDevTools = !!(
@@ -759,6 +1039,8 @@ export async function createAppContext(
       // ignore if we can't load (e.g. plugin not available)
     }
   }
+
+  mountInspectorCompatibilityUI(context);
 
   // Emit AUTHENTICATE phase for each service
   // This phase allows services to authenticate with their backends

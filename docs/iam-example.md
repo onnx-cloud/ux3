@@ -71,7 +71,7 @@ routes:
 ```
 examples/iam/
 ├─ ux/                      # UX3 configuration
-│  ├─ view/                 # View definitions (YAML + HTML)
+│  ├─ widget/                 # View definitions (YAML + HTML)
 │  │  ├─ login.yaml
 │  │  ├─ dashboard.yaml
 │  │  └─ {view-name}/       # Templates per state

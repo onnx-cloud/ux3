@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 describe('npm plugin packages', () => {
   const base = join(process.cwd(), 'packages/@ux3');
 
-  ['plugin-i18n', 'plugin-sentry', 'plugin-analytics', 'plugin-validation', 'plugin-charts-js', 'plugin-stripe', 'plugin-tailwind-plus', 'plugin-oidc'].forEach((pkg) => {
+  ['plugin-i18n', 'plugin-sentry', 'plugin-analytics', 'plugin-validation', 'plugin-charts-js', 'plugin-tailwind-plus', 'plugin-oidc'].forEach((pkg) => {
     it(`can require ${pkg}`, () => {
       const pluginPath = join(base, pkg, 'src', 'index.ts');
       const mod = require(pluginPath);

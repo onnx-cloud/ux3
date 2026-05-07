@@ -27,7 +27,7 @@ Use `ux3 generate view <name>` to scaffold a new view quickly.
 ## Authoring conventions
 
 - Keep view names kebab-case (for stable paths and route matching).
-- Keep template paths rooted from `view/...` for consistency.
+- Keep template paths rooted from `widget/...` for consistency.
 - Ensure every transition target exists in `states`.
 - Prefer explicit intermediate states (`loading`, `submitting`, `error`) over implicit async behavior.
 
@@ -37,15 +37,15 @@ Use `ux3 generate view <name>` to scaffold a new view quickly.
 initial: idle
 states:
   idle:
-    template: view/login/idle.html
+    template: widget/login/idle.html
     on:
       SUBMIT: submitting
   submitting:
-    template: view/login/submitting.html
+    template: widget/login/submitting.html
     invoke:
       src: handleLoginSubmit
     on:
       SUCCESS: done
       ERROR: idle
-  done: view/login/done.html
+  done: widget/login/done.html
 ```

@@ -21,6 +21,14 @@ function readConfig(app: AppContext): DevToolsPluginConfig {
   };
 }
 
+function resolveFlags(app: AppContext, cfg: DevToolsPluginConfig): { inspector: boolean; devTools: boolean } {
+  const pluginEnabled = cfg.enabled === true;
+  return {
+    inspector: !!(app.config?.development?.inspector || cfg.inspector || pluginEnabled),
+    devTools: !!(app.config?.development?.devTools || app.config?.development?.inspector || cfg.devTools || pluginEnabled),
+  };
+}
+
 export const DevToolsPlugin: Plugin = {
   name: '@ux3/plugin-dev-tools',
   version,
@@ -28,6 +36,7 @@ export const DevToolsPlugin: Plugin = {
 
   async install(app) {
     const cfg = readConfig(app);
+    const flags = resolveFlags(app, cfg);
     const service = createDevToolsService({ maxEvents: cfg.maxEvents });
 
     app.utils = app.utils || {};
@@ -40,8 +49,8 @@ export const DevToolsPlugin: Plugin = {
     }
 
     service.emit('system', 'dev-tools.installed', {
-      inspector: !!app.config?.development?.inspector,
-      devTools: !!app.config?.development?.devTools,
+      inspector: flags.inspector,
+      devTools: flags.devTools,
     });
   },
 };
