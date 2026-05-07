@@ -282,12 +282,14 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     const headStyles = Array.from(document.head.querySelectorAll('style'));
     for (const [index, style] of headStyles.entries()) {
       const key = style.getAttribute('data-ux3-shadow-key') || `head-style-${index}`;
-      if (shadow.querySelector(`style[data-ux3-shadow-key="${key}"]`)) {
-        continue;
+      const existing = shadow.querySelector(`style[data-ux3-shadow-key="${key}"]`) as HTMLStyleElement | null;
+      if (existing) {
+        existing.textContent = style.textContent;
+      } else {
+        const clone = style.cloneNode(true) as HTMLStyleElement;
+        clone.setAttribute('data-ux3-shadow-key', key);
+        shadow.appendChild(clone);
       }
-      const clone = style.cloneNode(true) as HTMLStyleElement;
-      clone.setAttribute('data-ux3-shadow-key', key);
-      shadow.appendChild(clone);
     }
   }
 
@@ -309,6 +311,36 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const incoming = mapped.split(/\s+/).filter(Boolean);
       node.className = Array.from(new Set([...existing, ...incoming])).join(' ');
     });
+
+    this.reflectClassesToLightDom(root);
+  }
+
+  private gatheredClassSet: Set<string> | null = null;
+
+  private reflectClassesToLightDom(root: ParentNode): void {
+    if (typeof document === 'undefined') return;
+    const all = new Set(this.gatheredClassSet ?? []);
+    const elts = root.querySelectorAll('[class]');
+    for (let i = 0; i < elts.length; i++) {
+      for (const c of (elts[i] as HTMLElement).className.split(/\s+/)) {
+        if (c) all.add(c);
+      }
+    }
+    this.gatheredClassSet = all;
+    let collector = document.getElementById('ux-class-collector');
+    if (!collector) {
+      collector = document.createElement('div');
+      collector.id = 'ux-class-collector';
+      collector.setAttribute('aria-hidden', 'true');
+      collector.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;visibility:hidden;pointer-events:none;';
+      document.body.appendChild(collector);
+    }
+    collector.className = Array.from(all).join(' ');
+    const tw = (window as any).tailwind;
+    if (tw && typeof tw.refresh === 'function') {
+      try { tw.refresh(); } catch { /* noop */ }
+      setTimeout(() => this.syncGlobalStylesIntoShadow(this.shadowRoot!), 0);
+    }
   }
 
   /**

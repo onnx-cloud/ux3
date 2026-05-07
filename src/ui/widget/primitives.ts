@@ -8,7 +8,7 @@
  */
 import { LifecycleComponent } from '../lifecycle-component.js';
 
-type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'image' | 'video' | 'audio' | 'wysiwyg' | 'tabs' | 'accordion' | 'popover' | 'tooltip' | 'drawer' | 'wizard' | 'capture' | 'progress';
+type PrimitiveKind = 'region' | 'toggle' | 'value' | 'input' | 'textarea' | 'slider' | 'checkbox' | 'switch' | 'form' | 'image' | 'video' | 'audio' | 'wysiwyg' | 'tabs' | 'accordion' | 'popover' | 'tooltip' | 'drawer' | 'wizard' | 'capture' | 'progress' | 'menu';
 
 interface PrimitiveDefinition {
   tag: string;
@@ -29,11 +29,12 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-link', role: 'link', kind: 'region' },
   { tag: 'ux-drawer', role: 'dialog', kind: 'drawer', stateAttr: 'open' },
   { tag: 'ux-tabs', role: 'tablist', kind: 'tabs' },
+  { tag: 'ux-tab', role: 'tab', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-tab-panel', role: 'tabpanel', kind: 'region' },
   { tag: 'ux-accordion', role: 'group', kind: 'accordion', stateAttr: 'open' },
   { tag: 'ux-wizard', role: 'group', kind: 'wizard' },
   { tag: 'ux-tooltip', role: 'tooltip', kind: 'tooltip', stateAttr: 'open' },
-  { tag: 'ux-menu', role: 'menu', kind: 'value' },
+  { tag: 'ux-menu', role: 'menu', kind: 'menu' },
   { tag: 'ux-menu-item', role: 'menuitem', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-select', role: 'listbox', kind: 'value' },
   { tag: 'ux-command-palette', role: 'dialog', kind: 'toggle', stateAttr: 'open' },
@@ -949,6 +950,7 @@ class UxPrimitiveTabs extends UxPrimitiveBase {
   protected onConnected(): void {
     super.onConnected();
     this.setAttribute('role', 'tablist');
+    this.generateTabsFromData();
     this.collectChildren();
     this.addEventListener('click', this.onTabClick);
     this.addEventListener('keydown', this.onTabKeyDown);
@@ -958,6 +960,18 @@ class UxPrimitiveTabs extends UxPrimitiveBase {
     this.removeEventListener('click', this.onTabClick);
     this.removeEventListener('keydown', this.onTabKeyDown);
     super.onDisconnected();
+  }
+
+  private generateTabsFromData() {
+    const data = this.getAttribute('data-tabs');
+    if (!data || this.querySelector('ux-tab,[role="tab"]')) return;
+    const labels = data.split('|').map(s => s.trim()).filter(Boolean);
+    labels.forEach((label, i) => {
+      const tab = document.createElement('ux-tab');
+      tab.textContent = label;
+      if (i === 0) tab.setAttribute('selected', '');
+      this.appendChild(tab);
+    });
   }
 
   private collectChildren() {
@@ -991,8 +1005,15 @@ class UxPrimitiveTabs extends UxPrimitiveBase {
 
   private selectTab(index: number) {
     this.tabs.forEach((t, i) => {
-      t.setAttribute('aria-selected', String(i === index));
-      t.setAttribute('tabindex', i === index ? '0' : '-1');
+      if (i === index) {
+        t.setAttribute('aria-selected', 'true');
+        t.setAttribute('selected', '');
+        t.setAttribute('tabindex', '0');
+      } else {
+        t.setAttribute('aria-selected', 'false');
+        t.removeAttribute('selected');
+        t.setAttribute('tabindex', '-1');
+      }
     });
     this.panels.forEach((p, i) => {
       p.style.display = i === index ? '' : 'none';
@@ -1191,6 +1212,103 @@ class UxPrimitiveProgress extends UxPrimitiveValue {
   }
 }
 
+/** Menu — <ux-menu> — Arrow-key navigation through items with Enter/Space selection */
+class UxPrimitiveMenu extends UxPrimitiveBase {
+  private items: HTMLElement[] = [];
+  private currentIdx = -1;
+
+  static get observedAttributes(): string[] {
+    return ['value'];
+  }
+
+  protected onConnected(): void {
+    super.onConnected();
+    this.setAttribute('role', 'menu');
+    this.collectItems();
+    this.addEventListener('click', this.onItemClick);
+    this.addEventListener('keydown', this.onMenuKeyDown);
+    this.addEventListener('mouseover', this.onItemHover);
+  }
+
+  protected onDisconnected(): void {
+    this.removeEventListener('click', this.onItemClick);
+    this.removeEventListener('keydown', this.onMenuKeyDown);
+    this.removeEventListener('mouseover', this.onItemHover);
+    super.onDisconnected();
+  }
+
+  private collectItems() {
+    this.items = Array.from(this.querySelectorAll('ux-menu-item, [role="menuitem"], [ux-role="menuitem"]'));
+    const selected = this.items.findIndex(item =>
+      item.hasAttribute('selected') || item.getAttribute('aria-selected') === 'true');
+    if (selected >= 0) {
+      this.currentIdx = selected;
+    }
+  }
+
+  private readonly onItemClick = (e: Event) => {
+    const item = (e.target as HTMLElement).closest('ux-menu-item, [role="menuitem"]') as HTMLElement;
+    if (!item) return;
+    const idx = this.items.indexOf(item);
+    if (idx >= 0) this.selectItem(idx);
+  };
+
+  private readonly onItemHover = (e: Event) => {
+    const item = (e.target as HTMLElement).closest('ux-menu-item, [role="menuitem"]') as HTMLElement;
+    if (!item) return;
+    const idx = this.items.indexOf(item);
+    if (idx >= 0) this.focusItem(idx);
+  };
+
+  private readonly onMenuKeyDown = (e: KeyboardEvent) => {
+    if (this.items.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.focusItem((this.currentIdx + 1) % this.items.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.focusItem((this.currentIdx - 1 + this.items.length) % this.items.length);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      this.focusItem(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      this.focusItem(this.items.length - 1);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (this.currentIdx >= 0) this.selectItem(this.currentIdx);
+    }
+  };
+
+  private focusItem(index: number) {
+    this.items[this.currentIdx]?.setAttribute('tabindex', '-1');
+    this.currentIdx = index;
+    const item = this.items[index];
+    if (item) {
+      item.setAttribute('tabindex', '0');
+      item.focus();
+    }
+  }
+
+  private selectItem(index: number) {
+    this.items.forEach((item, i) => {
+      if (i === index) {
+        item.setAttribute('aria-selected', 'true');
+        item.setAttribute('selected', '');
+      } else {
+        item.removeAttribute('aria-selected');
+        item.removeAttribute('selected');
+      }
+    });
+    const value = this.items[index]?.getAttribute('value') || this.items[index]?.textContent?.trim() || '';
+    this.setAttribute('value', value);
+    this.dispatchEvent(new CustomEvent('ux:change', {
+      bubbles: true,
+      detail: { value, selectedIndex: index },
+    }));
+  }
+}
+
 function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
     case 'toggle':
@@ -1200,6 +1318,8 @@ function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
       return UxPrimitiveToggle;
     case 'tabs':
       return UxPrimitiveTabs;
+    case 'menu':
+      return UxPrimitiveMenu;
     case 'accordion':
       return UxPrimitiveAccordion;
     case 'popover':

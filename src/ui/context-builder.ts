@@ -16,7 +16,7 @@ import type { NavConfig } from '../services/router.js';
 import { WidgetFactory } from './widget/factory.js';
 import type { AppContext } from './app.js';
 import type { ContentManifest } from '../services/content.js';
-import { HandlebarsLite } from '../logger/hbs/index.js';
+import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
 import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/lifecycle.js';

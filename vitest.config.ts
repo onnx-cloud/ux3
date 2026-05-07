@@ -54,7 +54,7 @@ export default defineConfig({
         find: /^@ux3\/hbs\/(.+)\.ts$/,
         replacement: (id: string) => {
           const m = id.match(/^@ux3\/hbs\/(.+)\.ts$/);
-          if (m) return path.resolve(__dirname, `src/logger/hbs/${m[1]}.ts`);
+          if (m) return path.resolve(__dirname, `src/hbs/${m[1]}.ts`);
           return id;
         },
       },
@@ -63,7 +63,7 @@ export default defineConfig({
         find: /^@ux3\/hbs\/(.+)\.js$/,
         replacement: (id: string) => {
           const m = id.match(/^@ux3\/hbs\/(.+)\.js$/);
-          if (m) return path.resolve(__dirname, `src/logger/hbs/${m[1]}.ts`);
+          if (m) return path.resolve(__dirname, `src/hbs/${m[1]}.ts`);
           return id;
         },
       },
@@ -72,12 +72,12 @@ export default defineConfig({
         find: /^@ux3\/hbs\/(.+)$/,
         replacement: (id: string) => {
           const m = id.match(/^@ux3\/hbs\/(.+)$/);
-          if (m) return path.resolve(__dirname, `src/logger/hbs/${m[1]}.ts`);
+          if (m) return path.resolve(__dirname, `src/hbs/${m[1]}.ts`);
           return id;
         },
       },
       // @ux3/hbs root import
-      { find: /^@ux3\/hbs$/, replacement: path.resolve(__dirname, 'src/logger/hbs/index.ts') },
+      { find: /^@ux3\/hbs$/, replacement: path.resolve(__dirname, 'src/hbs/index.ts') },
 
       // Handle @ux3/ imports with .js extensions
       {

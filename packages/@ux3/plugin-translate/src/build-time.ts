@@ -1,6 +1,12 @@
 import type { GeneratedConfig } from '../../../../src/ui/context-builder.js';
+import { defaultLogger } from '../../../../src/security/observability.js';
 import fs from 'node:fs';
 import path from 'node:path';
+
+const process = (globalThis as any).process as {
+  cwd(): string;
+  env: Record<string, string | undefined>;
+};
 
 export interface BuildTimeTranslateConfig {
   enabled?: boolean;
@@ -33,7 +39,7 @@ const DEFAULT_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const DEFAULT_MODEL = 'openai/gpt-oss-120b';
 let envLoaded = false;
 
-function loadDotEnvIfPresent(): void {
+export function loadDotEnvIfPresent(): void {
   if (envLoaded) {
     return;
   }
@@ -85,6 +91,13 @@ async function callTranslationApi(
     max_tokens: 2048,
   });
 
+  defaultLogger.info('@ux3/plugin-translate.buildTime.translate.request', {
+    sourceLocale,
+    targetLocale,
+    endpoint: options.endpoint,
+    model: options.model,
+  });
+
   const response = await fetch(options.endpoint, {
     method: 'POST',
     headers: {
@@ -95,16 +108,52 @@ async function callTranslationApi(
   });
 
   if (!response.ok) {
-    throw new Error(
-      `@ux3/plugin-translate: build-time API request failed - HTTP ${response.status}`
-    );
+    let responseDetails = '';
+    try {
+      const raw = (await response.text()).trim();
+      if (raw) {
+        const normalized = raw.replace(/\s+/g, ' ').slice(0, 240);
+        responseDetails = `: ${normalized}`;
+      }
+    } catch {
+      // ignore response parsing errors and keep the status-focused message
+    }
+
+    const errorMessage = response.status === 401 || response.status === 403
+      ? `@ux3/plugin-translate: build-time API request failed - HTTP ${response.status}. Check credentials in 'apiKey' or the env var '${process.env.GROQ_API_KEY ? 'GROQ_API_KEY' : 'GROQ_API_KEY (default)'}'. To silence this in dev, disable build-time translation with plugins.@ux3/plugin-translate.config.enabled=false${responseDetails}`
+      : `@ux3/plugin-translate: build-time API request failed - HTTP ${response.status}${responseDetails}`;
+
+    const error = new Error(errorMessage);
+    defaultLogger.error('@ux3/plugin-translate.buildTime.translate.failure', error, {
+      sourceLocale,
+      targetLocale,
+      endpoint: options.endpoint,
+      model: options.model,
+      status: response.status,
+    });
+    throw error;
   }
 
   const data = (await response.json()) as any;
   const translated: string = data?.choices?.[0]?.message?.content?.trim() ?? '';
   if (!translated) {
-    throw new Error('@ux3/plugin-translate: build-time API returned empty text');
+    const error = new Error('@ux3/plugin-translate: build-time API returned empty text');
+    defaultLogger.error('@ux3/plugin-translate.buildTime.translate.failure', error, {
+      sourceLocale,
+      targetLocale,
+      endpoint: options.endpoint,
+      model: options.model,
+    });
+    throw error;
   }
+
+  defaultLogger.info('@ux3/plugin-translate.buildTime.translate.success', {
+    sourceLocale,
+    targetLocale,
+    endpoint: options.endpoint,
+    model: options.model,
+    translatedLength: translated.length,
+  });
 
   return translated;
 }
@@ -221,7 +270,9 @@ export async function applyBuildTimeTranslation(
     '';
 
   if (!apiKey) {
-    throw new Error('@ux3/plugin-translate: build-time apiKey is required');
+    throw new Error(
+      '@ux3/plugin-translate: build-time apiKey is required (set config.apiKey or env GROQ_API_KEY)'
+    );
   }
 
   const targetLocales = resolveTargets(pluginConfig, sourceLocale, i18n);

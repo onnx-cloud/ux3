@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import YAML from 'yaml';
-import { HandlebarsLite } from '../logger/hbs/index.js';
+import { HandlebarsLite } from '../hbs/index.js';
 
 /**
  * Standardizes asset extraction (scripts/styles) from manifest or project config.

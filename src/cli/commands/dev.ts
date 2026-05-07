@@ -69,6 +69,7 @@ export const devCommand = new Command()
             configDir: projectDir,
             outputDir: generatedDir,
             schemas,
+            isDevServer: true,
           });
           const config = await configGenerator.generate();
           await configGenerator.emit(config);

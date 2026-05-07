@@ -6,7 +6,7 @@ import fsExtra from 'fs-extra';
 import YAML from 'yaml';
 import { processAssets } from './asset-processor';
 import { renderDashboard } from './dashboard';
-import { HandlebarsLite } from '../logger/hbs/index.js';
+import { HandlebarsLite } from '../hbs/index.js';
 import { MCPHTTPHandler } from '../mcp/http-handler.js';
 
 const frameworkRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -792,7 +792,7 @@ export class DevServer {
     try {
       const { ConfigGenerator } = await import('../build/config-generator.js');
       const outDir = path.join(this.projectDir, 'generated');
-      const gen = new ConfigGenerator({ configDir: this.projectDir, outputDir: outDir });
+      const gen = new ConfigGenerator({ configDir: this.projectDir, outputDir: outDir, isDevServer: true });
       const cfg = await gen.generate();
       this.manifest = {
         config: cfg as any,

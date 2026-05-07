@@ -1,5 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import { createRequire } from 'module';
+import { defaultLogger } from '../../../../src/security/observability.js';
 export { applyBuildTimeTranslation } from './build-time.js';
 export type { BuildTimeTranslateConfig, BuildTimeTranslateResult } from './build-time.js';
 
@@ -40,6 +41,53 @@ function readConfig(app: any): TranslateConfig {
   );
 }
 
+async function loadDotEnvIfPresent(): Promise<void> {
+  if (typeof process === 'undefined' || typeof process.cwd !== 'function' || !process.env) {
+    return;
+  }
+
+  try {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const envPath = path.join(process.cwd(), '.env');
+    if (!fs.existsSync(envPath)) {
+      return;
+    }
+
+    const contents = fs.readFileSync(envPath, 'utf8');
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) {
+        continue;
+      }
+
+      const separator = trimmed.indexOf('=');
+      if (separator < 0) {
+        continue;
+      }
+
+      const key = trimmed.slice(0, separator).trim();
+      const value = trimmed.slice(separator + 1).trim().replace(/^['"]|['"]$/g, '');
+      if (key && process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  } catch {
+    // Ignore if running in a non-Node environment.
+  }
+}
+
+async function resolveRuntimeConfig(cfg: TranslateConfig): Promise<Required<Pick<TranslateConfig, 'endpoint' | 'model' | 'apiKey'>>> {
+  await loadDotEnvIfPresent();
+
+  const nodeEnv = typeof process !== 'undefined' && process.env ? process.env : {} as NodeJS.ProcessEnv;
+  return {
+    endpoint: cfg.endpoint || nodeEnv.GROQ_OPENAI_ENDPOINT || '',
+    model: cfg.model || nodeEnv.GROQ_MODEL || '',
+    apiKey: cfg.apiKey || nodeEnv.GROQ_API_KEY || '',
+  };
+}
+
 /**
  * Call an OpenAI-compatible chat completions endpoint to translate `text`.
  */
@@ -57,6 +105,13 @@ async function callTranslationApi(
   if (!apiKey) {
     throw new Error('@ux3/plugin-translate: apiKey is required');
   }
+
+  defaultLogger.info('@ux3/plugin-translate.runtime.translate.request', {
+    sourceLocale,
+    targetLocale,
+    endpoint,
+    model,
+  });
 
   const body = JSON.stringify({
     model,
@@ -83,16 +138,39 @@ async function callTranslationApi(
   });
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       `@ux3/plugin-translate: API request failed – HTTP ${response.status}`
     );
+    defaultLogger.error('@ux3/plugin-translate.runtime.translate.failure', error, {
+      sourceLocale,
+      targetLocale,
+      endpoint,
+      model,
+      status: response.status,
+    });
+    throw error;
   }
 
   const data = (await response.json()) as any;
   const translated: string = data?.choices?.[0]?.message?.content?.trim() ?? '';
   if (!translated) {
-    throw new Error('@ux3/plugin-translate: empty response from API');
+    const error = new Error('@ux3/plugin-translate: empty response from API');
+    defaultLogger.error('@ux3/plugin-translate.runtime.translate.failure', error, {
+      sourceLocale,
+      targetLocale,
+      endpoint,
+      model,
+    });
+    throw error;
   }
+
+  defaultLogger.info('@ux3/plugin-translate.runtime.translate.success', {
+    sourceLocale,
+    targetLocale,
+    endpoint,
+    model,
+    translatedLength: translated.length,
+  });
   return translated;
 }
 
@@ -137,7 +215,8 @@ export const TranslatePlugin: Plugin = {
         sourceLocale?: string
       ): Promise<TranslationResult> {
         const source = sourceLocale ?? currentLocale;
-        const translated = await callTranslationApi(text, targetLocale, source, cfg);
+        const resolvedCfg = await resolveRuntimeConfig(cfg);
+        const translated = await callTranslationApi(text, targetLocale, source, resolvedCfg);
         return { source, target: targetLocale, translated };
       },
 
@@ -151,7 +230,8 @@ export const TranslatePlugin: Plugin = {
       async t(text: string, targetLocale?: string): Promise<string> {
         const target = targetLocale ?? currentLocale;
         if (target === defaultLocale) return text;
-        const translated = await callTranslationApi(text, target, defaultLocale, cfg);
+        const resolvedCfg = await resolveRuntimeConfig(cfg);
+        const translated = await callTranslationApi(text, target, defaultLocale, resolvedCfg);
         return translated;
       },
     }));
