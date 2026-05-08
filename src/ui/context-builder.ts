@@ -23,63 +23,8 @@ import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/
 import { captureBrowserContext, observeBrowserContext, type BrowserContextOptions } from './browser-context.js';
 import type { GeneratedEntities } from '../build/entity-index.js';
 import type { Plugin } from '../plugin/registry.js';
-import { createDevToolsService } from '../../packages/@ux3/plugin-dev-tools/src/services/dev-tools.service.js';
+import { builtInDevToolsPlugin, mountInspector } from './plugins/built-in.js';
 import { createLocaleService, type LocaleService } from '../services/locale-runtime.js';
-
-function extractDevToolsPluginConfig(entry: any): Record<string, unknown> | null {
-  if (!entry) return null;
-  if (typeof entry === 'string') {
-    return entry === '@ux3/plugin-dev-tools' ? {} : null;
-  }
-  if (typeof entry === 'object' && entry.name === '@ux3/plugin-dev-tools') {
-    return (entry.config as Record<string, unknown>) || {};
-  }
-  return null;
-}
-
-function resolveDevToolsFlags(config: any): { inspector: boolean; devTools: boolean } {
-  const pluginEntries = Array.isArray(config?.plugins) ? config.plugins : [];
-
-  let pluginEnabled = false;
-  let pluginInspector = false;
-  let pluginDevTools = false;
-
-  for (const entry of pluginEntries) {
-    const pluginCfg = extractDevToolsPluginConfig(entry);
-    if (!pluginCfg) continue;
-    if (pluginCfg.enabled === true) pluginEnabled = true;
-    if (pluginCfg.inspector === true) pluginInspector = true;
-    if (pluginCfg.devTools === true) pluginDevTools = true;
-  }
-
-  return {
-    inspector: !!(config?.development?.inspector || pluginEnabled || pluginInspector),
-    devTools: !!(config?.development?.devTools || config?.development?.inspector || pluginEnabled || pluginDevTools),
-  };
-}
-
-const builtInDevToolsPlugin: Plugin = {
-  name: '@ux3/plugin-dev-tools',
-  version: 'workspace',
-  description: 'UX3 development tools plugin (inspector, diagnostics, and event stream)',
-  async install(app) {
-    const service = createDevToolsService();
-    const flags = resolveDevToolsFlags(app.config);
-
-    app.utils = app.utils || {};
-    (app.utils as any).devTools = service;
-    app.registerService?.('devTools', () => service as any);
-
-    if (typeof window !== 'undefined') {
-      (window as any).__ux3DevTools = service;
-    }
-
-    service.emit('system', 'dev-tools.installed', {
-      inspector: flags.inspector,
-      devTools: flags.devTools,
-    });
-  },
-};
 
 /**
  * Generated configuration structure
@@ -448,7 +393,27 @@ export class AppContextBuilder {
 
     const navConfig: NavConfig | null = this.router ? this.router.getNavConfig() : null;
     const rawBrowserContext = captureBrowserContext(this.config.browserContext || {});
-    const localeService = createLocaleService({ defaultLocale: 'en-US' });
+
+    const translatePluginLocales: string[] = (() => {
+      const entries = Array.isArray(this.config.plugins) ? this.config.plugins : [];
+      for (const entry of entries) {
+        const name = typeof entry === 'string' ? entry : entry?.name;
+        if (name !== '@ux3/plugin-translate') continue;
+        const cfg = (typeof entry === 'object' && entry?.config) ? entry.config : null;
+        if (cfg && Array.isArray(cfg.locales)) return cfg.locales as string[];
+      }
+      return [];
+    })();
+
+    const supportedLocales = Array.from(new Set([
+      ...Object.keys(this.i18nData),
+      ...translatePluginLocales,
+    ]));
+
+    const localeService = createLocaleService({
+      defaultLocale: 'en-US',
+      supportedLocales: supportedLocales.length > 0 ? supportedLocales : undefined,
+    });
     const resolvedLocale = localeService.resolve();
 
     // Stabilize browser context with resolved locale before first render.
@@ -734,127 +699,51 @@ export async function createAppContext(
     });
   };
 
-  const mountInspector = (appContext: AppContext): void => {
-    const flags = resolveDevToolsFlags(config);
-    if (!flags.inspector || typeof window === 'undefined' || typeof document === 'undefined') {
-      return;
-    }
+  // Install plugins from config (dev-tools is built-in, others via dynamic import for Node.js).
+  // Browser build: the generated __entry__.ts calls installPlugins() after createAppContext().
+  const entries: any[] = Array.isArray(config.plugins) ? [...config.plugins] : [];
 
-    const existing = document.getElementById('ux3-devtools-inspector');
-    if (existing) {
-      return;
-    }
-
-    import('@ux3/plugin-dev-tools/inspector/inspector-shell.js')
-      .then(({ createInspectorShell }) => {
-        const { root, dispose } = createInspectorShell(appContext, {
-          dock: 'bottom-right',
-          minimized: true,
-        });
-        document.body.appendChild(root);
-
-        window.addEventListener('beforeunload', () => {
-          try { dispose(); } catch { /* noop */ }
-          root.remove();
-        }, { once: true });
-      })
-      .catch(() => {
-        // Inspector shell unavailable; skip silently.
-      });
-  };
-
-  // auto-install dev tools plugin in dev mode unless already declared explicitly
-  const pluginEntries: any[] = Array.isArray(config.plugins) ? [...config.plugins] : [];
-  const shouldAutoInstallDevTools = !!(
-    config.development &&
-    (config.development.devTools || config.development.inspector)
+  // Dev-tools is always available as a framework feature
+  const hasDevTools = entries.some((e: any) =>
+    (typeof e === 'string' ? e : e?.name) === '@ux3/plugin-dev-tools'
   );
-  if (shouldAutoInstallDevTools) {
-    const exists = pluginEntries.some((entry) => {
-      if (typeof entry === 'string') return entry === '@ux3/plugin-dev-tools';
-      return !!entry && typeof entry === 'object' && entry.name === '@ux3/plugin-dev-tools';
-    });
-    if (!exists) {
-      pluginEntries.unshift('@ux3/plugin-dev-tools');
-    }
+  if ((config.development?.inspector || config.development?.devTools) && !hasDevTools) {
+    entries.unshift('@ux3/plugin-dev-tools');
   }
 
-  // auto-install plugins listed in config
-  if (pluginEntries.length > 0) {
-    for (const entry of pluginEntries) {
-      try {
-        let plugin: any = null;
-        if (typeof entry === 'string') {
-          // import by package name or path. if resolution fails try workspace
-          // package source so tests can load local packages.
-          const pkgName = entry;
-          if (pkgName === '@ux3/plugin-dev-tools') {
-            plugin = builtInDevToolsPlugin;
+  for (const entry of entries) {
+    try {
+      const pkgName = typeof entry === 'string' ? entry : entry?.name;
+      if (!pkgName) continue;
+      if (pkgName === '@ux3/plugin-dev-tools') {
+        if (context.registerPlugin) {
+          await context.registerPlugin(builtInDevToolsPlugin);
+          recordInstalledPlugin(builtInDevToolsPlugin);
+        }
+        continue;
+      }
+      // Node.js-only fallback: try loading from workspace packages or filesystem paths
+      if (typeof process !== 'undefined') {
+        try {
+          let loadPath: string;
+          if (pkgName.startsWith('@ux3/plugin-')) {
+            const simple = pkgName.replace('@ux3/', '');
+            loadPath = require('path').join(process.cwd(), 'packages/@ux3', simple, 'src', 'index.ts');
           } else {
-            try {
-              plugin = await import(/* @vite-ignore */ pkgName);
-            } catch (e) {
-              // try require
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                plugin = require(pkgName);
-              } catch (err2) {
-                // attempt to load from workspace packages folder (Node.js only)
-                if (pkgName.startsWith('@ux3/plugin-') && typeof process !== 'undefined') {
-                  const simple = pkgName.replace('@ux3/', '');
-                  const localPath = path.join(process.cwd(), 'packages/@ux3', simple, 'src', 'index.ts');
-                  try {
-                    if (typeof require === 'function') {
-                      // eslint-disable-next-line @typescript-eslint/no-var-requires
-                      plugin = require(localPath);
-                    }
-                  } catch (err3) {
-                    throw e; // rethrow original
-                  }
-                } else {
-                  throw e;
-                }
-              }
-            }
+            loadPath = pkgName; // filesystem path
           }
+          let plugin = require(loadPath);
           plugin = plugin?.default || plugin;
-        } else if (entry && entry.name) {
-          // entry may specify configuration or be object
-          if (entry.name === '@ux3/plugin-dev-tools') {
-            plugin = builtInDevToolsPlugin;
-          } else {
-            try {
-              const mod = await import(/* @vite-ignore */ entry.name);
-              plugin = mod.default || mod;
-            } catch (e) {
-              // attempt to load from workspace packages folder (Node.js only, same fallback as string-path branch)
-              if (entry.name.startsWith('@ux3/plugin-') && typeof process !== 'undefined') {
-                const simple = entry.name.replace('@ux3/', '');
-                const localPath = path.join(process.cwd(), 'packages/@ux3', simple, 'src', 'index.ts');
-                try {
-                  const mod = await import(/* @vite-ignore */ localPath);
-                  plugin = mod.default || mod;
-                } catch (err2) {
-                  console.warn('[AppContext] failed to load plugin', entry?.name, err2 instanceof Error ? err2.message : String(err2));
-                }
-              } else {
-                console.debug('[AppContext] plugin not available in browser', entry?.name, e instanceof Error ? e.message : String(e));
-              }
-            }
-          }
-          // merge config onto plugin if provided
-          if (plugin && entry.config) {
+          if (typeof entry === 'object' && entry.config) {
             plugin.config = { ...(plugin.config || {}), ...entry.config };
           }
-        }
-        if (plugin && context.registerPlugin) {
-          await context.registerPlugin(plugin);
-          recordInstalledPlugin(plugin);
-        }
-      } catch (err) {
-        console.warn('[AppContext] failed to install plugin', entry, err);
+          if (context.registerPlugin && plugin) {
+            await context.registerPlugin(plugin);
+            recordInstalledPlugin(plugin);
+          }
+        } catch { /* Node.js plugin not found */ }
       }
-    }
+    } catch { /* plugin load failed */ }
   }
 
   // if content manifest was generated, install the built-in content plugin

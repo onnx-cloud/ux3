@@ -90,11 +90,6 @@ function mountView(viewName: string, params?: Record<string, string>): void {
     return;
   }
 
-  // Tear down existing view (fires disconnectedCallback → FSM cleanup)
-  while (main.firstChild) {
-    main.removeChild(main.firstChild);
-  }
-
   const tagName = `ux-${viewName}`;
   if (!customElements.get(tagName)) {
     defaultLogger.warn(
@@ -105,15 +100,43 @@ function mountView(viewName: string, params?: Record<string, string>): void {
   }
 
   const el = document.createElement(tagName);
-  
-  // Pass route params as data attributes
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       el.setAttribute(`data-param-${key}`, value);
     }
   }
-  
-  main.appendChild(el);
+
+  const performSwap = () => {
+    // Persist container height to prevent layout jumps during swap
+    const prevHeight = main.offsetHeight;
+    if (prevHeight > 0) {
+      main.style.minHeight = `${prevHeight}px`;
+    }
+
+    // Tear down existing view
+    while (main.firstChild) {
+      main.removeChild(main.firstChild);
+    }
+
+    // Mount new view with entrance class
+    el.classList.add('ux-view-entering');
+    main.appendChild(el);
+
+    // Remove entrance class after layout to trigger transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.remove('ux-view-entering');
+        // Release min-height after transition completes
+        setTimeout(() => {
+          main.style.minHeight = '';
+        }, 250);
+      });
+    });
+  };
+
+  // CSS class-based fade transition — reliable, no experimental API needed
+  performSwap();
+
   defaultLogger.info(`[Navigation] Mounted <${tagName}> into #ux-content`, params ? { params } : {});
 }
 

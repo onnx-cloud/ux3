@@ -41,13 +41,13 @@ describe('UxModal - Modal Component', () => {
     expect(modal.shadowRoot?.querySelector('.modal-backdrop')?.classList.contains('visible')).toBe(false);
   });
 
-  it('emits modal-close when closed', async () => {
+  it('emits ux:close when closed', async () => {
     const modal = document.createElement('ux-modal') as UxModal;
     container.appendChild(modal);
     await Promise.resolve();
 
     const closeSpy = vi.fn();
-    modal.addEventListener('modal-close', closeSpy);
+    modal.addEventListener('ux:close', closeSpy);
 
     modal.openModal();
     modal.closeModal();

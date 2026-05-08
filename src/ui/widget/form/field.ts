@@ -297,7 +297,7 @@ export class UxField extends LifecycleComponent {
     this.controlDisposers.push(this.listen(this.control, 'change', (e: Event) => {
       const target = e.target as HTMLInputElement;
       this.dispatchEvent(
-        new CustomEvent('field-change', {
+        new CustomEvent('ux:field-change', {
           detail: { name: this.name, value: target.value },
           bubbles: true,
           composed: true,
@@ -434,7 +434,7 @@ export class UxField extends LifecycleComponent {
         display: block;
         margin-bottom: 1rem;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        font-size: 1rem;
+        font-size: inherit;
         line-height: 1.5;
       }
 
@@ -467,8 +467,7 @@ export class UxField extends LifecycleComponent {
         padding: 0.5rem 0.75rem;
         border: 1px solid #d1d5db;
         border-radius: 0.375rem;
-        font-size: 1rem;
-        font-family: inherit;
+        font: inherit;
         transition: all 200ms ease;
       }
 

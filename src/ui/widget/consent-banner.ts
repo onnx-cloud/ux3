@@ -98,8 +98,8 @@ export class UxConsentBanner extends LifecycleComponent {
     container.innerHTML = `
       <div class="consent-content">
         <div class="consent-header">
-          <slot name="header">
-          <button class="consent-close" aria-label="i18n.consent.dismiss" title="i18n.consent.title">✕</button>
+          <slot name="title"></slot>
+          <button class="consent-close" aria-label="Dismiss" title="Dismiss">✕</button>
         </div>
         
         <div class="consent-message">
@@ -112,15 +112,11 @@ export class UxConsentBanner extends LifecycleComponent {
         </div>
 
         <div class="consent-actions">
-            <slot name="reject" consent-reject">
-              <button class="consent-btn consent-reject" type="button">
-                <span class="btn-label">
-                </span>
-              </button>
+            <slot name="reject">
+              <button class="consent-btn consent-reject" type="button">Decline</button>
             </slot>
-            <slot name="accept-label" class="consent-accept">
-              <button class="consent-btn consent-accept" type="button">
-              </button>
+            <slot name="accept">
+              <button class="consent-btn consent-accept" type="button">Accept All</button>
             </slot>
         </div>
 
@@ -181,7 +177,7 @@ export class UxConsentBanner extends LifecycleComponent {
     });
     this.saveConsentState(preferences);
 
-    this.dispatchEvent(new CustomEvent('consent-accept', {
+    this.dispatchEvent(new CustomEvent('ux:consent-accept', {
       detail: { preferences },
       bubbles: true,
       composed: true
@@ -199,7 +195,7 @@ export class UxConsentBanner extends LifecycleComponent {
 
     this.saveConsentState(preferences, false);
 
-    this.dispatchEvent(new CustomEvent('consent-reject', {
+    this.dispatchEvent(new CustomEvent('ux:consent-reject', {
       detail: { preferences },
       bubbles: true,
       composed: true
@@ -209,7 +205,7 @@ export class UxConsentBanner extends LifecycleComponent {
   }
 
   private handleDismiss() {
-    this.dispatchEvent(new CustomEvent('consent-dismiss', {
+    this.dispatchEvent(new CustomEvent('ux:consent-dismiss', {
       bubbles: true,
       composed: true
     }));

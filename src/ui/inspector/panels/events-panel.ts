@@ -7,7 +7,7 @@ import { inspectorBus, type InspectorEventSource } from '../event-bus.js';
 
 const ALL_SOURCES: InspectorEventSource[] = ['fsm', 'service', 'navigation', 'plugin', 'logger', 'validation'];
 
-export function createEventsPanel(): HTMLElement {
+export function createEventsPanel(_ctx?: any): HTMLElement {
   const root = document.createElement('div');
   root.style.cssText = 'padding:8px;display:flex;flex-direction:column;height:100%;box-sizing:border-box;font-size:11px;';
 

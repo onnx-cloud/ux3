@@ -51,7 +51,7 @@ describe('UxPanel - Panel Component', () => {
     expect(panel.shadowRoot?.querySelector('.panel-content')?.classList.contains('hidden')).toBe(false);
   });
 
-  it('emits panel-expand and panel-collapse events', async () => {
+  it('emits ux:panel-expand and ux:panel-collapse events', async () => {
     const panel = document.createElement('ux-panel') as UxPanel;
     panel.setAttribute('title', 'Events');
     panel.setAttribute('collapsible', '');
@@ -61,8 +61,8 @@ describe('UxPanel - Panel Component', () => {
 
     const expandSpy = vi.fn();
     const collapseSpy = vi.fn();
-    panel.addEventListener('panel-expand', expandSpy);
-    panel.addEventListener('panel-collapse', collapseSpy);
+    panel.addEventListener('ux:panel-expand', expandSpy);
+    panel.addEventListener('ux:panel-collapse', collapseSpy);
 
     const toggle = panel.shadowRoot?.querySelector('.panel-toggle') as HTMLButtonElement;
     toggle.click();

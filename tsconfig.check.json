@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "skipLibCheck": true,
+    "strict": false,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@ux3/*": [
+        "./src/*",
+        "./packages/@ux3/*/src"
+      ]
+    }
+  },
+  "include": ["src/**/*.ts", "packages/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/templates", "tmp"]
+}

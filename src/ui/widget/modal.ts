@@ -105,12 +105,6 @@ export class UxModal extends LifecycleComponent {
       bubbles: true,
       composed: true
     }));
-
-    // Backward compatibility for existing consumers.
-    this.dispatchEvent(new CustomEvent('modal-open', {
-      bubbles: true,
-      composed: true
-    }));
   }
 
   /**
@@ -130,12 +124,6 @@ export class UxModal extends LifecycleComponent {
     this.focusTrap?.releaseFocus();
 
     this.dispatchEvent(new CustomEvent('ux:close', {
-      bubbles: true,
-      composed: true
-    }));
-
-    // Backward compatibility for existing consumers.
-    this.dispatchEvent(new CustomEvent('modal-close', {
       bubbles: true,
       composed: true
     }));

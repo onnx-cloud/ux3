@@ -39,6 +39,16 @@ The five core UX3 topics are covered in these guides:
 
 ---
 
+## Governance And Operations
+
+- [Roadmap Taxonomy](roadmap-taxonomy.md): standard categories, priority model, and roadmap entry format.
+- [Deprecation Policy](deprecation-policy.md): staged API deprecation and removal rules.
+- [Plugin Certification](plugin-certification.md): plugin quality levels and conformance requirements.
+- [RFC Process](rfc-process.md): process for major architectural and API changes.
+- [Release Metrics](release-metrics.md): release success and regression metrics.
+
+---
+
 ## Example Projects
 
 - [IAM Example](iam-example.md): complete end-to-end app reference.

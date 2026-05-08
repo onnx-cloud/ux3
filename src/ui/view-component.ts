@@ -389,6 +389,18 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         color: #111827;
       }
+
+      :host(.ux-view-entering) #ux-layout {
+        opacity: 0;
+        transform: translateY(6px);
+        transition: none;
+      }
+
+      :host(:not(.ux-view-entering)) #ux-layout {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 180ms ease-out, transform 180ms ease-out;
+      }
       
       #ux-content {
         flex: 1;
@@ -514,90 +526,34 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
   /**
    * Setup event delegation
-   * Binds FSM transitions to element events
+   * Binds FSM transitions to element events via the ux-event directive.
+   * Format: ux-event="eventName:FSM_ACTION"
+   * Example: ux-event="click:SUBMIT", ux-event="submit:SAVE"
    */
   private setupEventListeners(): void {
     const contentArea = this.shadowRoot?.querySelector('#ux-content');
     if (!contentArea) return;
 
-    // Find all elements with ux-on:* OR ux-event attributes
-    // Note: CSS doesn't support wildcards in attribute selectors, so we query separately
-    // and combine the results manually
-    const allElements = new Set<Element>();
+    // Query only [ux-event] — the legacy ux-on:* syntax has been removed.
+    const elements = contentArea.querySelectorAll('[ux-event]');
     
-    // Get elements with ux-event attribute
-    contentArea.querySelectorAll('[ux-event]').forEach((el) => allElements.add(el));
-    
-    // Get elements with ux-on:* attributes by walking the tree
-    const walk = (node: Element) => {
-      if (node.attributes) {
-        for (const attr of node.attributes) {
-          if (attr.name.startsWith('ux-on:')) {
-            allElements.add(node);
-            break;
-          }
-        }
-      }
-      for (const child of node.children) {
-        walk(child);
-      }
-    };
-    walk(contentArea);
-    
-    allElements.forEach((element) => {
-      // 1. Handle ux-event directive: "click:SUBMIT"
+    elements.forEach((element) => {
       const uxEvent = element.getAttribute('ux-event');
-      if (uxEvent) {
-        const [eventName, action] = uxEvent.split(':');
-        if (eventName && action) {
-          const listener = (event: Event) => {
-            if (element.tagName === 'FORM' && event.type === 'submit') {
-              event.preventDefault();
-            }
-            const payload = this.extractPayload(element as HTMLElement, event);
-            this.fsm.send({ type: action, payload });
-          };
-          this.templateEventDisposers.push(this.listen(element, eventName, listener));
-        }
-      }
-
-      // 2. Handle legacy ux-on:* attributes
-      for (const attr of element.attributes) {
-        if (attr.name.startsWith('ux-on:')) {
-          const eventName = attr.name.slice(6); // "ux-on:click" → "click"
-          const action = attr.value; // e.g., "SUBMIT"
-
-          const listener = (event: Event) => {
-            const payload = this.extractPayload(element as HTMLElement, event);
-            this.fsm.send({ type: action, payload });
-          };
-
-          this.templateEventDisposers.push(this.listen(element, eventName, listener));
-        }
-      }
-    });
-
-    // Also support standard form submission and button clicks
-    this.setupFormBindings(contentArea);
-  }
-
-  /**
-   * Setup form and button auto-bindings
-   */
-  private setupFormBindings(contentArea: Element): void {
-    const forms = contentArea.querySelectorAll('form[ux-on\\:submit]');
-    forms.forEach((form) => {
-      const action = form.getAttribute('ux-on:submit');
-      if (!action) return;
+      if (!uxEvent) return;
+      const colonIdx = uxEvent.indexOf(':');
+      if (colonIdx < 0) return;
+      const eventName = uxEvent.slice(0, colonIdx);
+      const action = uxEvent.slice(colonIdx + 1);
+      if (!eventName || !action) return;
 
       const listener = (event: Event) => {
-        event.preventDefault();
-        const formData = new FormData(form as HTMLFormElement);
-        const payload = Object.fromEntries(formData);
+        if (element.tagName === 'FORM' && event.type === 'submit') {
+          event.preventDefault();
+        }
+        const payload = this.extractPayload(element as HTMLElement, event);
         this.fsm.send({ type: action, payload });
       };
-
-      this.templateEventDisposers.push(this.listen(form, 'submit', listener));
+      this.templateEventDisposers.push(this.listen(element, eventName, listener));
     });
   }
 

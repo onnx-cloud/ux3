@@ -66,7 +66,7 @@ export class UxFieldArray extends LifecycleComponent {
 
     // Dispatch event
     this.dispatchEvent(
-      new CustomEvent('item-added', {
+      new CustomEvent('ux:item-added', {
         detail: { index: this.items.length - 1, data },
         bubbles: true,
         composed: true,
@@ -90,7 +90,7 @@ export class UxFieldArray extends LifecycleComponent {
       this.items.splice(index, 1);
 
       this.dispatchEvent(
-        new CustomEvent('item-removed', {
+        new CustomEvent('ux:item-removed', {
           detail: { index },
           bubbles: true,
           composed: true,

@@ -62,6 +62,11 @@ export function createInspectorShell(
     'transition:opacity 140ms ease',
     'display:flex',
     'flex-direction:column',
+    '--ins-bg:#0f172a',
+    '--ins-accent:#1e3a5f',
+    '--ins-text:#e2e8f0',
+    '--ins-border:#334155',
+    '--ins-flash:#fbbf24',
   ].join(';');
 
   // ---- header ----
@@ -87,11 +92,23 @@ export function createInspectorShell(
   const collapseBtn = document.createElement('button');
   collapseBtn.type = 'button';
   collapseBtn.textContent = minimized ? '□' : '_';
+  collapseBtn.title = minimized ? 'Expand' : 'Minimize';
   collapseBtn.style.cssText =
     'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
   collapseBtn.addEventListener('click', toggleMinimized);
 
-  header.append(title, refreshBtn, collapseBtn);
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Close inspector';
+  closeBtn.style.cssText =
+    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  closeBtn.addEventListener('click', () => {
+    dispose();
+    root.remove();
+  });
+
+  header.append(title, summary, refreshBtn, collapseBtn, closeBtn);
   // ---- end header ----
 
   // ---- tab bar ----
@@ -142,8 +159,13 @@ export function createInspectorShell(
   // =========================================================================
 
   function setRootPosition(left: number, top: number) {
-    root.style.left = `${Math.max(MARGIN, Math.round(left))}px`;
-    root.style.top = `${Math.max(MARGIN, Math.round(top))}px`;
+    const rect = root.getBoundingClientRect();
+    const width = rect.width || 480;
+    const height = rect.height || 44;
+    const maxLeft = Math.max(MARGIN, window.innerWidth - width - MARGIN);
+    const maxTop = Math.max(MARGIN, window.innerHeight - height - MARGIN);
+    root.style.left = `${Math.min(maxLeft, Math.max(MARGIN, Math.round(left)))}px`;
+    root.style.top = `${Math.min(maxTop, Math.max(MARGIN, Math.round(top)))}px`;
     root.style.right = 'auto';
     root.style.bottom = 'auto';
   }
@@ -178,6 +200,10 @@ export function createInspectorShell(
     header.style.borderBottom = minimized ? 'none' : '1px solid #334155';
     summary.style.display = minimized ? 'inline' : 'none';
     title.style.display = minimized ? 'none' : 'inline';
+    if (minimized) {
+      const tab = TABS.find((t) => t.id === activePanel);
+      summary.textContent = tab ? `${tab.label} — Active Route: ${window.location?.pathname || '/'}` : 'Dev Inspector';
+    }
   }
 
   function toggleMinimized() {
@@ -353,18 +379,18 @@ export function createInspectorShell(
     const events = devToolsSnapshot?.events?.length ?? 0;
     const plugins = devToolsSnapshot?.plugins?.length ?? 0;
 
-    const items = [
-      ['Active Route', typeof window !== 'undefined' ? window.location.pathname : '/'],
-      ['FSM Machines', String(machines)],
-      ['Services', String(services)],
-      ['Routes', String(routes)],
-      ['Events', String(events)],
-      ['Plugins', String(plugins)],
+    const items: Array<[string, string, string?]> = [
+      ['Active Route', typeof window !== 'undefined' ? window.location.pathname : '/', 'routes'],
+      ['FSM Machines', String(machines), 'fsm'],
+      ['Services', String(services), 'services'],
+      ['Routes', String(routes), 'routes'],
+      ['Events', String(events), 'events'],
+      ['Plugins', String(plugins), 'plugins'],
       ['Active Panel', activePanel],
       ['Inspector Open', devToolsSnapshot?.open ? 'yes' : 'no'],
     ];
 
-    for (const [label, value] of items) {
+    for (const [label, value, targetPanel] of items) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e293b;';
       const l = document.createElement('span');
@@ -373,6 +399,15 @@ export function createInspectorShell(
       const v = document.createElement('span');
       v.textContent = value;
       row.append(l, v);
+
+      if (targetPanel) {
+        row.style.cursor = 'pointer';
+        row.title = `Open ${label} panel`;
+        row.addEventListener('click', () => switchPanel(targetPanel));
+        row.addEventListener('mouseenter', () => { row.style.background = '#1e293b'; });
+        row.addEventListener('mouseleave', () => { row.style.background = ''; });
+      }
+
       container.appendChild(row);
     }
     return container;
@@ -385,13 +420,23 @@ export function createInspectorShell(
     const container = document.createElement('div');
     container.style.cssText = 'padding:12px;font-size:12px;';
     const config = ctx.config || {};
+    const devToolsSnapshot = devTools?.getSnapshot?.();
+    const devToolsPlugin = devToolsSnapshot?.plugins?.find((p: any) => p.name === '@ux3/plugin-dev-tools');
+    const devToolsVersion = devToolsPlugin?.version || 'unknown';
+
+    const isDevelopment = !!(config.development && (
+      config.development.logging || config.development.hotReload ||
+      config.development.inspector || config.development.devTools
+    ));
 
     const items = [
-      ['Version', config.version || 'unknown'],
+      ['App Version', config.version || 'unknown'],
+      ['Dev Tools Version', devToolsVersion],
       ['Site Name', config.site?.name || '—'],
-      ['Development', config.development ? 'yes' : 'no'],
+      ['Development', isDevelopment ? 'yes' : 'no'],
       ['Hot Reload', config.development?.hotReload ? 'yes' : 'no'],
       ['Log Level', config.development?.logging || 'info'],
+      ['Inspector', config.development?.inspector ? 'yes' : 'no'],
     ];
 
     for (const [label, value] of items) {

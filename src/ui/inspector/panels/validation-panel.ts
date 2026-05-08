@@ -76,7 +76,7 @@ async function fetchDevDiagnostics(): Promise<void> {
 // Poll dev endpoints every 5s when panel is rendered
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-export function createValidationPanel(): HTMLElement {
+export function createValidationPanel(_ctx?: any): HTMLElement {
   const root = document.createElement('div');
   root.style.cssText = 'padding:8px;display:flex;flex-direction:column;height:100%;box-sizing:border-box;font-size:11px;';
 

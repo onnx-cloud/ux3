@@ -100,7 +100,7 @@ describe('UX3 CLI commands', () => {
     const gitignore = await fs.readFile(path.join(project, '.gitignore'), 'utf8');
     expect(gitignore).toContain('.env');
     expect(gitignore).toContain('dist/');
-    expect(gitignore).toContain('src/generated/');
+    expect(gitignore).toContain('generated/views/');
 
   });
 

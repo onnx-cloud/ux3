@@ -15,7 +15,7 @@ type DevToolsBridgeApi = {
   };
 };
 
-export function createPluginsPanel(): HTMLElement {
+export function createPluginsPanel(_ctx?: any): HTMLElement {
   const root = document.createElement('div');
   root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;';
 

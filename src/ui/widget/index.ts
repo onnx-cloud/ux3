@@ -16,14 +16,12 @@ export { UxDropdown } from './dropdown.js';
 // Presentation components
 export { UxButton } from './button.js';
 export { UxPanel } from './panel.js';
-export { registerBuiltInPrimitives } from './primitives.js';
+export { registerBuiltInPrimitives } from './primitives/index.js';
 
 // Compliance components
 export { UxConsentBanner } from './consent-banner.js';
 
 // Navigation components
-export { UxThemeToggle } from './theme-toggle.js';
-export { UxLangSwitcher } from './lang-switcher.js';
 export { UxNav } from './nav-panel.js';
 
 // Auth gate components

@@ -263,13 +263,6 @@ export class UxDropdown extends LifecycleComponent {
       bubbles: true,
       composed: true
     }));
-
-    // Backward compatibility for existing consumers.
-    this.dispatchEvent(new CustomEvent('change', {
-      detail: { value: this.value },
-      bubbles: true,
-      composed: true
-    }));
   }
 
   private updateDisplay() {
@@ -374,7 +367,7 @@ export class UxDropdown extends LifecycleComponent {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1rem;
+        font: inherit;
         transition: all 200ms ease;
         color: var(--dropdown-text);
       }
@@ -409,8 +402,7 @@ export class UxDropdown extends LifecycleComponent {
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--dropdown-border);
         border-top: none;
-        font-size: 1rem;
-        font-family: inherit;
+        font: inherit;
       }
 
       .dropdown-options {

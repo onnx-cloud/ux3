@@ -9,5 +9,5 @@ export { UxToastContainer } from './toast.js';
 export { UxDropdown } from './dropdown.js';
 export { UxButton } from './button.js';
 export { UxPanel } from './panel.js';
-export { registerBuiltInPrimitives } from './primitives.js';
+export { registerBuiltInPrimitives } from './primitives/index.js';
 export { UxConsentBanner } from './consent-banner.js';

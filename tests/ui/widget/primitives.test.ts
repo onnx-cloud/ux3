@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { registerBuiltInPrimitives } from '../../../src/ui/widget/primitives';
+import { registerBuiltInPrimitives } from '../../../src/ui/widget/primitives/index';
 import '../../../src/ui/widget/index';
 
 const BUILT_IN_TAGS = [
@@ -77,10 +77,7 @@ const BUILT_IN_TAGS = [
   'ux-splash-screen',
   'ux-wizard',
   'ux-wysiwyg',
-  'ux-consent',
   'ux-consent-banner',
-  'ux-locale',
-  'ux-theme',
   'ux-lang-switcher',
   'ux-theme-toggle',
   'ux-network-status',
@@ -248,14 +245,14 @@ describe('Built-in primitives', () => {
     expect(payload).toEqual({ name: 'Ada', bio: 'Engineer' });
   });
 
-  it('ux-locale switches document lang and emits locale event', () => {
+  it('ux-lang-switcher switches document lang and emits locale event', () => {
     (window as any).__ux3App = {
       config: { i18n: { en: {}, fr: {} } },
       browser: { locale: { primary: 'en', language: 'en', direction: 'ltr' } },
       ui: { browser: { locale: {} } },
     };
 
-    const switcher = document.createElement('ux-locale');
+    const switcher = document.createElement('ux-lang-switcher');
     switcher.setAttribute('persist', 'false');
     document.body.appendChild(switcher);
 
@@ -272,10 +269,10 @@ describe('Built-in primitives', () => {
     expect(locale).toBe('fr');
   });
 
-  it('ux-theme toggles document theme and emits theme event', () => {
+  it('ux-theme-toggle toggles document theme and emits theme event', () => {
     document.documentElement.dataset.theme = 'light';
 
-    const toggle = document.createElement('ux-theme');
+    const toggle = document.createElement('ux-theme-toggle');
     toggle.setAttribute('persist', 'false');
     document.body.appendChild(toggle);
 

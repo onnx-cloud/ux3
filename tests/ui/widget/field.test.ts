@@ -459,7 +459,7 @@ describe('UxField - Form Field Component', () => {
   // ==================== Event Emission ====================
 
   describe('Event Emission', () => {
-    it('should emit field-change on input change', async () => {
+    it('should emit ux:field-change on input change', async () => {
       field = document.createElement('ux-field') as UxField;
       field.setAttribute('name', 'email');
       
@@ -471,7 +471,7 @@ describe('UxField - Form Field Component', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
       
       const changeListener = vi.fn();
-      field.addEventListener('field-change', changeListener);
+      field.addEventListener('ux:field-change', changeListener);
       
       input.dispatchEvent(new Event('change', { bubbles: true }));
       
