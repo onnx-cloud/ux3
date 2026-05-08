@@ -4,7 +4,7 @@
  * Replaces the legacy monolithic JSON dump with a tabbed interface backed by
  * existing panel modules and the dev-tools service.
  */
-import type { AppContext } from '../../../../src/ui/app.js';
+import type { AppContext } from '@ux3/ui/app.js';
 
 const TABS: Array<{ id: string; label: string }> = [
   { id: 'summary', label: 'Summary' },
@@ -108,8 +108,168 @@ export function createInspectorShell(
     root.remove();
   });
 
-  header.append(title, summary, refreshBtn, collapseBtn, closeBtn);
+  const pickBtn = document.createElement('button');
+  pickBtn.type = 'button';
+  pickBtn.textContent = '🔍';
+  pickBtn.title = 'Inspect elements (hover to see widget info)';
+  pickBtn.style.cssText =
+    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  pickBtn.addEventListener('click', togglePickMode);
+
+  header.append(title, summary, pickBtn, refreshBtn, collapseBtn, closeBtn);
   // ---- end header ----
+
+  // ---- element inspector tooltip ----
+  const inspectOverlay = document.createElement('div');
+  inspectOverlay.style.cssText =
+    'position:fixed;pointer-events:none;z-index:2147483646;border:2px solid #fbbf24;border-radius:4px;display:none;transition:all 60ms ease;';
+  document.body.appendChild(inspectOverlay);
+
+  const inspectTooltip = document.createElement('div');
+  inspectTooltip.style.cssText =
+    'position:fixed;z-index:2147483647;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:8px 12px;font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;display:none;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+  document.body.appendChild(inspectTooltip);
+
+  let pickMode = false;
+  let pickLocked: HTMLElement | null = null;
+
+  function getWidgetInfo(el: HTMLElement): string[] {
+    const lines: string[] = [];
+    const tag = el.tagName.toLowerCase();
+    
+    const uxAttrs: string[] = [];
+    for (const name of el.getAttributeNames()) {
+      if (name.startsWith('ux-')) {
+        uxAttrs.push(`${name}="${el.getAttribute(name)}"`);
+      }
+    }
+
+    const isCustom = tag.includes('-');
+    const hasUx = uxAttrs.length > 0;
+    if (!isCustom && !hasUx) return [];
+
+    lines.push(`<${tag}>`);
+    
+    if (el.id) lines.push(`  id="${el.id}"`);
+    
+    const klass = el.className && typeof el.className === 'string' 
+      ? el.className.trim() : '';
+    if (klass) {
+      const short = klass.length > 80 ? klass.slice(0, 77) + '...' : klass;
+      lines.push(`  class="${short}"`);
+    }
+
+    for (const attr of uxAttrs) {
+      lines.push(`  ${attr}`);
+    }
+
+    const app = (window as any).__ux3App;
+    if (app?.machines) {
+      for (const [name, machine] of Object.entries(app.machines)) {
+        try {
+          const state = (machine as any).getState?.();
+          if (state) lines.push(`  FSM[${name}]: ${state}`);
+        } catch { /* ignore */ }
+      }
+    }
+
+    if (el.shadowRoot) {
+      const shadowChildren = el.shadowRoot.children.length;
+      lines.push(`  shadow: ${shadowChildren} child(ren)`);
+    }
+
+    return lines;
+  }
+
+  function togglePickMode() {
+    pickMode = !pickMode;
+    pickLocked = null;
+    pickBtn.style.background = pickMode ? '#1e3a5f' : '#1e293b';
+    pickBtn.style.color = pickMode ? '#fbbf24' : '#e2e8f0';
+    
+    if (!pickMode) {
+      inspectOverlay.style.display = 'none';
+      inspectTooltip.style.display = 'none';
+      document.body.style.cursor = '';
+    } else {
+      document.body.style.cursor = 'crosshair';
+    }
+  }
+
+  function onInspectMove(event: MouseEvent) {
+    if (!pickMode || pickLocked) return;
+    const target = event.target as HTMLElement;
+    if (!target || target === inspectOverlay || target === inspectTooltip || target.closest('#ux3-devtools-inspector')) {
+      inspectOverlay.style.display = 'none';
+      inspectTooltip.style.display = 'none';
+      return;
+    }
+
+    let widgetEl: HTMLElement | null = target;
+    while (widgetEl) {
+      const info = getWidgetInfo(widgetEl);
+      if (info.length > 0) break;
+      widgetEl = widgetEl.parentElement;
+    }
+
+    if (!widgetEl) {
+      inspectOverlay.style.display = 'none';
+      inspectTooltip.style.display = 'none';
+      return;
+    }
+
+    const info = getWidgetInfo(widgetEl);
+    const rect = widgetEl.getBoundingClientRect();
+    inspectOverlay.style.display = 'block';
+    inspectOverlay.style.left = `${rect.left + window.scrollX}px`;
+    inspectOverlay.style.top = `${rect.top + window.scrollY}px`;
+    inspectOverlay.style.width = `${rect.width}px`;
+    inspectOverlay.style.height = `${rect.height}px`;
+
+    inspectTooltip.style.display = 'block';
+    inspectTooltip.innerHTML = info.join('<br>').replace(/ /g, '&nbsp;');
+    
+    let tx = event.clientX + 16;
+    let ty = event.clientY - 16;
+    const tooltipRect = inspectTooltip.getBoundingClientRect();
+    if (tx + tooltipRect.width > window.innerWidth - 8) tx = event.clientX - tooltipRect.width - 16;
+    if (ty + tooltipRect.height > window.innerHeight - 8) ty = event.clientY - tooltipRect.height - 16;
+    if (ty < 8) ty = 8;
+    inspectTooltip.style.left = `${tx}px`;
+    inspectTooltip.style.top = `${ty}px`;
+  }
+
+  function onInspectClick(event: MouseEvent) {
+    if (!pickMode) return;
+    const target = event.target as HTMLElement;
+    if (!target || target.closest('#ux3-devtools-inspector')) return;
+    if (pickLocked) {
+      pickLocked = null;
+      inspectOverlay.style.display = 'none';
+      inspectTooltip.style.display = 'none';
+      return;
+    }
+    let widgetEl: HTMLElement | null = target;
+    while (widgetEl) {
+      if (getWidgetInfo(widgetEl).length > 0) break;
+      widgetEl = widgetEl.parentElement;
+    }
+    if (widgetEl) {
+      pickLocked = widgetEl;
+      const info = getWidgetInfo(widgetEl);
+      inspectTooltip.innerHTML = ['🔒 Locked — click again to release', ''].concat(info).join('<br>').replace(/ /g, '&nbsp;');
+    }
+  }
+
+  document.addEventListener('mousemove', onInspectMove);
+  document.addEventListener('click', onInspectClick);
+  disposers.push(() => {
+    document.removeEventListener('mousemove', onInspectMove);
+    document.removeEventListener('click', onInspectClick);
+    inspectOverlay.remove();
+    inspectTooltip.remove();
+    document.body.style.cursor = '';
+  });
 
   // ---- tab bar ----
   const tabBar = document.createElement('div');
@@ -142,8 +302,21 @@ export function createInspectorShell(
   // ---- panel body ----
   const panelHost = document.createElement('div');
   panelHost.style.cssText =
-    'flex:1;overflow:auto;min-height:0;';
+    'flex:1;overflow:auto;min-height:0;color:var(--ins-text);';
   panelHost.classList.add('ux3-inspector-panel-host');
+
+  const panelStyle = document.createElement('style');
+  panelStyle.textContent = `
+    .ux3-inspector-panel-host details { color: var(--ins-text); }
+    .ux3-inspector-panel-host summary { color: var(--ins-text); cursor: pointer; }
+    .ux3-inspector-panel-host input[type="checkbox"],
+    .ux3-inspector-panel-host input[type="radio"] { accent-color: var(--ins-accent); }
+    .ux3-inspector-panel-host select { background: var(--ins-bg); color: var(--ins-text); border: 1px solid var(--ins-border); }
+    .ux3-inspector-panel-host td { color: var(--ins-text); }
+    .ux3-inspector-panel-host th { color: var(--ins-text); }
+    .ux3-inspector-panel-host label { color: var(--ins-text); }
+  `;
+  panelHost.appendChild(panelStyle);
 
   // placeholder
   const placeholder = document.createElement('div');
@@ -465,6 +638,25 @@ export function createInspectorShell(
       })
     );
   }
+
+  // =========================================================================
+  // Refresh on route changes
+  // =========================================================================
+  function onRouteChange() {
+    if (minimized) return;
+    if (activePanel === 'summary') {
+      refreshActivePanel();
+    } else if (activePanel === 'routes') {
+      refreshActivePanel();
+    }
+  }
+
+  window.addEventListener('popstate', onRouteChange);
+  window.addEventListener('ux3:route-change', onRouteChange);
+  disposers.push(() => {
+    window.removeEventListener('popstate', onRouteChange);
+    window.removeEventListener('ux3:route-change', onRouteChange);
+  });
 
   // =========================================================================
   // Cleanup

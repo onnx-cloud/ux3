@@ -109,7 +109,7 @@ go straight to `ux3` in any shell; otherwise prefix with `npx` from your project
 
 Each command accepts a `--config` flag pointing at a `ux3.config.json` file, or you can supply paths individually (`--views`, `--output`, etc.).
 
-> A step‑by‑step walkthrough is available in [docs/example.md](./docs/example.md), and the full CLI reference lives in [docs/compilation.md#cli-commands](docs/compilation.md#cli-commands).
+> A step-by-step walkthrough is available in [docs/examples.md](./docs/examples.md), and core command workflows are summarized in [docs/build-and-test.md](docs/build-and-test.md).
 
 
 ---

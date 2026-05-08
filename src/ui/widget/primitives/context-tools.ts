@@ -38,7 +38,7 @@ export class UxLangSwitcher extends UxBase {
 
   private getCurrentLocale(locales: string[]): string {
     const app = (window as any).__ux3App;
-    const localeService = app?.services?.locale;
+    const localeService = app?.locale || app?.services?.locale;
     const serviceLocale = localeService?.locale?.primary || localeService?.locale?.language;
     if (serviceLocale && locales.includes(serviceLocale)) return serviceLocale;
 
@@ -98,7 +98,7 @@ export class UxLangSwitcher extends UxBase {
     this.setAttribute('value', locale);
 
     const app = (window as any).__ux3App;
-    const localeService = app?.services?.locale;
+    const localeService = app?.locale || app?.services?.locale;
 
     if (localeService && typeof localeService.setLocale === 'function') {
       localeService.setLocale(locale);

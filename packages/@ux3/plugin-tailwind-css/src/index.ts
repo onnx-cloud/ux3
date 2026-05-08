@@ -3,6 +3,7 @@
 declare const require: any;
 
 import type { Plugin } from '../../../../src/plugin/registry';
+import type { AppContext } from '@ux3/ui/app.js';
 
 // ============================================================================
 // COLOR PALETTES

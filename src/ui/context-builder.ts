@@ -445,9 +445,6 @@ export class AppContextBuilder {
       return hbs.render(template, context);
     };
 
-    // Register locale runtime service
-    (services as any).locale = localeService;
-
     const context: AppContext = {
       machines,
       services,
@@ -461,6 +458,7 @@ export class AppContextBuilder {
       nav: navConfig,
       config: this.config,
       hooks: this.hooks,
+      locale: localeService,
     };
 
     // Keep browser context available from both app.browser and app.ui.browser.

@@ -1,72 +1,38 @@
 # UX3 Documentation
 
-This documentation is written for people building with UX3: application developers, plugin authors, and teams shipping production apps. It focuses on what you use day to day, not framework internals.
+This is a compact, task-first guide to UX3.
 
----
+UX3 is a compile-first SPA framework:
+- UI behavior is defined as FSMs in YAML.
+- Templates are adjacent HTML files.
+- Styles, tokens, i18n, and routes are declarative.
+- Build steps validate and generate typed artifacts.
 
 ## Start Here
 
-- [Developer and User Guide](developer-user-guide.md): end-to-end workflow covering FSMs, events, styles, i18n, and content.
-- [Build and Development](build-and-dev.md): local workflow, build, validation, and test commands.
-- [Views](views.md): how to build screens using YAML + HTML.
-- [Routing](routing.md): map URLs to views.
-- [Services](services.md): connect APIs and side effects.
+1. [Quickstart](quickstart.md)
+2. [Build and Test](build-and-test.md)
+3. [Views and FSMs](views-and-fsms.md)
+4. [Templates and Styling](templates-and-styling.md)
+5. [Services and Side Effects](services-and-side-effects.md)
 
----
+## Core Topics
 
-## Core Developer Flows
+- [Routing](routing.md)
+- [Runtime Architecture](runtime-architecture.md)
+- [Forms and Validation](forms-and-validation.md)
+- [i18n and Content](i18n-and-content.md)
+- [Plugins](plugins.md)
+- [Security and Accessibility](security-and-accessibility.md)
+- [Examples](examples.md)
 
-The five core UX3 topics are covered in these guides:
+## Engineering Policies
 
-- [FSM Core](fsm-core.md): model view behavior with explicit states and transitions.
-- [Events Guide](events.md): publish, listen, and route events between templates and FSMs.
-- [Styles](styles.md): style via ux-style with reusable, token-driven compositions.
-- [i18n](i18n.md): localize UI with validated translation keys.
-- [Content Guide](content.md): manage markdown/frontmatter content and route it into views.
+- [Governance](governance.md)
 
----
+## Rules That Prevent Common Mistakes
 
-## Practical Guides
-
-- [Template System](template-system.md): template syntax and rendering patterns.
-- [Browser Components](browser-components.md): built-in locale switcher, theme toggle, and network status components.
-- [Telemetry and Analytics](telemetry-analytics.md): provider-based instrumentation with batching and realtime controls.
-- [Validation](validation.md): schema and compile-time checks.
-- [Tokens](tokens.md): design token conventions.
-- [Parts and Theming](parts-and-theming.md): consistent theming strategy.
-- [Testing Guides](testing-guides.md): unit, integration, and e2e testing.
-- [Accessibility](accessibility.md): accessibility baseline for production UX.
-
----
-
-## Governance And Operations
-
-- [Roadmap Taxonomy](roadmap-taxonomy.md): standard categories, priority model, and roadmap entry format.
-- [Deprecation Policy](deprecation-policy.md): staged API deprecation and removal rules.
-- [Plugin Certification](plugin-certification.md): plugin quality levels and conformance requirements.
-- [RFC Process](rfc-process.md): process for major architectural and API changes.
-- [Release Metrics](release-metrics.md): release success and regression metrics.
-
----
-
-## Example Projects
-
-- [IAM Example](iam-example.md): complete end-to-end app reference.
-- [Examples Overview](example.md): how to use and adapt bundled examples.
-
----
-
-## Typical Build Loop
-
-```bash
-# Develop
-npm run dev
-
-# Validate and build
-npm run build
-
-# Test
-npm run test
-```
-
-Use this index as your entry point, then jump into the focused guides for FSMs, events, styles, i18n, and content.
+- Never edit files in `src/generated/` by hand.
+- Keep user-visible strings in i18n files.
+- Keep network and side effects in services.
+- Keep view behavior in FSM state transitions, not ad-hoc DOM code.

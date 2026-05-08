@@ -6,6 +6,7 @@ import { WidgetFactory } from "./widget/factory.js";
 import type { HookRegistry } from "../core/lifecycle.js";
 import type { ServiceFactory, ComponentFactory } from "../plugin/registry.js";
 import type { BrowserContext } from './browser-context.js';
+import type { LocaleService } from "../services/locale-runtime.js";
 
 /**
  * App Context
@@ -52,6 +53,9 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
 
   /** Arbitrary utils namespace used by plugins (e.g. tailwind-plus). */
   utils?: Record<string, Function>;
+
+  /** Locale runtime service for locale resolution and switching. */
+  locale?: LocaleService;
 
   // full generated configuration (useful for plugins)
   config?: any;

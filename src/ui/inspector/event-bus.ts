@@ -21,12 +21,6 @@ type DevToolsBridgeApi = {
   emit(source: string, type: string, payload?: unknown): void;
 };
 
-declare global {
-  interface Window {
-    __ux3DevTools?: DevToolsBridgeApi;
-  }
-}
-
 export type InspectorEventSource = 'fsm' | 'service' | 'navigation' | 'plugin' | 'logger' | 'validation';
 
 export interface InspectorEvent {
@@ -48,7 +42,7 @@ class InspectorEventBus {
     if (typeof window === 'undefined') {
       return null;
     }
-    return window.__ux3DevTools ?? null;
+    return (window as any).__ux3DevTools ?? null;
   }
 
   emit(source: InspectorEventSource, type: string, payload?: unknown): void {

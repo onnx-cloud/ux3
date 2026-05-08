@@ -1,5 +1,5 @@
-import type { GeneratedConfig } from '../../../../src/ui/context-builder.js';
-import { defaultLogger } from '../../../../src/security/observability.js';
+import type { GeneratedConfig } from '@ux3/ui/context-builder.js';
+import { defaultLogger } from '@ux3/security/observability.js';
 import fs from 'node:fs';
 import path from 'node:path';
 

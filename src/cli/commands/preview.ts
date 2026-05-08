@@ -23,7 +23,8 @@ export const previewCommand = new Command()
       process.exit(1);
     }
 
-    const port = parseInt(options.port, 10) || 1337;
+    const parsed = parseInt(options.port, 10);
+    const port = isNaN(parsed) ? 1337 : parsed;
     const server = http.createServer((req, res) => {
       let reqPath = req.url || '/';
       if (reqPath === '/') reqPath = '/index.html';

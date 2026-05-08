@@ -16,7 +16,7 @@ interface MachineRow {
 
 function flash(el: HTMLElement): void {
   el.style.background = 'var(--ins-flash)';
-  el.style.color = '#000';
+  el.style.color = '#0f172a';
   setTimeout(() => {
     el.style.background = '';
     el.style.color = '';
