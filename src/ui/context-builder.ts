@@ -19,12 +19,13 @@ import type { ContentManifest } from '../services/content.js';
 import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
 import { setupNavigation } from './navigation-handler.js';
-import { HookRegistry, AppLifecyclePhase, ServiceLifecyclePhase } from '../core/lifecycle.js';
+import { HookRegistry, ServiceLifecyclePhase } from '../core/lifecycle.js';
 import { captureBrowserContext, observeBrowserContext, type BrowserContextOptions } from './browser-context.js';
 import type { GeneratedEntities } from '../build/entity-index.js';
 import type { Plugin } from '../plugin/registry.js';
 import { builtInDevToolsPlugin, mountInspector } from './plugins/built-in.js';
 import { createLocaleService, type LocaleService } from '../services/locale-runtime.js';
+import { createAppFSM, transitionAppFSM, type AppFSMContext } from './app-fsm.js';
 
 /**
  * Generated configuration structure
@@ -348,15 +349,6 @@ export class AppContextBuilder {
     for (const [name, service] of this.services) {
       services[name] = service;
     }
-    
-    // Emit CONNECT lifecycle phase for all services
-    for (const [name, service] of this.services) {
-      void this.hooks.execute(ServiceLifecyclePhase.CONNECT, {
-        phase: ServiceLifecyclePhase.CONNECT,
-        service,
-        meta: { serviceName: name }
-      });
-    }
 
     const i18nFn = (key: string, props?: Record<string, any>): string => {
       // Use locale service language, fallback to document lang or 'en'
@@ -676,6 +668,11 @@ export async function createAppContext(
     .withStyles()
     .build();
 
+  // Create the app root FSM — models the lifecycle as inspectable states
+  const appFSM = createAppFSM();
+  context.appFSM = appFSM;
+  transitionAppFSM(appFSM, 'CONFIG_READY', context);
+
   const recordInstalledPlugin = (plugin: Plugin): void => {
     const devTools = (context.utils as any)?.devTools;
     if (!devTools || typeof devTools.recordPlugin !== 'function') {
@@ -759,42 +756,11 @@ export async function createAppContext(
 
   mountInspector(context);
 
-  // Emit AUTHENTICATE phase for each service
-  // This phase allows services to authenticate with their backends
-  if (context.hooks && context.services) {
-    for (const [name, service] of Object.entries(context.services)) {
-      try {
-        await context.hooks.execute(ServiceLifecyclePhase.AUTHENTICATE, {
-          service,
-          meta: { serviceName: name },
-          app: context,
-          phase: ServiceLifecyclePhase.AUTHENTICATE
-        });
-      } catch (err) {
-        console.warn(`[AppContext] AUTHENTICATE phase failed for service ${name}:`, err);
-      }
-    }
-  }
-
-  // Emit READY phase for each service
-  // This phase signals that the service is fully initialized and ready for use
-  if (context.hooks && context.services) {
-    for (const [name, service] of Object.entries(context.services)) {
-      try {
-        await context.hooks.execute(ServiceLifecyclePhase.READY, {
-          service,
-          meta: { serviceName: name },
-          app: context,
-          phase: ServiceLifecyclePhase.READY
-        });
-      } catch (err) {
-        console.warn(`[AppContext] READY phase failed for service ${name}:`, err);
-      }
-    }
-  }
+  // Transition FSM through service lifecycle phases
+  await transitionAppFSM(appFSM, 'BUILD_COMPLETE', context);
+  await transitionAppFSM(appFSM, 'SERVICES_CONNECTED', context);
 
   // Wire client-side routing: mounts the initial view and handles history events.
-  // Only runs in browser (guards against SSR / test environments without a real DOM).
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     try {
       setupNavigation(context);
@@ -803,21 +769,7 @@ export async function createAppContext(
     }
   }
 
-  // Emit READY phase to signal that app is fully initialized and interactive
-  if (context.hooks) {
-    try {
-      await context.hooks.execute(AppLifecyclePhase.READY, {
-        app: context,
-        phase: AppLifecyclePhase.READY,
-      });
-    } catch (err) {
-      console.warn('[AppContext] READY phase hook execution failed', err);
-    }
-  }
-
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('ux3:ready', { detail: { app: context } }));
-  }
+  await transitionAppFSM(appFSM, 'ROUTING_READY', context);
 
   return context;
 }

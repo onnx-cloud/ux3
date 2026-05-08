@@ -7,6 +7,8 @@
  *  - Generated views must have registered their custom element tag
  *    (customElements.define('ux-<view>', ViewClass)) before initApp() is called.
  *  - Route matching supports :param segments (e.g. /market/:exchange).
+ *  - Locale-aware routing strips/applies locale prefixes when the locale
+ *    service is in prefix-optional or prefix-required mode.
  */
 
 import type { AppContext } from './app.js';
@@ -18,7 +20,7 @@ import { defaultLogger } from '../security/observability.js';
 // ---------------------------------------------------------------------------
 
 /**
- * BUG-9 fix: Match a pathname against a route pattern that may contain :param
+ * Match a pathname against a route pattern that may contain :param
  * segments.  Returns the extracted params on match, null otherwise.
  */
 function matchPattern(
@@ -62,7 +64,18 @@ function currentPathname(): string {
 }
 
 /**
- * BUG-2 fix: Insert a view custom element into #ux-content.
+ * Strip locale prefix from pathname when the locale service provides one.
+ */
+function stripLocalePrefix(pathname: string, prefix: string): string {
+  if (!prefix || prefix === '/') return pathname;
+  if (pathname === prefix) return '/';
+  if (pathname.startsWith(prefix + '/')) return pathname.slice(prefix.length);
+  if (pathname.startsWith(prefix)) return pathname.slice(prefix.length) || '/';
+  return pathname;
+}
+
+/**
+ * Insert a view custom element into #ux-content.
  * Removes any currently-mounted view first (triggering its disconnectedCallback).
  * Passes route params as data attributes for the view to consume.
  */
@@ -134,10 +147,27 @@ function mountView(viewName: string, params?: Record<string, string>): void {
     });
   };
 
-  // CSS class-based fade transition — reliable, no experimental API needed
+  // CSS class-based fade transition
   performSwap();
 
   defaultLogger.info(`[Navigation] Mounted <${tagName}> into #ux-content`, params ? { params } : {});
+}
+
+function mountNotFound(): void {
+  const main = ensureMountPoint();
+  if (!main) return;
+
+  while (main.firstChild) {
+    main.removeChild(main.firstChild);
+  }
+
+  const el = document.createElement('div');
+  el.className = 'ux-not-found';
+  el.setAttribute('role', 'alert');
+  el.innerHTML = '<h2>404</h2><p>Page not found</p>';
+  main.appendChild(el);
+
+  defaultLogger.warn('[Navigation] No matching route; mounted 404 fallback');
 }
 
 // ---------------------------------------------------------------------------
@@ -214,6 +244,7 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
 
   if (!match) {
     defaultLogger.warn(`[Navigation] No route found for path: ${pathname}`);
+    mountNotFound();
     return;
   }
 
@@ -224,14 +255,24 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
     return;
   }
 
+  // Resolve locale-aware path (apply prefix if locale service provides one)
+  let resolvedPath = pathname;
+  const localeSvc = (appContext as any).locale;
+  if (localeSvc && typeof localeSvc.getRoutePrefix === 'function') {
+    const prefix = localeSvc.getRoutePrefix();
+    if (prefix && !resolvedPath.startsWith(prefix)) {
+      resolvedPath = prefix + resolvedPath;
+    }
+  }
+
   // Update browser location before mounting so the view can read the correct URL.
   if (useHash) {
-    window.location.hash = pathname;
+    window.location.hash = resolvedPath;
   } else {
-    window.history.pushState({ view: targetView, path: pathname }, '', pathname);
+    window.history.pushState({ view: targetView, path: resolvedPath }, '', resolvedPath);
   }
   mountView(targetView, params);
-  defaultLogger.info(`[Navigation] Navigated to ${pathname} (view: ${targetView})`);
+  defaultLogger.info(`[Navigation] Navigated to ${resolvedPath} (view: ${targetView})`);
 }
 
 /**
@@ -241,15 +282,25 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
 function handleNavigationEvent(appContext: AppContext): void {
   if (!appContext.nav) return;
 
-  const pathname = currentPathname();
-  const match = findRouteForPath(pathname, appContext.nav.routes);
+  const rawPathname = currentPathname();
 
-  const targetView = match?.view ?? 'home';
-  const params = match?.params;
-
-  if (!match) {
-    defaultLogger.warn(`[Navigation] No route for path: ${pathname}; mounting default view '${targetView}'`);
+  // Strip locale prefix before matching routes
+  const localeSvc = (appContext as any).locale;
+  let pathnameForLookup = rawPathname;
+  if (localeSvc && typeof localeSvc.getRoutePrefix === 'function') {
+    const prefix = localeSvc.getRoutePrefix();
+    if (prefix) {
+      pathnameForLookup = stripLocalePrefix(rawPathname, prefix);
+    }
   }
 
-  mountView(targetView, params);
+  const match = findRouteForPath(pathnameForLookup, appContext.nav.routes);
+
+  if (!match) {
+    defaultLogger.warn(`[Navigation] No route for path: ${rawPathname} (lookup: ${pathnameForLookup})`);
+    mountNotFound();
+    return;
+  }
+
+  mountView(match.view, match.params);
 }

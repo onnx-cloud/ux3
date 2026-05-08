@@ -57,6 +57,9 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   /** Locale runtime service for locale resolution and switching. */
   locale?: LocaleService;
 
+  /** App root FSM — models the app lifecycle as states visible to devtools. */
+  appFSM?: import('../fsm/state-machine.js').StateMachine<import('./app-fsm.js').AppFSMContext>;
+
   // full generated configuration (useful for plugins)
   config?: any;
 }

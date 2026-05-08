@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-7/schema#",
+  "title": "ChatWidget",
+  "description": "Custom widget types in chat messages",
+  "oneOf": [
+    {
+      "title": "ButtonWidget",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "button" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "label": { "type": "string" },
+            "action": { "type": "string" },
+            "variant": { "enum": ["primary", "secondary", "danger"], "default": "primary" }
+          },
+          "required": ["label", "action"]
+        }
+      },
+      "required": ["kind", "data"]
+    },
+    {
+      "title": "CardWidget",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "card" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "image": { "type": "string", "format": "uri" },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": { "type": "string" },
+                  "action": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["kind", "data"]
+    },
+    {
+      "title": "PollWidget",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "poll" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "question": { "type": "string" },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "votes": { "type": "integer", "minimum": 0 }
+                }
+              }
+            },
+            "closed": { "type": "boolean" }
+          }
+        }
+      },
+      "required": ["kind", "data"]
+    },
+    {
+      "title": "TableWidget",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "table" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "columns": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "required": ["columns", "rows"]
+        }
+      },
+      "required": ["kind", "data"]
+    },
+    {
+      "title": "FormWidget",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "form" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "enum": ["text", "email", "number", "select"] },
+                  "label": { "type": "string" },
+                  "required": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["kind", "data"]
+    }
+  ]
+}

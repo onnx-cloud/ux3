@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-7/schema#",
+  "title": "ChatContent",
+  "description": "MCP-aligned content block with type discriminator",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "type": { "const": "text" },
+        "text": {
+          "type": "string",
+          "description": "Plain text or markdown"
+        }
+      },
+      "required": ["type", "text"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": { "const": "image" },
+        "data": {
+          "type": "string",
+          "description": "Data URI for inline image"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to external image"
+        },
+        "mimeType": {
+          "type": "string",
+          "pattern": "^image/",
+          "description": "Image MIME type (e.g. image/png)"
+        }
+      },
+      "required": ["type", "mimeType"],
+      "oneOf": [
+        { "required": ["data"] },
+        { "required": ["url"] }
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": { "const": "resource" },
+        "resource": {
+          "type": "object",
+          "properties": {
+            "uri": { "type": "string", "format": "uri" },
+            "mimeType": { "type": "string" },
+            "text": { "type": "string" }
+          },
+          "required": ["uri", "mimeType"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "resource"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": { "const": "widget" },
+        "widget": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": ["button", "card", "form", "poll", "table"],
+              "description": "Widget type"
+            },
+            "data": {
+              "type": "object",
+              "description": "Widget-specific data payload"
+            }
+          },
+          "required": ["kind"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "widget"],
+      "additionalProperties": false
+    }
+  ]
+}

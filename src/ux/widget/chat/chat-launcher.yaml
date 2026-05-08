@@ -1,0 +1,100 @@
+name: ChatLauncher
+description: Compact chat icon that opens mini drawer with message history and composer.
+
+initial: idle
+
+context:
+  inputText: ''
+  selectedContactId: 'conv-1'
+  history: []
+  unreadCount: 0
+  error: null
+  isLoading: false
+
+states:
+  idle:
+    template: launcher-icon.html
+    on:
+      CLICK: opening
+
+  opening:
+    template: launcher-opening.html
+    invoke:
+      - service: 'chat'
+        method: 'fetchHistory'
+        params:
+          conversationId: '{{ context.selectedContactId }}'
+          limit: 20
+        onSuccess: 'HISTORY_LOADED'
+        onError: 'HISTORY_ERROR'
+    on:
+      HISTORY_LOADED:
+        target: open
+        actions:
+          - type: 'assign'
+            key: 'history'
+            value: '{{ event.payload }}'
+          - type: 'assign'
+            key: 'isLoading'
+            value: false
+      HISTORY_ERROR:
+        target: error
+        actions:
+          - type: 'assign'
+            key: 'error'
+            value: '{{ event.payload.message }}'
+          - type: 'assign'
+            key: 'isLoading'
+            value: false
+
+  open:
+    template: launcher-drawer.html
+    initial: viewing
+    states:
+      viewing:
+        on:
+          INPUT_CHANGE:
+            actions:
+              - type: 'assign'
+                key: 'inputText'
+                value: '{{ event.payload }}'
+          SEND:
+            target: sending
+          CLOSE: '#idle'
+
+      sending:
+        invoke:
+          - service: 'chat'
+            method: 'sendMessage'
+            params:
+              conversationId: '{{ context.selectedContactId }}'
+              text: '{{ context.inputText }}'
+            onSuccess: 'SEND_SUCCESS'
+            onError: 'SEND_ERROR'
+        on:
+          SEND_SUCCESS:
+            target: viewing
+            actions:
+              - type: 'assign'
+                key: 'inputText'
+                value: ''
+              - type: 'assign'
+                key: 'history'
+                value: '{{ context.history.concat([event.payload]) }}'
+          SEND_ERROR:
+            target: viewing
+            actions:
+              - type: 'assign'
+                key: 'error'
+                value: '{{ event.payload.message }}'
+
+  error:
+    template: launcher-error.html
+    on:
+      RETRY: opening
+      CLOSE: idle
+
+  minimized:
+    template: launcher-icon.html
+    on:
+      CLICK: open

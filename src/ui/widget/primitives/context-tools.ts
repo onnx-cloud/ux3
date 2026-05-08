@@ -27,12 +27,13 @@ export class UxLangSwitcher extends UxBase {
       return attrLocales;
     }
 
-    const appLocales = Object.keys(((window as any).__ux3App?.config?.i18n || {}) as Record<string, unknown>);
-    if (appLocales.length > 0) {
-      return appLocales;
+    const app = (window as any).__ux3App;
+    const localeService = app?.locale || app?.services?.locale;
+    if (localeService?.supportedLocales?.length) {
+      return localeService.supportedLocales;
     }
 
-    const browserPreferred = ((window as any).__ux3App?.browser?.locale?.preferred || navigator.languages || [navigator.language || 'en']) as string[];
+    const browserPreferred = navigator.languages || [navigator.language || 'en'];
     return Array.from(new Set(browserPreferred));
   }
 
@@ -102,18 +103,6 @@ export class UxLangSwitcher extends UxBase {
 
     if (localeService && typeof localeService.setLocale === 'function') {
       localeService.setLocale(locale);
-    } else {
-      const lang = locale.split('-')[0]?.toLowerCase() || 'en';
-      document.documentElement.lang = locale;
-      document.documentElement.dir = this.rtlLanguages.has(lang) ? 'rtl' : 'ltr';
-      const shouldPersist = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false';
-      if (shouldPersist) {
-        try {
-          window.localStorage.setItem('ux3-locale', locale);
-        } catch {
-          // ignore storage failures
-        }
-      }
     }
 
     window.dispatchEvent(new Event('languagechange'));

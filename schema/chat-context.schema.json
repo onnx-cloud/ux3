@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-7/schema#",
+  "title": "ChatLauncherContext",
+  "description": "FSM context shape for ChatLauncher FSM",
+  "type": "object",
+  "properties": {
+    "inputText": {
+      "type": "string",
+      "description": "Current composer input text"
+    },
+    "selectedContactId": {
+      "type": ["string", "null"],
+      "description": "Currently selected contact/conversation ID"
+    },
+    "history": {
+      "type": "array",
+      "description": "Message history for current conversation",
+      "items": { "$ref": "chat-message.schema.json" }
+    },
+    "unreadCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of unread messages"
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Error message if last operation failed"
+    },
+    "isLoading": {
+      "type": "boolean",
+      "description": "True while loading history or sending message"
+    }
+  },
+  "required": ["inputText", "history", "isLoading", "unreadCount"],
+  "additionalProperties": false
+}

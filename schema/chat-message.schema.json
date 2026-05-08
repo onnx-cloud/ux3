@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-7/schema#",
+  "title": "ChatMessage",
+  "description": "MCP-aligned message envelope with metadata",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique message ID"
+    },
+    "conversationId": {
+      "type": "string",
+      "description": "Conversation or thread ID"
+    },
+    "role": {
+      "enum": ["user", "assistant", "system"],
+      "description": "Message role (MCP standard)"
+    },
+    "content": {
+      "type": "array",
+      "description": "Message content blocks",
+      "items": { "$ref": "chat-content.schema.json" },
+      "minItems": 1
+    },
+    "sender": {
+      "type": "object",
+      "description": "Sender metadata",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" }
+      },
+      "required": ["id", "name"],
+      "additionalProperties": false
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp"
+    },
+    "status": {
+      "enum": ["sending", "sent", "delivered", "error"],
+      "description": "Message delivery status"
+    },
+    "reactions": {
+      "type": "object",
+      "description": "Emoji reactions: { emoji -> count }",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "threadId": {
+      "type": ["string", "null"],
+      "description": "Parent thread ID if this is a reply"
+    },
+    "badge": {
+      "enum": ["new", "pinned", "important"],
+      "description": "Optional badge for highlighting"
+    }
+  },
+  "required": ["id", "conversationId", "role", "content", "sender", "timestamp", "status"],
+  "additionalProperties": false
+}

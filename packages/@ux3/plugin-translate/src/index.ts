@@ -184,57 +184,68 @@ export const TranslatePlugin: Plugin = {
     const defaultLocale = cfg.defaultLocale ?? 'en';
     const locales: string[] = cfg.locales ?? [defaultLocale];
 
-    let currentLocale = defaultLocale;
+    app.registerService?.('translate', () => {
+      const resolveLocale = (): string => {
+        const serviceLocale = (app as any).locale?.locale?.primary;
+        if (serviceLocale && locales.includes(serviceLocale)) return serviceLocale;
+        const lang = (app as any).locale?.locale?.language;
+        if (lang && locales.includes(lang)) return lang;
+        return defaultLocale;
+      };
 
-    app.registerService?.('translate', () => ({
-      /** Currently active locale */
-      get locale(): string {
-        return currentLocale;
-      },
+      return {
+        /** Currently active locale — derived from the canonical locale service */
+        get locale(): string {
+          return resolveLocale();
+        },
 
-      /** All supported locale tags */
-      get locales(): string[] {
-        return locales;
-      },
+        /** All supported locale tags */
+        get locales(): string[] {
+          return locales;
+        },
 
-      /** Switch the active locale used for translation lookups */
-      setLocale(locale: string): void {
-        if (!locales.includes(locale)) {
-          throw new Error(`@ux3/plugin-translate: unsupported locale '${locale}'`);
-        }
-        currentLocale = locale;
-      },
+        /** Switch the active locale via the canonical locale service */
+        setLocale(locale: string): void {
+          if (!locales.includes(locale)) {
+            throw new Error(`@ux3/plugin-translate: unsupported locale '${locale}'`);
+          }
+          const svc = (app as any).locale;
+          if (svc && typeof svc.setLocale === 'function') {
+            svc.setLocale(locale);
+          }
+        },
 
-      /**
-       * Translate `text` from `sourceLocale` (defaults to `currentLocale`) into
-       * `targetLocale`.
-       */
-      async translate(
-        text: string,
-        targetLocale: string,
-        sourceLocale?: string
-      ): Promise<TranslationResult> {
-        const source = sourceLocale ?? currentLocale;
-        const resolvedCfg = await resolveRuntimeConfig(cfg);
-        const translated = await callTranslationApi(text, targetLocale, source, resolvedCfg);
-        return { source, target: targetLocale, translated };
-      },
+        /**
+         * Translate `text` from `sourceLocale` (defaults to the active locale)
+         * into `targetLocale`.
+         */
+        async translate(
+          text: string,
+          targetLocale: string,
+          sourceLocale?: string
+        ): Promise<TranslationResult> {
+          const source = sourceLocale ?? resolveLocale();
+          const resolvedCfg = await resolveRuntimeConfig(cfg);
+          const translated = await callTranslationApi(text, targetLocale, source, resolvedCfg);
+          return { source, target: targetLocale, translated };
+        },
 
-      /**
-       * Shorthand: translate `text` from the default locale into `targetLocale`
-       * (defaults to `currentLocale`).  Returns the translated string directly.
-       *
-       * When `targetLocale === defaultLocale` the original text is returned
-       * immediately without an API call.
-       */
-      async t(text: string, targetLocale?: string): Promise<string> {
-        const target = targetLocale ?? currentLocale;
-        if (target === defaultLocale) return text;
-        const resolvedCfg = await resolveRuntimeConfig(cfg);
-        const translated = await callTranslationApi(text, target, defaultLocale, resolvedCfg);
-        return translated;
-      },
-    }));
+        /**
+         * Shorthand: translate `text` from the default locale into `targetLocale`
+         * (defaults to the active locale).  Returns the translated string directly.
+         *
+         * When `targetLocale === defaultLocale` the original text is returned
+         * immediately without an API call.
+         */
+        async t(text: string, targetLocale?: string): Promise<string> {
+          const target = targetLocale ?? resolveLocale();
+          if (target === defaultLocale) return text;
+          const resolvedCfg = await resolveRuntimeConfig(cfg);
+          const translated = await callTranslationApi(text, target, defaultLocale, resolvedCfg);
+          return translated;
+        },
+      };
+    });
 
     app.utils = app.utils ?? {};
     (app.utils as any).translate = { defaultLocale, locales };
