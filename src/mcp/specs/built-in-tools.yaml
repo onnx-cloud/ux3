@@ -1,0 +1,553 @@
+# Built-in MCP tool specs — defines all core UX3 tools available to LLM clients.
+# These specs are validated at build time and generate type-safe handler registries.
+# Per-project overrides go in: ux/mcp/specs/tools.yaml (merged with built-in)
+
+tools:
+  browse:
+    - name: project.list
+      description: "List all views, services, styles, i18n, routes, and layouts in the project"
+      input:
+        type: object
+        properties:
+          filter:
+            type: string
+            description: Optional filter pattern
+        required: []
+      handler: project.list
+      tags: [core, browse]
+
+    - name: entity.list
+      description: "List entities for a given kind: view, layout, i18n, service, or route"
+      input:
+        type: object
+        properties:
+          kind:
+            type: string
+            enum: [view, layout, i18n, service, route]
+            description: Entity kind
+        required: [kind]
+      handler: entity.list
+      tags: [core, browse]
+
+    - name: entity.get
+      description: Read one entity by kind and name
+      input:
+        type: object
+        properties:
+          kind:
+            type: string
+            enum: [view, layout, i18n, service, route]
+            description: Entity kind
+          name:
+            type: string
+            description: Entity name
+        required: [kind, name]
+      handler: entity.get
+      tags: [core, browse]
+
+    - name: entity.search
+      description: Search entities by text content or name
+      input:
+        type: object
+        properties:
+          kind:
+            type: string
+            enum: [view, layout, i18n, service, route]
+            description: Entity kind
+          query:
+            type: string
+            description: Search query
+        required: [kind, query]
+      handler: entity.search
+      tags: [core, browse]
+
+    - name: view.get
+      description: Read view YAML and HTML source
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: "View name (PascalCase)"
+        required: [name]
+      handler: view.get
+      tags: [core, browse]
+
+    - name: views.search
+      description: "Find views by keyword, state, or service"
+      input:
+        type: object
+        properties:
+          query:
+            type: string
+            description: Search query
+        required: [query]
+      handler: views.search
+      tags: [core, browse]
+
+    - name: service.list
+      description: List service declarations
+      input:
+        type: object
+        properties: {}
+        required: []
+      handler: service.list
+      tags: [core, browse]
+
+    - name: service.get
+      description: Read a service declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Service file name
+        required: [name]
+      handler: service.get
+      tags: [core, browse]
+
+    - name: service.search
+      description: Search service declarations
+      input:
+        type: object
+        properties:
+          query:
+            type: string
+            description: Search query
+        required: [query]
+      handler: service.search
+      tags: [core, browse]
+
+    - name: route.list
+      description: List route declaration files
+      input:
+        type: object
+        properties: {}
+        required: []
+      handler: route.list
+      tags: [core, browse]
+
+    - name: route.get
+      description: Read a route declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Route file name
+        required: [name]
+      handler: route.get
+      tags: [core, browse]
+
+    - name: route.search
+      description: Search route declarations
+      input:
+        type: object
+        properties:
+          query:
+            type: string
+            description: Search query
+        required: [query]
+      handler: route.search
+      tags: [core, browse]
+
+    - name: layout.get
+      description: Read a layout template
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Layout name
+        required: [name]
+      handler: layout.get
+      tags: [core, browse]
+
+    - name: layouts.search
+      description: Search layout templates
+      input:
+        type: object
+        properties:
+          query:
+            type: string
+            description: Search query
+        required: [query]
+      handler: layouts.search
+      tags: [core, browse]
+
+    - name: i18n.get
+      description: Read an i18n locale catalog
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Locale name or relative catalog path
+        required: [name]
+      handler: i18n.get
+      tags: [core, browse]
+
+    - name: i18n.search
+      description: Search i18n locale catalogs
+      input:
+        type: object
+        properties:
+          query:
+            type: string
+            description: Search query
+        required: [query]
+      handler: i18n.search
+      tags: [core, browse]
+
+  mutate:
+    - name: entity.create
+      description: Create an entity by kind and content
+      input:
+        type: object
+        properties:
+          kind:
+            type: string
+            enum: [view, layout, i18n, service, route]
+            description: Entity kind
+          name:
+            type: string
+            description: Entity name
+          content:
+            type: string
+            description: Entity content
+          template:
+            type: string
+            description: Optional extra template content for views
+        required: [kind, name]
+      handler: entity.create
+      tags: [core, mutate]
+
+    - name: entity.update
+      description: Update an existing entity by kind and content
+      input:
+        type: object
+        properties:
+          kind:
+            type: string
+            enum: [view, layout, i18n, service, route]
+            description: Entity kind
+          name:
+            type: string
+            description: Entity name
+          content:
+            type: string
+            description: Replacement content
+          template:
+            type: string
+            description: Optional replacement template for views
+        required: [kind, name]
+      handler: entity.update
+      tags: [core, mutate]
+
+    - name: entity.delete
+      description: Delete an entity by kind and name
+      input:
+        type: object
+        properties:
+          kind:
+            type: string
+            enum: [view, layout, i18n, service, route]
+            description: Entity kind
+          name:
+            type: string
+            description: Entity name
+        required: [kind, name]
+      handler: entity.delete
+      tags: [core, mutate]
+
+    - name: view.create
+      description: Generate a new view from description
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: "PascalCase view name"
+          description:
+            type: string
+            description: View description
+          initialState:
+            type: string
+            description: Initial FSM state
+          states:
+            type: array
+            description: Optional state definitions
+        required: [name, description, initialState]
+      handler: view.create
+      tags: [core, mutate]
+
+    - name: layout.create
+      description: Create a layout template
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Layout name
+          content:
+            type: string
+            description: HTML content
+        required: [name]
+      handler: layout.create
+      tags: [core, mutate]
+
+    - name: layout.update
+      description: Update a layout template
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Layout name
+          content:
+            type: string
+            description: Replacement HTML content
+        required: [name, content]
+      handler: layout.update
+      tags: [core, mutate]
+
+    - name: layout.delete
+      description: Delete a layout template
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Layout name
+        required: [name]
+      handler: layout.delete
+      tags: [core, mutate]
+
+    - name: style.create
+      description: Generate a style widget
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Widget name
+          description:
+            type: string
+            description: Style description
+          designTokens:
+            type: object
+            description: Design tokens
+        required: [name, description]
+      handler: style.create
+      tags: [core, mutate]
+
+    - name: i18n.create
+      description: Scaffold i18n keys for a view
+      input:
+        type: object
+        properties:
+          viewName:
+            type: string
+            description: View name
+          strings:
+            type: object
+            description: English strings map
+        required: [viewName, strings]
+      handler: i18n.create
+      tags: [core, mutate]
+
+    - name: i18n.update
+      description: Update an i18n locale catalog
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Locale name or relative catalog path
+          content:
+            type: string
+            description: Replacement JSON or YAML content
+        required: [name, content]
+      handler: i18n.update
+      tags: [core, mutate]
+
+    - name: i18n.delete
+      description: Delete an i18n locale catalog
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Locale name or relative catalog path
+        required: [name]
+      handler: i18n.delete
+      tags: [core, mutate]
+
+    - name: service.create
+      description: Create a service declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Service file name
+          content:
+            type: string
+            description: YAML content
+        required: [name, content]
+      handler: service.create
+      tags: [core, mutate]
+
+    - name: service.update
+      description: Update a service declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Service file name
+          content:
+            type: string
+            description: Replacement YAML content
+        required: [name, content]
+      handler: service.update
+      tags: [core, mutate]
+
+    - name: service.delete
+      description: Delete a service declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Service file name
+        required: [name]
+      handler: service.delete
+      tags: [core, mutate]
+
+    - name: route.create
+      description: Create a route declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Route file name
+          content:
+            type: string
+            description: YAML content
+        required: [name, content]
+      handler: route.create
+      tags: [core, mutate]
+
+    - name: route.update
+      description: Update a route declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Route file name
+          content:
+            type: string
+            description: Replacement YAML content
+        required: [name, content]
+      handler: route.update
+      tags: [core, mutate]
+
+    - name: route.delete
+      description: Delete a route declaration file
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Route file name
+        required: [name]
+      handler: route.delete
+      tags: [core, mutate]
+
+  validate:
+    - name: view.validate
+      description: "Validate a view: schema, templates, reachability"
+      input:
+        type: object
+        properties:
+          nameOrPath:
+            type: string
+            description: View name or path
+        required: [nameOrPath]
+      handler: view.validate
+      tags: [core, validate]
+
+    - name: validate.i18n
+      description: Check for missing or unused i18n keys
+      input:
+        type: object
+        properties: {}
+        required: []
+      handler: validate.i18n
+      tags: [core, validate]
+
+    - name: validate.styles
+      description: Validate style token refs and class names
+      input:
+        type: object
+        properties: {}
+        required: []
+      handler: validate.styles
+      tags: [core, validate]
+
+  explain:
+    - name: view.explain
+      description: Describe a view FSM for LLM context
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: View name
+        required: [name]
+      handler: view.explain
+      tags: [core, explain]
+
+    - name: fsm.graph
+      description: Return state graph as JSON or Mermaid
+      input:
+        type: object
+        properties:
+          viewName:
+            type: string
+            description: View name
+          format:
+            type: string
+            enum: [json, mermaid]
+            description: Output format
+        required: [viewName]
+      handler: fsm.graph
+      tags: [core, explain]
+
+  hints:
+    - name: hints.list
+      description: "List available SPEC hints by section (view, style, i18n, etc.)"
+      input:
+        type: object
+        properties:
+          section:
+            type: string
+            description: "Optional section filter (view, style, i18n, route, service, logic, validation)"
+        required: []
+      handler: hints.list
+      tags: [core, hints]
+
+    - name: hints.view
+      description: View full content of a SPEC hint file
+      input:
+        type: object
+        properties:
+          section:
+            type: string
+            description: "Hint section (view, style, i18n, etc.)"
+        required: [section]
+      handler: hints.view
+      tags: [core, hints]

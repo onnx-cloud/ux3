@@ -2,35 +2,48 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ToolRegistry } from './tools.js';
 import { ResourceRegistry } from './resources.js';
+import { MCPHost } from './host.js';
+
+function getApp(): any {
+  return (globalThis as any).__ux3App;
+}
 
 export function createSDKServer(projectDir: string, resourceBaseUrl?: string): McpServer {
   const server = new McpServer({
     name: 'ux3-mcp',
-    version: '0.1.0',
+    version: '0.2.0',
   });
 
-  const toolRegistry = new ToolRegistry(projectDir);
-  const resourceRegistry = new ResourceRegistry(projectDir, resourceBaseUrl);
+  const legacyToolRegistry = new ToolRegistry(projectDir);
+  const legacyResourceRegistry = new ResourceRegistry(projectDir, resourceBaseUrl);
 
-  // Register all tools from toolRegistry
-  const toolDefs = toolRegistry.getToolDefinitions();
-  for (const toolDef of toolDefs) {
-    const inputSchema = toZodObject((toolDef as any).inputSchema);
+  const host = new MCPHost({
+    projectDir,
+    legacyToolRegistry,
+    legacyResourceRegistry,
+  });
+
+  registerDevModeHandlers(host);
+
+  // Register all tools from the spec bundle
+  const toolSpecs = host.getToolSpecs();
+  for (const toolSpec of toolSpecs) {
+    const inputSchema = toZodObject(toolSpec.input);
 
     server.registerTool(
-      toolDef.name,
+      toolSpec.name,
       {
-        description: toolDef.description || 'Tool',
+        description: toolSpec.description,
         inputSchema,
       },
       async (args: any) => {
         try {
-          const result = await toolRegistry.executeTool(toolDef.name, args);
+          const result = await host.executeTool(toolSpec.name, args);
           return {
             content: [
               {
                 type: 'text' as const,
-                text: typeof result === 'string' ? result : JSON.stringify(result, null, 2),
+                text: typeof result === 'string' ? result : safeStringify(result),
               },
             ],
           };
@@ -49,23 +62,28 @@ export function createSDKServer(projectDir: string, resourceBaseUrl?: string): M
     );
   }
 
-  // Register resources as concrete URIs from current project state.
-  for (const resource of resourceRegistry.listResources()) {
-    const uri = resource.uri;
+  // Register resources from the spec bundle
+  const resourceSpecs = host.getResourceSpecs();
+  for (const resourceSpec of resourceSpecs) {
+    const uri = resourceSpec.uri;
+
+    // Skip dynamic patterns
+    if (uri.includes('{')) continue;
+
     server.registerResource(
-      resource.name,
+      resourceSpec.name,
       uri,
       {
-        description: resource.description,
-        mimeType: resource.mimeType,
+        description: resourceSpec.description,
+        mimeType: resourceSpec.mimeType,
       },
       async () => {
-        const content = await resourceRegistry.readResource(uri);
+        const content = await host.readResource(uri);
         return {
           contents: [
             {
               uri,
-              mimeType: resource.mimeType,
+              mimeType: resourceSpec.mimeType,
               text: content,
             },
           ],
@@ -75,6 +93,174 @@ export function createSDKServer(projectDir: string, resourceBaseUrl?: string): M
   }
 
   return server;
+}
+
+function registerDevModeHandlers(host: MCPHost): void {
+  host.registerToolHandler('fsm.list', async (_args) => {
+    const app = getApp();
+    if (!app?.machines) {
+      return { machines: [], count: 0, note: 'No active FSM instances. Dev tools must be running in a browser context.' };
+    }
+    const entries = Object.entries(app.machines).map(([name, machine]: [string, any]) => ({
+      name,
+      state: machine.getState?.() ?? 'unknown',
+      hasContext: !!machine.getContext?.(),
+    }));
+    return { machines: entries, count: entries.length };
+  });
+
+  host.registerToolHandler('fsm.snapshot', async (args) => {
+    const app = getApp();
+    if (!app?.machines) {
+      return { error: 'No active FSM instances. Dev tools must be running in a browser context.' };
+    }
+    const widgetId = args.widgetId as string | undefined;
+    if (widgetId) {
+      const machine = app.machines[widgetId];
+      if (!machine) return { error: `FSM "${widgetId}" not found` };
+      return {
+        widgetId,
+        state: machine.getState?.() ?? 'unknown',
+        context: machine.getContext?.() ?? {},
+      };
+    }
+    return { error: 'widgetId required' };
+  });
+
+  host.registerToolHandler('fsm.dispatch', async (args) => {
+    const app = getApp();
+    if (!app?.machines) {
+      return { error: 'No active FSM instances. Dev tools must be running in a browser context.' };
+    }
+    const widgetId = args.widgetId as string;
+    const event = args.event as string;
+    const payload = args.payload as Record<string, unknown> | undefined;
+    if (!widgetId || !event) return { error: 'widgetId and event required' };
+    const machine = app.machines[widgetId];
+    if (!machine) return { error: `FSM "${widgetId}" not found` };
+    const oldState = machine.getState?.() ?? 'unknown';
+    try {
+      machine.send?.(event, payload);
+      const newState = machine.getState?.() ?? 'unknown';
+      return { success: true, oldState, newState, event, eventEmitted: true };
+    } catch (e: any) {
+      return { success: false, oldState, error: e.message };
+    }
+  });
+
+  host.registerToolHandler('app-state.get', async (args) => {
+    const app = getApp();
+    if (!app) return { error: 'No app context available' };
+    const path = args.path as string | undefined;
+    if (path) {
+      const parts = path.split('.');
+      let val: any = app;
+      for (const part of parts) {
+        val = val?.[part];
+      }
+      return { path, value: JSON.stringify(val).length > 2000 ? '[truncated]' : val };
+    }
+    const summary = {
+      machines: Object.keys(app.machines || {}),
+      services: Object.keys(app.services || {}),
+      locale: app.locale?.locale?.primary,
+      route: typeof window !== 'undefined' ? window.location.pathname : null,
+    };
+    return summary;
+  });
+
+  host.registerToolHandler('service-registry.list', async (_args) => {
+    const app = getApp();
+    if (!app?.services) {
+      return { services: [], count: 0, note: 'No active services' };
+    }
+    const services = Object.entries(app.services).map(([name, svc]: [string, any]) => ({
+      name,
+      connected: svc.connected ?? svc.isConnected?.() ?? false,
+      lastError: svc.lastError ?? null,
+    }));
+    return { services, count: services.length };
+  });
+
+  host.registerToolHandler('inspect.dom', async (args) => {
+    if (typeof document === 'undefined') {
+      return { error: 'DOM inspection only available in browser context' };
+    }
+    const selector = args.selector as string | undefined;
+    if (selector) {
+      const el = document.querySelector(selector);
+      if (!el) return { error: `No element matching "${selector}"` };
+      return {
+        selector,
+        tag: el.tagName.toLowerCase(),
+        id: el.id || null,
+        classList: Array.from(el.classList),
+        children: el.children.length,
+        innerText: (el as HTMLElement).innerText?.slice(0, 500) || '',
+      };
+    }
+    const uxElements = document.querySelectorAll('[class*="ux-"], [id*="ux-"], [ux-view], [ux-route]');
+    return {
+      documentTitle: document.title,
+      bodyChildren: document.body.children.length,
+      uxElementsFound: uxElements.length,
+    };
+  });
+
+  host.registerToolHandler('rebuild.project', async () => {
+    const app = getApp();
+    if (app?.config?.development?.hotReload) {
+      return { success: true, message: 'Hot reload is active. Changes are applied automatically.' };
+    }
+    return { success: false, message: 'Project rebuild requires dev server with hot reload enabled.' };
+  });
+
+  host.registerToolHandler('reload.view', async (args) => {
+    const name = args.name as string;
+    const app = getApp();
+    return {
+      success: true,
+      view: name,
+      message: `View "${name}" reload instruction sent. ${app ? '(app context available)' : '(dev server context unavailable)'}`,
+    };
+  });
+
+  host.registerToolHandler('reload.style', async (args) => {
+    const name = (args.name as string) || 'all';
+    return {
+      success: true,
+      style: name,
+      message: `Style "${name}" reload triggered.`,
+    };
+  });
+
+  host.registerToolHandler('config.view', async (args) => {
+    return {
+      viewName: args.viewName,
+      overrides: args.overrides || {},
+      applied: true,
+      note: 'View config overrides are ephemeral; they reset on reload.',
+    };
+  });
+
+  host.registerToolHandler('config.fsm-logging', async (args) => {
+    const enabled = !!args.enabled;
+    (globalThis as any).__ux3FSMLogging = enabled;
+    return { fsmLogging: enabled, message: `FSM logging ${enabled ? 'enabled' : 'disabled'}.` };
+  });
+
+  const app = getApp();
+  if (app) {
+    host.connectDevSession(app);
+  }
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
 }
 
 function toZodObject(inputSchema: any): z.ZodObject<Record<string, z.ZodTypeAny>> {

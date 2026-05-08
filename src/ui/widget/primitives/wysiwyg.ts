@@ -75,6 +75,7 @@ export class UxWysiwyg extends UxBase {
       btn.addEventListener('mousedown', (e) => {
         e.preventDefault();
         editor.focus();
+        // TODO: signature '(commandId: string, showUI?: boolean, value?: string): boolean' of 'document.execCommand' is deprecated.
         document.execCommand((btn as HTMLElement).dataset.cmd || '');
         emitChange();
       });

@@ -1,4 +1,5 @@
 import { UxBase } from './base.js';
+import { resolveStyle } from '../../style-registry.js';
 
 export class UxTabs extends UxBase {
   private tabs: HTMLElement[] = [];
@@ -9,6 +10,7 @@ export class UxTabs extends UxBase {
     this.setAttribute('role', 'tablist');
     this.generateTabsFromData();
     this.collectChildren();
+    this.applyTabStyles();
     this.addEventListener('click', this.onTabClick);
     this.addEventListener('keydown', this.onTabKeyDown);
   }
@@ -22,13 +24,28 @@ export class UxTabs extends UxBase {
   private generateTabsFromData() {
     const data = this.getAttribute('data-tabs');
     if (!data || this.querySelector('ux-tab,[role="tab"]')) return;
-    const labels = data.split('|').map(s => s.trim()).filter(Boolean);
+    const labels = data.split(/[|,]/).map(s => s.trim()).filter(Boolean);
     labels.forEach((label, i) => {
       const tab = document.createElement('ux-tab');
       tab.textContent = label;
       if (i === 0) tab.setAttribute('selected', '');
       this.appendChild(tab);
     });
+  }
+
+  private applyTabStyles() {
+    const tabCls = resolveStyle('tab') || resolveStyle('tabs');
+    const panelCls = resolveStyle('tab-panel');
+    if (tabCls) {
+      this.tabs.forEach(t => {
+        if (!t.className) t.className = tabCls;
+      });
+    }
+    if (panelCls) {
+      this.panels.forEach(p => {
+        if (!p.className) p.className = panelCls;
+      });
+    }
   }
 
   private collectChildren() {
@@ -61,15 +78,18 @@ export class UxTabs extends UxBase {
   };
 
   private selectTab(index: number) {
+    const selCls = resolveStyle('tab-selected');
     this.tabs.forEach((t, i) => {
       if (i === index) {
         t.setAttribute('aria-selected', 'true');
         t.setAttribute('selected', '');
         t.setAttribute('tabindex', '0');
+        if (selCls) t.classList.add(...selCls.split(/\s+/).filter(Boolean));
       } else {
         t.setAttribute('aria-selected', 'false');
         t.removeAttribute('selected');
         t.setAttribute('tabindex', '-1');
+        if (selCls) t.classList.remove(...selCls.split(/\s+/).filter(Boolean));
       }
     });
     this.panels.forEach((p, i) => {

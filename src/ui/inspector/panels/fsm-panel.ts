@@ -115,10 +115,16 @@ export function createFsmPanel(ctx: AppContext): HTMLElement {
 
     const ctxTree = document.createElement('div');
     ctxTree.style.cssText = 'transition:background 0.3s;border-radius:2px;margin-bottom:8px;';
+    let contextRendered = false;
     const rebuildCtx = () => {
-      ctxTree.innerHTML = '';
       const c = machine.getContext?.() ?? {};
+      // Preserve DOM on first render; replace entire tree on subsequent transitions
+      // so that flash animation triggers correctly.
+      if (contextRendered) {
+        while (ctxTree.firstChild) ctxTree.removeChild(ctxTree.firstChild);
+      }
       ctxTree.appendChild(renderKV(c));
+      contextRendered = true;
     };
     rebuildCtx();
     body.appendChild(ctxTree);

@@ -1,25 +1,9 @@
 /**
  * Inspector Event Bus
- * Lightweight pub/sub used by all inspector panels to push entries to the Events timeline.
- * Isolated from the app's event system.
+ *
+ * Thin proxy over the canonical devtools event stream (window.__ux3DevTools).
+ * Falls back to a local buffer when the devtools service is not available.
  */
-
-type DevToolsBridgeEvent = {
-  ts: number;
-  source: string;
-  type: string;
-  payload?: unknown;
-};
-
-type DevToolsBridgeSnapshot = {
-  events: readonly DevToolsBridgeEvent[];
-};
-
-type DevToolsBridgeApi = {
-  getSnapshot(): DevToolsBridgeSnapshot;
-  subscribe(handler: (snapshot: DevToolsBridgeSnapshot) => void): () => void;
-  emit(source: string, type: string, payload?: unknown): void;
-};
 
 export type InspectorEventSource = 'fsm' | 'service' | 'navigation' | 'plugin' | 'logger' | 'validation';
 
@@ -34,69 +18,64 @@ export type InspectorEventHandler = (event: InspectorEvent) => void;
 
 const MAX_BUFFER = 500;
 
-class InspectorEventBus {
-  private buffer: InspectorEvent[] = [];
-  private handlers: Set<InspectorEventHandler> = new Set();
-
-  private getService(): DevToolsBridgeApi | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    return (window as any).__ux3DevTools ?? null;
-  }
-
-  emit(source: InspectorEventSource, type: string, payload?: unknown): void {
-    const service = this.getService();
-    if (service) {
-      service.emit(source, type, payload);
-      return;
-    }
-
-    const evt: InspectorEvent = { ts: Date.now(), source, type, payload };
-    if (this.buffer.length >= MAX_BUFFER) {
-      this.buffer.shift();
-    }
-    this.buffer.push(evt);
-    this.handlers.forEach(h => {
-      try { h(evt); } catch { console.warn('[InspectorEventBus] handler error', evt.type); }
-    });
-  }
-
-  subscribe(handler: InspectorEventHandler): () => void {
-    const service = this.getService();
-    if (service) {
-      let lastSeen = service.getSnapshot().events.length;
-      return service.subscribe((snapshot) => {
-        const nextEvents = snapshot.events.slice(lastSeen) as InspectorEvent[];
-        lastSeen = snapshot.events.length;
-        nextEvents.forEach((event) => {
-          try {
-            handler(event);
-          } catch {
-            console.warn('[InspectorEventBus] subscriber handler error');
-          }
-        });
-      });
-    }
-
-    this.handlers.add(handler);
-    return () => this.handlers.delete(handler);
-  }
-
-  getAll(): readonly InspectorEvent[] {
-    const service = this.getService();
-    if (service) {
-      return service.getSnapshot().events as readonly InspectorEvent[];
-    }
-    return this.buffer;
-  }
-
-  clear(): void {
-    if (this.getService()) {
-      return;
-    }
-    this.buffer = [];
-  }
+function getService(): any | null {
+  if (typeof window === 'undefined') return null;
+  return (window as any).__ux3DevTools ?? null;
 }
 
-export const inspectorBus = new InspectorEventBus();
+// Local fallback buffer used when the devtools service is unavailable.
+let fallbackBuffer: InspectorEvent[] = [];
+let fallbackHandlers: Set<InspectorEventHandler> = new Set();
+
+function emitLocal(source: InspectorEventSource, type: string, payload?: unknown): void {
+  const evt: InspectorEvent = { ts: Date.now(), source, type, payload };
+  if (fallbackBuffer.length >= MAX_BUFFER) {
+    fallbackBuffer.shift();
+  }
+  fallbackBuffer.push(evt);
+  fallbackHandlers.forEach(h => {
+    try { h(evt); } catch { /* noop */ }
+  });
+}
+
+export const inspectorBus = {
+  emit(source: InspectorEventSource, type: string, payload?: unknown): void {
+    const svc = getService();
+    if (svc) {
+      svc.emit(source, type, payload);
+      return;
+    }
+    emitLocal(source, type, payload);
+  },
+
+  subscribe(handler: InspectorEventHandler): () => void {
+    const svc = getService();
+    if (svc) {
+      let lastSeen: number = svc.getSnapshot?.()?.events?.length ?? 0;
+      return svc.subscribe((snapshot: any) => {
+        const evts = snapshot.events as InspectorEvent[];
+        const next = evts.slice(lastSeen);
+        lastSeen = evts.length;
+        for (const evt of next) {
+          try { handler(evt); } catch { /* noop */ }
+        }
+      });
+    }
+    fallbackHandlers.add(handler);
+    return () => { fallbackHandlers.delete(handler); };
+  },
+
+  getAll(): readonly InspectorEvent[] {
+    const svc = getService();
+    if (svc) {
+      return (svc.getSnapshot?.()?.events ?? []) as readonly InspectorEvent[];
+    }
+    return fallbackBuffer;
+  },
+
+  clear(): void {
+    const svc = getService();
+    if (svc) return;
+    fallbackBuffer = [];
+  },
+};

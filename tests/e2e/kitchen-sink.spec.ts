@@ -3,10 +3,17 @@ import { test, expect, Page } from '@playwright/test';
 async function waitForShowcase(page: Page, route = '/components') {
   await page.goto(route, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => !!(window as any).__ux3App, { timeout: 15000 });
-  await page.waitForSelector('body > #ux-content > ux-hello', { state: 'attached', timeout: 15000 });
+  await page.waitForSelector('body > #ux-content > ux-components', { state: 'attached', timeout: 15000 });
   await page.waitForSelector('ux-app-shell', { state: 'attached', timeout: 15000 });
   await page.waitForSelector('ux-theme-toggle', { state: 'attached', timeout: 15000 });
   await page.waitForSelector('ux-lang-switcher', { state: 'attached', timeout: 15000 });
+}
+
+async function waitForPatterns(page: Page) {
+  await page.goto('/patterns', { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => !!(window as any).__ux3App, { timeout: 15000 });
+  await page.waitForSelector('body > #ux-content > ux-patterns', { state: 'attached', timeout: 15000 });
+  await page.waitForSelector('ux-app-shell', { state: 'attached', timeout: 15000 });
 }
 
 async function dispatchHostClick(page: Page, selector: string) {
@@ -19,26 +26,20 @@ test.describe('Kitchen sink component showcase', () => {
   test('mounts the kitchen sink showcase shell', async ({ page }) => {
     await waitForShowcase(page);
     await expect(page.locator('body > #ux-content')).toHaveCount(1);
-    await expect(page.locator('body > #ux-content > ux-hello')).toHaveCount(1);
+    await expect(page.locator('body > #ux-content > ux-components')).toHaveCount(1);
     await expect(page.locator('ux-app-shell')).toHaveCount(1);
   });
 
-  test('renders the expanded built-in component catalog', async ({ page }) => {
+  test('renders the built-in component catalog', async ({ page }) => {
     await waitForShowcase(page);
 
     const expectedTags = [
       'ux-app-shell',
       'ux-topbar',
-      'ux-sidebar',
-      'ux-breadcrumb',
-      'ux-pagination',
-      'ux-panel',
       'ux-button',
       'ux-icon',
       'ux-icon-button',
       'ux-link',
-      'ux-modal',
-      'ux-drawer',
       'ux-tabs',
       'ux-tab-panel',
       'ux-accordion',
@@ -48,17 +49,15 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-select',
       'ux-command-palette',
       'ux-tooltip',
-      'ux-search-input',
-      'ux-search-tags',
-      'ux-search-results',
+      'ux-hover-panel',
+      'ux-popover',
+      'ux-breadcrumb',
+      'ux-pagination',
+      'ux-wizard',
       'ux-table',
-      'ux-table-virtual',
       'ux-list',
       'ux-description-list',
       'ux-card',
-      'ux-card-icon',
-      'ux-surface',
-      'ux-divider',
       'ux-badge',
       'ux-avatar',
       'ux-alert',
@@ -69,49 +68,22 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-skeleton',
       'ux-empty-state',
       'ux-error-panel',
-      'ux-form',
       'ux-field',
-      'ux-field-array',
       'ux-input',
       'ux-textarea',
       'ux-checkbox',
       'ux-radio-group',
       'ux-switch',
       'ux-slider',
-      'ux-form-errors',
-      'ux-grid',
-      'ux-hero',
       'ux-image',
       'ux-image-panel',
-      'ux-image-capture',
-      'ux-inline',
       'ux-video',
-      'ux-video-capture',
-      'ux-article',
       'ux-audio',
-      'ux-audio-capture',
       'ux-chart-line',
       'ux-chart-bar',
       'ux-chart-donut',
-      'ux-chart-line-legend',
-      'ux-chat-messenger',
-      'ux-chat-thread-list',
-      'ux-chat-roster',
-      'ux-chat-messages',
-      'ux-chat-bubble',
-      'ux-chat-composer',
-      'ux-popover',
-      'ux-hover-panel',
-      'ux-splash',
-      'ux-splash-screen',
-      'ux-stack',
-      'ux-wizard',
-      'ux-wysiwyg',
-      'ux-consent-banner',
-      'ux-content',
-      'ux-nav',
-      'ux-lang-switcher',
       'ux-theme-toggle',
+      'ux-lang-switcher',
       'ux-network-status',
     ];
 
@@ -123,29 +95,30 @@ test.describe('Kitchen sink component showcase', () => {
   test('theme and locale controls are present in showcase layout', async ({ page }) => {
     await waitForShowcase(page);
 
-    await expect(page.locator('ux-theme-toggle')).toHaveCount(2);
-    await expect(page.locator('ux-lang-switcher')).toHaveCount(2);
+    await expect(page.locator('ux-theme-toggle')).toHaveCount(1);
+    await expect(page.locator('ux-lang-switcher')).toHaveCount(1);
   });
 
   test('guarded flow transitions through showcase states', async ({ page }) => {
-    await waitForShowcase(page);
+    await waitForPatterns(page);
 
     await dispatchHostClick(page, 'ux-button[ux-event="click:ENABLE_ADVANCED"]');
     await dispatchHostClick(page, 'ux-button[ux-event="click:SET_MODE"][ux-event-value="mode=forms"]');
-    await dispatchHostClick(page, 'ux-button[ux-event="click:NEXT"]');
-    await expect(page.locator('ux-button[ux-event="click:COMPLETE"]')).toHaveCount(1);
+    await dispatchHostClick(page, 'ux-button[ux-event="click:SHOW_OPERATIONS"]');
+    await dispatchHostClick(page, 'ux-button[ux-event="click:SHOW_NARRATIVE"]');
+    await dispatchHostClick(page, 'ux-button[ux-event="click:SHOW_ADVANCED"]');
+    await expect(page.locator('ux-button[ux-event="click:FINISH_FLOW"]')).toHaveCount(1);
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:COMPLETE"]');
-    await expect(page.locator('ux-button[ux-event="click:RESET"]')).toHaveCount(1);
+    await dispatchHostClick(page, 'ux-button[ux-event="click:FINISH_FLOW"]');
+    await expect(page.locator('ux-button[ux-event="click:RESET_FSM"]')).toHaveCount(1);
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:RESET"]');
-    await expect(page.locator('ux-button[ux-event="click:NEXT"]')).toHaveCount(1);
+    await dispatchHostClick(page, 'ux-button[ux-event="click:RESET_FSM"]');
+    await expect(page.locator('ux-button[ux-event="click:SHOW_OPERATIONS"]')).toHaveCount(1);
   });
 
   test('form components are properly rendered', async ({ page }) => {
     await waitForShowcase(page);
 
-    await expect(page.locator('ux-form')).toHaveCount(1);
     await expect(page.locator('ux-input')).toBeAttached();
     await expect(page.locator('ux-textarea')).toBeAttached();
     await expect(page.locator('ux-select')).toBeAttached();
@@ -159,14 +132,11 @@ test.describe('Kitchen sink component showcase', () => {
     await waitForShowcase(page);
 
     await expect(page.locator('ux-table')).toBeAttached();
-    await expect(page.locator('ux-search-input')).toBeAttached();
-    await expect(page.locator('ux-search-tags')).toBeAttached();
     await expect(page.locator('ux-list')).toBeAttached();
     await expect(page.locator('ux-description-list')).toBeAttached();
     await expect(page.locator('ux-chart-line')).toBeAttached();
     await expect(page.locator('ux-chart-bar')).toBeAttached();
     await expect(page.locator('ux-chart-donut')).toBeAttached();
-    await expect(page.locator('ux-table-virtual')).toBeAttached();
   });
 
   test('feedback and status components are properly rendered', async ({ page }) => {
@@ -194,51 +164,19 @@ test.describe('Kitchen sink component showcase', () => {
     await expect(page.locator('ux-wizard')).toBeAttached();
   });
 
-  test('media and messaging components are properly rendered', async ({ page }) => {
+  test('media components are properly rendered', async ({ page }) => {
     await waitForShowcase(page);
 
     await expect(page.locator('ux-image')).toBeAttached();
     await expect(page.locator('ux-image-panel')).toBeAttached();
-    await expect(page.locator('ux-image-capture')).toBeAttached();
     await expect(page.locator('ux-video')).toBeAttached();
-    await expect(page.locator('ux-video-capture')).toBeAttached();
     await expect(page.locator('ux-audio')).toBeAttached();
-    await expect(page.locator('ux-audio-capture')).toBeAttached();
-    await expect(page.locator('ux-chat-messenger')).toBeAttached();
-    await expect(page.locator('ux-chat-thread-list')).toBeAttached();
-    await expect(page.locator('ux-chat-roster')).toBeAttached();
-    await expect(page.locator('ux-chat-messages')).toBeAttached();
-    await expect(page.locator('ux-chat-bubble')).toBeAttached();
-    await expect(page.locator('ux-chat-composer')).toBeAttached();
-  });
-
-  test('content and layout components are properly rendered', async ({ page }) => {
-    await waitForShowcase(page);
-
-    await expect(page.locator('ux-hero')).toBeAttached();
-    await expect(page.locator('ux-article')).toBeAttached();
-    await expect(page.locator('ux-grid')).toBeAttached();
-    await expect(page.locator('ux-wysiwyg')).toBeAttached();
-    await expect(page.locator('ux-consent-banner')).toBeAttached();
-  });
-
-  test('composition elements are properly rendered', async ({ page }) => {
-    await waitForShowcase(page);
-
-    await expect(page.locator('ux-card')).toBeAttached();
-    await expect(page.locator('ux-surface')).toBeAttached();
-    await expect(page.locator('ux-divider')).toBeAttached();
-    await expect(page.locator('ux-badge')).toBeAttached();
-    await expect(page.locator('ux-avatar')).toBeAttached();
-    await expect(page.locator('ux-splash')).toBeAttached();
-    await expect(page.locator('ux-splash-screen')).toBeAttached();
   });
 
   test('navigation components are properly rendered', async ({ page }) => {
     await waitForShowcase(page);
 
     await expect(page.locator('ux-topbar')).toBeAttached();
-    await expect(page.locator('ux-sidebar')).toBeAttached();
     await expect(page.locator('ux-breadcrumb')).toBeAttached();
     await expect(page.locator('ux-pagination')).toBeAttached();
     await expect(page.locator('ux-menu')).toBeAttached();
@@ -261,13 +199,12 @@ test.describe('Kitchen sink component showcase', () => {
     await waitForShowcase(page);
 
     const themeButtons = await page.locator('ux-theme-toggle').count();
-    expect(themeButtons).toBe(2);
+    expect(themeButtons).toBe(1);
 
     const localeButtons = await page.locator('ux-lang-switcher').count();
-    expect(localeButtons).toBe(2);
+    expect(localeButtons).toBe(1);
 
-    // Verify locales attribute is set
-    const localeWithLocales = await page.locator('ux-lang-switcher[locales="en,fr,de,ar"]').first();
+    const localeWithLocales = await page.locator('ux-lang-switcher[locales="en,fr"]').first();
     await expect(localeWithLocales).toBeAttached();
   });
 
@@ -275,22 +212,25 @@ test.describe('Kitchen sink component showcase', () => {
     await waitForShowcase(page);
 
     const networkStatus = await page.locator('ux-network-status').count();
-    expect(networkStatus).toBeGreaterThanOrEqual(2);
+    expect(networkStatus).toBeGreaterThanOrEqual(1);
   });
 
-  test('switches between capability, operations, and narrative layouts', async ({ page }) => {
-    await waitForShowcase(page);
+  test('FSM flow switches between capability, operations, narrative, and advanced', async ({ page }) => {
+    await waitForPatterns(page);
 
-    await expect(page.locator('text=Active layout: Capability Matrix')).toBeVisible();
+    await expect(page.locator('text=Capability Showcase')).toBeVisible();
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_OPERATIONS"]');
-    await expect(page.locator('text=Active layout: Operations Board')).toBeVisible();
+    await dispatchHostClick(page, 'ux-button[ux-event="click:SHOW_OPERATIONS"]');
+    await expect(page.locator('text=Operations view with sidebar menu')).toBeVisible();
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_NARRATIVE"]');
-    await expect(page.locator('text=Active layout: Narrative Journey')).toBeVisible();
+    await dispatchHostClick(page, 'ux-button[ux-event="click:SHOW_NARRATIVE"]');
+    await expect(page.locator('text=Narrative step showing article layout')).toBeVisible();
 
-    await dispatchHostClick(page, 'ux-button[ux-event="click:VIEW_CAPABILITY"]');
-    await expect(page.locator('text=Active layout: Capability Matrix')).toBeVisible();
+    await dispatchHostClick(page, 'ux-button[ux-event="click:SHOW_ADVANCED"]');
+    await expect(page.locator('text=Advanced panel')).toBeVisible();
+
+    await dispatchHostClick(page, 'ux-button[ux-event="click:RESET_FSM"]');
+    await expect(page.locator('text=Capability Showcase')).toBeVisible();
   });
 
   test('theme toggle toggles light/dark attribute on document', async ({ page }) => {
@@ -310,14 +250,14 @@ test.describe('Kitchen sink component showcase', () => {
   test('form input fields accept and update values', async ({ page }) => {
     await waitForShowcase(page);
 
-    const nameInput = page.locator('ux-input[name="name"]').first();
-    await expect(nameInput).toBeAttached();
+    const textInput = page.locator('ux-input[name="demo-text"]').first();
+    await expect(textInput).toBeAttached();
 
-    await nameInput.fill('Test User');
-    const nameVal = await nameInput.inputValue();
-    expect(nameVal).toBe('Test User');
+    await textInput.fill('Test User');
+    const textVal = await textInput.inputValue();
+    expect(textVal).toBe('Test User');
 
-    const bio = page.locator('ux-textarea[name="bio"]').first();
+    const bio = page.locator('ux-textarea[name="demo-bio"]').first();
     await expect(bio).toBeAttached();
     await bio.fill('Updated bio text');
     const bioVal = await bio.inputValue();
@@ -333,14 +273,14 @@ test.describe('Kitchen sink component showcase', () => {
   test('modal opens and closes', async ({ page }) => {
     await waitForShowcase(page);
 
-    const modalTrigger = page.locator('ux-button:has-text("Open modal")').first();
+    const modalTrigger = page.locator('ux-button:has-text("Open Modal")').first();
     await expect(modalTrigger).toBeAttached();
 
     await modalTrigger.click();
     await page.waitForTimeout(300);
     await expect(page.locator('ux-modal')).toBeVisible();
 
-    const closeBtn = page.locator('ux-modal ux-button:has-text("Close")').first();
+    const closeBtn = page.locator('ux-modal button:has-text("Close")').first();
     if (await closeBtn.isVisible()) {
       await closeBtn.click();
       await page.waitForTimeout(300);
@@ -371,5 +311,26 @@ test.describe('Kitchen sink component showcase', () => {
       await trigger.click();
       await page.waitForTimeout(300);
     }
+  });
+
+  test('navigation links point to the 5 category pages', async ({ page }) => {
+    await waitForShowcase(page);
+
+    const navLinks = page.locator('ux-topbar nav a');
+    await expect(navLinks).toHaveCount(5);
+
+    await expect(navLinks.nth(0)).toHaveAttribute('href', '/components');
+    await expect(navLinks.nth(1)).toHaveAttribute('href', '/patterns');
+    await expect(navLinks.nth(2)).toHaveAttribute('href', '/integrations');
+    await expect(navLinks.nth(3)).toHaveAttribute('href', '/platform');
+    await expect(navLinks.nth(4)).toHaveAttribute('href', '/about');
+  });
+
+  test('patterns page has validation form', async ({ page }) => {
+    await waitForPatterns(page);
+
+    await expect(page.locator('ux-form#demo-form')).toBeAttached();
+    await expect(page.locator('ux-input[name="email"]')).toBeAttached();
+    await expect(page.locator('ux-input[name="password"]')).toBeAttached();
   });
 });

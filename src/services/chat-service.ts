@@ -3,6 +3,11 @@
  * Idiomatic UX3 pattern: service interface with param objects, adapter registry for dependency injection
  */
 
+const USER_AVATAR_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%234A90E2%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E';
+const BOT_AVATAR_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%2350C878%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3EA%3C/text%3E%3C/svg%3E';
+const TEAM_AVATAR_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%2350C878%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3ES%3C/text%3E%3C/svg%3E';
+const SALES_AVATAR_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%23FF9500%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3ESA%3C/text%3E%3C/svg%3E';
+
 export interface ChatMessage {
   id: string;
   conversationId: string;
@@ -55,7 +60,6 @@ export class MockChatService implements ChatService {
   }
 
   private createSampleHistory(): Map<string, ChatMessage[]> {
-    const now = new Date().toISOString();
     const history = new Map<string, ChatMessage[]>();
 
     // Sample conversation
@@ -65,7 +69,7 @@ export class MockChatService implements ChatService {
         conversationId: 'conv-1',
         role: 'user',
         content: [{ type: 'text', text: 'Hello! Can you help me with this?' }],
-        sender: { id: 'user-1', name: 'You', avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%234A90E2%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E' },
+        sender: { id: 'user-1', name: 'You', avatar: USER_AVATAR_SVG },
         timestamp: new Date(Date.now() - 120000).toISOString(),
         status: 'sent'
       },
@@ -74,7 +78,7 @@ export class MockChatService implements ChatService {
         conversationId: 'conv-1',
         role: 'assistant',
         content: [{ type: 'text', text: 'Of course! I\'d be happy to help. What do you need?' }],
-        sender: { id: 'bot-1', name: 'Support Assistant', avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%2350C878%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3EA%3C/text%3E%3C/svg%3E' },
+        sender: { id: 'bot-1', name: 'Support Assistant', avatar: BOT_AVATAR_SVG },
         timestamp: new Date(Date.now() - 60000).toISOString(),
         status: 'sent'
       },
@@ -83,7 +87,7 @@ export class MockChatService implements ChatService {
         conversationId: 'conv-1',
         role: 'user',
         content: [{ type: 'text', text: 'I\'m trying to understand the chat architecture.' }],
-        sender: { id: 'user-1', name: 'You', avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%234A90E2%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E' },
+        sender: { id: 'user-1', name: 'You', avatar: USER_AVATAR_SVG },
         timestamp: new Date(Date.now() - 30000).toISOString(),
         status: 'sent'
       }
@@ -119,7 +123,7 @@ export class MockChatService implements ChatService {
             text: `I received your message: "${params.text}". This is a mock response from the chat service.`
           }
         ],
-        sender: { id: 'bot-1', name: 'Support Assistant', avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%2350C878%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3EA%3C/text%3E%3C/svg%3E' },
+        sender: { id: 'bot-1', name: 'Support Assistant', avatar: BOT_AVATAR_SVG },
         timestamp: new Date().toISOString(),
         status: 'sent'
       };
@@ -150,13 +154,13 @@ export class MockChatService implements ChatService {
         id: 'contact-1',
         name: 'Support Team',
         presence: 'online',
-        avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%2350C878%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3ES%3C/text%3E%3C/svg%3E'
+        avatar: TEAM_AVATAR_SVG
       },
       {
         id: 'contact-2',
         name: 'Sales Team',
         presence: 'away',
-        avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%23FF9500%22/%3E%3Ctext x=%2212%22 y=%2216%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22white%22 font-weight=%22bold%22%3ESA%3C/text%3E%3C/svg%3E'
+        avatar: SALES_AVATAR_SVG
       }
     ];
   }
@@ -175,7 +179,7 @@ export class MockChatService implements ChatService {
   }
 
   async updatePresence(params: { status: 'online' | 'away' | 'offline' }): Promise<void> {
-    // Mock: no-op
+    throw new Error(`ChatService.updatePresence not implemented (mock service). Status: ${params.status}`);
   }
 }
 

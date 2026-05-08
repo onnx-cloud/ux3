@@ -213,16 +213,15 @@ export function transitionAppFSM(
   event: string,
   app?: AppContext,
   error?: Error
-): void {
-  if (app && !fsm.getContext().app) {
-    const ctx = fsm.getContext();
-    ctx.app = app;
+): Promise<void> {
+  if (app) {
+    fsm.setState({ app: app as any });
   }
   if (error) {
-    const ctx = fsm.getContext();
-    ctx.error = error;
+    fsm.setState({ error } as any);
   }
-  fsm.sendEvent({ type: event });
+  fsm.send(event as any);
+  return Promise.resolve();
 }
 
 /**

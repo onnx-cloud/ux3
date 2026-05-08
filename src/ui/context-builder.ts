@@ -7,7 +7,7 @@ import { StateMachine } from '../fsm/state-machine.js';
 import { FSMRegistry } from '../fsm/registry.js';
 import type { StateConfig } from '../fsm/types.js';
 import { ServiceFactory } from '../services/service-factory.js';
-import { LogLevel } from '../security/observability.js';
+import { LogLevel, defaultLogger } from '../security/observability.js';
 import { Router } from '../services/router.js';
 import type { Service, ServiceConfig } from '../services/types.js';
 import { InvokeRegistry } from '../services/invoke-registry.js';
@@ -116,6 +116,11 @@ export class AppContextBuilder {
             context,
             timestamp: Date.now(),
           });
+          this.emitDevTools('fsm', 'transition', {
+            machine: name,
+            state,
+            context,
+          });
         });
       }
     } catch (error) {
@@ -154,6 +159,7 @@ export class AppContextBuilder {
         import('../security/observability.js').then(({ defaultLogger }) => {
           defaultLogger.debug('service.initialized', { name, type: serviceSpec.type, adapter: serviceSpec.adapter });
         });
+        this.emitDevTools('service', 'registered', { name, type: serviceSpec.type, adapter: serviceSpec.adapter });
       }
     } catch (error) {
       this.handleError(new Error(`Failed to build services: ${error}`), true);
@@ -212,7 +218,7 @@ export class AppContextBuilder {
               const module = await import(resolvedPath);
               return module.default || module;
             } catch (e) {
-              console.warn(`[AppContextBuilder] Failed to lazy-load widget ${name}: ${e}`);
+              defaultLogger.warn(`[AppContextBuilder] Failed to lazy-load widget ${name}`, { error: String(e) });
               return null;
             }
           });
@@ -223,7 +229,7 @@ export class AppContextBuilder {
             const widget = require(resolvedPath);
             this.widgets.register(name, widget.default || widget);
           } catch (e) {
-            console.warn(`[AppContextBuilder] Failed to load widget ${name}: ${e}`);
+            defaultLogger.warn(`[AppContextBuilder] Failed to load widget ${name}`, { error: String(e) });
             // Do not throw - widget loading failures are non-fatal in builder
           }
         }
@@ -329,6 +335,17 @@ export class AppContextBuilder {
   }
 
   /**
+   * Emit a devtools event when the devtools service is available.
+   */
+  private emitDevTools(source: string, type: string, payload?: any): void {
+    if (typeof window === 'undefined') return;
+    const devTools = (window as any).__ux3DevTools;
+    if (devTools && typeof devTools.emit === 'function') {
+      devTools.emit(source, type, { ...(payload || {}), timestamp: Date.now() });
+    }
+  }
+
+  /**
    * Build and return AppContext
    */
   build(): AppContext {
@@ -379,7 +396,7 @@ export class AppContextBuilder {
         }
       }
 
-      console.warn(`[AppContextBuilder] Template not found: ${name}`);
+      defaultLogger.warn(`[AppContextBuilder] Template not found: ${name}`);
       return '';
     };
 
@@ -493,7 +510,7 @@ export class AppContextBuilder {
 
     context.registerService = (name, factory) => {
       if (context.services[name]) {
-        console.warn(`[AppContext] service ${name} already exists, overwriting`);
+        defaultLogger.warn(`[AppContext] service ${name} already exists, overwriting`);
       }
       context.services[name] = factory();
     };
@@ -540,11 +557,11 @@ export class AppContextBuilder {
           try {
             await result;
           } catch (e) {
-            console.error('[AppContext] plugin install failed', e);
+            defaultLogger.error('[AppContext] plugin install failed', e instanceof Error ? e : new Error(String(e)));
           }
         }
       } catch (err) {
-        console.error('[AppContext] plugin install failed', err);
+        defaultLogger.error('[AppContext] plugin install failed', err instanceof Error ? err : new Error(String(err)));
       }
     };
 
@@ -620,7 +637,7 @@ export async function hydrate(
     try {
       await (app as any).reconnectServices?.();
     } catch (err) {
-      console.warn('[UX3] service reconnection failed', err);
+      defaultLogger.warn('[UX3] service reconnection failed', { error: String(err) });
     }
   }
 
@@ -692,6 +709,11 @@ export async function createAppContext(
       hooks: Array.from(hookNames),
       status: 'active',
     });
+    devTools.emit('plugin', 'installed', {
+      name: plugin.name,
+      version: plugin.version,
+      hooks: Array.from(hookNames),
+    });
   };
 
   // Install plugins from config (dev-tools is built-in, others via dynamic import for Node.js).
@@ -750,11 +772,34 @@ export async function createAppContext(
         recordInstalledPlugin(ContentPlugin as Plugin);
       }
     } catch (e) {
-      console.warn('[AppContext] content plugin not loaded', e instanceof Error ? e.message : String(e));
+      defaultLogger.warn('[AppContext] content plugin not loaded', { error: e instanceof Error ? e.message : String(e) });
     }
   }
 
   mountInspector(context);
+
+  // Bridge framework logger output into the devtools event stream.
+  if (typeof window !== 'undefined' && (window as any).__ux3DevTools) {
+    try {
+      if (typeof defaultLogger.warn !== 'function' || typeof defaultLogger.error !== 'function') {
+        // Logger has been spied/mocked — skip bridge to avoid breaking tests
+      } else {
+        const devTools = (window as any).__ux3DevTools;
+        const originalWarn = defaultLogger.warn.bind(defaultLogger);
+        const originalError = defaultLogger.error.bind(defaultLogger);
+        defaultLogger.warn = (message: string, context?: Record<string, unknown>) => {
+          originalWarn(message, context);
+          devTools.emit('logger', 'warn', { message, context });
+        };
+        defaultLogger.error = (message: string, error?: Error, context?: Record<string, unknown>) => {
+          originalError(message, error, context);
+          devTools.emit('logger', 'error', { message, error: error?.message, context });
+        };
+      }
+    } catch {
+      // Logger bridge unavailable
+    }
+  }
 
   // Transition FSM through service lifecycle phases
   await transitionAppFSM(appFSM, 'BUILD_COMPLETE', context);
@@ -765,7 +810,7 @@ export async function createAppContext(
     try {
       setupNavigation(context);
     } catch (err) {
-      console.warn('[AppContext] setupNavigation failed', err);
+      defaultLogger.warn('[AppContext] setupNavigation failed', { error: String(err) });
     }
   }
 

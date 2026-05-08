@@ -140,5 +140,61 @@ export const builtInHelpers = {
     }
     return current;
   },
+
+  // Markdown: basic inline markdown-to-HTML conversion
+  markdown: (text: unknown) => {
+    const s = String(text || '');
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      .replace(/^/, '<p>')
+      .replace(/$/, '</p>');
+  },
+
+  // formatTime: relative or ISO timestamp formatting
+  formatTime: (ts: unknown) => {
+    const date = new Date(ts as string | number);
+    if (isNaN(date.getTime())) return String(ts || '');
+    const now = Date.now();
+    const diff = now - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
+  },
+
+  // i18n: resolve locale key with optional params
+  // Usage: {{ i18n 'path.to.key' }} or {{ i18n 'path.to.key' param }}
+  i18n: (...args: unknown[]) => {
+    const key = String(args[0] || '');
+    // Global i18n map stored on HandlebarsLite instance via custom options
+    // Falls back to key as display text if no i18n map is available
+    const i18nMap = (globalThis as any).__ux3I18nMap as Record<string, string> | undefined;
+    if (i18nMap && key in i18nMap) {
+      const template = i18nMap[key];
+      const params = args.slice(1);
+      return params.length > 0 ? template.replace(/\{(\d+)\}/g, (_, i) => String(params[Number(i)] ?? '')) : template;
+    }
+    // Fallback: show key as text for dev visibility
+    return key;
+  },
+
+  // concat: string concatenation helper
+  // Usage: {{ concat 'prefix.' value }}
+  concat: (...args: unknown[]) => {
+    return args.map(a => String(a ?? '')).join('');
+  },
 /* eslint-enable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 };

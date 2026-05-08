@@ -16,6 +16,7 @@ states:
     template: launcher-icon.html
     on:
       CLICK: opening
+      MINIMIZE: minimized
 
   opening:
     template: launcher-opening.html
@@ -61,6 +62,7 @@ states:
           SEND:
             target: sending
           CLOSE: '#idle'
+          MINIMIZE: minimized
 
       sending:
         invoke:

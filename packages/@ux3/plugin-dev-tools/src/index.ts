@@ -1,11 +1,9 @@
 import type { Plugin } from '../../../../src/plugin/registry.js';
 import type { AppContext } from '../../../../src/ui/app.js';
-import { createRequire } from 'module';
 import { createDevToolsService } from './services/dev-tools.service.js';
 import type { DevToolsApi, DevToolsPluginConfig } from './types.js';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '1.0.0';
 
 declare global {
   interface Window {

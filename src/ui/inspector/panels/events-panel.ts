@@ -1,11 +1,48 @@
 /**
  * Events Panel — chronological timeline from the inspector event bus.
  * Circular buffer (500 entries), filterable by source type, exportable.
+ * Uses incremental rendering to append new events instead of full rebuild.
  */
 
 import { inspectorBus, type InspectorEventSource } from '../event-bus.js';
 
 const ALL_SOURCES: InspectorEventSource[] = ['fsm', 'service', 'navigation', 'plugin', 'logger', 'validation'];
+
+const SOURCE_COLORS: Record<string, string> = {
+  fsm: '#4caf50',
+  service: '#2196f3',
+  navigation: '#ff9800',
+  plugin: '#9c27b0',
+  logger: '#888',
+  validation: '#f44336',
+};
+
+function buildRow(ev: { ts: number; source: string; type: string; payload?: unknown }): HTMLElement {
+  const row = document.createElement('div');
+  row.style.cssText = 'padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:6px;';
+
+  const time = document.createElement('span');
+  time.style.cssText = 'color:#888;min-width:70px;';
+  time.textContent = new Date(ev.ts).toLocaleTimeString();
+
+  const src = document.createElement('span');
+  src.style.cssText = `color:${SOURCE_COLORS[ev.source] ?? '#fff'};min-width:70px;`;
+  src.textContent = ev.source;
+
+  const type = document.createElement('span');
+  type.style.cssText = 'color:#dcdcaa;min-width:100px;';
+  type.textContent = ev.type;
+
+  const payload = document.createElement('span');
+  payload.style.cssText = 'color:#ce9178;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+  if (ev.payload !== undefined) {
+    payload.textContent = JSON.stringify(ev.payload);
+    payload.title = JSON.stringify(ev.payload, null, 2);
+  }
+
+  row.append(time, src, type, payload);
+  return row;
+}
 
 export function createEventsPanel(_ctx?: any): HTMLElement {
   const root = document.createElement('div');
@@ -27,7 +64,7 @@ export function createEventsPanel(_ctx?: any): HTMLElement {
     cb.addEventListener('change', () => {
       if (cb.checked) activeFilters.add(src);
       else activeFilters.delete(src);
-      render();
+      fullRender();
     });
     checkboxes.set(src, cb);
     label.appendChild(cb);
@@ -52,58 +89,38 @@ export function createEventsPanel(_ctx?: any): HTMLElement {
 
   // Log area
   const log = document.createElement('div');
-  log.style.cssText = 'flex:1;overflow:auto;font-family:monospace;border:1px solid var(--ins-border);border-radius:3px;padding:4px;';
+  log.style.cssText = 'flex:1;overflow:auto;font-family:monospace;border:1px solid var(--ins-border);border-radius:3px;padding:4px;display:flex;flex-direction:column-reverse;';
   root.appendChild(log);
 
-  const SOURCE_COLORS: Record<string, string> = {
-    fsm: '#4caf50',
-    service: '#2196f3',
-    navigation: '#ff9800',
-    plugin: '#9c27b0',
-    logger: '#888',
-    validation: '#f44336',
-  };
+  // Track rendered count for incremental updates
+  let renderedCount = 0;
 
-  const render = () => {
+  const fullRender = () => {
     log.innerHTML = '';
+    renderedCount = 0;
     const events = inspectorBus.getAll().filter(e => activeFilters.has(e.source));
-    // Render newest first
     for (let i = events.length - 1; i >= 0; i--) {
-      const ev = events[i];
-      const row = document.createElement('div');
-      row.style.cssText = 'padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:6px;';
-
-      const time = document.createElement('span');
-      time.style.cssText = 'color:#888;min-width:70px;';
-      time.textContent = new Date(ev.ts).toLocaleTimeString();
-
-      const src = document.createElement('span');
-      src.style.cssText = `color:${SOURCE_COLORS[ev.source] ?? '#fff'};min-width:70px;`;
-      src.textContent = ev.source;
-
-      const type = document.createElement('span');
-      type.style.cssText = 'color:#dcdcaa;min-width:100px;';
-      type.textContent = ev.type;
-
-      const payload = document.createElement('span');
-      payload.style.cssText = 'color:#ce9178;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-      if (ev.payload !== undefined) {
-        payload.textContent = JSON.stringify(ev.payload);
-        payload.title = JSON.stringify(ev.payload, null, 2);
-      }
-
-      row.appendChild(time);
-      row.appendChild(src);
-      row.appendChild(type);
-      row.appendChild(payload);
+      const row = buildRow(events[i]);
       log.appendChild(row);
     }
+    renderedCount = events.length;
   };
 
-  render();
+  const appendNew = () => {
+    const events = inspectorBus.getAll();
+    if (events.length <= renderedCount) return;
+    const newEvents = events.slice(renderedCount).filter(e => activeFilters.has(e.source));
+    for (const ev of newEvents) {
+      const row = buildRow(ev);
+      log.insertBefore(row, log.firstChild);
+    }
+    renderedCount = events.length;
+  };
 
-  // Subscribe to new events
-  const unsub = inspectorBus.subscribe(() => render());
+  fullRender();
+
+  // Subscribe to new events — use incremental append for performance
+  const unsub = inspectorBus.subscribe(() => appendNew());
 
   // Cleanup
   const obs = new MutationObserver(() => {

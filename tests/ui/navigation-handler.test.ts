@@ -127,8 +127,10 @@ describe('BUG-9: parameterised route matching', () => {
     // fallback view already mounted from handleNavigationEvent.
     navigateTo('/market', ctx);      // '/market' has no exchange segment
     const content = document.querySelector('#ux-content');
-    // No view should be mounted because no route matched
-    expect(content!.firstElementChild).toBeNull();
+    // A 404 fallback div is mounted when no route matches
+    const fallback = content!.firstElementChild;
+    expect(fallback).not.toBeNull();
+    expect(fallback!.classList.contains('ux-not-found')).toBe(true);
   });
 
   it('should match multiple :param segments in the same path', () => {
@@ -348,5 +350,103 @@ describe('canNavigate guard', () => {
 
     navigateTo('/news', ctx);
     expect(document.querySelector('#ux-content')!.firstElementChild!.tagName.toLowerCase()).toBe('ux-news');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Locale-aware routing integration
+// ---------------------------------------------------------------------------
+
+describe('locale-aware routing', () => {
+  it('navigateTo applies locale prefix when locale service provides getRoutePrefix', () => {
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const ctx = makeCtx();
+    (ctx as any).locale = {
+      getRoutePrefix: () => '/fr',
+    };
+
+    navigateTo('/news', ctx);
+
+    // Path should have locale prefix prepended
+    expect(pushState).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/fr/news' }),
+      '',
+      '/fr/news'
+    );
+    pushState.mockRestore();
+  });
+
+  it('navigateTo does not double-apply locale prefix', () => {
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const ctx = makeCtx();
+    (ctx as any).locale = {
+      getRoutePrefix: () => '/fr',
+    };
+
+    navigateTo('/fr/news', ctx);
+
+    // Path already has prefix — should not double it
+    expect(pushState).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/fr/news' }),
+      '',
+      '/fr/news'
+    );
+    pushState.mockRestore();
+  });
+
+  it('handleNavigationEvent strips locale prefix before matching routes', () => {
+    const ctx = makeCtx([
+      { path: '/news', view: 'news' },
+      { path: '/', view: 'home' },
+    ]);
+    (ctx as any).locale = {
+      getRoutePrefix: () => '/fr',
+    };
+
+    // Simulate navigating to /fr/news via popstate
+    window.history.pushState({}, '', '/fr/news');
+    setupNavigation(ctx);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    const content = document.querySelector('#ux-content');
+    expect(content!.firstElementChild!.tagName.toLowerCase()).toBe('ux-news');
+  });
+
+  it('handleNavigationEvent uses raw path when no locale prefix', () => {
+    const ctx = makeCtx([
+      { path: '/news', view: 'news' },
+    ]);
+    (ctx as any).locale = {
+      getRoutePrefix: () => '',
+    };
+
+    window.history.pushState({}, '', '/news');
+    setupNavigation(ctx);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    const content = document.querySelector('#ux-content');
+    expect(content!.firstElementChild!.tagName.toLowerCase()).toBe('ux-news');
+  });
+
+  it('mounts 404 on unmatched route after prefix strip', () => {
+    const ctx = makeCtx([
+      { path: '/dashboard', view: 'dashboard' },
+    ]);
+    (ctx as any).locale = {
+      getRoutePrefix: () => '/fr',
+    };
+    if (!customElements.get('ux-dashboard')) {
+      customElements.define('ux-dashboard', class extends HTMLElement {});
+    }
+
+    // /fr/nonexistent should not match /dashboard
+    window.history.pushState({}, '', '/fr/nonexistent');
+    setupNavigation(ctx);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    const content = document.querySelector('#ux-content');
+    const child = content!.firstElementChild;
+    expect(child).not.toBeNull();
+    expect(child!.classList.contains('ux-not-found')).toBe(true);
   });
 });

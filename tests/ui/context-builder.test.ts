@@ -343,8 +343,9 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       expect(template).toBe('<form><input name="email"/></form>');
     });
 
-    it('should warn on missing template', () => {
-      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    it('should warn on missing template', async () => {
+      const { defaultLogger } = await import('../../src/security/observability.js');
+      const spy = vi.spyOn(defaultLogger, 'warn').mockImplementation(() => {});
 
       const builder = new AppContextBuilder(config);
       builder.withTemplates();

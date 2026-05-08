@@ -1,0 +1,60 @@
+# MCP resource specs — URI-addressable data available to LLM clients.
+
+resources:
+  schema:
+    - uri: /schema/view
+      name: View Schema
+      description: JSON Schema for UX3 views
+      mimeType: application/json
+      handler: schema.view
+
+    - uri: /schema/i18n
+      name: i18n Schema
+      description: JSON Schema for i18n declarations
+      mimeType: application/json
+      handler: schema.i18n
+
+    - uri: /schema/style
+      name: Style Schema
+      description: JSON Schema for styles
+      mimeType: application/json
+      handler: schema.style
+
+  project:
+    - uri: /project/structure
+      name: Project Structure
+      description: Directory tree and stats for the current project
+      mimeType: text/plain
+      handler: project.structure
+
+    - uri: /project/services
+      name: Project Services
+      description: Service registry and signatures
+      mimeType: text/plain
+      handler: project.services
+
+    - uri: /project/config
+      name: Project Config
+      description: Current ux3.yaml config contents
+      mimeType: application/yaml
+      handler: project.config
+
+  generated:
+    - uri: /generated/chat-types
+      name: Chat Types
+      description: Chat-related generated TypeScript types
+      mimeType: application/typescript
+      handler: generated.chat-types
+
+  dynamic:
+    - uri: /views/{name}
+      name: View Resource
+      description: Dynamic view resource — resolve view YAML, template, and style files by view name
+      mimeType: application/json
+      handler: views.read
+
+    - uri: /examples/{name}
+      name: Example Resource
+      description: Example app metadata — resolve example project structure and config by name
+      mimeType: application/json
+      handler: examples.read

@@ -53,6 +53,12 @@ describe('TranslatePlugin', () => {
     TranslatePlugin.install?.(mockApp);
     const [, factory] = mockApp.registerService.mock.calls[0];
     const service = factory();
+    // Provide a minimal locale service so setLocale delegates correctly
+    let currentLocale = 'en';
+    mockApp.locale = {
+      setLocale(locale: string) { currentLocale = locale; },
+      get locale() { return { primary: currentLocale, language: currentLocale }; },
+    };
     service.setLocale('fr');
     expect(service.locale).toBe('fr');
   });

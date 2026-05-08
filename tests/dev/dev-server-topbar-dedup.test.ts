@@ -43,8 +43,8 @@ describe('Topbar deduplication', () => {
     await fs.writeFile(path.join(temp, 'ux', 'widget', 'index.yaml'),
       `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
-    await fs.writeFile(path.join(temp, 'ux', 'i18n', 'en', 'common.yaml'),
-      `site:\n  title: Test App\n  description: A test app`);
+    await fs.writeFile(path.join(temp, 'ux', 'i18n', 'en', 'site.yaml'),
+      `title: Test App\ndescription: A test app`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const port = 3770;
@@ -80,8 +80,8 @@ describe('Topbar deduplication', () => {
     await fs.writeFile(path.join(temp, 'ux', 'widget', 'index.yaml'),
       `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
-    await fs.writeFile(path.join(temp, 'ux', 'i18n', 'en', 'common.yaml'),
-      `site:\n  title: Minimal\n  description: A minimal app`);
+    await fs.writeFile(path.join(temp, 'ux', 'i18n', 'en', 'site.yaml'),
+      `title: Minimal\ndescription: A minimal app`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const port = 3771;
@@ -128,8 +128,8 @@ describe('Topbar deduplication', () => {
     await fs.writeFile(path.join(temp, 'ux', 'widget', 'index.yaml'),
       `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
-    await fs.writeFile(path.join(temp, 'ux', 'i18n', 'en', 'common.yaml'),
-      `site:\n  title: Feature App\n  description: Feature app`);
+    await fs.writeFile(path.join(temp, 'ux', 'i18n', 'en', 'site.yaml'),
+      `title: Feature App\ndescription: Feature app`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
     const port = 3772;

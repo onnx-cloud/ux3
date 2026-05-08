@@ -209,6 +209,9 @@ export class UxThemeToggle extends UxBase {
 }
 
 export class UxNetworkStatus extends UxBase {
+  private showTooltip = false;
+  private tooltipTimer: ReturnType<typeof setTimeout> | null = null;
+
   protected onConnected(): void {
     super.onConnected();
     if (!this.shadowRoot) {
@@ -222,6 +225,9 @@ export class UxNetworkStatus extends UxBase {
   protected onDisconnected(): void {
     window.removeEventListener('online', this.onConnectivityChange);
     window.removeEventListener('offline', this.onConnectivityChange);
+    if (this.tooltipTimer) {
+      clearTimeout(this.tooltipTimer);
+    }
   }
 
   private render(): void {
@@ -231,16 +237,47 @@ export class UxNetworkStatus extends UxBase {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host { display: inline-flex; align-items: center; gap: var(--ux-status-gap, 0.375rem); }
+        :host { display: inline-flex; align-items: center; gap: var(--ux-status-gap, 0.375rem); position: relative; cursor: default; }
         .dot {
           width: var(--ux-status-dot-size, 0.625rem);
           height: var(--ux-status-dot-size, 0.625rem);
           border-radius: 50%;
-          background: var(--status-color, var(--ux-status-online, #16a34a));
+          background: var(--ux-status-color, var(--ux-status-online, #16a34a));
+          transition: background var(--ux-status-transition, 0.2s ease);
         }
+        :host([online]) .dot {
+          background: var(--ux-status-color, var(--ux-status-online, #16a34a));
+        }
+        :host(:not([online])) .dot {
+          background: var(--ux-status-offline, #dc2626);
+        }
+        .label {
+          font: inherit;
+          color: inherit;
+        }
+        .tooltip {
+          display: none;
+          position: absolute;
+          bottom: calc(100% + 6px);
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--ux-tooltip-bg, #0f172a);
+          color: var(--ux-tooltip-color, #e2e8f0);
+          border: 1px solid var(--ux-tooltip-border, #334155);
+          border-radius: 6px;
+          padding: 6px 10px;
+          font-size: 11px;
+          white-space: nowrap;
+          z-index: 10000;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        :host(:hover) .tooltip,
+        :host(:focus-within) .tooltip { display: block; }
       </style>
       <span class="dot" aria-hidden="true"></span>
-      <span part="label" aria-live="polite"></span>
+      <span part="label" class="label" aria-live="polite"></span>
+      <slot name="tooltip"></slot>
+      <span part="tooltip" class="tooltip"><slot name="tooltip-content">${this.getTooltipContent()}</slot></span>
     `;
     this.update();
   }
@@ -253,15 +290,50 @@ export class UxNetworkStatus extends UxBase {
     }));
   };
 
+  private getLabel(): string {
+    const onlineLabel = this.getAttribute('label-online') || 'Online';
+    const offlineLabel = this.getAttribute('label-offline') || 'Offline';
+    const app = (window as any).__ux3App;
+    const i18n = app?.i18n;
+    if (navigator.onLine) {
+      return i18n ? i18n('network.online') || onlineLabel : onlineLabel;
+    }
+    return i18n ? i18n('network.offline') || offlineLabel : offlineLabel;
+  }
+
+  private getTooltipContent(): string {
+    const app = (window as any).__ux3App;
+    const i18n = app?.i18n;
+    if (navigator.onLine) {
+      return i18n ? (i18n('network.tooltip.online') || 'Connected to the internet') : 'Connected to the internet';
+    }
+    return i18n ? (i18n('network.tooltip.offline') || 'No internet connection') : 'No internet connection';
+  }
+
   private update(): void {
     if (!this.shadowRoot) {
       return;
     }
-    const dot = this.shadowRoot.querySelector('.dot') as HTMLSpanElement;
     const isOnline = navigator.onLine;
-    // TODO: use theme colors for online/offline status (success/error) instead of hardcoded green/red
-    dot.style.background = isOnline ? '#16a34a' : '#dc2626';
+    const label = this.getLabel();
+
+    const labelEl = this.shadowRoot.querySelector('.label') as HTMLSpanElement;
+    if (labelEl) {
+      labelEl.textContent = label;
+    }
+
+    const tooltipSpan = this.shadowRoot.querySelector('.tooltip slot[name="tooltip-content"]') as HTMLSlotElement;
+    if (tooltipSpan && !this.querySelector('[slot="tooltip-content"]')) {
+      const parent = tooltipSpan.parentElement;
+      if (parent && !parent.querySelector(':scope > [slot]')) {
+        parent.textContent = this.getTooltipContent();
+        const newSlot = document.createElement('slot');
+        newSlot.name = 'tooltip-content';
+        parent.appendChild(newSlot);
+      }
+    }
+
     this.toggleAttribute('online', isOnline);
-    this.setAttribute('aria-label', isOnline ? 'Online' : 'Offline');
+    this.setAttribute('aria-label', label);
   }
 }

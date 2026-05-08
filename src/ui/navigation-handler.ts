@@ -15,6 +15,14 @@ import type { AppContext } from './app.js';
 import type { NavRoute } from '../services/router.js';
 import { defaultLogger } from '../security/observability.js';
 
+function emitDevTools(source: string, type: string, payload?: any): void {
+  if (typeof window === 'undefined') return;
+  const devTools = (window as any).__ux3DevTools;
+  if (devTools && typeof devTools.emit === 'function') {
+    devTools.emit(source, type, { ...(payload || {}), timestamp: Date.now() });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -240,7 +248,17 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
     return;
   }
 
-  const match = findRouteForPath(pathname, appContext.nav.routes);
+  // Strip locale prefix before matching routes
+  const localeSvc = (appContext as any).locale;
+  let pathnameForLookup = pathname;
+  if (localeSvc && typeof localeSvc.getRoutePrefix === 'function') {
+    const prefix = localeSvc.getRoutePrefix();
+    if (prefix) {
+      pathnameForLookup = stripLocalePrefix(pathname, prefix);
+    }
+  }
+
+  const match = findRouteForPath(pathnameForLookup, appContext.nav.routes);
 
   if (!match) {
     defaultLogger.warn(`[Navigation] No route found for path: ${pathname}`);
@@ -257,11 +275,10 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
 
   // Resolve locale-aware path (apply prefix if locale service provides one)
   let resolvedPath = pathname;
-  const localeSvc = (appContext as any).locale;
   if (localeSvc && typeof localeSvc.getRoutePrefix === 'function') {
     const prefix = localeSvc.getRoutePrefix();
     if (prefix && !resolvedPath.startsWith(prefix)) {
-      resolvedPath = prefix + resolvedPath;
+      resolvedPath = prefix + (pathnameForLookup === '/' ? '' : pathnameForLookup);
     }
   }
 
@@ -273,6 +290,7 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
   }
   mountView(targetView, params);
   defaultLogger.info(`[Navigation] Navigated to ${resolvedPath} (view: ${targetView})`);
+  emitDevTools('navigation', 'navigate', { path: resolvedPath, view: targetView, params });
 }
 
 /**
@@ -298,9 +316,11 @@ function handleNavigationEvent(appContext: AppContext): void {
 
   if (!match) {
     defaultLogger.warn(`[Navigation] No route for path: ${rawPathname} (lookup: ${pathnameForLookup})`);
+    emitDevTools('navigation', 'route.miss', { path: rawPathname, lookupPath: pathnameForLookup });
     mountNotFound();
     return;
   }
 
   mountView(match.view, match.params);
+  emitDevTools('navigation', 'route.mount', { path: rawPathname, view: match.view, params: match.params });
 }

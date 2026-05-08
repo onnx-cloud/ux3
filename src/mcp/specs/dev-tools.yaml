@@ -1,0 +1,152 @@
+# Dev-mode MCP tools — available only when dev server is running.
+# These tools enable live FSM inspection, state mutation, and hot reload.
+
+tools:
+  debug:
+    - name: fsm.snapshot
+      description: Get live FSM state of a running widget instance
+      input:
+        type: object
+        properties:
+          widgetId:
+            type: string
+            description: Widget instance ID
+        required: [widgetId]
+      handler: fsm.snapshot
+      devOnly: true
+      tags: [debug, live]
+
+    - name: fsm.dispatch
+      description: Send event to live FSM instance
+      input:
+        type: object
+        properties:
+          widgetId:
+            type: string
+            description: Widget instance ID
+          event:
+            type: string
+            description: Event name
+          payload:
+            type: object
+            description: Event payload
+        required: [widgetId, event]
+      handler: fsm.dispatch
+      devOnly: true
+      tags: [debug, mutate, live]
+
+    - name: fsm.list
+      description: List all active FSM instances with current state
+      input:
+        type: object
+        properties: {}
+        required: []
+      handler: fsm.list
+      devOnly: true
+      tags: [debug, browse, live]
+
+    - name: app-state.get
+      description: Read reactive state tree snapshot
+      input:
+        type: object
+        properties:
+          path:
+            type: string
+            description: "Dot-notation path (e.g. machines.MyView)"
+        required: []
+      handler: app-state.get
+      devOnly: true
+      tags: [debug, browse, live]
+
+    - name: service-registry.list
+      description: List active services and last invocation state
+      input:
+        type: object
+        properties: {}
+        required: []
+      handler: service-registry.list
+      devOnly: true
+      tags: [debug, browse, live]
+
+    - name: inspect.dom
+      description: Get live DOM state summaries
+      input:
+        type: object
+        properties:
+          selector:
+            type: string
+            description: Optional CSS selector to scope inspection
+        required: []
+      handler: inspect.dom
+      devOnly: true
+      tags: [debug, browse, live]
+
+  reload:
+    - name: rebuild.project
+      description: Re-run build pipeline and emit updated types
+      input:
+        type: object
+        properties:
+          target:
+            type: string
+            description: Optional build target filter
+        required: []
+      handler: rebuild.project
+      devOnly: true
+      tags: [debug, mutate]
+
+    - name: reload.view
+      description: "Hot-replace view YAML and template, notify FSM instances"
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: View name to reload
+        required: [name]
+      handler: reload.view
+      devOnly: true
+      tags: [debug, mutate, live]
+
+    - name: reload.style
+      description: Hot-replace styles and reapply to DOM
+      input:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Style name
+        required: []
+      handler: reload.style
+      devOnly: true
+      tags: [debug, mutate, live]
+
+  config:
+    - name: config.view
+      description: "Get/set view runtime overrides (disable animations, force state, etc.)"
+      input:
+        type: object
+        properties:
+          viewName:
+            type: string
+            description: View name
+          overrides:
+            type: object
+            description: Key-value overrides to apply
+        required: [viewName]
+      handler: config.view
+      devOnly: true
+      tags: [debug, config, live]
+
+    - name: config.fsm-logging
+      description: Enable FSM event logging
+      input:
+        type: object
+        properties:
+          enabled:
+            type: boolean
+            description: Enable or disable FSM logging
+        required: [enabled]
+      handler: config.fsm-logging
+      devOnly: true
+      tags: [debug, config]

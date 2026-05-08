@@ -116,7 +116,15 @@ export function createInspectorShell(
     'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
   pickBtn.addEventListener('click', togglePickMode);
 
-  header.append(title, summary, pickBtn, refreshBtn, collapseBtn, closeBtn);
+  const maximizeBtn = document.createElement('button');
+  maximizeBtn.type = 'button';
+  maximizeBtn.textContent = '⛶';
+  maximizeBtn.title = 'Maximize';
+  maximizeBtn.style.cssText =
+    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  maximizeBtn.addEventListener('click', toggleMaximized);
+
+  header.append(title, summary, pickBtn, maximizeBtn, refreshBtn, collapseBtn, closeBtn);
   // ---- end header ----
 
   // ---- element inspector tooltip ----
@@ -181,6 +189,53 @@ export function createInspectorShell(
     return lines;
   }
 
+  function breadcrumbChain(el: HTMLElement): string[] {
+    const chain: string[] = [];
+    let current: HTMLElement | null = el;
+    while (current && current !== document.body && current !== document.documentElement) {
+      const tag = current.tagName.toLowerCase();
+      if (tag.includes('-') || current.hasAttribute('ux-view') || current.hasAttribute('ux-route')) {
+        const label = current.getAttribute('ux-label') || 
+                       current.getAttribute('ux-view') || 
+                       current.id || 
+                       tag;
+        chain.unshift(label);
+      } else if (current.id || current.className) {
+        const id = current.id ? `#${current.id}` : '';
+        const cls = typeof current.className === 'string' ? `.${current.className.split(' ')[0]}` : '';
+        chain.unshift(tag + id + cls);
+      }
+      current = current.parentElement;
+    }
+    return chain;
+  }
+
+  function updateTitleForSelection(el: HTMLElement | null) {
+    if (el) {
+      const chain = breadcrumbChain(el);
+      const tag = el.tagName.toLowerCase();
+      const label = el.getAttribute('ux-label') || el.getAttribute('ux-view') || el.id || tag;
+      title.textContent = label;
+      title.style.color = '#fbbf24';
+      title.title = `Selection: ${chain.join(' > ')}`;
+      summary.textContent = chain.join(' › ');
+      summary.style.display = 'block';
+      summary.style.color = '#94a3b8';
+    } else {
+      title.textContent = 'UX3 Dev Inspector';
+      title.style.color = '#93c5fd';
+      title.title = '';
+      if (minimized) {
+        const tab = TABS.find((t) => t.id === activePanel);
+        summary.textContent = tab ? `${tab.label} — Active Route: ${window.location?.pathname || '/'}` : 'Dev Inspector';
+        summary.style.display = 'inline';
+      } else {
+        summary.style.display = 'none';
+      }
+      summary.style.color = '#94a3b8';
+    }
+  }
+
   function togglePickMode() {
     pickMode = !pickMode;
     pickLocked = null;
@@ -191,6 +246,7 @@ export function createInspectorShell(
       inspectOverlay.style.display = 'none';
       inspectTooltip.style.display = 'none';
       document.body.style.cursor = '';
+      updateTitleForSelection(null);
     } else {
       document.body.style.cursor = 'crosshair';
     }
@@ -227,7 +283,9 @@ export function createInspectorShell(
     inspectOverlay.style.height = `${rect.height}px`;
 
     inspectTooltip.style.display = 'block';
-    inspectTooltip.innerHTML = info.join('<br>').replace(/ /g, '&nbsp;');
+    const chain = breadcrumbChain(widgetEl);
+    const tooltipLines = chain.length ? [`Path: ${chain.join(' › ')}`, ''].concat(info) : info;
+    inspectTooltip.innerHTML = tooltipLines.join('<br>').replace(/ /g, '&nbsp;');
     
     let tx = event.clientX + 16;
     let ty = event.clientY - 16;
@@ -245,6 +303,7 @@ export function createInspectorShell(
     if (!target || target.closest('#ux3-devtools-inspector')) return;
     if (pickLocked) {
       pickLocked = null;
+      updateTitleForSelection(null);
       inspectOverlay.style.display = 'none';
       inspectTooltip.style.display = 'none';
       return;
@@ -256,6 +315,7 @@ export function createInspectorShell(
     }
     if (widgetEl) {
       pickLocked = widgetEl;
+      updateTitleForSelection(widgetEl);
       const info = getWidgetInfo(widgetEl);
       inspectTooltip.innerHTML = ['🔒 Locked — click again to release', ''].concat(info).join('<br>').replace(/ /g, '&nbsp;');
     }
@@ -387,6 +447,51 @@ export function createInspectorShell(
     }
     if (!minimized && !panelHost.querySelector('.ux3-inspector-panel')) {
       switchPanel(activePanel);
+    }
+  }
+
+  // ---- maximize ----
+  let maximized = false;
+  let preMaximize: { width: string; height: string; maxHeight: string; left: string; top: string; bottom: string; right: string } | null = null;
+
+  function toggleMaximized() {
+    maximized = !maximized;
+    maximizeBtn.textContent = maximized ? '🗖' : '⛶';
+    maximizeBtn.title = maximized ? 'Restore' : 'Maximize';
+
+    if (maximized) {
+      preMaximize = {
+        width: root.style.width,
+        height: root.style.height,
+        maxHeight: root.style.maxHeight,
+        left: root.style.left,
+        top: root.style.top,
+        bottom: root.style.bottom,
+        right: root.style.right,
+      };
+      root.style.width = `calc(100vw - ${MARGIN * 2}px)`;
+      root.style.height = `calc(100vh - ${MARGIN * 2}px)`;
+      root.style.maxHeight = `calc(100vh - ${MARGIN * 2}px)`;
+      root.style.left = `${MARGIN}px`;
+      root.style.top = `${MARGIN}px`;
+      root.style.right = 'auto';
+      root.style.bottom = 'auto';
+      root.style.opacity = '1';
+      dockTarget = 'custom';
+    } else if (preMaximize) {
+      root.style.width = preMaximize.width;
+      root.style.height = preMaximize.height;
+      root.style.maxHeight = preMaximize.maxHeight;
+      root.style.left = preMaximize.left;
+      root.style.top = preMaximize.top;
+      root.style.bottom = preMaximize.bottom;
+      root.style.right = preMaximize.right;
+      if (minimized) {
+        root.style.opacity = '0.5';
+      } else {
+        root.style.opacity = '1';
+      }
+      preMaximize = null;
     }
   }
 
@@ -571,14 +676,24 @@ export function createInspectorShell(
       l.textContent = label;
       const v = document.createElement('span');
       v.textContent = value;
+      v.style.cssText = 'transition:color 0.12s;';
+      const arrow = document.createElement('span');
+      arrow.textContent = '→ ';
+      arrow.style.cssText = 'color:transparent;transition:color 0.12s;';
+      v.prepend(arrow);
       row.append(l, v);
 
       if (targetPanel) {
         row.style.cursor = 'pointer';
         row.title = `Open ${label} panel`;
+        row.setAttribute('tabindex', '0');
+        row.setAttribute('role', 'link');
         row.addEventListener('click', () => switchPanel(targetPanel));
-        row.addEventListener('mouseenter', () => { row.style.background = '#1e293b'; });
-        row.addEventListener('mouseleave', () => { row.style.background = ''; });
+        row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') switchPanel(targetPanel); });
+        row.addEventListener('mouseenter', () => { row.style.background = '#1e293b'; arrow.style.color = '#fbbf24'; v.style.color = '#fbbf24'; });
+        row.addEventListener('mouseleave', () => { row.style.background = ''; arrow.style.color = 'transparent'; v.style.color = ''; });
+        row.addEventListener('focus', () => { row.style.background = '#1e293b'; arrow.style.color = '#fbbf24'; v.style.color = '#fbbf24'; });
+        row.addEventListener('blur', () => { row.style.background = ''; arrow.style.color = 'transparent'; v.style.color = ''; });
       }
 
       container.appendChild(row);
@@ -602,26 +717,65 @@ export function createInspectorShell(
       config.development.inspector || config.development.devTools
     ));
 
-    const items = [
-      ['App Version', config.version || 'unknown'],
+    const activeLocale = ctx.locale?.locale?.primary || '—';
+    const supportedLocales = ctx.locale?.supportedLocales?.join(', ') || '—';
+    const prefix = ctx.locale?.getRoutePrefix?.() || '';
+    const routeMode = (config?.i18n?.routeMode) || (prefix ? 'prefix-optional' : 'no-prefix');
+    const localeSource = ctx.locale?.locale?.source || '—';
+    const direction = ctx.locale?.locale?.direction || '—';
+
+    const pkgName = config.name || config.site?.name || '—';
+    const pkgVersion = config.version || '—';
+
+    const plugins = devToolsSnapshot?.plugins ?? [];
+    const activePlugins = Array.isArray(plugins) ? plugins.map((p: any) => p.name || p).join(', ') : '—';
+
+    const machineCount = Object.keys(ctx.machines || {}).length;
+    const serviceCount = Object.keys(ctx.services || {}).length;
+    const navMode = ctx.nav?.routes?.length ? `${ctx.nav.routes.length} routes` : 'none';
+
+    const sections: Array<[string, string]> = [
+      ['— Framework —', ''],
+      ['App Name', pkgName],
+      ['App Version', pkgVersion],
       ['Dev Tools Version', devToolsVersion],
-      ['Site Name', config.site?.name || '—'],
+      ['', ''],
+      ['— Locale & Routing —', ''],
+      ['Active Locale', activeLocale],
+      ['Supported Locales', supportedLocales],
+      ['Route Mode', routeMode],
+      ['Locale Source', localeSource],
+      ['Direction', direction],
+      ['Navigation', navMode],
+      ['', ''],
+      ['— Runtime —', ''],
       ['Development', isDevelopment ? 'yes' : 'no'],
       ['Hot Reload', config.development?.hotReload ? 'yes' : 'no'],
       ['Log Level', config.development?.logging || 'info'],
       ['Inspector', config.development?.inspector ? 'yes' : 'no'],
+      ['FSM Machines', `${machineCount}`],
+      ['Services', `${serviceCount}`],
+      ['', ''],
+      ['— Plugins —', ''],
+      ['Active Plugins', activePlugins],
     ];
 
-    for (const [label, value] of items) {
+    for (const [label, value] of sections) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e293b;';
       const l = document.createElement('span');
-      l.style.color = '#94a3b8';
-      l.textContent = label;
+      if (label.startsWith('—') && label.endsWith('—')) {
+        l.style.cssText = 'color:#64748b;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;font-size:10px;';
+        l.textContent = label.replace(/—/g, '').trim();
+        row.style.borderBottom = 'none';
+      } else {
+        l.style.color = '#94a3b8';
+        l.textContent = label;
+      }
       const v = document.createElement('span');
-      v.textContent = String(value);
+      v.textContent = value;
       row.append(l, v);
-      container.appendChild(row);
+      if (label !== '') container.appendChild(row);
     }
     return container;
   }

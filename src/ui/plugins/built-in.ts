@@ -5,9 +5,11 @@
  * and the devTools telemetry service. Installed automatically when the
  * @ux3/plugin-dev-tools entry appears in config.plugins or
  * config.development.inspector / devTools is set.
+ *
+ * Delegates to the @ux3/plugin-dev-tools package as the single source of truth
+ * for devtools install behaviour, flag resolution, and the inspector shell.
  */
-import type { Plugin } from '../../plugin/registry.js';
-import { createDevToolsService } from '../../../packages/@ux3/plugin-dev-tools/src/services/dev-tools.service.js';
+import { DevToolsPlugin } from '../../../packages/@ux3/plugin-dev-tools/src/index.js';
 import { createInspectorShell } from '../../../packages/@ux3/plugin-dev-tools/src/inspector/inspector-shell.js';
 
 function extractDevToolsPluginConfig(entry: any): Record<string, unknown> | null {
@@ -39,28 +41,7 @@ export function resolveDevToolsFlags(config: any): { inspector: boolean; devTool
   };
 }
 
-export const builtInDevToolsPlugin: Plugin = {
-  name: '@ux3/plugin-dev-tools',
-  version: 'workspace',
-  description: 'UX3 development tools plugin (inspector, diagnostics, and event stream)',
-  async install(app) {
-    const service = createDevToolsService();
-    const flags = resolveDevToolsFlags(app.config);
-
-    app.utils = app.utils || {};
-    (app.utils as any).devTools = service;
-    app.registerService?.('devTools', () => service as any);
-
-    if (typeof window !== 'undefined') {
-      (window as any).__ux3DevTools = service;
-    }
-
-    service.emit('system', 'dev-tools.installed', {
-      inspector: flags.inspector,
-      devTools: flags.devTools,
-    });
-  },
-};
+export const builtInDevToolsPlugin = DevToolsPlugin;
 
 export function mountInspector(appContext: any): void {
   const flags = resolveDevToolsFlags(appContext.config);
