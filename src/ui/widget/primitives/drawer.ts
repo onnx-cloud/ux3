@@ -7,7 +7,7 @@ export class UxDrawer extends UxToggle {
       if (e.key === 'Escape' && this.hasAttribute('open')) {
         this.removeAttribute('open');
         this.applyAriaState(false);
-        this.dispatchEvent(new CustomEvent('ux:close', { bubbles: true }));
+        this.dispatchEvent(new CustomEvent('ux:event', { bubbles: true, detail: { action: 'CLOSE' } }));
       }
     });
   }

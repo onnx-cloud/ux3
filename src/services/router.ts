@@ -65,11 +65,8 @@ export class Router {
       const paramMatch = route.path.match(/:(\w+)/g);
       const params = paramMatch ? paramMatch.map(p => p.slice(1)) : undefined;
 
-      // Derive label from i18n or use view name
-      let label: string | undefined;
-      if (route.view === 'home') label = 'header.home';
-      else if (route.view === 'market') label = 'header.market';
-      else if (route.view === 'account') label = 'header.account';
+      // Derive i18n label key from view name (convention: nav.{view})
+      const label = `nav.${route.view}`;
 
       navRoutes.push({
         path: route.path,

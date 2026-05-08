@@ -7,18 +7,18 @@ import { inspectorBus } from '../event-bus.js';
 
 export function createRoutesPanel(ctx: AppContext): HTMLElement {
   const root = document.createElement('div');
-  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;';
+  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;color:var(--ins-text);';
 
   const nav = ctx.nav;
 
   const currentBar = document.createElement('div');
-  currentBar.style.cssText = 'margin-bottom:8px;color:#888;';
+  currentBar.style.cssText = 'margin-bottom:8px;color:var(--ins-muted,#64748b);';
   currentBar.textContent = `Current: ${nav?.current?.path ?? (window.location.hash || window.location.pathname)}`;
   root.appendChild(currentBar);
 
   if (!nav || !nav.routes || nav.routes.length === 0) {
     const empty = document.createElement('div');
-    empty.style.color = '#888';
+    empty.style.color = 'var(--ins-muted,#64748b)';
     empty.textContent = 'No routes registered.';
     root.appendChild(empty);
     return root;
@@ -33,7 +33,7 @@ export function createRoutesPanel(ctx: AppContext): HTMLElement {
     const th = document.createElement('th');
     th.textContent = h;
     th.style.cssText =
-      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:#888;position:sticky;top:0;background:var(--ins-bg);';
+      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-muted,#64748b);position:sticky;top:0;background:var(--ins-bg);';
     hrow.appendChild(th);
   }
   thead.appendChild(hrow);
@@ -46,15 +46,15 @@ export function createRoutesPanel(ctx: AppContext): HTMLElement {
     tr.style.cssText = `cursor:pointer;${isActive ? 'background:rgba(15,52,96,0.6);' : ''}`;
 
     const tdPath = document.createElement('td');
-    tdPath.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);font-family:monospace;';
+    tdPath.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);font-family:monospace;color:var(--ins-key,#9cdcfe);';
     tdPath.textContent = route.path;
 
     const tdView = document.createElement('td');
-    tdView.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);';
+    tdView.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-text);';
     tdView.textContent = route.view;
 
     const tdGuard = document.createElement('td');
-    tdGuard.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);color:#888;';
+    tdGuard.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-muted,#64748b);';
     tdGuard.textContent = (route as any).guard ?? '—';
 
     const tdActive = document.createElement('td');

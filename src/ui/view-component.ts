@@ -29,6 +29,18 @@ export interface TemplateBindings {
 }
 
 /**
+ * Widget Configuration
+ * Defines metadata for widget factory and declarative behavior
+ */
+export interface WidgetConfig {
+  name: string;
+  state?: string;
+  style?: string;
+  template?: string;
+  props?: Record<string, any>;
+}
+
+/**
  * ViewComponent - Base Web Component for FSM-driven views
  * Each view has:
  * - A layout (shared HTML structure)
@@ -327,6 +339,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       }
     }
     this.gatheredClassSet = all;
+    // TODO: what is this ugly mess - not idiomatic, causes performance issues if there are many classes.  
+    // Need a more robust solution for sharing dynamic styles between shadow and light DOM>>
     let collector = document.getElementById('ux-class-collector');
     if (!collector) {
       collector = document.createElement('div');
@@ -336,6 +350,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       document.body.appendChild(collector);
     }
     collector.className = Array.from(all).join(' ');
+    // << end of ugly mess
     const tw = (window as any).tailwind;
     if (tw && typeof tw.refresh === 'function') {
       try { tw.refresh(); } catch { /* noop */ }
@@ -422,24 +437,24 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   private onFSMStateChange(state: string): void {
     try {
-      if (this.state !== state) {
-        this.state = state;
-        
-        // Reflect state to attribute for CSS-driven visibility
-        this.setAttribute('data-state', state);
-        
-        this.renderState(state);
+      const stateChanged = this.state !== state;
+      this.state = state;
+      
+      // Reflect state to attribute for CSS-driven visibility
+      this.setAttribute('data-state', state);
+      
+      // Always re-render on any FSM transition – context may have changed
+      this.renderState(state);
 
-        // execute any configured invoke for this state (service call, logic function, etc)
-        this.handleStateInvoke(state).catch(err => {
-          this.logger.error('state.invoke.error', { state, error: String(err) });
-        });
+      // execute any configured invoke for this state (service call, logic function, etc)
+      this.handleStateInvoke(state).catch(err => {
+        this.logger.error('state.invoke.error', { state, error: String(err) });
+      });
 
-        this.emitTelemetry('fsm:state-change', {
-          view: this.getAttribute('ux-view'),
-          state,
-        });
-      }
+      this.emitTelemetry('fsm:state-change', {
+        view: this.getAttribute('ux-view'),
+        state,
+      });
     } catch (error) {
       this.logger.error('state.change.error', { state, error: String(error) });
       this.showErrorState(error as Error);
@@ -555,6 +570,35 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       };
       this.templateEventDisposers.push(this.listen(element, eventName, listener));
     });
+
+    const eventHandler = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail?.action) {
+        this.fsm.send({ type: detail.action, payload: detail.payload || {} });
+      }
+    };
+    this.templateEventDisposers.push(
+      this.listen(contentArea, 'ux:event', eventHandler)
+    );
+
+    // Listen for ux:change from widgets (pass through to FSM if ux-event is set)
+    const changeHandler = (event: Event) => {
+      const target = event.target as HTMLElement;
+      if (!target) return;
+      const uxEvent = target.getAttribute('ux-event');
+      if (!uxEvent) return;
+      const colonIdx = uxEvent.indexOf(':');
+      if (colonIdx < 0) return;
+      const eventName = uxEvent.slice(0, colonIdx);
+      if (eventName !== 'change') return;
+      const action = uxEvent.slice(colonIdx + 1);
+      if (!action) return;
+      const detail = (event as CustomEvent).detail;
+      this.fsm.send({ type: action, payload: detail || {} });
+    };
+    this.templateEventDisposers.push(
+      this.listen(contentArea, 'ux:change', changeHandler)
+    );
   }
 
   /**

@@ -20,61 +20,101 @@ import { UxProgress } from './progress.js';
 import { UxSelect } from './select.js';
 import { UxChart } from './chart.js';
 import { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from './context-tools.js';
+import { UxCard } from './card.js';
+import { UxAlert } from './alert.js';
+import { UxSpinner } from './spinner.js';
+import { UxEmptyState } from './empty-state.js';
+import { UxErrorPanel } from './error-panel.js';
+import { UxPagination } from './pagination.js';
+import { UxBreadcrumb } from './breadcrumb.js';
+import { UxCommandPalette } from './command-palette.js';
+import { UxBadge } from './badge.js';
+import { UxAvatar } from './avatar.js';
+import { UxSkeleton } from './skeleton.js';
+import { UxPage } from './page.js';
+import { UxComboBox } from './combobox.js';
+import { UxDatePicker } from './date-picker.js';
+import { UxFileUpload } from './file-upload.js';
+import { UxDropZone } from './dropzone.js';
+import { UxSearchBar } from './search-bar.js';
+import { UxTreeNav } from './tree-nav.js';
+import { UxNotifications } from './notifications.js';
+import { UxQrCode } from './qr-code.js';
+import { UxFlowEditor } from './flow-editor.js';
+import { UxWorkflow } from './workflow.js';
+import { UxCalendar } from './calendar.js';
+import { UxKanban } from './kanban.js';
+import { UxGantt } from './gantt.js';
+import { UxDashboard } from './dashboard.js';
+import { UxKpiBoard } from './kpi-board.js';
+import { UxQueryBuilder } from './query-builder.js';
+import { UxFilterBuilder } from './filter-builder.js';
+import { UxPivotTable } from './pivot-table.js';
+import { UxReportBuilder } from './report-builder.js';
+import { UxTableVirtual } from './table-virtual.js';
+import { UxDataGrid } from './data-grid.js';
 
 export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
-    case 'toggle':
-      return UxToggle;
+    case 'toggle': return UxToggle;
     case 'checkbox':
-    case 'switch':
-      return UxToggle;
-    case 'tabs':
-      return UxTabs;
-    case 'menu':
-      return UxMenu;
-    case 'accordion':
-      return UxAccordion;
-    case 'popover':
-      return UxPopover;
-    case 'tooltip':
-      return UxTooltip;
-    case 'drawer':
-      return UxDrawer;
-    case 'wizard':
-      return UxWizard;
-    case 'value':
-      return UxValue;
-    case 'input':
-      return UxInput;
-    case 'textarea':
-      return UxTextarea;
-    case 'slider':
-      return UxSlider;
-    case 'form':
-      return UxForm;
-    case 'image':
-      return UxImage;
-    case 'video':
-      return UxVideo;
-    case 'audio':
-      return UxAudio;
-    case 'wysiwyg':
-      return UxWysiwyg;
-    case 'capture':
-      return UxCapture;
-    case 'progress':
-      return UxProgress;
-    case 'chart':
-      return UxChart;
-    case 'select':
-      return UxSelect;
-    case 'network-status':
-      return UxNetworkStatus;
-    case 'theme-toggle':
-      return UxThemeToggle;
-    case 'lang-switcher':
-      return UxLangSwitcher;
-    default:
-      return UxRegion;
+    case 'switch': return UxToggle;
+    case 'tabs': return UxTabs;
+    case 'menu': return UxMenu;
+    case 'accordion': return UxAccordion;
+    case 'popover': return UxPopover;
+    case 'tooltip': return UxTooltip;
+    case 'drawer': return UxDrawer;
+    case 'wizard': return UxWizard;
+    case 'value': return UxValue;
+    case 'input': return UxInput;
+    case 'textarea': return UxTextarea;
+    case 'slider': return UxSlider;
+    case 'form': return UxForm;
+    case 'image': return UxImage;
+    case 'video': return UxVideo;
+    case 'audio': return UxAudio;
+    case 'wysiwyg': return UxWysiwyg;
+    case 'capture': return UxCapture;
+    case 'progress': return UxProgress;
+    case 'chart': return UxChart;
+    case 'select': return UxSelect;
+    case 'network-status': return UxNetworkStatus;
+    case 'theme-toggle': return UxThemeToggle;
+    case 'lang-switcher': return UxLangSwitcher;
+    case 'card': return UxCard;
+    case 'alert': return UxAlert;
+    case 'spinner': return UxSpinner;
+    case 'empty-state': return UxEmptyState;
+    case 'error-panel': return UxErrorPanel;
+    case 'pagination': return UxPagination;
+    case 'breadcrumb': return UxBreadcrumb;
+    case 'command-palette': return UxCommandPalette;
+    case 'badge': return UxBadge;
+    case 'avatar': return UxAvatar;
+    case 'skeleton': return UxSkeleton;
+    case 'page': return UxPage;
+    case 'combobox': return UxComboBox;
+    case 'date-picker': return UxDatePicker;
+    case 'file-upload': return UxFileUpload;
+    case 'dropzone': return UxDropZone;
+    case 'search-bar': return UxSearchBar;
+    case 'tree-nav': return UxTreeNav;
+    case 'notifications': return UxNotifications;
+    case 'qr-code': return UxQrCode;
+    case 'data-grid': return UxDataGrid;
+    case 'flow-editor': return UxFlowEditor;
+    case 'workflow': return UxWorkflow;
+    case 'calendar': return UxCalendar;
+    case 'kanban': return UxKanban;
+    case 'gantt': return UxGantt;
+    case 'dashboard': return UxDashboard;
+    case 'kpi-board': return UxKpiBoard;
+    case 'query-builder': return UxQueryBuilder;
+    case 'filter-builder': return UxFilterBuilder;
+    case 'pivot-table': return UxPivotTable;
+    case 'report-builder': return UxReportBuilder;
+    case 'table-virtual': return UxTableVirtual;
+    default: return UxRegion;
   }
 }

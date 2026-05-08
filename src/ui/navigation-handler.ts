@@ -161,6 +161,13 @@ function mountView(viewName: string, params?: Record<string, string>): void {
   defaultLogger.info(`[Navigation] Mounted <${tagName}> into #ux-content`, params ? { params } : {});
 }
 
+/**
+ * Track current path globally so nav-panel can stay in sync.
+ */
+function trackCurrentPath(pathname: string): void {
+  (window as any).__ux3RoutePath = pathname;
+}
+
 function mountNotFound(): void {
   const main = ensureMountPoint();
   if (!main) return;
@@ -289,6 +296,7 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
     window.history.pushState({ view: targetView, path: resolvedPath }, '', resolvedPath);
   }
   mountView(targetView, params);
+  trackCurrentPath(resolvedPath);
   defaultLogger.info(`[Navigation] Navigated to ${resolvedPath} (view: ${targetView})`);
   emitDevTools('navigation', 'navigate', { path: resolvedPath, view: targetView, params });
 }
@@ -322,5 +330,6 @@ function handleNavigationEvent(appContext: AppContext): void {
   }
 
   mountView(match.view, match.params);
+  trackCurrentPath(rawPathname);
   emitDevTools('navigation', 'route.mount', { path: rawPathname, view: match.view, params: match.params });
 }

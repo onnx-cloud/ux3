@@ -1,7 +1,6 @@
 import { StateMachine } from "../fsm/index.js";
 import type { Service } from "../services/types.js";
 import type { NavConfig } from "../services/router.js";
-import type { Widget } from "./widget/index.js";
 import { WidgetFactory } from "./widget/factory.js";
 import type { HookRegistry } from "../core/lifecycle.js";
 import type { ServiceFactory, ComponentFactory } from "../plugin/registry.js";
@@ -23,7 +22,7 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
     services: Record<string, Service>;
     browser: BrowserContext;
     widgets: WidgetFactory;
-    ui: Record<string, Widget>;
+    ui: Record<string, HTMLElement>;
     template: (name: string) => string;
     render: (template: string, props?: Record<string, unknown>) => string;
     i18n: (key: string, props?: Record<string, unknown>) => string;

@@ -78,7 +78,7 @@ let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 export function createValidationPanel(_ctx?: any): HTMLElement {
   const root = document.createElement('div');
-  root.style.cssText = 'padding:8px;display:flex;flex-direction:column;height:100%;box-sizing:border-box;font-size:11px;';
+  root.style.cssText = 'padding:8px;display:flex;flex-direction:column;height:100%;box-sizing:border-box;font-size:11px;color:var(--ins-text);';
 
   // Start polling
   fetchDevDiagnostics();
@@ -172,21 +172,21 @@ export function createValidationPanel(_ctx?: any): HTMLElement {
       tdSev.textContent = d.severity.toUpperCase();
 
       const tdCat = document.createElement('td');
-      tdCat.style.cssText = 'padding:2px 6px;color:#9cdcfe;white-space:nowrap;';
+      tdCat.style.cssText = 'padding:2px 6px;color:var(--ins-key,#9cdcfe);white-space:nowrap;font-size:11px;';
       tdCat.textContent = d.category;
 
       const tdFile = document.createElement('td');
-      tdFile.style.cssText = 'padding:2px 6px;color:#888;font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      tdFile.style.cssText = 'padding:2px 6px;color:var(--ins-muted,#64748b);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
       tdFile.textContent = d.file ?? '—';
       tdFile.title = d.file ?? '';
 
       const tdMsg = document.createElement('td');
-      tdMsg.style.cssText = 'padding:2px 6px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      tdMsg.style.cssText = 'padding:2px 6px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--ins-text);';
       tdMsg.textContent = d.message;
       tdMsg.title = d.message;
 
       const tdSrc = document.createElement('td');
-      tdSrc.style.cssText = 'padding:2px 6px;color:#888;font-size:10px;white-space:nowrap;';
+      tdSrc.style.cssText = 'padding:2px 6px;color:var(--ins-muted,#64748b);font-size:11px;white-space:nowrap;';
       tdSrc.textContent = d.source;
 
       const tdActions = document.createElement('td');

@@ -1,12 +1,11 @@
 /**
  * WidgetFactory - Lazy-loading widget instantiation and management
  */
-import type { Widget } from './widget.js';
 /**
  * Widget loader function
  */
-export type WidgetLoader = () => Promise<Widget | {
-    default: Widget;
+export type WidgetLoader = () => Promise<HTMLElement | {
+    default: HTMLElement;
 }>;
 /**
  * WidgetFactory - Manages widget registration, lazy-loading, and caching

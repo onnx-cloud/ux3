@@ -2,7 +2,7 @@
  * WidgetFactory - Lazy-loading widget instantiation and management
  */
 
-import type { Widget, WidgetConfig } from './widget.js';
+import type { WidgetConfig } from './widget.js';
 
 type AsyncLocalStorageType<T> = {
   getStore(): T | undefined;
@@ -12,7 +12,7 @@ type AsyncLocalStorageType<T> = {
 /**
  * Widget loader function
  */
-export type WidgetLoader = () => Promise<Widget | { default: Widget }>;
+export type WidgetLoader = () => Promise<HTMLElement | { default: HTMLElement }>;
 
 /**
  * WidgetFactory - Manages widget registration, lazy-loading, and caching

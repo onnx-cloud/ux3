@@ -212,9 +212,10 @@ export class UxDropdown extends LifecycleComponent {
         if (filter) filter.focus();
       }, 0);
 
-      this.dispatchEvent(new CustomEvent('ux:open', {
+      this.dispatchEvent(new CustomEvent('ux:event', {
         bubbles: true,
-        composed: true
+        composed: true,
+        detail: { action: 'OPEN' }
       }));
     } else {
       wrapper?.classList.remove('open');
@@ -222,9 +223,10 @@ export class UxDropdown extends LifecycleComponent {
       options?.setAttribute('aria-expanded', 'false');
       toggle?.focus();
 
-      this.dispatchEvent(new CustomEvent('ux:close', {
+      this.dispatchEvent(new CustomEvent('ux:event', {
         bubbles: true,
-        composed: true
+        composed: true,
+        detail: { action: 'CLOSE' }
       }));
     }
   }

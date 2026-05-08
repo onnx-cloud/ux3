@@ -6,14 +6,14 @@ import type { AppContext } from '../../app.js';
 
 export function createStylesPanel(ctx: AppContext): HTMLElement {
   const root = document.createElement('div');
-  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;';
+  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;color:var(--ins-text);';
 
   const styles = ctx.styles ?? {};
   const tokens = Object.entries(styles);
 
   if (tokens.length === 0) {
     const empty = document.createElement('div');
-    empty.style.color = '#888';
+    empty.style.color = 'var(--ins-muted,#64748b)';
     empty.textContent = 'No styles registered.';
     root.appendChild(empty);
     return root;
@@ -28,7 +28,7 @@ export function createStylesPanel(ctx: AppContext): HTMLElement {
     const th = document.createElement('th');
     th.textContent = h;
     th.style.cssText =
-      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:#888;position:sticky;top:0;background:var(--ins-bg);';
+      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-muted,#64748b);position:sticky;top:0;background:var(--ins-bg);';
     hrow.appendChild(th);
   }
   thead.appendChild(hrow);
@@ -42,24 +42,24 @@ export function createStylesPanel(ctx: AppContext): HTMLElement {
     const tr = document.createElement('tr');
 
     const tdToken = document.createElement('td');
-    tdToken.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);font-family:monospace;color:#9cdcfe;';
+    tdToken.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);font-family:monospace;color:var(--ins-key,#9cdcfe);';
     tdToken.textContent = token;
 
     const tdClasses = document.createElement('td');
-    tdClasses.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);word-break:break-all;color:#ce9178;';
+    tdClasses.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);word-break:break-all;color:var(--ins-value,#ce9178);font-size:11px;';
     tdClasses.textContent = typeof classes === 'string' ? classes : JSON.stringify(classes);
 
     const tdApplied = document.createElement('td');
     tdApplied.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);';
 
     if (applied.length === 0) {
-      tdApplied.style.color = '#888';
+      tdApplied.style.color = 'var(--ins-muted,#64748b)';
       tdApplied.textContent = '—';
     } else {
       applied.forEach((el, i) => {
         const chip = document.createElement('span');
         chip.style.cssText =
-          'display:inline-block;margin-right:4px;padding:1px 5px;border:1px solid var(--ins-border);border-radius:3px;cursor:pointer;font-size:10px;';
+          'display:inline-block;margin-right:4px;padding:1px 5px;border:1px solid var(--ins-border);border-radius:3px;cursor:pointer;font-size:10px;color:var(--ins-text);';
         chip.textContent = el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '');
         chip.title = 'Scroll into view';
         chip.addEventListener('click', () => {

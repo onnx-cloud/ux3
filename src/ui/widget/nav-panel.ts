@@ -3,6 +3,8 @@
  *
  * Renders route links from app context nav config.  Auto-highlights the current
  * route and exposes a <slot> for custom branding/header content.
+ *
+ * variant="inline" renders bare links suitable for use inside a top-bar.
  */
 export class UxNav extends HTMLElement {
   connectedCallback() {
@@ -14,15 +16,44 @@ export class UxNav extends HTMLElement {
 
   private render() {
     const ctx = typeof window !== 'undefined' ? (window as any).__ux3App : null;
-    const routes = ctx?.nav?.routes || [];
+    const navConfig = ctx?.nav;
+    const routes = navConfig?.routes || [];
+    const getLabel = navConfig?.getLabel as ((route: any) => string) | undefined;
     if (routes.length === 0) {
       this.innerHTML = '<slot></slot>';
       return;
     }
 
-    const currentPath = window.location.pathname || '/';
+    const currentPath = this.getCurrentPath();
 
     this.innerHTML = '';
+
+    const variant = this.getAttribute('variant') || 'default';
+
+    if (variant === 'inline') {
+      this.renderInline(routes, currentPath, getLabel);
+    } else {
+      this.renderDefault(routes, currentPath, getLabel);
+    }
+  }
+
+  private getCurrentPath(): string {
+    return (window as any).__ux3RoutePath || (() => {
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#/')) return hash.slice(1);
+      return window.location.pathname || '/';
+    })();
+  }
+
+  private isActive(routePath: string): boolean {
+    const currentPath = this.getCurrentPath();
+    if (routePath === '/') return currentPath === '/' || currentPath === '';
+    if (routePath === currentPath) return true;
+    if (routePath.endsWith('/')) return currentPath === routePath || currentPath.startsWith(routePath);
+    return currentPath.startsWith(routePath + '/') || currentPath === routePath;
+  }
+
+  private renderDefault(routes: any[], currentPath: string, getLabel?: (route: any) => string) {
     const style = document.createElement('style');
     style.textContent = `
       :host { display: block; }
@@ -69,8 +100,8 @@ export class UxNav extends HTMLElement {
       if (!route.path || route.path === '*') continue;
       const a = document.createElement('a');
       a.href = route.path;
-      a.textContent = route.label || route.view || route.path;
-      if (currentPath === route.path || (route.path !== '/' && currentPath.startsWith(route.path))) {
+      a.textContent = getLabel ? getLabel(route) : (route.label || route.view || route.path);
+      if (this.isActive(route.path)) {
         a.classList.add('active');
       }
       a.addEventListener('click', (e) => {
@@ -84,9 +115,27 @@ export class UxNav extends HTMLElement {
     this.appendChild(nav);
   }
 
+  private renderInline(routes: any[], _currentPath: string, getLabel?: (route: any) => string) {
+    for (const route of routes) {
+      if (!route.path || route.path === '*') continue;
+      const a = document.createElement('a');
+      a.href = route.path;
+      a.setAttribute('data-nav-link', '');
+      a.textContent = getLabel ? getLabel(route) : (route.label || route.view || route.path);
+      if (this.isActive(route.path)) {
+        a.classList.add('active');
+      }
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.history.pushState({}, '', route.path);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+      this.appendChild(a);
+    }
+  }
+
   private subscribeToRouteChanges() {
     window.addEventListener('popstate', () => this.render());
-    // Also re-render on custom nav events
     window.addEventListener('ux3:navigate', () => this.render());
   }
 }

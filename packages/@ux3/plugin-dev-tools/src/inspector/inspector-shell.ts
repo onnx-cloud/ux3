@@ -1,10 +1,10 @@
 /**
  * Inspector Shell — plugin-owned, tabbed dev inspector with service-driven state.
  *
- * Replaces the legacy monolithic JSON dump with a tabbed interface backed by
- * existing panel modules and the dev-tools service.
+ * Uses styles.json for built-in theming; user overrides via appContext.config.inspectorStyles.
  */
 import type { AppContext } from '@ux3/ui/app.js';
+import builtInStyles from '../styles.json' with { type: 'json' };
 
 const TABS: Array<{ id: string; label: string }> = [
   { id: 'summary', label: 'Summary' },
@@ -30,16 +30,28 @@ export interface InspectorShellOptions {
   minimized?: boolean;
 }
 
+function resolveInspectorStyles(appContext: AppContext): Record<string, string> {
+  const userStyles = (appContext.config as any)?.inspectorStyles || {};
+  return { ...builtInStyles, ...userStyles };
+}
+
 export function createInspectorShell(
   appContext: AppContext,
   options: InspectorShellOptions = {}
 ): { root: HTMLElement; dispose: () => void } {
   const devTools = (appContext.utils as any)?.devTools;
   const disposers: Array<() => void> = [];
+  const theme = resolveInspectorStyles(appContext);
 
   let dockTarget: DockTarget = options.dock || 'bottom-right';
   let minimized = options.minimized ?? true;
   let activePanel = devTools?.getSnapshot?.()?.activePanel || 'fsm';
+
+  // Apply CSS custom properties from theme
+  const cssVars = Object.entries(theme)
+    .filter(([k]) => !k.includes('/'))
+    .map(([k, v]) => `--ins-${k}:${v}`)
+    .join(';');
 
   // =========================================================================
   // Build DOM
@@ -51,9 +63,9 @@ export function createInspectorShell(
     'z-index:2147483647',
     'width:min(480px,calc(100vw - 24px))',
     'max-height:70vh',
-    'background:#0f172a',
-    'color:#e2e8f0',
-    'border:1px solid #334155',
+    `background:var(--ins-bg,${theme.bg || '#0f172a'})`,
+    `color:var(--ins-text,${theme.text || '#e2e8f0'})`,
+    `border:1px solid var(--ins-border,${theme.border || '#334155'})`,
     'border-radius:10px',
     'box-shadow:0 20px 50px rgba(15,23,42,0.45)',
     'font:12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace',
@@ -62,47 +74,42 @@ export function createInspectorShell(
     'transition:opacity 140ms ease',
     'display:flex',
     'flex-direction:column',
-    '--ins-bg:#0f172a',
-    '--ins-accent:#1e3a5f',
-    '--ins-text:#e2e8f0',
-    '--ins-border:#334155',
-    '--ins-flash:#fbbf24',
+    cssVars,
   ].join(';');
 
   // ---- header ----
   const header = document.createElement('div');
   header.style.cssText =
-    'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#111827;border-bottom:1px solid #334155;cursor:move;user-select:none;gap:8px;flex-shrink:0;';
+    'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--ins-bg,var(--ins-surface,#111827));border-bottom:1px solid var(--ins-border);cursor:move;user-select:none;gap:8px;flex-shrink:0;';
 
   const title = document.createElement('strong');
   title.textContent = 'UX3 Dev Inspector';
-  title.style.cssText = 'font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:#93c5fd;';
+  title.style.cssText = 'font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ins-key,#93c5fd);';
 
   const summary = document.createElement('span');
   summary.style.cssText =
-    'font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+    'font-size:11px;color:var(--ins-label,var(--ins-muted,#94a3b8));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+
+  const buttonBase = 'background:var(--ins-accent,#1e293b);color:var(--ins-text);border:1px solid var(--ins-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
 
   const refreshBtn = document.createElement('button');
   refreshBtn.type = 'button';
   refreshBtn.textContent = '↻';
-  refreshBtn.style.cssText =
-    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  refreshBtn.style.cssText = buttonBase;
   refreshBtn.addEventListener('click', () => refreshActivePanel());
 
   const collapseBtn = document.createElement('button');
   collapseBtn.type = 'button';
   collapseBtn.textContent = minimized ? '□' : '_';
   collapseBtn.title = minimized ? 'Expand' : 'Minimize';
-  collapseBtn.style.cssText =
-    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  collapseBtn.style.cssText = buttonBase;
   collapseBtn.addEventListener('click', toggleMinimized);
 
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.textContent = '✕';
   closeBtn.title = 'Close inspector';
-  closeBtn.style.cssText =
-    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  closeBtn.style.cssText = buttonBase;
   closeBtn.addEventListener('click', () => {
     dispose();
     root.remove();
@@ -112,16 +119,14 @@ export function createInspectorShell(
   pickBtn.type = 'button';
   pickBtn.textContent = '🔍';
   pickBtn.title = 'Inspect elements (hover to see widget info)';
-  pickBtn.style.cssText =
-    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  pickBtn.style.cssText = buttonBase;
   pickBtn.addEventListener('click', togglePickMode);
 
   const maximizeBtn = document.createElement('button');
   maximizeBtn.type = 'button';
   maximizeBtn.textContent = '⛶';
   maximizeBtn.title = 'Maximize';
-  maximizeBtn.style.cssText =
-    'background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1;';
+  maximizeBtn.style.cssText = buttonBase;
   maximizeBtn.addEventListener('click', toggleMaximized);
 
   header.append(title, summary, pickBtn, maximizeBtn, refreshBtn, collapseBtn, closeBtn);
@@ -130,12 +135,12 @@ export function createInspectorShell(
   // ---- element inspector tooltip ----
   const inspectOverlay = document.createElement('div');
   inspectOverlay.style.cssText =
-    'position:fixed;pointer-events:none;z-index:2147483646;border:2px solid #fbbf24;border-radius:4px;display:none;transition:all 60ms ease;';
+    'position:fixed;pointer-events:none;z-index:2147483646;border:2px solid var(--ins-flash,#fbbf24);border-radius:4px;display:none;transition:all 60ms ease;';
   document.body.appendChild(inspectOverlay);
 
   const inspectTooltip = document.createElement('div');
   inspectTooltip.style.cssText =
-    'position:fixed;z-index:2147483647;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:8px 12px;font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;display:none;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+    `position:fixed;z-index:2147483647;background:var(--ins-bg,${theme.bg || '#0f172a'});color:var(--ins-text);border:1px solid var(--ins-border);border-radius:8px;padding:8px 12px;font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;display:none;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.5);`;
   document.body.appendChild(inspectTooltip);
 
   let pickMode = false;
@@ -144,27 +149,26 @@ export function createInspectorShell(
   function getWidgetInfo(el: HTMLElement): string[] {
     const lines: string[] = [];
     const tag = el.tagName.toLowerCase();
-    
+
     const uxAttrs: string[] = [];
+    const uxStyle = el.getAttribute('ux-style') || el.getAttribute('data-style') || '';
     for (const name of el.getAttributeNames()) {
-      if (name.startsWith('ux-')) {
+      if (name.startsWith('ux-') && name !== 'ux-style' && name !== 'data-style') {
         uxAttrs.push(`${name}="${el.getAttribute(name)}"`);
       }
     }
 
     const isCustom = tag.includes('-');
-    const hasUx = uxAttrs.length > 0;
-    if (!isCustom && !hasUx) return [];
+    const hasUx = uxAttrs.length > 0 || !!uxStyle;
+    const hasShadow = !!el.shadowRoot;
+    if (!isCustom && !hasUx && !hasShadow) return [];
 
     lines.push(`<${tag}>`);
-    
+
     if (el.id) lines.push(`  id="${el.id}"`);
-    
-    const klass = el.className && typeof el.className === 'string' 
-      ? el.className.trim() : '';
-    if (klass) {
-      const short = klass.length > 80 ? klass.slice(0, 77) + '...' : klass;
-      lines.push(`  class="${short}"`);
+
+    if (uxStyle) {
+      lines.push(`  style="${uxStyle}"`);
     }
 
     for (const attr of uxAttrs) {
@@ -189,23 +193,46 @@ export function createInspectorShell(
     return lines;
   }
 
+  function getHostChain(el: HTMLElement): HTMLElement[] {
+    const chain: HTMLElement[] = [];
+    let current: Node | null = el;
+    while (current && current !== document.body && current !== document.documentElement) {
+      if (current instanceof HTMLElement) {
+        chain.unshift(current);
+      }
+      if (current instanceof ShadowRoot) {
+        current = current.host;
+      } else if (current instanceof HTMLElement) {
+        const root = current.getRootNode();
+        if (root instanceof ShadowRoot) {
+          current = root;
+        } else {
+          current = current.parentElement;
+        }
+      } else {
+        current = (current as Node).parentElement || (current as Node).parentNode;
+      }
+    }
+    return chain;
+  }
+
   function breadcrumbChain(el: HTMLElement): string[] {
     const chain: string[] = [];
-    let current: HTMLElement | null = el;
-    while (current && current !== document.body && current !== document.documentElement) {
+    const hostChain = getHostChain(el);
+    for (const current of hostChain) {
       const tag = current.tagName.toLowerCase();
       if (tag.includes('-') || current.hasAttribute('ux-view') || current.hasAttribute('ux-route')) {
-        const label = current.getAttribute('ux-label') || 
-                       current.getAttribute('ux-view') || 
-                       current.id || 
+        const label = current.getAttribute('ux-label') ||
+                       current.getAttribute('ux-view') ||
+                       current.getAttribute('ux-style') ||
+                       current.id ||
                        tag;
-        chain.unshift(label);
+        chain.push(label);
       } else if (current.id || current.className) {
         const id = current.id ? `#${current.id}` : '';
         const cls = typeof current.className === 'string' ? `.${current.className.split(' ')[0]}` : '';
-        chain.unshift(tag + id + cls);
+        chain.push(tag + id + cls);
       }
-      current = current.parentElement;
     }
     return chain;
   }
@@ -216,31 +243,31 @@ export function createInspectorShell(
       const tag = el.tagName.toLowerCase();
       const label = el.getAttribute('ux-label') || el.getAttribute('ux-view') || el.id || tag;
       title.textContent = label;
-      title.style.color = '#fbbf24';
+      title.style.color = 'var(--ins-flash,#fbbf24)';
       title.title = `Selection: ${chain.join(' > ')}`;
       summary.textContent = chain.join(' › ');
       summary.style.display = 'block';
-      summary.style.color = '#94a3b8';
+      summary.style.color = 'var(--ins-muted,#94a3b8)';
     } else {
-      title.textContent = 'UX3 Dev Inspector';
-      title.style.color = '#93c5fd';
+      title.textContent = 'UX3';
+      title.style.color = 'var(--ins-key,#93c5fd)';
       title.title = '';
       if (minimized) {
         const tab = TABS.find((t) => t.id === activePanel);
-        summary.textContent = tab ? `${tab.label} — Active Route: ${window.location?.pathname || '/'}` : 'Dev Inspector';
+        summary.textContent = tab ? `${tab.label} — ${window.location?.pathname || '/'}` : 'Inspector';
         summary.style.display = 'inline';
       } else {
         summary.style.display = 'none';
       }
-      summary.style.color = '#94a3b8';
+      summary.style.color = 'var(--ins-muted,#94a3b8)';
     }
   }
 
   function togglePickMode() {
     pickMode = !pickMode;
     pickLocked = null;
-    pickBtn.style.background = pickMode ? '#1e3a5f' : '#1e293b';
-    pickBtn.style.color = pickMode ? '#fbbf24' : '#e2e8f0';
+    pickBtn.style.background = pickMode ? 'var(--ins-accent,#1e3a5f)' : 'var(--ins-bg,#1e293b)';
+    pickBtn.style.color = pickMode ? 'var(--ins-flash,#fbbf24)' : 'var(--ins-text)';
     
     if (!pickMode) {
       inspectOverlay.style.display = 'none';
@@ -252,21 +279,20 @@ export function createInspectorShell(
     }
   }
 
+  function findWidgetInPath(path: EventTarget[]): HTMLElement | null {
+    for (const el of path) {
+      if (el instanceof HTMLElement && el !== inspectOverlay && el !== inspectTooltip && !el.closest('#ux3-devtools-inspector')) {
+        const info = getWidgetInfo(el);
+        if (info.length > 0) return el;
+      }
+    }
+    return null;
+  }
+
   function onInspectMove(event: MouseEvent) {
     if (!pickMode || pickLocked) return;
-    const target = event.target as HTMLElement;
-    if (!target || target === inspectOverlay || target === inspectTooltip || target.closest('#ux3-devtools-inspector')) {
-      inspectOverlay.style.display = 'none';
-      inspectTooltip.style.display = 'none';
-      return;
-    }
-
-    let widgetEl: HTMLElement | null = target;
-    while (widgetEl) {
-      const info = getWidgetInfo(widgetEl);
-      if (info.length > 0) break;
-      widgetEl = widgetEl.parentElement;
-    }
+    const path = event.composedPath();
+    const widgetEl = findWidgetInPath(path);
 
     if (!widgetEl) {
       inspectOverlay.style.display = 'none';
@@ -299,8 +325,7 @@ export function createInspectorShell(
 
   function onInspectClick(event: MouseEvent) {
     if (!pickMode) return;
-    const target = event.target as HTMLElement;
-    if (!target || target.closest('#ux3-devtools-inspector')) return;
+    const path = event.composedPath();
     if (pickLocked) {
       pickLocked = null;
       updateTitleForSelection(null);
@@ -308,11 +333,7 @@ export function createInspectorShell(
       inspectTooltip.style.display = 'none';
       return;
     }
-    let widgetEl: HTMLElement | null = target;
-    while (widgetEl) {
-      if (getWidgetInfo(widgetEl).length > 0) break;
-      widgetEl = widgetEl.parentElement;
-    }
+    const widgetEl = findWidgetInPath(path);
     if (widgetEl) {
       pickLocked = widgetEl;
       updateTitleForSelection(widgetEl);
@@ -334,7 +355,7 @@ export function createInspectorShell(
   // ---- tab bar ----
   const tabBar = document.createElement('div');
   tabBar.style.cssText =
-    'display:flex;overflow-x:auto;flex-shrink:0;background:#111827;border-bottom:1px solid #1e293b;gap:2px;padding:4px 6px 0;';
+    'display:flex;overflow-x:auto;flex-shrink:0;background:var(--ins-bg,var(--ins-surface,#111827));border-bottom:1px solid var(--ins-border,#1e293b);gap:2px;padding:4px 6px 0;';
   tabBar.classList.add('ux3-inspector-tabbar');
 
   for (const tab of TABS) {
@@ -362,25 +383,36 @@ export function createInspectorShell(
   // ---- panel body ----
   const panelHost = document.createElement('div');
   panelHost.style.cssText =
-    'flex:1;overflow:auto;min-height:0;color:var(--ins-text);';
+    'flex:1;overflow:auto;min-height:0;background:var(--ins-bg);color:var(--ins-text);';
   panelHost.classList.add('ux3-inspector-panel-host');
 
   const panelStyle = document.createElement('style');
   panelStyle.textContent = `
+    .ux3-inspector-panel-host { background: var(--ins-bg); color: var(--ins-text); }
+    .ux3-inspector-panel-host * { color: var(--ins-text); }
+    .ux3-inspector-panel-host div,
+    .ux3-inspector-panel-host span,
+    .ux3-inspector-panel-host p,
+    .ux3-inspector-panel-host a { color: var(--ins-text); }
+    .ux3-inspector-panel-host table { border-collapse: collapse; }
+    .ux3-inspector-panel-host th { color: var(--ins-muted, #64748b); text-align: left; }
+    .ux3-inspector-panel-host td { color: var(--ins-text); }
     .ux3-inspector-panel-host details { color: var(--ins-text); }
     .ux3-inspector-panel-host summary { color: var(--ins-text); cursor: pointer; }
     .ux3-inspector-panel-host input[type="checkbox"],
     .ux3-inspector-panel-host input[type="radio"] { accent-color: var(--ins-accent); }
     .ux3-inspector-panel-host select { background: var(--ins-bg); color: var(--ins-text); border: 1px solid var(--ins-border); }
-    .ux3-inspector-panel-host td { color: var(--ins-text); }
-    .ux3-inspector-panel-host th { color: var(--ins-text); }
     .ux3-inspector-panel-host label { color: var(--ins-text); }
+    .ux3-inspector-panel-host button { font-family: inherit; }
+    .ux3-inspector-panel-host .ins-error { color: var(--ins-error, #f44336) !important; }
+    .ux3-inspector-panel-host .ins-warn { color: var(--ins-warn, #ff9800) !important; }
+    .ux3-inspector-panel-host .ins-success { color: var(--ins-success, #4caf50) !important; }
   `;
   panelHost.appendChild(panelStyle);
 
   // placeholder
   const placeholder = document.createElement('div');
-  placeholder.style.cssText = 'padding:12px;color:#64748b;text-align:center;';
+  placeholder.style.cssText = 'padding:12px;color:var(--ins-muted,#64748b);text-align:center;';
   placeholder.textContent = 'Select a panel';
   panelHost.appendChild(placeholder);
 
@@ -430,7 +462,7 @@ export function createInspectorShell(
     collapseBtn.textContent = minimized ? '□' : '_';
     root.style.opacity = minimized ? '0.5' : '1';
     root.style.maxHeight = minimized ? 'none' : '70vh';
-    header.style.borderBottom = minimized ? 'none' : '1px solid #334155';
+    header.style.borderBottom = minimized ? 'none' : '1px solid var(--ins-border)';
     summary.style.display = minimized ? 'inline' : 'none';
     title.style.display = minimized ? 'none' : 'inline';
     if (minimized) {
@@ -549,8 +581,8 @@ export function createInspectorShell(
     // Update tab bar highlights
     tabBar.querySelectorAll('button').forEach((btn) => {
       const el = btn as HTMLButtonElement;
-      el.style.background = el.dataset.panelId === panelId ? '#1e293b' : 'transparent';
-      el.style.color = el.dataset.panelId === panelId ? '#93c5fd' : '#94a3b8';
+      el.style.background = el.dataset.panelId === panelId ? 'var(--ins-accent,#1e293b)' : 'transparent';
+      el.style.color = el.dataset.panelId === panelId ? 'var(--ins-key,#93c5fd)' : 'var(--ins-muted,#94a3b8)';
     });
 
     // Sync to devTools service
@@ -564,28 +596,37 @@ export function createInspectorShell(
       currentPanelDisposer = null;
     }
 
-    // Clear host
-    panelHost.innerHTML = '';
+    // Clear host (preserve the style element)
+    while (panelHost.firstChild) {
+      panelHost.removeChild(panelHost.firstChild);
+    }
+    panelHost.appendChild(panelStyle);
 
     // Lazy-load panel
     loadPanel(panelId).then((panelEl) => {
       if (activePanel !== panelId) return; // race guard
-      panelHost.innerHTML = '';
+      while (panelHost.firstChild) {
+        panelHost.removeChild(panelHost.firstChild);
+      }
+      panelHost.appendChild(panelStyle);
       if (panelEl) {
         panelEl.classList.add('ux3-inspector-panel');
         panelHost.appendChild(panelEl);
       } else {
         const msg = document.createElement('div');
-        msg.style.cssText = 'padding:12px;color:#64748b;text-align:center;';
+        msg.style.cssText = 'padding:12px;color:var(--ins-muted,#64748b);text-align:center;';
         msg.textContent = `Panel "${panelId}" not available`;
         panelHost.appendChild(msg);
       }
     }).catch(() => {
       if (activePanel !== panelId) return;
       const err = document.createElement('div');
-      err.style.cssText = 'padding:12px;color:#f87171;';
+      err.style.cssText = 'padding:12px;color:var(--ins-error,#f87171);';
       err.textContent = `Failed to load panel "${panelId}"`;
-      panelHost.innerHTML = '';
+      while (panelHost.firstChild) {
+        panelHost.removeChild(panelHost.firstChild);
+      }
+      panelHost.appendChild(panelStyle);
       panelHost.appendChild(err);
     });
   }
@@ -658,21 +699,21 @@ export function createInspectorShell(
     const plugins = devToolsSnapshot?.plugins?.length ?? 0;
 
     const items: Array<[string, string, string?]> = [
-      ['Active Route', typeof window !== 'undefined' ? window.location.pathname : '/', 'routes'],
-      ['FSM Machines', String(machines), 'fsm'],
+      ['UX3', typeof window !== 'undefined' ? window.location.pathname : '/', 'routes'],
+      ['Machines', String(machines), 'fsm'],
       ['Services', String(services), 'services'],
       ['Routes', String(routes), 'routes'],
       ['Events', String(events), 'events'],
       ['Plugins', String(plugins), 'plugins'],
-      ['Active Panel', activePanel],
-      ['Inspector Open', devToolsSnapshot?.open ? 'yes' : 'no'],
+      ['Active', activePanel],
+      ['Inspector', devToolsSnapshot?.open ? 'yes' : 'no'],
     ];
 
     for (const [label, value, targetPanel] of items) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e293b;';
+      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--ins-border,#1e293b);';
       const l = document.createElement('span');
-      l.style.color = '#94a3b8';
+      l.style.color = 'var(--ins-muted,#94a3b8)';
       l.textContent = label;
       const v = document.createElement('span');
       v.textContent = value;
@@ -690,9 +731,9 @@ export function createInspectorShell(
         row.setAttribute('role', 'link');
         row.addEventListener('click', () => switchPanel(targetPanel));
         row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') switchPanel(targetPanel); });
-        row.addEventListener('mouseenter', () => { row.style.background = '#1e293b'; arrow.style.color = '#fbbf24'; v.style.color = '#fbbf24'; });
+        row.addEventListener('mouseenter', () => { row.style.background = 'var(--ins-accent,#1e293b)'; arrow.style.color = 'var(--ins-flash,#fbbf24)'; v.style.color = 'var(--ins-flash,#fbbf24)'; });
         row.addEventListener('mouseleave', () => { row.style.background = ''; arrow.style.color = 'transparent'; v.style.color = ''; });
-        row.addEventListener('focus', () => { row.style.background = '#1e293b'; arrow.style.color = '#fbbf24'; v.style.color = '#fbbf24'; });
+        row.addEventListener('focus', () => { row.style.background = 'var(--ins-accent,#1e293b)'; arrow.style.color = 'var(--ins-flash,#fbbf24)'; v.style.color = 'var(--ins-flash,#fbbf24)'; });
         row.addEventListener('blur', () => { row.style.background = ''; arrow.style.color = 'transparent'; v.style.color = ''; });
       }
 
@@ -706,16 +747,22 @@ export function createInspectorShell(
   // =========================================================================
   function createAboutPanel(ctx: AppContext): HTMLElement {
     const container = document.createElement('div');
-    container.style.cssText = 'padding:12px;font-size:12px;';
+    container.style.cssText = 'padding:12px;font-size:11px;';
+
     const config = ctx.config || {};
     const devToolsSnapshot = devTools?.getSnapshot?.();
     const devToolsPlugin = devToolsSnapshot?.plugins?.find((p: any) => p.name === '@ux3/plugin-dev-tools');
     const devToolsVersion = devToolsPlugin?.version || 'unknown';
 
-    const isDevelopment = !!(config.development && (
-      config.development.logging || config.development.hotReload ||
-      config.development.inspector || config.development.devTools
-    ));
+    const frameworkVersion = (typeof window !== 'undefined' && (window as any).__ux3Version) || '0.2.1';
+    const appName = config.name || config.site?.name || '—';
+    const appVersion = config.version || '0.1.0';
+
+    const isInspectorOpen = devToolsSnapshot?.open ?? false;
+    const isDevelopment = !!(config.development || config.devMode || isInspectorOpen);
+    const hotReload = !!(config.development?.hotReload || config.hotReload || false);
+    const logLevel = config.development?.logging || config.logLevel || (isDevelopment ? 'debug' : 'info');
+    const inspectorEnabled = !!(config.development?.inspector || config.inspector || isInspectorOpen);
 
     const activeLocale = ctx.locale?.locale?.primary || '—';
     const supportedLocales = ctx.locale?.supportedLocales?.join(', ') || '—';
@@ -723,9 +770,6 @@ export function createInspectorShell(
     const routeMode = (config?.i18n?.routeMode) || (prefix ? 'prefix-optional' : 'no-prefix');
     const localeSource = ctx.locale?.locale?.source || '—';
     const direction = ctx.locale?.locale?.direction || '—';
-
-    const pkgName = config.name || config.site?.name || '—';
-    const pkgVersion = config.version || '—';
 
     const plugins = devToolsSnapshot?.plugins ?? [];
     const activePlugins = Array.isArray(plugins) ? plugins.map((p: any) => p.name || p).join(', ') : '—';
@@ -735,10 +779,11 @@ export function createInspectorShell(
     const navMode = ctx.nav?.routes?.length ? `${ctx.nav.routes.length} routes` : 'none';
 
     const sections: Array<[string, string]> = [
-      ['— Framework —', ''],
-      ['App Name', pkgName],
-      ['App Version', pkgVersion],
-      ['Dev Tools Version', devToolsVersion],
+      ['— Versions —', ''],
+      ['UX3 Framework', frameworkVersion],
+      ['App Name', appName],
+      ['App Version', appVersion],
+      ['Dev Tools', devToolsVersion],
       ['', ''],
       ['— Locale & Routing —', ''],
       ['Active Locale', activeLocale],
@@ -750,9 +795,9 @@ export function createInspectorShell(
       ['', ''],
       ['— Runtime —', ''],
       ['Development', isDevelopment ? 'yes' : 'no'],
-      ['Hot Reload', config.development?.hotReload ? 'yes' : 'no'],
-      ['Log Level', config.development?.logging || 'info'],
-      ['Inspector', config.development?.inspector ? 'yes' : 'no'],
+      ['Hot Reload', hotReload ? 'yes' : 'no'],
+      ['Log Level', logLevel],
+      ['Inspector', inspectorEnabled ? 'yes' : 'no'],
       ['FSM Machines', `${machineCount}`],
       ['Services', `${serviceCount}`],
       ['', ''],
@@ -762,14 +807,14 @@ export function createInspectorShell(
 
     for (const [label, value] of sections) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e293b;';
+      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--ins-border,#1e293b);';
       const l = document.createElement('span');
       if (label.startsWith('—') && label.endsWith('—')) {
-        l.style.cssText = 'color:#64748b;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;font-size:10px;';
+        l.style.cssText = 'color:var(--ins-muted,#64748b);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;font-size:10px;';
         l.textContent = label.replace(/—/g, '').trim();
         row.style.borderBottom = 'none';
       } else {
-        l.style.color = '#94a3b8';
+        l.style.color = 'var(--ins-muted,#94a3b8)';
         l.textContent = label;
       }
       const v = document.createElement('span');

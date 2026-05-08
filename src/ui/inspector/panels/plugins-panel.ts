@@ -17,14 +17,14 @@ type DevToolsBridgeApi = {
 
 export function createPluginsPanel(_ctx?: any): HTMLElement {
   const root = document.createElement('div');
-  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;';
+  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;color:var(--ins-text);';
 
   const devTools = (window as any).__ux3DevTools as DevToolsBridgeApi | undefined;
   const plugins = devTools?.getSnapshot().plugins ?? [];
 
   if (plugins.length === 0) {
     const empty = document.createElement('div');
-    empty.style.color = '#888';
+    empty.style.color = 'var(--ins-muted,#64748b)';
     empty.textContent = 'No plugins registered in the dev tools snapshot.';
     root.appendChild(empty);
     return root;
@@ -39,7 +39,7 @@ export function createPluginsPanel(_ctx?: any): HTMLElement {
     const th = document.createElement('th');
     th.textContent = h;
     th.style.cssText =
-      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:#888;position:sticky;top:0;background:var(--ins-bg);';
+      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-muted,#64748b);position:sticky;top:0;background:var(--ins-bg);';
     hrow.appendChild(th);
   }
   thead.appendChild(hrow);
@@ -50,15 +50,15 @@ export function createPluginsPanel(_ctx?: any): HTMLElement {
     const tr = document.createElement('tr');
 
     const tdName = document.createElement('td');
-    tdName.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);font-weight:bold;';
+    tdName.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);font-weight:bold;color:var(--ins-text);';
     tdName.textContent = plugin.name;
 
     const tdVer = document.createElement('td');
-    tdVer.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);color:#888;';
+    tdVer.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-muted,#64748b);';
     tdVer.textContent = plugin.version ?? '—';
 
     const tdHooks = document.createElement('td');
-    tdHooks.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);';
+    tdHooks.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-text);';
     if (plugin.hooks && plugin.hooks.length > 0) {
       const det = document.createElement('details');
       const s = document.createElement('summary');
@@ -67,20 +67,20 @@ export function createPluginsPanel(_ctx?: any): HTMLElement {
       det.appendChild(s);
       plugin.hooks.forEach(h => {
         const chip = document.createElement('div');
-        chip.style.cssText = 'font-size:10px;color:#9cdcfe;margin-left:8px;';
+        chip.style.cssText = 'font-size:10px;color:var(--ins-key,#9cdcfe);margin-left:8px;';
         chip.textContent = h;
         det.appendChild(chip);
       });
       tdHooks.appendChild(det);
     } else {
       tdHooks.textContent = '—';
-      tdHooks.style.color = '#888';
+      tdHooks.style.color = 'var(--ins-muted,#64748b)';
     }
 
     const tdStatus = document.createElement('td');
     tdStatus.style.cssText = 'padding:3px 6px;border-bottom:1px solid var(--ins-border);';
     tdStatus.textContent = plugin.status ?? 'active';
-    tdStatus.style.color = (plugin.status === 'error' || plugin.status === 'disabled') ? '#f44' : '#4caf50';
+    tdStatus.style.color = (plugin.status === 'error' || plugin.status === 'disabled') ? 'var(--ins-error,#f44)' : 'var(--ins-success,#4caf50)';
 
     tr.appendChild(tdName);
     tr.appendChild(tdVer);

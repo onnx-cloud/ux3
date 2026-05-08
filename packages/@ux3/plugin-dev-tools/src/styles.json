@@ -1,0 +1,23 @@
+{
+  "ins-bg": "#0f172a",
+  "ins-accent": "#1e3a5f",
+  "ins-text": "#e2e8f0",
+  "ins-border": "#334155",
+  "ins-flash": "#fbbf24",
+  "ins-muted": "#64748b",
+  "ins-label": "#94a3b8",
+  "ins-key": "#9cdcfe",
+  "ins-value": "#ce9178",
+  "ins-string": "#dcdcaa",
+  "ins-section": "#64748b",
+  "font-size": "11px",
+  "font-family": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  "line-height": "1.35",
+  "panel-padding": "8px",
+  "table-padding": "3px 6px",
+  "border-radius": "4px",
+  "row-hover": "#1e293b",
+  "success": "#4caf50",
+  "warn": "#ff9800",
+  "error": "#f44336"
+}

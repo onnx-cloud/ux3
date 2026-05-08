@@ -1,7 +1,7 @@
 import type { GeneratedConfig } from '@ux3/ui/context-builder.js';
-import { defaultLogger } from '@ux3/security/observability.ts';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const process = (globalThis as any).process as {
   cwd(): string;
@@ -20,6 +20,9 @@ export interface BuildTimeTranslateConfig {
   locales?: string[];
   overwrite?: boolean;
   parallel?: boolean;
+  prompts?: {
+    batch?: { system?: string };
+  };
 }
 
 export interface BuildTimeTranslateResult {
@@ -28,12 +31,12 @@ export interface BuildTimeTranslateResult {
   translatedKeys: number;
 }
 
-type TranslateFn = (
-  text: string,
+type BatchTranslateFn = (
+  texts: Record<string, string>,
   targetLocale: string,
   sourceLocale: string,
-  options: { endpoint: string; model: string; apiKey: string }
-) => Promise<string>;
+  options: { endpoint: string; model: string; apiKey: string; systemPrompt?: string }
+) => Promise<Record<string, string>>;
 
 const DEFAULT_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const DEFAULT_MODEL = 'openai/gpt-oss-120b';
@@ -70,32 +73,67 @@ export function loadDotEnvIfPresent(): void {
   }
 }
 
-async function callTranslationApi(
-  text: string,
+interface PromptConfig {
+  batch: { system: string };
+  runtime: { system: string };
+}
+
+let _defaultPrompts: PromptConfig | null = null;
+
+function loadDefaultPrompts(): PromptConfig {
+  if (_defaultPrompts) return _defaultPrompts;
+  try {
+    const promptsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'prompts.json');
+    if (fs.existsSync(promptsPath)) {
+      _defaultPrompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8')) as PromptConfig;
+      return _defaultPrompts;
+    }
+  } catch {
+    // fall through to hardcoded defaults
+  }
+  _defaultPrompts = {
+    batch: {
+      system:
+        'You are a professional translator. ' +
+        'Translate the JSON values below from {{sourceLocale}} to {{targetLocale}}. ' +
+        'Return a JSON object with the same keys and the translated values. ' +
+        'Return only valid JSON with no additional commentary, markdown fences, or explanations.',
+    },
+    runtime: {
+      system:
+        'You are a professional translator. ' +
+        'Translate the following text from {{sourceLocale}} to {{targetLocale}}. ' +
+        'Return only the translated text with no additional commentary.',
+    },
+  };
+  return _defaultPrompts;
+}
+
+function resolvePrompt(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`);
+}
+
+export async function callBatchTranslationApi(
+  texts: Record<string, string>,
   targetLocale: string,
   sourceLocale: string,
-  options: { endpoint: string; model: string; apiKey: string }
-): Promise<string> {
+  options: { endpoint: string; model: string; apiKey: string; systemPrompt?: string }
+): Promise<Record<string, string>> {
+  const keys = Object.keys(texts);
+  if (keys.length === 0) return {};
+
+  const sourceJson = JSON.stringify(texts, null, 2);
+
+  const defaultPrompts = loadDefaultPrompts();
+  const systemPrompt = options.systemPrompt || defaultPrompts.batch.system;
+
   const body = JSON.stringify({
     model: options.model,
     messages: [
-      {
-        role: 'system',
-        content:
-          `You are a professional translator. ` +
-          `Translate the following text from ${sourceLocale} to ${targetLocale}. ` +
-          `Return only the translated text with no additional commentary.`,
-      },
-      { role: 'user', content: text },
+      { role: 'system', content: resolvePrompt(systemPrompt, { sourceLocale, targetLocale }) },
+      { role: 'user', content: sourceJson },
     ],
-    max_tokens: 2048,
-  });
-
-  defaultLogger.info('@ux3/plugin-translate.buildTime.translate.request', {
-    sourceLocale,
-    targetLocale,
-    endpoint: options.endpoint,
-    model: options.model,
+    max_tokens: 4096,
   });
 
   const response = await fetch(options.endpoint, {
@@ -108,71 +146,48 @@ async function callTranslationApi(
   });
 
   if (!response.ok) {
-    let responseDetails = '';
+    let details = '';
     try {
       const raw = (await response.text()).trim();
-      if (raw) {
-        const normalized = raw.replace(/\s+/g, ' ').slice(0, 240);
-        responseDetails = `: ${normalized}`;
-      }
-    } catch {
-      // ignore response parsing errors and keep the status-focused message
-    }
+      if (raw) details = ': ' + raw.replace(/\s+/g, ' ').slice(0, 240);
+    } catch { /* ignore */ }
 
-    const errorMessage = response.status === 401 || response.status === 403
-      ? `@ux3/plugin-translate: build-time API request failed - HTTP ${response.status}. Check credentials in 'apiKey' or the env var '${process.env.GROQ_API_KEY ? 'GROQ_API_KEY' : 'GROQ_API_KEY (default)'}'. To silence this in dev, disable build-time translation with plugins.@ux3/plugin-translate.config.enabled=false${responseDetails}`
-      : `@ux3/plugin-translate: build-time API request failed - HTTP ${response.status}${responseDetails}`;
-
-    const error = new Error(errorMessage);
-    defaultLogger.error('@ux3/plugin-translate.buildTime.translate.failure', error, {
-      sourceLocale,
-      targetLocale,
-      endpoint: options.endpoint,
-      model: options.model,
-      status: response.status,
-    });
-    throw error;
+    throw new Error(
+      `@ux3/plugin-translate: API request failed - HTTP ${response.status}${details}`
+    );
   }
 
   const data = (await response.json()) as any;
-  const translated: string = data?.choices?.[0]?.message?.content?.trim() ?? '';
-  if (!translated) {
-    const error = new Error('@ux3/plugin-translate: build-time API returned empty text');
-    defaultLogger.error('@ux3/plugin-translate.buildTime.translate.failure', error, {
-      sourceLocale,
-      targetLocale,
-      endpoint: options.endpoint,
-      model: options.model,
-    });
-    throw error;
+  const rawContent: string = data?.choices?.[0]?.message?.content?.trim() ?? '';
+  if (!rawContent) {
+    throw new Error('@ux3/plugin-translate: API returned empty response');
   }
 
-  defaultLogger.info('@ux3/plugin-translate.buildTime.translate.success', {
-    sourceLocale,
-    targetLocale,
-    endpoint: options.endpoint,
-    model: options.model,
-    translatedLength: translated.length,
-  });
-
-  return translated;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function resolveTargets(
-  cfg: BuildTimeTranslateConfig,
-  sourceLocale: string,
-  i18n: Record<string, Record<string, string>>
-): string[] {
-  if (Array.isArray(cfg.locales) && cfg.locales.length > 0) {
-    return cfg.locales.filter((locale) => locale && locale !== sourceLocale);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawContent);
+  } catch {
+    const cleaned = rawContent.replace(/```json\s*|\s*```/g, '').trim();
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      throw new Error('@ux3/plugin-translate: API returned invalid JSON: ' + rawContent.slice(0, 200));
+    }
   }
 
-  const fromConfig = Object.keys(i18n).filter((locale) => locale !== sourceLocale);
-  return fromConfig;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('@ux3/plugin-translate: API returned non-object response');
+  }
+
+  const result: Record<string, string> = {};
+  for (const key of keys) {
+    const val = (parsed as Record<string, unknown>)[key];
+    if (typeof val === 'string' && val.trim().length > 0) {
+      result[key] = val.trim();
+    }
+  }
+
+  return result;
 }
 
 function getSourceLocale(cfg: BuildTimeTranslateConfig, i18n: Record<string, Record<string, string>>): string {
@@ -186,60 +201,45 @@ function getSourceLocale(cfg: BuildTimeTranslateConfig, i18n: Record<string, Rec
   return firstLocale || 'en';
 }
 
-async function translateObject(
-  source: Record<string, unknown>,
-  target: Record<string, unknown>,
-  sourceLocale: string,
-  targetLocale: string,
-  options: {
-    overwrite: boolean;
-    translateFn: TranslateFn;
-    client: { endpoint: string; model: string; apiKey: string };
-  }
-): Promise<number> {
-  let translatedKeys = 0;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
-  const entries = Object.entries(source);
-  for (const [key, sourceValue] of entries) {
+function collectFlat(source: Record<string, unknown>, target: Record<string, unknown>, overwrite: boolean, prefix = ''): Record<string, string> {
+  const out: Record<string, string> = {};
+  const pfx = prefix ? prefix + '.' : '';
+  for (const [key, value] of Object.entries(source)) {
+    const fullKey = pfx + key;
     const existing = target[key];
-
-    if (typeof sourceValue === 'string') {
-      if (!options.overwrite && typeof existing === 'string' && existing.trim().length > 0) {
-        continue;
-      }
-
-      target[key] = await options.translateFn(sourceValue, targetLocale, sourceLocale, options.client);
-      translatedKeys += 1;
-      continue;
-    }
-
-    if (Array.isArray(sourceValue)) {
-      if (!options.overwrite && Array.isArray(existing) && existing.length > 0) {
-        continue;
-      }
-      target[key] = sourceValue.slice();
-      continue;
-    }
-
-    if (isRecord(sourceValue)) {
+    if (typeof value === 'string') {
+      if (!overwrite && typeof existing === 'string' && existing.trim().length > 0) continue;
+      out[fullKey] = value;
+    } else if (isRecord(value)) {
       const nestedTarget = isRecord(existing) ? existing : {};
-      target[key] = nestedTarget;
-      translatedKeys += await translateObject(sourceValue, nestedTarget, sourceLocale, targetLocale, options);
-      continue;
-    }
-
-    if (options.overwrite || typeof existing === 'undefined') {
-      target[key] = sourceValue;
+      Object.assign(out, collectFlat(value, nestedTarget, overwrite, fullKey));
     }
   }
+  return out;
+}
 
-  return translatedKeys;
+function applyFlat(target: Record<string, unknown>, translations: Record<string, string>): void {
+  for (const [fullKey, value] of Object.entries(translations)) {
+    const dot = fullKey.indexOf('.');
+    if (dot < 0) {
+      target[fullKey] = value;
+    } else {
+      const top = fullKey.slice(0, dot);
+      const rest = fullKey.slice(dot + 1);
+      if (!target[top] || !isRecord(target[top])) target[top] = {};
+      (target[top] as Record<string, unknown>)[rest] = value;
+    }
+  }
 }
 
 export async function applyBuildTimeTranslation(
   config: GeneratedConfig,
   pluginConfig: BuildTimeTranslateConfig,
-  deps: { translateFn?: TranslateFn } = {}
+  deps: { translateFn?: BatchTranslateFn } = {}
 ): Promise<BuildTimeTranslateResult | null> {
   if (pluginConfig.enabled === false) {
     return null;
@@ -252,7 +252,7 @@ export async function applyBuildTimeTranslation(
   const source = i18n[sourceLocale];
   if (!source || Object.keys(source).length === 0) {
     throw new Error(
-      `@ux3/plugin-translate: build-time source locale '${sourceLocale}' not found in config.i18n`
+      `@ux3/plugin-translate: source locale '${sourceLocale}' not found in config.i18n`
     );
   }
 
@@ -270,51 +270,41 @@ export async function applyBuildTimeTranslation(
     '';
 
   if (!apiKey) {
-    throw new Error(
-      '@ux3/plugin-translate: build-time apiKey is required (set config.apiKey or env GROQ_API_KEY)'
-    );
+    throw new Error('@ux3/plugin-translate: apiKey is required (set config.apiKey or env GROQ_API_KEY)');
   }
 
-  const targetLocales = resolveTargets(pluginConfig, sourceLocale, i18n);
+  const targetLocales = (Array.isArray(pluginConfig.locales)
+    ? pluginConfig.locales.filter((l) => l && l !== sourceLocale)
+    : Object.keys(i18n).filter((l) => l !== sourceLocale));
+
   if (targetLocales.length === 0) {
-    return {
-      sourceLocale,
-      targetLocales: [],
-      translatedKeys: 0,
-    };
+    return { sourceLocale, targetLocales: [], translatedKeys: 0 };
   }
 
   const overwrite = pluginConfig.overwrite === true;
-  const translateFn = deps.translateFn || callTranslationApi;
-  const parallel = pluginConfig.parallel !== false;
+  const translateFn = deps.translateFn || callBatchTranslationApi;
+  const systemPrompt = pluginConfig.prompts?.batch?.system;
+  const client = { endpoint, model, apiKey, systemPrompt };
 
-  const translateLocale = async (locale: string): Promise<number> => {
-    const target = (i18n[locale] ?? {}) as Record<string, unknown>;
-    i18n[locale] = target as Record<string, string>;
+  let translatedKeys = 0;
 
-    return translateObject(source as Record<string, unknown>, target, sourceLocale, locale, {
-      overwrite,
-      translateFn,
-      client: { endpoint, model, apiKey },
-    });
-  };
+  for (const targetLocale of targetLocales) {
+    const target = (i18n[targetLocale] ?? {}) as Record<string, unknown>;
 
-  const localeResults = parallel
-    ? await Promise.all(targetLocales.map((locale) => translateLocale(locale)))
-    : await (async () => {
-        const counts: number[] = [];
-        for (const locale of targetLocales) {
-          counts.push(await translateLocale(locale));
-        }
-        return counts;
-      })();
+    const toTranslate = collectFlat(source as Record<string, unknown>, target, overwrite);
 
-  const translatedKeys = localeResults.reduce((sum, count) => sum + count, 0);
+    if (Object.keys(toTranslate).length === 0) continue;
+
+    console.log(`   ${sourceLocale} → ${targetLocale}: ${Object.keys(toTranslate).length} keys`);
+
+    const translated = await translateFn(toTranslate, targetLocale, sourceLocale, client);
+    applyFlat(target, translated);
+    i18n[targetLocale] = target as Record<string, string>;
+
+    translatedKeys += Object.keys(translated).length;
+  }
+
   config.i18n = i18n;
 
-  return {
-    sourceLocale,
-    targetLocales,
-    translatedKeys,
-  };
+  return { sourceLocale, targetLocales, translatedKeys };
 }

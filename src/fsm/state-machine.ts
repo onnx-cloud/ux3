@@ -9,6 +9,14 @@ import { defaultLogger } from '../security/observability.js';
 
 type Listener<T> = (state: string, context: T) => void;
 
+function emitDevTools(source: string, type: string, payload?: any): void {
+  if (typeof window === 'undefined') return;
+  const devTools = (window as any).__ux3DevTools;
+  if (devTools && typeof devTools.emit === 'function') {
+    devTools.emit(source, type, { ...(payload || {}), timestamp: Date.now() });
+  }
+}
+
 function isFunction(value: unknown): value is (...args: any[]) => any {
   return typeof value === 'function';
 }
@@ -35,6 +43,8 @@ export class StateMachine<T extends Record<string, any>> {
   private processing = false;
   private invokeHandlers: Map<string, (...args: any[]) => Promise<any>> = new Map();
   private invokeRegistry?: InvokeRegistry;
+  private activeChildren: Map<string, string> = new Map();
+  private historyMap: Map<string, string> = new Map();
 
   constructor(config: MachineConfig<T>) {
     this.config = config;
@@ -43,8 +53,8 @@ export class StateMachine<T extends Record<string, any>> {
       ? config.context() 
       : { ...(config.context || {} as T) };
 
-    // Call entry actions for initial state
     this.executeStateActions('entry', this.state);
+    this.enterCompoundChildren(this.state);
   }
 
   /**
@@ -58,8 +68,136 @@ export class StateMachine<T extends Record<string, any>> {
    * Set the InvokeRegistry for centralized service invocation (Phase 1.2.3)
    * When set, service invokes will use the registry for retry/monitoring/stats
    */
+  private crossMachineLookup: ((namespace: string) => StateMachine<any> | null) | null = null;
+
+  setFSMLookup(lookup: (namespace: string) => StateMachine<any> | null): void {
+    this.crossMachineLookup = lookup;
+  }
+
+  /**
+   * Set the InvokeRegistry for centralized service invocation (Phase 1.2.3)
+   * When set, service invokes will use the registry for retry/monitoring/stats
+   */
   setInvokeRegistry(registry: InvokeRegistry): void {
     this.invokeRegistry = registry;
+  }
+
+  /**
+   * Enter children of a compound state recursively
+   */
+  private enterCompoundChildren(stateName: string): void {
+    const cfg = this.config.states[stateName];
+    if (!cfg?.states || (cfg.type && cfg.type !== 'compound' && cfg.type !== 'parallel')) return;
+
+    let childName: string | undefined;
+    if (cfg.history && this.historyMap.has(stateName)) {
+      const hist = this.historyMap.get(stateName)!;
+      if (cfg.states[hist]) childName = hist;
+    }
+    if (!childName) childName = cfg.initial;
+    if (!childName || !cfg.states[childName]) return;
+
+    this.activeChildren.set(stateName, childName);
+    this.executeStateActions('entry', childName);
+    this.handleStateInvoke(childName);
+    this.enterCompoundChildren(childName);
+  }
+
+  /**
+   * Exit children of a compound state recursively
+   */
+  private exitCompoundChildren(stateName: string): void {
+    const cfg = this.config.states[stateName];
+    const childName = this.activeChildren.get(stateName);
+    if (!childName) return;
+
+    this.exitCompoundChildren(childName);
+    this.executeStateActions('exit', childName);
+
+    if (cfg?.history === 'shallow' || cfg?.history === 'deep') {
+      this.historyMap.set(stateName, childName);
+    }
+    this.activeChildren.delete(stateName);
+  }
+
+  /**
+   * Get full state path from root to deepest active child
+   */
+  getStatePath(): string[] {
+    const path = [this.state];
+    let current = this.state;
+    while (true) {
+      const child = this.activeChildren.get(current);
+      if (!child) break;
+      path.push(child);
+      current = child;
+    }
+    return path;
+  }
+
+  /**
+   * Get all active leaf states (alias for getStatePath)
+   */
+  getActiveStates(): string[] {
+    return this.getStatePath();
+  }
+
+  /**
+   * Check if current state path matches a dot-separated path pattern
+   * Supports prefix matching: 'edit' matches 'edit.loading'
+   */
+  matchesPath(path: string): boolean {
+    const myPath = this.getStatePath().join('.');
+    return myPath === path || myPath.startsWith(path + '.');
+  }
+
+  /**
+   * Resolve transition target with support for:
+   * - '.'     : self-transition (re-enter current state)
+   * - '.child': relative child transition
+   * - '#root' : absolute root state transition
+   * - 'a.b'   : path transition (root state + child chain)
+   * - 'name'  : direct root state transition
+   */
+  private resolveTarget(target: string): { rootState: string; childPath?: string } {
+    if (target === '.') return { rootState: this.state };
+    if (target.startsWith('#')) return { rootState: target.slice(1) };
+    if (target.startsWith('.')) return { rootState: this.state, childPath: target.slice(1) };
+    if (target.includes('.')) {
+      const dotIdx = target.indexOf('.');
+      return { rootState: target.substring(0, dotIdx), childPath: target.substring(dotIdx + 1) };
+    }
+    return { rootState: target };
+  }
+
+  /**
+   * Evaluate a guard that may be a function or a string reference
+   * String guard format: 'namespace:state' checks FSM 'namespace' in state 'state'
+   */
+  private evaluateGuard(guard: string | ((context: T) => boolean)): boolean {
+    if (typeof guard === 'function') return guard(this.context);
+    if (typeof guard === 'string' && guard.includes(':')) {
+      const [namespace, requiredState] = guard.split(':');
+      const otherFsm = this.crossMachineLookup?.(namespace);
+      if (!otherFsm) return false;
+      return otherFsm.matches(requiredState) || otherFsm.matchesPath(requiredState);
+    }
+    return false;
+  }
+
+  /**
+   * Handle cross-machine transitions
+   * Format: target = 'namespace.state' sends event to sibling FSM
+   */
+  private handleCrossMachineTransition(target: string): boolean {
+    if (!target.includes('.') || target.startsWith('.') || target.startsWith('#')) return false;
+    const dotIdx = target.indexOf('.');
+    const namespace = target.substring(0, dotIdx);
+    const stateName = target.substring(dotIdx + 1);
+    const otherFsm = this.crossMachineLookup?.(namespace);
+    if (!otherFsm) return false;
+    otherFsm.send({ type: stateName });
+    return true;
   }
 
   /**
@@ -105,19 +243,15 @@ export class StateMachine<T extends Record<string, any>> {
 
     const prevState = this.state;
 
-    // Execute exit actions
+    this.exitCompoundChildren(prevState);
     this.executeStateActions('exit', prevState);
 
-    // Update state
     this.state = targetState;
 
-    // Execute entry actions
     this.executeStateActions('entry', this.state);
-
-    // Start invoke for new state (if configured)
+    this.enterCompoundChildren(this.state);
     this.handleStateInvoke(this.state);
 
-    // Notify listeners
     this.notifyListeners();
   }
 
@@ -160,17 +294,25 @@ export class StateMachine<T extends Record<string, any>> {
 
     const transition = stateConfig.on[event.type];
     if (!transition) {
+      if (this.config.strict) {
+        const available = Object.keys(stateConfig.on).join(', ');
+        throw new Error(`[FSM ${this.config.id}] No transition for '${event.type}' in state '${this.state}'. Available: ${available || '(none)'}`);
+      }
       return;
     }
 
-    const transitionConfig = typeof transition === 'string' ? { target: transition } : transition;
+    const transitionConfig = typeof transition === 'string' ? { target: transition } : { ...transition };
 
-    // Check guard condition (ignore non-function guard declarations)
-    if (transitionConfig.guard && isFunction(transitionConfig.guard) && !transitionConfig.guard(this.context)) {
-      return;
+    emitDevTools('fsm', event.type, { from: this.state, id: this.config.id });
+
+    if (transitionConfig.guard) {
+      const guardFn = this.resolveGuardFunction(transitionConfig.guard);
+      if (guardFn && !guardFn()) {
+        emitDevTools('fsm', 'guard.rejected', { event: event.type, from: this.state, id: this.config.id });
+        return;
+      }
     }
 
-    // Execute transition actions; allow functions to return partial context updates
     if (Array.isArray(transitionConfig.actions)) {
       transitionConfig.actions.forEach((action) => {
         if (!isFunction(action)) {
@@ -179,7 +321,6 @@ export class StateMachine<T extends Record<string, any>> {
         try {
           const result = action(this.context, event);
           if (result && typeof (result as Promise<unknown>).then === 'function') {
-            // async result
             (result as Promise<any>)
               .then((update) => {
                 if (update && typeof update === 'object') {
@@ -195,7 +336,6 @@ export class StateMachine<T extends Record<string, any>> {
                 this.send({ type: 'ERROR', payload: { error: ex } });
               });
           } else if (result && typeof result === 'object') {
-            // merge returned context updates
             this.setState(result as Partial<T>);
           }
         } catch (e) {
@@ -209,34 +349,95 @@ export class StateMachine<T extends Record<string, any>> {
       });
     }
 
-    // Transition to new state if target exists
     if (transitionConfig.target) {
-      if (!this.config.states[transitionConfig.target]) {
-        const error = new Error(`FSM transition failed: target state "${transitionConfig.target}" not found`);
-        defaultLogger.error('fsm.transition.missingTarget', error, {
-          targetState: transitionConfig.target,
-          state: this.state,
+      const resolved = this.resolveTarget(transitionConfig.target);
+
+      // Try cross-machine transition first: 'namespace.state'
+      if (this.handleCrossMachineTransition(transitionConfig.target)) {
+        emitDevTools('fsm', 'cross-machine', {
+          from: this.state,
+          target: transitionConfig.target,
+          id: this.config.id,
         });
-        throw error;
+        return;
       }
 
+      // Handle relative child transition: '.childName'
+      if (transitionConfig.target.startsWith('.')) {
+        const childName = transitionConfig.target.slice(1);
+        const currentChild = this.activeChildren.get(this.state);
+        const rootCfg = this.config.states[this.state];
+        if (rootCfg?.states?.[childName]) {
+          if (currentChild) {
+            this.exitCompoundChildren(this.state);
+          }
+          this.activeChildren.set(this.state, childName);
+          this.executeStateActions('entry', childName);
+          this.handleStateInvoke(childName);
+          this.notifyListeners();
+          emitDevTools('fsm', 'transition', {
+            from: currentChild || this.state,
+            to: childName,
+            id: this.config.id,
+          });
+          return;
+        }
+      }
+
+      // Handle root-level transition
+      this.exitCompoundChildren(this.state);
+      this.executeStateActions('exit', this.state);
+
       const prevState = this.state;
+      this.state = resolved.rootState;
 
-      // Execute exit actions
-      this.executeStateActions('exit', prevState);
-
-      // Update state
-      this.state = transitionConfig.target;
-
-      // Execute entry actions
       this.executeStateActions('entry', this.state);
+      this.enterCompoundChildren(this.state);
 
-      // Start invoke for new state (if configured)
-      this.handleStateInvoke(this.state);
+      // If target had a child path, navigate to it
+      if (resolved.childPath) {
+        const childCfg = this.config.states[this.state];
+        if (childCfg?.states?.[resolved.childPath]) {
+          this.activeChildren.set(this.state, resolved.childPath);
+          this.executeStateActions('entry', resolved.childPath);
+          this.handleStateInvoke(resolved.childPath);
+        }
+      }
 
-      // Notify listeners
+      if (this.state !== prevState) {
+        this.handleStateInvoke(this.state);
+      }
       this.notifyListeners();
+
+      emitDevTools('fsm', 'transition', {
+        from: prevState,
+        to: this.state,
+        id: this.config.id,
+      });
     }
+  }
+
+  /**
+   * Resolve a guard that may be a function, string, or cross-machine check
+   */
+  private resolveGuardFunction(
+    guard: string | ((context: T) => boolean)
+  ): (() => boolean) | null {
+    if (typeof guard === 'function') {
+      return () => guard(this.context);
+    }
+    if (typeof guard === 'string') {
+      if (guard.includes(':')) {
+        const [namespace, requiredState] = guard.split(':');
+        return () => {
+          const other = this.crossMachineLookup?.(namespace);
+          if (!other) return false;
+          return other.matches(requiredState) || other.matchesPath(requiredState);
+        };
+      }
+      return null;
+    }
+    return null;
   }
 
   /**
@@ -376,23 +577,9 @@ export class StateMachine<T extends Record<string, any>> {
 
     // Transition to errorTarget if configured
     if (stateConfig.errorTarget) {
-      const prevState = this.state;
-      
-      // Ensure we only transition if still in the same state
       if (this.state === stateName) {
         this.setState({ error: errorContext } as unknown as Partial<T>);
-        
-        // Execute exit actions
-        this.executeStateActions('exit', prevState);
-
-        // Update state
-        this.state = stateConfig.errorTarget;
-
-        // Execute entry actions
-        this.executeStateActions('entry', this.state);
-
-        // Notify listeners
-        this.notifyListeners();
+        this.transitionTo(stateConfig.errorTarget);
       }
     } else {
       // No errorTarget - send ERROR event to let views handle it
@@ -475,7 +662,10 @@ export class StateMachine<T extends Record<string, any>> {
    */
   matches(pattern: string | string[]): boolean {
     const patterns = Array.isArray(pattern) ? pattern : [pattern];
-    return patterns.includes(this.state);
+    const activeStates = this.getActiveStates();
+    return patterns.some((p) => 
+      activeStates.includes(p) || this.getStatePath().join('.') === p
+    );
   }
 
   /**
@@ -496,10 +686,12 @@ export class StateMachine<T extends Record<string, any>> {
       return false;
     }
 
-    // Check guard condition if present
     const transitionConfig = typeof transition === 'string' ? {} : transition;
-    if (transitionConfig.guard && isFunction(transitionConfig.guard) && !transitionConfig.guard(this.context)) {
-      return false;
+    if (transitionConfig.guard) {
+      const guardFn = this.resolveGuardFunction(transitionConfig.guard);
+      if (guardFn && !guardFn()) {
+        return false;
+      }
     }
 
     return true;
@@ -527,15 +719,15 @@ export class StateMachine<T extends Record<string, any>> {
     this.eventQueue = [];
     this.processing = false;
 
-    // Execute exit actions for current state
+    this.exitCompoundChildren(this.state);
     this.executeStateActions('exit', this.state);
 
     this.state = this.config.initial;
+    this.activeChildren.clear();
 
-    // Execute entry actions for initial state
     this.executeStateActions('entry', this.state);
+    this.enterCompoundChildren(this.state);
 
-    // Notify listeners
     this.notifyListeners();
   }
 }

@@ -23,9 +23,13 @@ describe('@ux3/plugin-translate build-time', () => {
         locales: ['fr', 'de'],
       },
       {
-        translateFn: async (text, locale) => {
-          calls.push(`${locale}:${text}`);
-          return `${text} [${locale}]`;
+        translateFn: async (texts, locale) => {
+          const result: Record<string, string> = {};
+          for (const [key, text] of Object.entries(texts)) {
+            calls.push(`${locale}:${text}`);
+            result[key] = `${text} [${locale}]`;
+          }
+          return result;
         },
       }
     );
@@ -52,6 +56,14 @@ describe('@ux3/plugin-translate build-time', () => {
       },
     };
 
+    const batchFn = async (texts: Record<string, string>, locale: string) => {
+      const result: Record<string, string> = {};
+      for (const [key, text] of Object.entries(texts)) {
+        result[key] = `${text} [${locale}]`;
+      }
+      return result;
+    };
+
     await applyBuildTimeTranslation(
       config,
       {
@@ -59,9 +71,7 @@ describe('@ux3/plugin-translate build-time', () => {
         sourceLocale: 'en',
         locales: ['fr'],
       },
-      {
-        translateFn: async (text, locale) => `${text} [${locale}]`,
-      }
+      { translateFn: batchFn }
     );
 
     expect(config.i18n.fr.title).toBe('Bonjour');
@@ -75,9 +85,7 @@ describe('@ux3/plugin-translate build-time', () => {
         locales: ['fr'],
         overwrite: true,
       },
-      {
-        translateFn: async (text, locale) => `${text} [${locale}]`,
-      }
+      { translateFn: batchFn }
     );
 
     expect(config.i18n.fr.title).toBe('Hello [fr]');

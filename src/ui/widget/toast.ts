@@ -80,10 +80,10 @@ export class UxToastContainer extends LifecycleComponent {
 
     this.toasts.set(id, toast);
 
-    this.dispatchEvent(new CustomEvent('ux:open', {
+    this.dispatchEvent(new CustomEvent('ux:event', {
       bubbles: true,
       composed: true,
-      detail: { id, config }
+      detail: { id, config, action: 'OPEN' }
     }));
 
     // Auto-dismiss after duration
@@ -106,10 +106,10 @@ export class UxToastContainer extends LifecycleComponent {
       toast.remove();
       this.toasts.delete(id);
 
-      this.dispatchEvent(new CustomEvent('ux:close', {
+      this.dispatchEvent(new CustomEvent('ux:event', {
         bubbles: true,
         composed: true,
-        detail: { id }
+        detail: { id, action: 'CLOSE' }
       }));
     }
   }

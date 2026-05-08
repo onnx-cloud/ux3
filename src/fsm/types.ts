@@ -51,12 +51,16 @@ export type InvokeConfig<T extends Record<string, any> = Record<string, any>> =
  * Individual state configuration
  */
 export interface StateConfig<T extends Record<string, any>> {
+  type?: 'atomic' | 'compound' | 'parallel';
   on?: Record<string, TransitionConfig<T> | string>;
   entry?: Array<(context: T) => void | Partial<T> | Promise<Partial<T>>>;
   exit?: Array<(context: T) => void | Partial<T> | Promise<Partial<T>>>;
   invoke?: InvokeConfig<T>;
-  errorTarget?: string;  // Auto-transition to this state on service invoke error
-  errorActions?: Array<(context: T, error: Error) => void>;  // Run before transitioning to error state
+  errorTarget?: string;
+  errorActions?: Array<(context: T, error: Error) => void>;
+  initial?: string;
+  states?: Record<string, StateConfig<T>>;
+  history?: 'shallow' | 'deep';
 }
 
 /**
@@ -67,6 +71,9 @@ export interface MachineConfig<T extends Record<string, any>> {
   initial: string;
   context?: T | (() => T);
   states: Record<string, StateConfig<T>>;
+  parent?: string;
+  delegates?: string[];
+  strict?: boolean;
 }
 
 export interface MachineContext<T extends Record<string, any>> {

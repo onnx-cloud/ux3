@@ -4,15 +4,16 @@ import fsSync from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import type { GeneratedConfig } from '../../ui/context-builder.js';
-import * as translateBuildTimeModule from '../../../packages/@ux3/plugin-translate/src/build-time.ts';
+import * as translateModule from '../../../packages/@ux3/plugin-translate/src/build-time.ts';
 import type { BuildTimeTranslateConfig } from '../../../packages/@ux3/plugin-translate/src/build-time.ts';
+import { resolveConfigTemplates } from '../../utils/env-template.js';
 
 const _require = createRequire(import.meta.url);
 
 const applyBuildTimeTranslation =
-  (translateBuildTimeModule as { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation }).applyBuildTimeTranslation ||
-  (translateBuildTimeModule as { default?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation } }).default?.applyBuildTimeTranslation ||
-  (translateBuildTimeModule as { 'module.exports'?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation } })['module.exports']?.applyBuildTimeTranslation;
+  (translateModule as { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation }).applyBuildTimeTranslation ||
+  (translateModule as { default?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation } }).default?.applyBuildTimeTranslation ||
+  (translateModule as { 'module.exports'?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation } })['module.exports']?.applyBuildTimeTranslation;
 
 interface TranslateOptions {
   force?: boolean;
@@ -41,7 +42,7 @@ async function loadTranslatorConfig(projectDir: string): Promise<any> {
       const raw = await fs.readFile(candidate, 'utf-8');
       try {
         const YAML = _require('yaml');
-        return YAML.parse(raw);
+        return resolveConfigTemplates(YAML.parse(raw));
       } catch {
         console.warn(`[ux3 translate] could not parse ${candidate}`);
       }
@@ -50,64 +51,137 @@ async function loadTranslatorConfig(projectDir: string): Promise<any> {
   return null;
 }
 
-async function loadI18nFromProject(projectDir: string): Promise<Record<string, Record<string, string>>> {
-  const i18nDir = path.join(projectDir, 'ux', 'i18n');
-  const i18n: Record<string, Record<string, string>> = {};
-  if (!fsSync.existsSync(i18nDir)) return i18n;
-  const localeDirs = await fs.readdir(i18nDir, { withFileTypes: true });
-  for (const dirent of localeDirs) {
-    if (!dirent.isDirectory()) continue;
-    const locale = dirent.name;
-    const localeDir = path.join(i18nDir, locale);
-    const files = await fs.readdir(localeDir);
-    i18n[locale] = {};
-    for (const file of files) {
-      if (!file.endsWith('.yaml') && !file.endsWith('.yml')) continue;
-      const yamlPath = path.join(localeDir, file);
-      const raw = await fs.readFile(yamlPath, 'utf-8');
-      try {
-        const YAML = _require('yaml');
-        const parsed = YAML.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          const ns = file.replace(/\.(yaml|yml)$/, '');
-          for (const [key, value] of Object.entries(parsed)) {
-            i18n[locale][`${ns}.${key}`] = String(value);
-          }
-        }
-      } catch (e) {
-        console.warn(`[ux3 translate] could not parse ${yamlPath}: ${e}`);
-      }
-    }
-  }
-  return i18n;
-}
-
 async function runBuildTimeTranslation(
   projectDir: string,
-  rootConfig: any,
-  translateConfig: Record<string, unknown>
-): Promise<{ translated: number; skipped: number }> {
+  translateConfig: Record<string, unknown>,
+  force: boolean,
+  dryRun: boolean
+): Promise<{ translated: number; skipped: number; files: string[] }> {
   let translated = 0;
   let skipped = 0;
+  const written: string[] = [];
 
   try {
-    const i18n = await loadI18nFromProject(projectDir);
-    const genConfig: GeneratedConfig = {
-      routes: [],
-      services: {},
-      machines: {},
-      i18n,
-      widgets: {},
-      styles: {},
-      templates: {},
-    };
-    const pluginConfig: BuildTimeTranslateConfig = {
-      ...translateConfig,
-      overwrite: translateConfig.forceTranslate === true,
-    };
-    const result = await applyBuildTimeTranslation(genConfig, pluginConfig);
-    if (result && 'translatedKeys' in result) {
-      translated = result.translatedKeys || 0;
+    const YAML = _require('yaml');
+    const sourceLocale = (translateConfig.defaultLocale as string) || 'en';
+    const targetLocales: string[] = (Array.isArray(translateConfig.locales)
+      ? (translateConfig.locales as string[]).filter((l: string) => l !== sourceLocale)
+      : []);
+
+    if (targetLocales.length === 0) {
+      console.warn('[ux3 translate] no target locales configured');
+      return { translated, skipped, files: [] };
+    }
+
+    const i18nDir = path.join(projectDir, 'ux', 'i18n');
+    const sourceDir = path.join(i18nDir, sourceLocale);
+    if (!fsSync.existsSync(sourceDir)) {
+      console.warn(`[ux3 translate] source locale directory not found: ${sourceDir}`);
+      return { translated, skipped, files: [] };
+    }
+
+    const sourceFiles = (await fs.readdir(sourceDir, { withFileTypes: true }))
+      .filter((d) => d.isFile() && (d.name.endsWith('.yaml') || d.name.endsWith('.yml')))
+      .map((d) => d.name);
+
+    if (sourceFiles.length === 0) {
+      console.warn(`[ux3 translate] no i18n files found in ${sourceDir}`);
+      return { translated, skipped, files: [] };
+    }
+
+    console.log(`\n🌐 Translating ${sourceLocale} → ${targetLocales.join(', ')}`);
+
+    const pluginConfig: BuildTimeTranslateConfig = { ...translateConfig, overwrite: true };
+
+    for (const fileName of sourceFiles) {
+      const sourcePath = path.join(sourceDir, fileName);
+      const ns = fileName.replace(/\.(yaml|yml)$/, '');
+      const raw = await fs.readFile(sourcePath, 'utf-8');
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = (YAML.parse(raw) || {}) as Record<string, unknown>;
+      } catch {
+        console.warn(`[ux3 translate] could not parse ${sourcePath}, skipping`);
+        continue;
+      }
+
+      const sourceKeys: Record<string, string> = {};
+      for (const [key, value] of Object.entries(parsed)) {
+        sourceKeys[`${ns}.${key}`] = String(value);
+      }
+
+      if (Object.keys(sourceKeys).length === 0) continue;
+
+      let needsTranslation = false;
+      for (const locale of targetLocales) {
+        const targetPath = path.join(i18nDir, locale, fileName);
+        if (!fsSync.existsSync(targetPath)) {
+          needsTranslation = true;
+          break;
+        }
+        if (force) {
+          needsTranslation = true;
+          break;
+        }
+        const srcStat = await fs.stat(sourcePath);
+        const tgtStat = await fs.stat(targetPath);
+        if (srcStat.mtimeMs > tgtStat.mtimeMs) {
+          needsTranslation = true;
+          break;
+        }
+        skipped += Object.keys(sourceKeys).length;
+      }
+
+      if (!needsTranslation) continue;
+
+      const i18n: Record<string, Record<string, string>> = {};
+      i18n[sourceLocale] = sourceKeys;
+      for (const locale of targetLocales) {
+        const targetPath = path.join(i18nDir, locale, fileName);
+        i18n[locale] = {};
+        if (fsSync.existsSync(targetPath)) {
+          try {
+            const tgtRaw = await fs.readFile(targetPath, 'utf-8');
+            const tgtParsed = (YAML.parse(tgtRaw) || {}) as Record<string, unknown>;
+            for (const [key, value] of Object.entries(tgtParsed)) {
+              i18n[locale][`${ns}.${key}`] = String(value);
+            }
+          } catch { /* start fresh */ }
+        }
+      }
+
+      const genConfig: GeneratedConfig = {
+        routes: [],
+        services: {},
+        machines: {},
+        i18n,
+        widgets: {},
+        styles: {},
+        templates: {},
+      };
+
+      const result = await applyBuildTimeTranslation(genConfig, pluginConfig);
+      if (result && result.translatedKeys > 0) {
+        translated += result.translatedKeys;
+
+        if (!dryRun) {
+          for (const locale of targetLocales) {
+            const localeDir = path.join(i18nDir, locale);
+            if (!fsSync.existsSync(localeDir)) {
+              await fs.mkdir(localeDir, { recursive: true });
+            }
+            const outPath = path.join(localeDir, fileName);
+            const outKeys: Record<string, unknown> = {};
+            for (const [fullKey, value] of Object.entries(i18n[locale])) {
+              const key = fullKey.slice(ns.length + 1);
+              outKeys[key] = value;
+            }
+            const yamlStr = YAML.stringify(outKeys, { lineWidth: 0 });
+            await fs.writeFile(outPath, yamlStr, 'utf-8');
+            written.push(`ux/i18n/${locale}/${fileName}`);
+          }
+        }
+      }
     }
   } catch (e) {
     console.warn(
@@ -116,7 +190,7 @@ async function runBuildTimeTranslation(
     );
   }
 
-  return { translated, skipped };
+  return { translated, skipped, files: written };
 }
 
 export const translateCommand = new Command()
@@ -143,7 +217,6 @@ export const translateCommand = new Command()
       process.exit(1);
     }
 
-    // Validate translator config
     const pluginEntries: any[] = Array.isArray(rootConfig.plugins)
       ? rootConfig.plugins
       : [];
@@ -154,10 +227,7 @@ export const translateCommand = new Command()
     );
 
     if (!translateEntry) {
-      console.error(
-        '\n❌ No @ux3/plugin-translate configured in ux3.yaml plugins.'
-      );
-      console.error('   Add it with endpoint, model, apiKey, and locales.');
+      console.error('\n❌ No @ux3/plugin-translate configured in ux3.yaml plugins.');
       process.exit(1);
     }
 
@@ -167,10 +237,7 @@ export const translateCommand = new Command()
     const requiredKeys = ['endpoint', 'model', 'apiKey', 'locales'];
     const missing = requiredKeys.filter((k) => !translateConfig[k]);
     if (missing.length > 0) {
-      console.error(
-        `\n❌ Missing required translator config keys: ${missing.join(', ')}`
-      );
-      console.error('   All of endpoint, model, apiKey, and locales are mandatory.');
+      console.error(`\n❌ Missing required translator config keys: ${missing.join(', ')}`);
       process.exit(1);
     }
 
@@ -183,21 +250,21 @@ export const translateCommand = new Command()
       return;
     }
 
-    console.log(`\n🌐 Translating with ${translateConfig.model}...`);
-    console.log(`   Source:  ${translateConfig.defaultLocale || 'en'}`);
-    console.log(`   Targets: ${translateConfig.locales.join(', ')}`);
-
-    const { translated, skipped } = await runBuildTimeTranslation(
+    const { translated, skipped, files } = await runBuildTimeTranslation(
       projectDir,
-      rootConfig,
-      { ...translateConfig, forceTranslate: options.force }
+      translateConfig,
+      options.force === true,
+      false
     );
 
     if (translated > 0) {
-      console.log(`✅ ${translated} file(s) translated`);
+      console.log(`✅ ${translated} key(s) translated across ${files.length} file(s)`);
+      for (const f of files) {
+        console.log(`   ${f}`);
+      }
     }
     if (skipped > 0) {
-      console.log(`   ${skipped} file(s) skipped (up-to-date)`);
+      console.log(`   ${skipped} key(s) skipped (target up-to-date)`);
     }
     if (translated === 0 && skipped === 0) {
       console.log('⚠️  No translation output produced.');

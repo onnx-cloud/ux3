@@ -22,19 +22,19 @@ function buildRow(ev: { ts: number; source: string; type: string; payload?: unkn
   row.style.cssText = 'padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:6px;';
 
   const time = document.createElement('span');
-  time.style.cssText = 'color:#888;min-width:70px;';
+  time.style.cssText = 'color:var(--ins-muted,#888);min-width:70px;';
   time.textContent = new Date(ev.ts).toLocaleTimeString();
 
   const src = document.createElement('span');
-  src.style.cssText = `color:${SOURCE_COLORS[ev.source] ?? '#fff'};min-width:70px;`;
+  src.style.cssText = `color:${SOURCE_COLORS[ev.source] ?? 'var(--ins-text)'};min-width:70px;`;
   src.textContent = ev.source;
 
   const type = document.createElement('span');
-  type.style.cssText = 'color:#dcdcaa;min-width:100px;';
+  type.style.cssText = 'color:var(--ins-string,#dcdcaa);min-width:100px;';
   type.textContent = ev.type;
 
   const payload = document.createElement('span');
-  payload.style.cssText = 'color:#ce9178;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+  payload.style.cssText = 'color:var(--ins-value,#ce9178);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
   if (ev.payload !== undefined) {
     payload.textContent = JSON.stringify(ev.payload);
     payload.title = JSON.stringify(ev.payload, null, 2);
@@ -75,7 +75,7 @@ export function createEventsPanel(_ctx?: any): HTMLElement {
   const exportBtn = document.createElement('button');
   exportBtn.textContent = 'Export JSON';
   exportBtn.style.cssText =
-    'margin-left:auto;background:var(--ins-accent);color:var(--ins-text);border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:11px;';
+    'margin-left:auto;background:var(--ins-accent);color:var(--ins-text);border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:11px;font-family:inherit;';
   exportBtn.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(inspectorBus.getAll(), null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -89,7 +89,7 @@ export function createEventsPanel(_ctx?: any): HTMLElement {
 
   // Log area
   const log = document.createElement('div');
-  log.style.cssText = 'flex:1;overflow:auto;font-family:monospace;border:1px solid var(--ins-border);border-radius:3px;padding:4px;display:flex;flex-direction:column-reverse;';
+  log.style.cssText = 'flex:1;overflow:auto;font-family:monospace;font-size:11px;border:1px solid var(--ins-border);border-radius:3px;padding:4px;';
   root.appendChild(log);
 
   // Track rendered count for incremental updates
@@ -99,6 +99,7 @@ export function createEventsPanel(_ctx?: any): HTMLElement {
     log.innerHTML = '';
     renderedCount = 0;
     const events = inspectorBus.getAll().filter(e => activeFilters.has(e.source));
+    // Reverse order: newest first
     for (let i = events.length - 1; i >= 0; i--) {
       const row = buildRow(events[i]);
       log.appendChild(row);
@@ -110,8 +111,9 @@ export function createEventsPanel(_ctx?: any): HTMLElement {
     const events = inspectorBus.getAll();
     if (events.length <= renderedCount) return;
     const newEvents = events.slice(renderedCount).filter(e => activeFilters.has(e.source));
-    for (const ev of newEvents) {
-      const row = buildRow(ev);
+    // Prepend new events so newest appears at top
+    for (let i = newEvents.length - 1; i >= 0; i--) {
+      const row = buildRow(newEvents[i]);
       log.insertBefore(row, log.firstChild);
     }
     renderedCount = events.length;

@@ -2,7 +2,7 @@
  * @ux3/widget - Widget factory system
  *
  */
-export type { WidgetConfig, WidgetFactory, Widget } from './widget.js';
+export type { WidgetConfig } from './widget.js';
 export { UxField, UxFieldArray } from './form/index.js';
 export { UxModal } from './modal.js';
 export { UxToastContainer } from './toast.js';

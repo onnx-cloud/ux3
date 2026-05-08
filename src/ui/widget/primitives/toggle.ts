@@ -25,7 +25,6 @@ export class UxToggle extends UxBase {
       bubbles: true,
       detail: { [stateAttr]: next },
     }));
-    this.dispatchEvent(new CustomEvent(next ? 'ux:open' : 'ux:close', { bubbles: true }));
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {

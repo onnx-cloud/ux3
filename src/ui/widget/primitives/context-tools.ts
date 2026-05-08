@@ -235,6 +235,8 @@ export class UxNetworkStatus extends UxBase {
       return;
     }
 
+    const hideLabel = this.hasAttribute('hide-label');
+
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: inline-flex; align-items: center; gap: var(--ux-status-gap, 0.375rem); position: relative; cursor: default; }
@@ -255,6 +257,7 @@ export class UxNetworkStatus extends UxBase {
           font: inherit;
           color: inherit;
         }
+        ${hideLabel ? '.label { display: none; }' : ''}
         .tooltip {
           display: none;
           position: absolute;

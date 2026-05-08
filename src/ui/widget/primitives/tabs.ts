@@ -4,10 +4,12 @@ import { resolveStyle } from '../../style-registry.js';
 export class UxTabs extends UxBase {
   private tabs: HTMLElement[] = [];
   private panels: HTMLElement[] = [];
+  private tabBar: HTMLElement | null = null;
 
   protected onConnected(): void {
     super.onConnected();
     this.setAttribute('role', 'tablist');
+    this.buildTabBar();
     this.generateTabsFromData();
     this.collectChildren();
     this.applyTabStyles();
@@ -21,24 +23,43 @@ export class UxTabs extends UxBase {
     super.onDisconnected();
   }
 
+  private buildTabBar() {
+    this.tabBar = document.createElement('div');
+    this.tabBar.className = 'ux-tab-bar';
+    this.tabBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:2px;';
+    this.tabBar.setAttribute('role', 'presentation');
+    this.appendChild(this.tabBar);
+  }
+
   private generateTabsFromData() {
     const data = this.getAttribute('data-tabs');
-    if (!data || this.querySelector('ux-tab,[role="tab"]')) return;
-    const labels = data.split(/[|,]/).map(s => s.trim()).filter(Boolean);
+    if (!data || this.querySelector('[role="tab"], ux-tab')) return;
+    const labels = data.split(/[|█,]/).map(s => s.trim()).filter(Boolean);
     labels.forEach((label, i) => {
       const tab = document.createElement('ux-tab');
       tab.textContent = label;
+      tab.setAttribute('role', 'tab');
       if (i === 0) tab.setAttribute('selected', '');
-      this.appendChild(tab);
+      if (this.tabBar) {
+        this.tabBar.appendChild(tab);
+      } else {
+        this.appendChild(tab);
+      }
     });
   }
 
   private applyTabStyles() {
     const tabCls = resolveStyle('tab') || resolveStyle('tabs');
     const panelCls = resolveStyle('tab-panel');
-    if (tabCls) {
-      this.tabs.forEach(t => {
-        if (!t.className) t.className = tabCls;
+    const selCls = resolveStyle('tab-selected');
+    if (tabCls && selCls) {
+      this.tabs.forEach((t, i) => {
+        const existing = t.className.split(/\s+/).filter(Boolean);
+        const base = new Set([...existing, ...tabCls.split(/\s+/).filter(Boolean)]);
+        if (t.hasAttribute('selected')) {
+          for (const c of selCls.split(/\s+/).filter(Boolean)) base.add(c);
+        }
+        t.className = Array.from(base).join(' ');
       });
     }
     if (panelCls) {
@@ -60,8 +81,14 @@ export class UxTabs extends UxBase {
     const tab = (e.target as HTMLElement).closest('[role="tab"], ux-tab') as HTMLElement;
     if (!tab) return;
     const idx = this.tabs.indexOf(tab);
-    if (idx >= 0) this.selectTab(idx);
-    this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { selectedIndex: idx } }));
+    if (idx >= 0) {
+      this.selectTab(idx);
+      this.dispatchEvent(new CustomEvent('ux:change', {
+        bubbles: true, composed: true,
+        detail: { selectedIndex: idx, selectedLabel: tab.textContent?.trim() || '' },
+      }));
+      this.dispatchFsmEvent(idx);
+    }
   };
 
   private readonly onTabKeyDown = (e: KeyboardEvent) => {
@@ -75,7 +102,25 @@ export class UxTabs extends UxBase {
     e.preventDefault();
     this.selectTab(next);
     this.tabs[next]?.focus();
+    this.dispatchFsmEvent(next);
   };
+
+  private dispatchFsmEvent(index: number) {
+    const uxEvent = this.getAttribute('ux-event');
+    if (!uxEvent) return;
+    const colonIdx = uxEvent.indexOf(':');
+    if (colonIdx < 0) return;
+    const action = uxEvent.slice(colonIdx + 1).trim();
+    if (!action) return;
+    const payload: Record<string, unknown> = {
+      selectedIndex: index,
+      selectedLabel: this.tabs[index]?.textContent?.trim() || '',
+    };
+    this.dispatchEvent(new CustomEvent('ux:event', {
+      bubbles: true, composed: true,
+      detail: { action, payload },
+    }));
+  }
 
   private selectTab(index: number) {
     const selCls = resolveStyle('tab-selected');
@@ -84,7 +129,11 @@ export class UxTabs extends UxBase {
         t.setAttribute('aria-selected', 'true');
         t.setAttribute('selected', '');
         t.setAttribute('tabindex', '0');
-        if (selCls) t.classList.add(...selCls.split(/\s+/).filter(Boolean));
+        if (selCls) {
+          const existing = t.className.split(/\s+/).filter(Boolean);
+          const merged = new Set([...existing, ...selCls.split(/\s+/).filter(Boolean)]);
+          t.className = Array.from(merged).join(' ');
+        }
       } else {
         t.setAttribute('aria-selected', 'false');
         t.removeAttribute('selected');

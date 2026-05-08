@@ -20,7 +20,7 @@ function flattenI18n(obj: unknown, prefix = ''): Record<string, string> {
 
 export function createI18nPanel(ctx: AppContext): HTMLElement {
   const root = document.createElement('div');
-  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;';
+  root.style.cssText = 'padding:8px;overflow:auto;height:100%;box-sizing:border-box;font-size:11px;color:var(--ins-text);';
 
   // Extract flat map from config.i18n
   const rawI18n = (ctx.config as any)?.i18n ?? {};
@@ -38,7 +38,7 @@ export function createI18nPanel(ctx: AppContext): HTMLElement {
     'flex:1;background:var(--ins-bg);color:var(--ins-text);border:1px solid var(--ins-border);padding:3px 6px;border-radius:3px;font-size:11px;';
 
   const missingToggle = document.createElement('label');
-  missingToggle.style.cssText = 'font-size:11px;display:flex;gap:4px;align-items:center;cursor:pointer;white-space:nowrap;';
+  missingToggle.style.cssText = 'font-size:11px;display:flex;gap:4px;align-items:center;cursor:pointer;white-space:nowrap;color:var(--ins-text);';
   const missingChk = document.createElement('input');
   missingChk.type = 'checkbox';
   missingToggle.appendChild(missingChk);
@@ -58,7 +58,7 @@ export function createI18nPanel(ctx: AppContext): HTMLElement {
     const th = document.createElement('th');
     th.textContent = h;
     th.style.cssText =
-      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:#888;position:sticky;top:0;background:var(--ins-bg);';
+      'text-align:left;padding:3px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-muted,#64748b);position:sticky;top:0;background:var(--ins-bg);';
     hrow.appendChild(th);
   }
   thead.appendChild(hrow);
@@ -79,14 +79,14 @@ export function createI18nPanel(ctx: AppContext): HTMLElement {
       if (q && !key.toLowerCase().includes(q) && !val.toLowerCase().includes(q)) continue;
 
       const tr = document.createElement('tr');
-      if (missing) tr.style.color = '#f44';
+      if (missing) tr.style.color = 'var(--ins-error,#f44)';
 
       const tdKey = document.createElement('td');
-      tdKey.style.cssText = 'padding:2px 6px;border-bottom:1px solid var(--ins-border);font-family:monospace;';
+      tdKey.style.cssText = 'padding:2px 6px;border-bottom:1px solid var(--ins-border);font-family:monospace;color:var(--ins-key,#9cdcfe);';
       tdKey.textContent = key;
 
       const tdVal = document.createElement('td');
-      tdVal.style.cssText = 'padding:2px 6px;border-bottom:1px solid var(--ins-border);';
+      tdVal.style.cssText = 'padding:2px 6px;border-bottom:1px solid var(--ins-border);color:var(--ins-text);';
       tdVal.textContent = val || '(missing)';
 
       tr.appendChild(tdKey);

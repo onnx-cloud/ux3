@@ -1,6 +1,7 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import { createRequire } from 'module';
 import { defaultLogger } from '../../../../src/security/observability.js';
+import { fileURLToPath } from 'node:url';
 export { applyBuildTimeTranslation } from './build-time.js';
 export type { BuildTimeTranslateConfig, BuildTimeTranslateResult } from './build-time.js';
 
@@ -25,6 +26,10 @@ export interface TranslateConfig {
   defaultLocale?: string;
   /** Supported target locale tags */
   locales?: string[];
+  /** Override system prompts for translation requests */
+  prompts?: {
+    runtime?: { system?: string };
+  };
 }
 
 export interface TranslationResult {
@@ -77,6 +82,28 @@ async function loadDotEnvIfPresent(): Promise<void> {
   }
 }
 
+async function loadRuntimePrompt(cfg: TranslateConfig): Promise<string> {
+  if (cfg.prompts?.runtime?.system) {
+    return cfg.prompts.runtime.system;
+  }
+
+  try {
+    const path = await import('node:path');
+    const fs = await import('node:fs');
+    const promptsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'prompts.json');
+    if (fs.existsSync(promptsPath)) {
+      const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8')) as { runtime?: { system?: string } };
+      if (prompts.runtime?.system) {
+        return prompts.runtime.system;
+      }
+    }
+  } catch {
+    // fall through to default
+  }
+
+  return 'You are a professional translator. Translate the following text from {{sourceLocale}} to {{targetLocale}}. Return only the translated text with no additional commentary.';
+}
+
 async function resolveRuntimeConfig(cfg: TranslateConfig): Promise<Required<Pick<TranslateConfig, 'endpoint' | 'model' | 'apiKey'>>> {
   await loadDotEnvIfPresent();
 
@@ -106,6 +133,13 @@ async function callTranslationApi(
     throw new Error('@ux3/plugin-translate: apiKey is required');
   }
 
+  const promptTemplate = await loadRuntimePrompt(cfg);
+  const systemContent = promptTemplate.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    if (key === 'sourceLocale') return sourceLocale;
+    if (key === 'targetLocale') return targetLocale;
+    return `{{${key}}}`;
+  });
+
   defaultLogger.info('@ux3/plugin-translate.runtime.translate.request', {
     sourceLocale,
     targetLocale,
@@ -116,13 +150,7 @@ async function callTranslationApi(
   const body = JSON.stringify({
     model,
     messages: [
-      {
-        role: 'system',
-        content:
-          `You are a professional translator. ` +
-          `Translate the following text from ${sourceLocale} to ${targetLocale}. ` +
-          `Return only the translated text with no additional commentary.`,
-      },
+      { role: 'system', content: systemContent },
       { role: 'user', content: text },
     ],
     max_tokens: 2048,

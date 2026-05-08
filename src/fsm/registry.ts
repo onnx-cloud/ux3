@@ -82,6 +82,7 @@ export class FSMRegistry {
       throw new Error(`[UX3] FSM for namespace '${namespace}' must be defined`);
     }
     this.instances.set(namespace, fsm);
+    (fsm as any).setFSMLookup?.((ns: string) => this.instances.get(ns) || null);
   }
 
   /**

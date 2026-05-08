@@ -101,9 +101,10 @@ export class UxModal extends LifecycleComponent {
     this.backdrop?.classList.add('visible');
     this.focusTrap?.trapFocus();
 
-    this.dispatchEvent(new CustomEvent('ux:open', {
+    this.dispatchEvent(new CustomEvent('ux:event', {
       bubbles: true,
-      composed: true
+      composed: true,
+      detail: { action: 'OPEN' }
     }));
   }
 
@@ -123,9 +124,10 @@ export class UxModal extends LifecycleComponent {
     this.backdrop?.classList.remove('visible');
     this.focusTrap?.releaseFocus();
 
-    this.dispatchEvent(new CustomEvent('ux:close', {
+    this.dispatchEvent(new CustomEvent('ux:event', {
       bubbles: true,
-      composed: true
+      composed: true,
+      detail: { action: 'CLOSE' }
     }));
   }
 

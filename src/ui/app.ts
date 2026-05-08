@@ -1,7 +1,6 @@
 import { StateMachine } from "../fsm/index.js";
 import type { Service } from "../services/types.js";
 import type { NavConfig } from "../services/router.js";
-import type { Widget } from "./widget/index.js";
 import { WidgetFactory } from "./widget/factory.js";
 import type { HookRegistry } from "../core/lifecycle.js";
 import type { ServiceFactory, ComponentFactory } from "../plugin/registry.js";
@@ -26,7 +25,7 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   services: Record<string, Service>; // registered services (e.g., API clients)
   browser: BrowserContext; // normalized browser runtime context
   widgets: WidgetFactory; // widget factory
-  ui: Record<string, Widget>; // global UI state
+  ui: Record<string, HTMLElement>; // global UI state
   template: (name: string) => string; // template registry function
   render: (template: string, props?: Record<string, unknown>) => string; // template rendering function
   i18n: (key: string, props?: Record<string, unknown>) => string; // i18n function
