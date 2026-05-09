@@ -6,7 +6,7 @@
  * Richer widgets like ux-button and ux-modal remain sourced from their
  * dedicated implementations and are not overridden.
  */
-import { PRIMITIVES } from './types.js';
+import { ALL_PRIMITIVES } from './registry.js';
 import { resolveClass } from './resolve.js';
 
 export { UxBase } from './base.js';
@@ -64,11 +64,14 @@ export { UxFilterBuilder } from './filter-builder.js';
 export { UxPivotTable } from './pivot-table.js';
 export { UxReportBuilder } from './report-builder.js';
 export { UxTableVirtual } from './table-virtual.js';
+export { UxTable } from './table.js';
+export { UxLink } from './link.js';
+export { UxChatMessages } from './chat-messages.js';
 export { resolveClass } from './resolve.js';
 export type { PrimitiveKind, PrimitiveDefinition } from './types.js';
 
 export function registerBuiltInPrimitives(): void {
-  for (const definition of PRIMITIVES) {
+  for (const definition of ALL_PRIMITIVES) {
     if (!customElements.get(definition.tag)) {
       const BaseClass = resolveClass(definition.kind);
       const ElementClass = class extends BaseClass {};

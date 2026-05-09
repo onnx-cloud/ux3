@@ -5,6 +5,8 @@ export class UxGantt extends UxBase {
   private start: Date = new Date();
   private end: Date = new Date();
   private resizeHandle: { task: string; side: 'left' | 'right'; el: HTMLElement } | null = null;
+  private _onMove: ((e: MouseEvent) => void) | null = null;
+  private _onUp: (() => void) | null = null;
 
   protected onConnected(): void {
     super.onConnected();
@@ -19,6 +21,19 @@ export class UxGantt extends UxBase {
       this.end = new Date(Math.max(...this.tasks.map(t => t.end.getTime())));
     }
     this.build();
+  }
+
+  protected onDisconnected(): void {
+    if (this._onMove) {
+      document.removeEventListener('mousemove', this._onMove);
+      this._onMove = null;
+    }
+    if (this._onUp) {
+      document.removeEventListener('mouseup', this._onUp);
+      this._onUp = null;
+    }
+    this.resizeHandle = null;
+    super.onDisconnected();
   }
 
   private build(): void {
@@ -84,7 +99,14 @@ export class UxGantt extends UxBase {
       });
     });
 
-    const onMove = (e: MouseEvent) => {
+    if (this._onUp) {
+      document.removeEventListener('mouseup', this._onUp);
+    }
+    if (this._onMove) {
+      document.removeEventListener('mousemove', this._onMove);
+    }
+
+    this._onMove = (e: MouseEvent) => {
       if (!this.resizeHandle) return;
       const task = this.tasks.find(t => t.id === this.resizeHandle!.task);
       if (!task) return;
@@ -96,7 +118,8 @@ export class UxGantt extends UxBase {
       else task.end = new Date(ms);
       this.build();
     };
-    const onUp = () => {
+
+    this._onUp = () => {
       if (this.resizeHandle) {
         this.dispatchEvent(new CustomEvent('ux:event', {
           bubbles: true, composed: true,
@@ -105,8 +128,8 @@ export class UxGantt extends UxBase {
       }
       this.resizeHandle = null;
     };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp, { once: true });
+    document.addEventListener('mousemove', this._onMove);
+    document.addEventListener('mouseup', this._onUp, { once: true });
   }
 }
 

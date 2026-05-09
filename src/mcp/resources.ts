@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { WidgetRegistry } from './widget-registry.js';
 
 interface Resource {
   uri: string;
@@ -18,6 +19,7 @@ const RESOURCE_URIS = {
   projectServices: '/project/services',
   view: (name: string) => `/views/${name}`,
   example: (name: string) => `/examples/${name}`,
+  widget: (name: string) => `/widgets/${name}`,
 } as const;
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -33,10 +35,12 @@ export class ResourceRegistry {
   private uxDir: string;
   private frameworkRoot: string;
   private resourceBaseUrl: string;
+  private widgetRegistry: WidgetRegistry;
 
   constructor(projectDir: string, resourceBaseUrl = 'http://localhost') {
     this.projectDir = projectDir;
     this.resourceBaseUrl = resourceBaseUrl;
+    this.widgetRegistry = new WidgetRegistry();
     
     // Support both src/ux (new projects) and ux (examples)
     const uxPath = path.join(projectDir, 'ux');
@@ -109,6 +113,13 @@ export class ResourceRegistry {
       name: 'Services',
       description: 'Service registry and signatures',
     });
+
+    // Widget resources (dynamic, discovered at runtime)
+    this.registerResource({
+      uri: RESOURCE_URIS.widget('all'),
+      name: 'Widget Registry',
+      description: 'All registered UX3 widgets categorized by kind',
+    });
   }
 
   private registerPattern(pattern: string) {
@@ -168,6 +179,16 @@ export class ResourceRegistry {
     }
     if (resourcePath === RESOURCE_URIS.projectServices || uri === 'project://services') {
       return this.readServicesRegistry();
+    }
+
+    // Handle widget resources
+    if (resourcePath.startsWith('/widgets/')) {
+      const widgetName = resourcePath.slice('/widgets/'.length);
+      return this.widgetRegistry.toMCPResource(widgetName || 'all');
+    }
+    if (uri.startsWith('widget://')) {
+      const widgetName = uri.slice('widget://'.length);
+      return this.widgetRegistry.toMCPResource(widgetName || 'all');
     }
 
     throw new Error(`Resource not found: ${uri}`);
@@ -425,6 +446,16 @@ states:
             description: `View: ${entry}`,
           });
         }
+      });
+    }
+
+    // Add widget resources
+    const widgets = this.widgetRegistry.list();
+    for (const w of widgets) {
+      resources.push({
+        uri: this.toResourceUri(RESOURCE_URIS.widget(w.tag)),
+        name: `Widget: ${w.tag}`,
+        description: `${w.kind} widget — role="${w.role}"${w.stateAttr ? ` stateAttr="${w.stateAttr}"` : ''}`,
       });
     }
 

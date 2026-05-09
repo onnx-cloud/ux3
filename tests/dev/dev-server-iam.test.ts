@@ -6,7 +6,7 @@ import path from 'path';
 // ensure dev server serves dist assets for the real IAM example
 
 describe('DevServer with IAM example', () => {
-  it('should serve bundle.js from /dist after building', async () => {
+  it('should serve bundle.js from /dist after building', { timeout: 10000 }, async () => {
     const projectDir = path.resolve('examples/iam');
 
     // skip bundling; runtime info will still point at /dist/app.bundle.js

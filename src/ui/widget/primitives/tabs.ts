@@ -5,6 +5,7 @@ export class UxTabs extends UxBase {
   private tabs: HTMLElement[] = [];
   private panels: HTMLElement[] = [];
   private tabBar: HTMLElement | null = null;
+  private selectedIndex = 0;
 
   protected onConnected(): void {
     super.onConnected();
@@ -13,8 +14,64 @@ export class UxTabs extends UxBase {
     this.generateTabsFromData();
     this.collectChildren();
     this.applyTabStyles();
+    // Restore tab index from FSM context if a fsm-key is set,
+    // otherwise from the data-selected-index attribute.
+    this.selectedIndex = this.restoreSelectedIndex();
+    if (this.selectedIndex > 0 && this.selectedIndex < this.tabs.length) {
+      this.selectTab(this.selectedIndex);
+    }
     this.addEventListener('click', this.onTabClick);
     this.addEventListener('keydown', this.onTabKeyDown);
+  }
+
+  /**
+   * Derive a stable FSM context key so the selected index survives DOM
+   * replacement (e.g. locale-change re-renders).  Precedence:
+   *   1. explicit data-fsm-key attribute
+   *   2. derived from data-tabs (hash of the label string)
+   */
+  private fsmKey(): string {
+    const attr = this.getAttribute('data-fsm-key');
+    if (attr) return attr;
+    const data = this.getAttribute('data-tabs') || '';
+    return `tab_${data}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40) || 'tab_default';
+  }
+
+  /**
+   * Restore the selected tab index from the parent FSM context.
+   */
+  private restoreSelectedIndex(): number {
+    const key = this.fsmKey();
+    const fsm = this.findParentFsm();
+    if (fsm) {
+      const ctx = fsm.getContext();
+      if (ctx && typeof ctx[key] === 'number') {
+        return ctx[key];
+      }
+    }
+    return 0;
+  }
+
+  /** Walk shadow-DOM host to find the parent view component's FSM. */
+  private findParentFsm(): any {
+    try {
+      const root = this.getRootNode() as ShadowRoot;
+      const host = root?.host as any;
+      if (host && host.fsm && typeof host.fsm.getContext === 'function') {
+        return host.fsm;
+      }
+    } catch { /* not in a shadow root or no FSM available */ }
+    return null;
+  }
+
+  /** Persist the selected index to the FSM context so it survives re-renders. */
+  private persistSelectedIndex(index: number): void {
+    const key = this.fsmKey();
+    const fsm = this.findParentFsm();
+    if (fsm) {
+      const ctx = fsm.getContext();
+      ctx[key] = index;
+    }
   }
 
   protected onDisconnected(): void {
@@ -28,7 +85,7 @@ export class UxTabs extends UxBase {
     this.tabBar.className = 'ux-tab-bar';
     this.tabBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:2px;';
     this.tabBar.setAttribute('role', 'presentation');
-    this.appendChild(this.tabBar);
+    this.prepend(this.tabBar);
   }
 
   private generateTabsFromData() {
@@ -71,7 +128,7 @@ export class UxTabs extends UxBase {
 
   private collectChildren() {
     this.tabs = Array.from(this.querySelectorAll('[role="tab"], ux-tab, [ux-role="tab"]'));
-    this.panels = Array.from(this.querySelectorAll('[role="tabpanel"], ux-tab-panel'));
+    this.panels = Array.from(this.querySelectorAll(':scope > [role="tabpanel"], :scope > ux-tab-panel'));
     if (this.tabs.length > 0 && !this.tabs.find((t) => t.getAttribute('aria-selected') === 'true')) {
       this.selectTab(0);
     }
@@ -83,6 +140,7 @@ export class UxTabs extends UxBase {
     const idx = this.tabs.indexOf(tab);
     if (idx >= 0) {
       this.selectTab(idx);
+      this.persistSelectedIndex(idx);
       this.dispatchEvent(new CustomEvent('ux:change', {
         bubbles: true, composed: true,
         detail: { selectedIndex: idx, selectedLabel: tab.textContent?.trim() || '' },
@@ -101,6 +159,7 @@ export class UxTabs extends UxBase {
     else return;
     e.preventDefault();
     this.selectTab(next);
+    this.persistSelectedIndex(next);
     this.tabs[next]?.focus();
     this.dispatchFsmEvent(next);
   };
@@ -123,6 +182,7 @@ export class UxTabs extends UxBase {
   }
 
   private selectTab(index: number) {
+    this.selectedIndex = index;
     const selCls = resolveStyle('tab-selected');
     this.tabs.forEach((t, i) => {
       if (i === index) {

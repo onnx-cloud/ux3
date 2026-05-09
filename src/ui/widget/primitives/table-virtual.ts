@@ -1,7 +1,7 @@
 import { UxBase } from './base.js';
 
 export class UxTableVirtual extends UxBase {
-  private observer!: IntersectionObserver;
+  private observer: IntersectionObserver | null = null;
   private viewport!: HTMLDivElement;
   private rowHeight = 36;
   private overscan = 5;
@@ -97,7 +97,10 @@ export class UxTableVirtual extends UxBase {
   }
 
   protected onDisconnected(): void {
-    this.observer?.disconnect();
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
     super.onDisconnected();
   }
 }

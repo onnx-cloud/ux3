@@ -41,13 +41,8 @@ export const ContentPlugin: Plugin = {
     if (manifest && Array.isArray(manifest.items)) {
       for (const item of manifest.items) {
         const routePath = item.frontmatter.path || `/${item.slug}`;
-        try {
-          app.registerRoute(routePath, 'content');
-        } catch (_e) {
-          if (_e instanceof Error && !String(_e.message).includes('already')) {
-            console.warn('[ContentPlugin] route registration failed', _e.message);
-          }
-        }
+        const title = item.frontmatter.title || item.frontmatter.label || item.slug;
+        app.registerRoute(routePath, 'content', title);
       }
     }
   },

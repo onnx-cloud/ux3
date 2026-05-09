@@ -7,17 +7,47 @@
  * variant="inline" renders bare links suitable for use inside a top-bar.
  */
 export class UxNav extends HTMLElement {
+  private _rafId: number | null = null;
+
   connectedCallback() {
     this.setAttribute('role', 'navigation');
     this.setAttribute('aria-label', 'Main navigation');
     this.render();
     this.subscribeToRouteChanges();
+    if (!this.hasLinks()) {
+      this.waitForAppReady();
+    }
+  }
+
+  disconnectedCallback() {
+    if (this._rafId !== null) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
+  }
+
+  private hasLinks(): boolean {
+    const ctx = typeof window !== 'undefined' ? (window as any).__ux3App : null;
+    const routes = (ctx?.nav?.routes || []).filter((r: any) => this.isNavigableView(r));
+    return routes.length > 0;
+  }
+
+  private waitForAppReady() {
+    const check = () => {
+      this._rafId = null;
+      if (this.hasLinks()) {
+        this.render();
+        return;
+      }
+      this._rafId = requestAnimationFrame(check);
+    };
+    this._rafId = requestAnimationFrame(check);
   }
 
   private render() {
     const ctx = typeof window !== 'undefined' ? (window as any).__ux3App : null;
     const navConfig = ctx?.nav;
-    const routes = navConfig?.routes || [];
+    const routes = (navConfig?.routes || []).filter((r: any) => this.isNavigableView(r));
     const getLabel = navConfig?.getLabel as ((route: any) => string) | undefined;
     if (routes.length === 0) {
       this.innerHTML = '<slot></slot>';
@@ -35,6 +65,13 @@ export class UxNav extends HTMLElement {
     } else {
       this.renderDefault(routes, currentPath, getLabel);
     }
+  }
+
+  private isNavigableView(route: any): boolean {
+    const app = (window as any).__ux3App;
+    if (app?.machines && route.view in app.machines) return true;
+    if (app?.machines && `${route.view}FSM` in app.machines) return true;
+    return false;
   }
 
   private getCurrentPath(): string {
@@ -116,26 +153,92 @@ export class UxNav extends HTMLElement {
   }
 
   private renderInline(routes: any[], _currentPath: string, getLabel?: (route: any) => string) {
-    for (const route of routes) {
-      if (!route.path || route.path === '*') continue;
-      const a = document.createElement('a');
-      a.href = route.path;
-      a.setAttribute('data-nav-link', '');
-      a.textContent = getLabel ? getLabel(route) : (route.label || route.view || route.path);
-      if (this.isActive(route.path)) {
-        a.classList.add('active');
-      }
-      a.addEventListener('click', (e) => {
+    const maxVisible = 6;
+    const visible = routes.slice(0, maxVisible);
+    const overflow = routes.slice(maxVisible);
+
+    for (const route of visible) {
+      this.appendLink(route, getLabel);
+    }
+
+    if (overflow.length > 0) {
+      const wrapper = document.createElement('span');
+      wrapper.style.cssText = 'position:relative;';
+
+      const toggle = document.createElement('a');
+      toggle.href = '#';
+      toggle.setAttribute('data-nav-link', '');
+      toggle.textContent = 'More...';
+      toggle.addEventListener('click', (e) => {
         e.preventDefault();
-        window.history.pushState({}, '', route.path);
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        const menu = wrapper.querySelector<HTMLElement>('.ux-nav-overflow');
+        if (!menu) return;
+        const open = menu.style.display === 'block';
+        menu.style.display = open ? 'none' : 'block';
       });
-      this.appendChild(a);
+
+      const menu = document.createElement('div');
+      menu.className = 'ux-nav-overflow';
+      menu.style.cssText = 'display:none;position:absolute;top:100%;right:0;z-index:50;min-width:10rem;border-radius:0.5rem;border:1px solid var(--color-border,#e2e8f0);background:var(--color-bg,#fff);box-shadow:0 4px 12px rgba(0,0,0,0.1);padding:0.25rem 0;';
+
+      for (const route of overflow) {
+        const a = this.makeOverflowLink(route, getLabel);
+        menu.appendChild(a);
+      }
+
+      wrapper.appendChild(toggle);
+      wrapper.appendChild(menu);
+
+      document.addEventListener('click', (ev: Event) => {
+        if (!wrapper.contains(ev.target as Node)) {
+          menu.style.display = 'none';
+        }
+      });
+
+      this.appendChild(wrapper);
     }
   }
 
+  private appendLink(route: any, getLabel?: (route: any) => string): HTMLElement {
+    const a = document.createElement('a');
+    a.href = route.path;
+    a.setAttribute('data-nav-link', '');
+    a.textContent = getLabel ? getLabel(route) : (route.label || route.view || route.path);
+    if (this.isActive(route.path)) {
+      a.classList.add('active');
+    }
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.history.pushState({}, '', route.path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    this.appendChild(a);
+    return a;
+  }
+
+  private makeOverflowLink(route: any, getLabel?: (route: any) => string): HTMLElement {
+    const a = document.createElement('a');
+    a.href = route.path;
+    a.style.cssText = 'display:block;padding:0.375rem 0.75rem;color:var(--color-text,#334155);text-decoration:none;font-size:0.875rem;font-weight:500;white-space:nowrap;transition:background 0.15s;';
+    a.textContent = getLabel ? getLabel(route) : (route.label || route.view || route.path);
+    if (this.isActive(route.path)) {
+      a.style.backgroundColor = 'var(--color-primary,#dbeafe)';
+      a.style.color = 'var(--color-text,#334155)';
+    }
+    a.addEventListener('mouseenter', () => { a.style.backgroundColor = 'var(--color-bg-muted,#f1f5f9)'; });
+    a.addEventListener('mouseleave', () => { if (!this.isActive(route.path)) a.style.backgroundColor = ''; });
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.history.pushState({}, '', route.path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    return a;
+  }
+
   private subscribeToRouteChanges() {
-    window.addEventListener('popstate', () => this.render());
+    window.addEventListener('popstate', () => {
+      requestAnimationFrame(() => this.render());
+    });
     window.addEventListener('ux3:navigate', () => this.render());
   }
 }

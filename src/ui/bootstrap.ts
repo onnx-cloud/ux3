@@ -13,51 +13,57 @@ import { hydrate as coreHydrate } from './context-builder.js';
 /**
  * Create a project-specific bootstrap function.
  *
- * Usage from an application entrypoint (eg. `src/index.ts`):
+ * @param config          Generated project configuration.
+ * @param installPlugins  Optional hook to install browser-side plugins after
+ *                        context creation. Called BEFORE FSMs start, so services
+ *                        are available when invokers fire.  Passed through to
+ *                        every call — both the auto-run and explicit calls.
+ *
+ * Usage from an application entrypoint:
  *
  * ```ts
  * import { createBootstrap } from '@ux3/ui/bootstrap';
  * import { config } from './generated/config.js';
+ * import { installPlugins } from './generated/plugins.js';
  *
- * export const initApp = createBootstrap(config);
+ * export const initApp = createBootstrap(config, installPlugins);
  * ```
  *
  * The returned `initApp` function automatically registers itself on
- * `window.initApp` and will run on DOMContentLoaded when executed in a browser.
+ * `window.initApp` and will run on DOMContentLoaded.
  */
 export function createBootstrap(
-  config: GeneratedConfig
+  config: GeneratedConfig,
+  installPlugins?: (app: any) => Promise<void>
 ): (opts?: HydrationOptions) => Promise<any> {
   async function initApp(opts: HydrationOptions = {}) {
+    const { installPlugins: overridePlugins, ...rest } = opts as any;
+    const plugins = overridePlugins || installPlugins;
     return coreHydrate(config, {
       recoverState: true,
       reattachListeners: true,
       reconnectServices: true,
       validateVersion: true,
-      ...opts,
+      ...rest,
+      installPlugins: plugins,
     });
   }
 
   if (typeof window !== 'undefined') {
     (window as any).initApp = initApp;
 
-    if (document.readyState === 'loading') {
-      // the listener doesn't receive our hydration options; wrap so the
-      // signature matches the DOM API and drop any event argument.
-      document.addEventListener('DOMContentLoaded', () => {
+    if (!(window as any).__ux3App) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          initApp().catch((e) => console.error('[UX3]', e));
+        });
+      } else {
         initApp().catch((e) => console.error('[UX3]', e));
-      });
-    } else {
-      // if DOM already loaded (e.g. script tag placed at end) run immediately
-      initApp().catch((e) => console.error('[UX3]', e));
+      }
     }
   }
 
   return initApp;
 }
-
-// convenience default export that will be used once a config is available; the
-// framework build can generate a small wrapper that imports this module along
-// with the project's generated config and calls `createBootstrap(config)`.
 
 export default createBootstrap;

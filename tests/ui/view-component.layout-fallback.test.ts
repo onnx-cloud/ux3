@@ -58,13 +58,11 @@ describe('ViewComponent layout fallback', () => {
     const el = document.createElement('ux-fallback-layout-view');
     el.setAttribute('ux-fsm', 'fallback');
     el.setAttribute('ux-view', 'fallback');
-    // no ux-layout override => defaults to "default", template() returns empty
     document.body.appendChild(el);
 
-    const shadow = (el as HTMLElement).shadowRoot;
-    expect(shadow).toBeTruthy();
-    expect(shadow?.querySelector('#ux-content')).toBeTruthy();
-    expect(shadow?.querySelector('#ok')?.textContent).toContain('Ready');
+    expect(el.querySelector('#ux-layout')).toBeTruthy();
+    expect(el.querySelector('#ux-content')).toBeTruthy();
+    expect(el.querySelector('#ok')?.textContent).toContain('Ready');
   });
 
   it('supports <ux-view> layout alias for the active content mount point', () => {
@@ -73,13 +71,11 @@ describe('ViewComponent layout fallback', () => {
     el.setAttribute('ux-view', 'fallback');
     document.body.appendChild(el);
 
-    const shadow = (el as HTMLElement).shadowRoot;
-    const mount = shadow?.querySelector('#ux-content');
+    const mount = el.querySelector('#ux-content');
 
-    expect(shadow).toBeTruthy();
     expect(mount).toBeTruthy();
     expect(mount?.tagName).toBe('UX-CONTENT');
     expect(mount?.classList.contains('mount-slot')).toBe(true);
-    expect(shadow?.querySelector('#magic-ok')?.textContent).toContain('Ready');
+    expect(el.querySelector('#magic-ok')?.textContent).toContain('Ready');
   });
 });

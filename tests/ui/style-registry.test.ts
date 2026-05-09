@@ -44,12 +44,10 @@ describe('StyleRegistry', () => {
 
     customElements.define('test-style-view', StubView as any);
     const view = document.createElement('test-style-view') as any;
-    // emulate what connectedCallback would do up to mountLayout
-    view.attachShadow({ mode: 'open' });
     view.layout = '<div id="ux-layout"><div id="ux-content"><span ux-style="foo"></span></div></div>';
     view.mountLayout();
 
-    const el = view.shadowRoot?.querySelector('[ux-style]');
+    const el = view.querySelector('[ux-style]');
     expect(el?.className).toBe('x y');
   });
 

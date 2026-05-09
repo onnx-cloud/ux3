@@ -1,0 +1,18 @@
+{
+  "name": "@ux3/plugin-webrtc",
+  "version": "1.0.0",
+  "description": "WebRTC video/audio calling for UX3 via SimplePeer",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "simple-peer": "^9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "simple-peer": { "optional": true }
+  }
+}

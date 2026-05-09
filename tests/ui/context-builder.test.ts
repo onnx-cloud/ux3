@@ -372,14 +372,16 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
     });
 
     it('should propagate styles into the global registry', () => {
-      // clear registry before running builder
       clearStyles();
 
       const builder = new AppContextBuilder(config);
       builder.withStyles();
       builder.build();
 
-      expect(getRegisteredStyles()).toEqual(config.styles);
+      const all = getRegisteredStyles();
+      for (const [key, value] of Object.entries(config.styles)) {
+        expect(all[key], `style key "${key}" must be registered`).toBe(value);
+      }
     });
   });
 

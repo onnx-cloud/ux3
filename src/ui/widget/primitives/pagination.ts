@@ -1,13 +1,23 @@
 import { UxBase } from './base.js';
 
 export class UxPagination extends UxBase {
+  private currentPage: number = 1;
+  private totalPages: number = 1;
+
   protected onConnected(): void {
     super.onConnected();
-    const current = parseInt(this.getAttribute('current') || '1', 10);
-    const total = parseInt(this.getAttribute('total') || '1', 10);
+    this.currentPage = parseInt(this.getAttribute('current') || '1', 10);
+    this.totalPages = parseInt(this.getAttribute('total') || '1', 10);
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+  }
 
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot!.innerHTML = `
+  private render(): void {
+    if (!this.shadowRoot) return;
+    const c = this.currentPage;
+    const t = this.totalPages;
+
+    this.shadowRoot.innerHTML = `
       <style>
         :host {
           --_pg-bg: var(--ux-pg-bg, #fff);
@@ -20,29 +30,44 @@ export class UxPagination extends UxBase {
           padding: 0.375rem 0.75rem;
           border: 1px solid var(--_pg-border);
           background: var(--_pg-bg);
-          border-radius: 0.25rem; cursor: pointer; font: inherit;
+          border-radius: 0.25rem; cursor: pointer; font: inherit; font-size: 0.875rem;
         }
         button:hover:not(:disabled) { filter: brightness(0.95); }
         button:disabled { opacity: 0.5; cursor: default; }
         .active { font-weight: 600; background: var(--_pg-active-bg); color: var(--_pg-active-color); border-color: var(--_pg-active-bg); }
         .info { padding: 0 0.5rem; color: #6b7280; font-size: 0.875rem; }
       </style>
-      <button data-action="PREV" ${current <= 1 ? 'disabled' : ''}>Prev</button>
-      ${this.pageButtons(current, total)}
-      <button data-action="NEXT" ${current >= total ? 'disabled' : ''}>Next</button>
-      <span class="info">${current} / ${total}</span>
+      <button data-action="PREV" ${c <= 1 ? 'disabled' : ''}>Prev</button>
+      ${this.pageButtons(c, t)}
+      <button data-action="NEXT" ${c >= t ? 'disabled' : ''}>Next</button>
+      <span class="info">${c} / ${t}</span>
     `;
 
-    this.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest('[data-action]');
-      if (btn) {
-        const action = btn.getAttribute('data-action')!;
-        const page = btn.getAttribute('data-page');
-        this.dispatchEvent(new CustomEvent('ux:event', {
-          bubbles: true, composed: true,
-          detail: { action, page: page ? parseInt(page, 10) : undefined }
-        }));
+    this.shadowRoot.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
+      if (!btn) return;
+      const action = btn.getAttribute('data-action')!;
+      const page = btn.getAttribute('data-page');
+      const pageNum = page ? parseInt(page, 10) : undefined;
+
+      if (action === 'GOTO' && pageNum) {
+        this.currentPage = pageNum;
+        this.setAttribute('current', String(pageNum));
+        this.render();
+      } else if (action === 'PREV' && this.currentPage > 1) {
+        this.currentPage--;
+        this.setAttribute('current', String(this.currentPage));
+        this.render();
+      } else if (action === 'NEXT' && this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.setAttribute('current', String(this.currentPage));
+        this.render();
       }
+
+      this.dispatchEvent(new CustomEvent('ux:event', {
+        bubbles: true, composed: true,
+        detail: { action, page: pageNum },
+      }));
     });
   }
 

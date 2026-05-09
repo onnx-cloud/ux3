@@ -101,6 +101,7 @@ export default defineConfig({
       '**/dist/**',
       '**/node_modules/**',
       '**/iam/**',
+      'tmp/**',
       'examples/quadra/tests/**',
     ],
     // store results under test-results/vitest for CI or local inspection

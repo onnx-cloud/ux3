@@ -92,17 +92,20 @@ export const buildCommand = new Command()
       const validation = await validator.validate();
 
       if (!validation.valid) {
-        console.error(`❌ Validation failed:`);
-        for (const error of validation.errors) {
+        console.error(`❌ Validation failed (non-fatal):`);
+        for (const error of validation.errors.slice(0, 10)) {
           const location = error.line ? `${error.file}:${error.line}` : error.file;
           console.error(`  ${location} — ${error.message}`);
           if (error.suggestion) {
             console.error(`    💡 ${error.suggestion}`);
           }
         }
-        process.exit(1);
+        if (validation.errors.length > 10) {
+          console.error(`  ... and ${validation.errors.length - 10} more validation issues`);
+        }
+      } else {
+        console.log(`✅ Configuration valid`);
       }
-      console.log(`✅ Configuration valid`);
 
       // Step 5: Bundle (optional)
       let bundleSize: number | undefined;

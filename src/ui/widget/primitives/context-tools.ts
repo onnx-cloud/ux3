@@ -128,13 +128,11 @@ export class UxThemeToggle extends UxBase {
   }
 
   private getTheme(): 'light' | 'dark' {
-    const persisted = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false'
-      ? window.localStorage.getItem('ux3.theme')
-      : null;
+    const persisted = window.localStorage.getItem('ux3.color.scheme');
     const attrTheme = this.getAttribute('theme');
     const docTheme = document.documentElement.dataset.theme;
 
-    if (persisted === 'light' || persisted === 'dark') return persisted;
+    if (persisted === 'light' || persisted === 'dark') return persisted as 'light' | 'dark';
     if (attrTheme === 'light' || attrTheme === 'dark') return attrTheme;
     if (docTheme === 'light' || docTheme === 'dark') return docTheme;
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -187,13 +185,10 @@ export class UxThemeToggle extends UxBase {
     const next = current === 'dark' ? 'light' : 'dark';
     this.applyTheme(next);
 
-    const shouldPersist = this.hasAttribute('persist') && this.getAttribute('persist') !== 'false';
-    if (shouldPersist) {
-      try {
-        window.localStorage.setItem('ux3.theme', next);
-      } catch {
-        // ignore storage failures
-      }
+    try {
+      window.localStorage.setItem('ux3.color.scheme', next);
+    } catch {
+      // ignore storage failures
     }
 
     this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { theme: next } }));

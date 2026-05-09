@@ -1,5 +1,7 @@
 export { ToolRegistry } from './tools.js';
 export { ResourceRegistry } from './resources.js';
+export { WidgetRegistry } from './widget-registry.js';
+export type { WidgetDescriptor, WidgetCategory } from './widget-registry.js';
 export { MCPHTTPHandler } from './http-handler.js';
 export { createSDKServer } from './sdk-server.js';
 export { MCPHost } from './host.js';

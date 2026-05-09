@@ -47,7 +47,9 @@ describe('UxModal - Modal Component', () => {
     await Promise.resolve();
 
     const closeSpy = vi.fn();
-    modal.addEventListener('ux:close', closeSpy);
+    modal.addEventListener('ux:event', ((e: CustomEvent) => {
+      if (e.detail?.action === 'CLOSE') closeSpy();
+    }) as EventListener);
 
     modal.openModal();
     modal.closeModal();
@@ -62,8 +64,10 @@ describe('UxModal - Modal Component', () => {
 
     const openSpy = vi.fn();
     const closeSpy = vi.fn();
-    modal.addEventListener('ux:open', openSpy);
-    modal.addEventListener('ux:close', closeSpy);
+    modal.addEventListener('ux:event', ((e: CustomEvent) => {
+      if (e.detail?.action === 'OPEN') openSpy();
+      if (e.detail?.action === 'CLOSE') closeSpy();
+    }) as EventListener);
 
     modal.openModal();
     modal.closeModal();

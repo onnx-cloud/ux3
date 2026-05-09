@@ -92,10 +92,214 @@ export function createSDKServer(projectDir: string, resourceBaseUrl?: string): M
     );
   }
 
+  // Register prompts from the spec bundle
+  const promptSpecs = host.getPromptSpecs();
+  for (const promptSpec of promptSpecs) {
+    server.registerPrompt(
+      promptSpec.name,
+      {
+        description: promptSpec.description,
+      },
+      async () => {
+        try {
+          const text = await host.getPrompt(promptSpec.name);
+          return {
+            messages: [
+              {
+                role: 'user' as const,
+                content: { type: 'text' as const, text },
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            messages: [
+              {
+                role: 'user' as const,
+                content: {
+                  type: 'text' as const,
+                  text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                },
+              },
+            ],
+          };
+        }
+      }
+    );
+  }
+
   return server;
 }
 
 function registerDevModeHandlers(host: MCPHost): void {
+  // Register prompt handlers — each returns a developer-focused guide
+  host.registerPromptHandler('ux3-new-view', async () => {
+    return renderPrompt('ux3-new-view', 'View YAML FSM config', `## UX3 View Response Format
+
+When asked to create a view, respond with:
+
+### 1. View YAML (\`ux/widget/{name}.yaml\`)
+\`\`\`yaml
+name: {view-name}
+layout: default         # default | blog | blank
+initial: index
+context:
+  {key}: {default}
+states:
+  index:
+    template: 'widget/{name}/index.html'
+    on:
+      EVENT_NAME:
+        target: index
+        actions: [{actionFn}]
+        set: { key: value }        # declarative set
+        toggle: {key}              # declarative toggle
+        navigate: /path            # declarative navigate
+        dispatch: eventName        # declarative dispatch
+\`\`\`
+
+### 2. Template (\`ux/widget/{name}/index.html\`)
+- Use HandlebarsLite syntax: \`{{ i18n.{scope}.key }}\`, \`{{ ctx.field }}\`
+- Use \`{{#each array}}\` for iteration, \`{{#if condition}}\` for guards
+- Bind events with \`ux-event="click:FSM_EVENT"\`
+- Use built-in widgets: \`<ux-tabs>\`, \`<ux-table>\`, \`<ux-card>\`, etc.
+- Pass event data with \`ux-event-value="key=value"\`
+
+### 3. Logic (\`ux/logic/{name}.ts\`)
+- Export \`ActionFn<T>\`, \`InvokerFn<T>\`, \`GuardFn<T>\` typed functions
+- Actions receive \`(context, event)\` and may mutate context or return a partial update
+- Invokers return a partial context object that is merged on completion
+
+### 4. i18n (\`ux/i18n/{locale}/{name}.yaml\`)
+- Flat key-value pairs: \`heading: My Heading\`
+- Reference in templates as \`{{ i18n.{name}.heading }}\`
+
+### 5. Route (\`ux/route/routes.yaml\`)
+- Add to \`routes:\` array: \`- path: /{route-path}\` / \`view: {name}\``);
+  });
+
+  host.registerPromptHandler('ux3-add-widget', async () => {
+    return renderPrompt('ux3-add-widget', 'Custom widget registration', `## UX3 Widget Creation Guide
+
+### Interactive Widget (shadow DOM)
+\`\`\`typescript
+// src/ui/widget/primitives/my-widget.ts
+import { UxBase } from './base.js';
+
+export class UxMyWidget extends UxBase {
+  static get observedAttributes(): string[] { return ['value']; }
+
+  protected onConnected(): void {
+    super.onConnected();
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+  }
+
+  protected onAttributeChanged(name: string, _old: string | null, _new: string | null): void {
+    if (this.isConnected) this.render();
+  }
+
+  private render(): void {
+    this.shadowRoot!.innerHTML = \`
+      <style>:host { display: block; }</style>
+      <slot></slot>
+    \`;
+  }
+}
+\`\`\`
+
+### Registration (3 steps)
+1. Add \`import { UxMyWidget } from './my-widget.js';\` to \`registry.ts\`
+2. Add definition: \`{ tag: 'ux-my-widget', role: 'region', kind: 'my-widget' }\` to \`ALL_PRIMITIVES\`
+3. Add \`'my-widget'\` to the \`PrimitiveKind\` union in \`types.ts\`
+
+### Resolving (2 steps)
+1. Add import + switch case to \`resolve.ts\`
+2. Add export to \`index.ts\``);
+  });
+
+  host.registerPromptHandler('ux3-add-service', async () => {
+    return renderPrompt('ux3-add-service', 'Service wiring', `## UX3 Service Registration Guide
+
+### Service YAML (\`ux/service/services.yaml\`)
+\`\`\`yaml
+services:
+  - name: {service-name}
+    type: http                # http | mock | oidc | plugin
+    adapter: custom           # for plugin types
+    config:
+      baseURL: /api/{path}
+      headers:
+        Authorization: Bearer {{token}}
+    connectOnStart: true
+\`\`\`
+
+### Invoker Usage
+\`\`\`typescript
+export const loadData: InvokerFn<MyContext> = async (ctx) => {
+  const app = (window as any).__ux3App;
+  const svc = app?.services?.{serviceName};
+  const data = await svc?.get('/endpoint');
+  return { items: data };
+};
+\`\`\`
+
+### FSM Wiring
+\`\`\`yaml
+states:
+  loading:
+    invoke: { src: loadData, onDone: index }
+  index:
+    template: 'widget/{name}/index.html'
+\`\`\``);
+  });
+
+  host.registerPromptHandler('ux3-fsm-flow', async () => {
+    return renderPrompt('ux3-fsm-flow', 'FSM state machine design', `## UX3 FSM Design Guide
+
+### Core Concepts
+- **States**: named states with templates, transitions, and invokers
+- **Transitions**: \`EVENT → target\` with optional guards, actions, declarative ops
+- **Context**: reactive key-value store, mutated by actions and invokers
+
+### Declarative Actions (no TypeScript needed)
+\`\`\`yaml
+on:
+  TOGGLE_FEATURE:
+    target: index
+    toggle: featureEnabled           # flip boolean
+    set: { mode: advanced }          # set fixed value
+    navigate: /dashboard             # client-side navigation
+    dispatch: app:refresh            # DOM event
+    log: "feature toggled"           # diagnostic log
+\`\`\`
+
+### Guards + Actions
+\`\`\`yaml
+on:
+  NEXT_STEP:
+    target: index
+    guard: canAdvance               # Fn(context) => boolean
+    actions: [nextStep]             # Fn(context, event) => void|Partial<T>
+\`\`\`
+
+### Service Invokers
+\`\`\`yaml
+states:
+  loading:
+    invoke: { src: loadFromService, onDone: index, onError: error }
+  index:
+    template: 'widget/{name}/index.html'
+  error:
+    template: 'widget/{name}/error.html'
+\`\`\`
+
+### Context Patterns
+- Boolean flags for UI state: \`modalOpen\`, \`submitting\`, \`validated\`
+- Nullable references: \`selectedItem: null\`, \`errorMessage: null\`
+- Derived state: compute in actions, store as context keys`);
+  });
+
   host.registerToolHandler('fsm.list', async (_args) => {
     const app = getApp();
     if (!app?.machines) {
@@ -318,4 +522,8 @@ function jsonTypeToZod(prop: any): z.ZodTypeAny {
     default:
       return z.any();
   }
+}
+
+function renderPrompt(name: string, title: string, body: string): string {
+  return `# ${title}\n\n${body}\n\n---\n*Prompt: \`${name}\` — generated by UX3 MCP server*`;
 }

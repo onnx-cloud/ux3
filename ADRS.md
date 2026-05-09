@@ -345,3 +345,96 @@ services:
 **Decision:** Server-rendered HTML must have exactly one shell. Dev server `resolveAndRenderLayout` applies `viewLayoutHtml` wrapping only when `chromeWrapperHtml` is absent. With a project `_.html` (chrome wrapper), the view layout is skipped server-side. SPA shadow DOM independently renders `default.html` for client-side navigation.
 
 **Critical invariant:** After SPA init, light DOM shell and shadow DOM shell overlap identically — only one visible topbar renders. `#ux-content` exists in both light DOM (for navigation handler `ensureMountPoint()`) and shadow DOM (for `ViewComponent.renderState()`).
+
+---
+
+## ADR-20: Event standardization — ux:event and ux:change
+
+**Decision:** All framework events conform to exactly 2 types:
+
+1. **`ux:change`** — value/state changes. `detail.value`, `detail.name`, `detail.checked` etc. Used for data-binding, form inputs, toggle state changes.
+2. **`ux:event`** — lifecycle actions. `detail.action` (`OPEN`, `CLOSE`, `CHECK`, `UNCHECK`, `SELECT`, `DESELECT`, `PRESS`, `RELEASE`). Used for modal open/close, dropdown, toggle press/release.
+
+**Rationale:** The legacy `ux:open`, `ux:close`, `ux:fsm-event` events were inconsistent and proliferated. Two standard types cover all widget behavior: value flow uses `ux:change`, action/lifecycle flow uses `ux:event`.
+
+**UxToggle mapping:**
+| Toggle prop | `ux:change` | `ux:event` actions |
+|---|---|---|
+| `open` | `value` on `ux:change` | `OPEN` / `CLOSE` |
+| `checked` | `checked` on `ux:change` | `CHECK` / `UNCHECK` |
+| `selected` | `value` on `ux:change` | `SELECT` / `DESELECT` |
+| `pressed` | `value` on `ux:change` | `PRESS` / `RELEASE` |
+
+---
+
+## ADR-21: Compound/hierarchical state machines
+
+**Decision:** FSMs support compound (hierarchical nested) states via `type`, `states`, `initial`, and `history` fields in state config:
+
+```yaml
+name: dashboard
+type: compound
+initial: overview
+states:
+  overview:
+    type: parallel
+    states:
+      charts:
+        initial: loading
+        states:
+          loading: { invoke: { src: loadCharts, onDone: ready } }
+          ready: {}
+      kpis:
+        initial: idle
+        states:
+          idle: { on: { FETCH: target: loading } }
+          loading: { invoke: { src: loadKpi, onDone: idle } }
+```
+
+**Detection:** Child state nodes detected via explicit `type === 'atomic'` or `type === 'final'` checks (not generic "has template" inference). Compound parents enter their children recursively via `.` delimited paths.
+
+**Cross-machine transitions:** Uses `:` delimiter (`otherMachine:someState`), distinct from internal `.` dot-path resolution. Transitions call the target machine's `transitionTo()` (now public) and pass extracted context. Cross-machine references registered via `FSMRegistry`.
+
+**Guards:** Plain string guards check `guard in context` truthiness. Unknown guards emit warnings and allow the transition (backward compatibility). Cross-machine guards use `namespace:state` format.
+
+---
+
+## ADR-22: Widget architecture — primitives, plugins, composites
+
+**Decision:** Three-tier widget architecture:
+
+| Tier | Mechanism | Example | When to use |
+|---|---|---|---|
+| **Primitive** | Web Component (<5 lines logic) | `ux-badge`, `ux-spinner`, `ux-toggle` | Simple DOM wrappers, attribute reflection |
+| **Plugin** | External library bridge | `@ux3/plugin-chart-js`, `@ux3/plugin-cytoscape` | "Ridiculous to rebuild" libraries |
+| **Composite** | YAML-only FSM + HTML template | `dashboard-shell`, `sign-in-form` | Composition-only widgets, 0 TypeScript |
+
+**Primitive registry** (`src/ui/widget/primitives/types.ts`):
+- 116 registered primitives in the `PRIMITIVES` array
+- Each maps `tag` → ARIA `role` + `kind`
+- Lookup by tag via `DEF_BY_TAG` Map
+- Runtime discovery via `registerBuiltInPrimitives()` (iterates `PRIMITIVES`, resolves class, calls `customElements.define()`)
+
+**Composites** live in `ux/widget/composites/`:
+- `.yaml` FSM definition (states, transitions, invoke)
+- `.html` template (layout + data-bind attributes)
+- Async invoke handlers in `ux/logic/composites.ts` (loadDashboard, loadFeed, loadGallery, loadTableData, validateSignUp)
+
+---
+
+## ADR-23: Style architecture — ux-style and variants
+
+**Decision:** Two-layer style system:
+
+1. **`ux-style` attribute** — auto-inferred from custom element tag name. `StyleRegistry.applyStyles(root)` scans for `[ux-style]` / `[data-style]` attributes and injects resolved Tailwind class strings. Hooks into `ViewComponent.prototype.mountLayout` for auto-apply on render.
+
+2. **CSS custom properties** — design tokens from `ux/token/*.yaml` compile to `:root` CSS variables (`--ux-color-primary`, etc.). Used for theming (light/dark), inspector styling (`--ins-error`, `--ins-text`), and framework chrome.
+
+**Invariants:**
+- Style keys in YAML are camelCase (resolved: `resolvedStyleKey`)
+- Reserved structural keys: `kitchen-app`, `section`, `row`, `grid`, `button-row`
+- Templates use `ux-style="key"` attributes — never hard-coded Tailwind classes
+- CSS custom properties never resolve in jsdom — tests must check the raw var string
+- `default-styles.ts` provides framework fallback styles for all built-in primitives
+
+**Runtime integration:** Tailwind CDN mode triggers `tailwind.refresh()` after style injection. `MutationObserver` handles dynamically-inserted content. `DOMContentLoaded` listener sweeps for hydration.

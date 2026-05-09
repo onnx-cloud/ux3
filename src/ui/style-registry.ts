@@ -66,6 +66,13 @@ export function getRegisteredStyles(): StyleMap {
   return styles;
 }
 
+const _warnedStyleKeys = new Set<string>();
+function warnOnce(key: string): void {
+  if (_warnedStyleKeys.has(key)) return;
+  _warnedStyleKeys.add(key);
+  console.warn(`[Ux3] unknown ux-style key: '${key}'`);
+}
+
 /**
  * Register or override style definitions.
  * Multiple calls will merge values; later registrations win.
@@ -107,7 +114,6 @@ export function clearStyles(): void {
 export function resolveStyle(key: string, variants?: Record<string, string>): string {
   const entry = styleObjects[key];
   if (!entry) {
-    // fall back to flat registry
     return styles[key] || '';
   }
 
@@ -164,8 +170,7 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
         const merged = Array.from(new Set([...existing, ...incoming]));
         el2.className = merged.join(' ');
       } else {
-        // P3-2: warn on unknown key so developers notice missing style registrations
-        console.warn(`[Ux3] unknown ux-style key: '${key}'`);
+        warnOnce(key);
       }
     });
 
@@ -237,7 +242,6 @@ export function initStyleRegistry(): void {
     (ViewComponent.prototype as any).mountLayout = function (this: ViewComponent & HTMLElement) {
       orig.call(this);
       try {
-        if (this.shadowRoot) applyStyles(this.shadowRoot);
         applyStyles(this);
       } catch (e) {
         console.warn('[Ux3] view style injection failed', e);

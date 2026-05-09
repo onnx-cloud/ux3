@@ -211,6 +211,7 @@ export function setupNavigation(appContext: AppContext): void {
 
   // Handle all anchor clicks (SPA link interception)
   document.addEventListener('click', (event: Event) => {
+    if (event.defaultPrevented) return;
     const target = event.target as HTMLElement;
     const anchor = target.closest('a');
 
@@ -244,6 +245,9 @@ export function setupNavigation(appContext: AppContext): void {
 
   // Mount the view that corresponds to the current URL on page load
   handleNavigationEvent(appContext);
+
+  // Notify nav components that the app is ready and routes are available
+  window.dispatchEvent(new CustomEvent('ux3:navigate'));
 }
 
 /**

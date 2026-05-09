@@ -119,8 +119,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         this.loadTemplates(viewName || fsmName);
       }
 
-      // 5. Mount layout to shadow DOM
-      this.attachShadow({ mode: 'open' });
+      // 5. Mount layout
       this.mountLayout();
 
       // Inject route params into FSM context (data-param-* attributes from navigation handler)
@@ -237,72 +236,26 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * minimal wrapper (<main id="ux-content">) to avoid duplicating chrome
    * (topbar, header, footer, etc.) inside the shadow root.
    */
-  private mountLayout(): void {
-    const shadow = this.shadowRoot!;
+  protected mountLayout(): void {
+    const el = this;
 
-    const layoutEl = document.createElement('div');
-    layoutEl.id = 'ux-layout';
-    
     const lightContentEl = typeof document !== 'undefined'
       ? document.getElementById('ux-content')
       : null;
     const alreadyRendered = lightContentEl && lightContentEl.contains(this);
 
     const renderedLayout = alreadyRendered
-      ? '<main id="ux-content" role="main">{{{content}}}</main>'
+      ? '<main id="ux-view-content" role="main">{{{content}}}</main>'
       : (this.app?.render?.(this.layout) || this.layout);
 
+    const layoutEl = document.createElement('div');
+    layoutEl.id = 'ux-layout';
     layoutEl.innerHTML = renderedLayout;
 
     this.normalizeLayoutMountPoint(layoutEl);
 
-    // Inject styles
-    const style = document.createElement('style');
-    style.textContent = this.getStyles();
-    shadow.appendChild(style);
-    this.syncGlobalStylesIntoShadow(shadow);
-
-    shadow.appendChild(layoutEl);
-    this.applyMappedStyles(shadow);
-
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => this.syncGlobalStylesIntoShadow(shadow));
-    }
-    setTimeout(() => this.syncGlobalStylesIntoShadow(shadow), 120);
-  }
-
-  private syncGlobalStylesIntoShadow(shadow: ShadowRoot): void {
-    if (typeof document === 'undefined' || !document.head) {
-      return;
-    }
-
-    const existingLinks = new Set(
-      Array.from(shadow.querySelectorAll('link[rel="stylesheet"]'))
-        .map((el) => el.getAttribute('href'))
-        .filter((href): href is string => Boolean(href))
-    );
-
-    for (const link of Array.from(document.head.querySelectorAll('link[rel="stylesheet"]'))) {
-      const href = link.getAttribute('href');
-      if (!href || existingLinks.has(href)) {
-        continue;
-      }
-      shadow.appendChild(link.cloneNode(true));
-      existingLinks.add(href);
-    }
-
-    const headStyles = Array.from(document.head.querySelectorAll('style'));
-    for (const [index, style] of headStyles.entries()) {
-      const key = style.getAttribute('data-ux3-shadow-key') || `head-style-${index}`;
-      const existing = shadow.querySelector(`style[data-ux3-shadow-key="${key}"]`) as HTMLStyleElement | null;
-      if (existing) {
-        existing.textContent = style.textContent;
-      } else {
-        const clone = style.cloneNode(true) as HTMLStyleElement;
-        clone.setAttribute('data-ux3-shadow-key', key);
-        shadow.appendChild(clone);
-      }
-    }
+    el.appendChild(layoutEl);
+    this.applyMappedStyles(el);
   }
 
   private applyMappedStyles(root: ParentNode): void {
@@ -323,39 +276,6 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const incoming = mapped.split(/\s+/).filter(Boolean);
       node.className = Array.from(new Set([...existing, ...incoming])).join(' ');
     });
-
-    this.reflectClassesToLightDom(root);
-  }
-
-  private gatheredClassSet: Set<string> | null = null;
-
-  private reflectClassesToLightDom(root: ParentNode): void {
-    if (typeof document === 'undefined') return;
-    const all = new Set(this.gatheredClassSet ?? []);
-    const elts = root.querySelectorAll('[class]');
-    for (let i = 0; i < elts.length; i++) {
-      for (const c of (elts[i] as HTMLElement).className.split(/\s+/)) {
-        if (c) all.add(c);
-      }
-    }
-    this.gatheredClassSet = all;
-    // TODO: what is this ugly mess - not idiomatic, causes performance issues if there are many classes.  
-    // Need a more robust solution for sharing dynamic styles between shadow and light DOM>>
-    let collector = document.getElementById('ux-class-collector');
-    if (!collector) {
-      collector = document.createElement('div');
-      collector.id = 'ux-class-collector';
-      collector.setAttribute('aria-hidden', 'true');
-      collector.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;visibility:hidden;pointer-events:none;';
-      document.body.appendChild(collector);
-    }
-    collector.className = Array.from(all).join(' ');
-    // << end of ugly mess
-    const tw = (window as any).tailwind;
-    if (tw && typeof tw.refresh === 'function') {
-      try { tw.refresh(); } catch { /* noop */ }
-      setTimeout(() => this.syncGlobalStylesIntoShadow(this.shadowRoot!), 0);
-    }
   }
 
   /**
@@ -366,7 +286,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * `<ux-content id="ux-content" role="main"></ux-content>`.
    */
   private normalizeLayoutMountPoint(layoutEl: HTMLElement): void {
-    if (layoutEl.querySelector('#ux-content')) {
+    if (layoutEl.querySelector('#ux-content, #ux-view-content')) {
       return;
     }
 
@@ -443,13 +363,14 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       // Reflect state to attribute for CSS-driven visibility
       this.setAttribute('data-state', state);
       
-      // Always re-render on any FSM transition – context may have changed
-      this.renderState(state);
+      if (stateChanged) {
+        this.renderState(state);
 
-      // execute any configured invoke for this state (service call, logic function, etc)
-      this.handleStateInvoke(state).catch(err => {
-        this.logger.error('state.invoke.error', { state, error: String(err) });
-      });
+        // execute any configured invoke for this state (service call, logic function, etc)
+        this.handleStateInvoke(state).catch(err => {
+          this.logger.error('state.invoke.error', { state, error: String(err) });
+        });
+      }
 
       this.emitTelemetry('fsm:state-change', {
         view: this.getAttribute('ux-view'),
@@ -471,7 +392,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       return;
     }
 
-    const contentArea = this.shadowRoot?.querySelector('#ux-content');
+    const contentArea = this.querySelector('#ux-content, #ux-view-content');
     if (!contentArea) {
       this.logger.warn('render.no_content_area', {});
       return;
@@ -481,7 +402,15 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     this.removeEventListeners();
 
     // Render template through app's render function to process Handlebars
-    const renderedHtml = this.app.render ? this.app.render(template) : template;
+    const ctx = this.fsm?.getContext ? this.fsm.getContext() : {};
+    const renderedHtml = this.app.render
+      ? this.app.render(template, { ctx })
+      : template;
+    if (typeof renderedHtml === 'string' && renderedHtml.includes('{{ i18n.')) {
+      if (typeof document !== 'undefined') {
+        console.warn('[ViewComponent] HBS tags unresolved in renderState — i18n may not be loaded', { view: this.getAttribute('ux-view'), sample: renderedHtml.substring(0, 80) });
+      }
+    }
     contentArea.innerHTML = renderedHtml;
     this.applyMappedStyles(contentArea);
 
@@ -498,12 +427,19 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   private async handleStateInvoke(state: string): Promise<void> {
     try {
-      // obtain raw FSM config
-      const cfgMachine: any = this.fsm;
-      const fsmConfig =
-        typeof cfgMachine.getMachineConfig === 'function'
-          ? cfgMachine.getMachineConfig()
-          : cfgMachine.getStateConfig?.(undefined);
+      // Prefer the class-level FSM_CONFIG which has resolved function
+      // references (e.g. logic.initIntegrations), then fall back to
+      // the machine config from getMachineConfig().
+      const ctor = (this as any).constructor;
+      const classConfig = ctor.FSM_CONFIG ?? ctor.fsmConfig;
+      let fsmConfig = classConfig;
+      if (!fsmConfig?.states?.[state]?.invoke) {
+        const cfgMachine: any = this.fsm;
+        fsmConfig =
+          typeof cfgMachine.getMachineConfig === 'function'
+            ? cfgMachine.getMachineConfig()
+            : cfgMachine.getStateConfig?.(undefined);
+      }
       const stateCfg = fsmConfig?.states?.[state];
       if (!stateCfg || !stateCfg.invoke) return;
 
@@ -532,7 +468,9 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         this.fsm.setState(result);
       }
 
-      this.fsm.send('SUCCESS');
+      if (inv.onDone && typeof inv.onDone === 'string') {
+        this.fsm.transitionTo(inv.onDone);
+      }
     } catch (err) {
       this.fsm.send('ERROR');
       throw err;
@@ -546,7 +484,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * Example: ux-event="click:SUBMIT", ux-event="submit:SAVE"
    */
   private setupEventListeners(): void {
-    const contentArea = this.shadowRoot?.querySelector('#ux-content');
+    const contentArea = this.querySelector('#ux-content, #ux-view-content');
     if (!contentArea) return;
 
     // Query only [ux-event] — the legacy ux-on:* syntax has been removed.
@@ -574,7 +512,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     const eventHandler = (event: Event) => {
       const detail = (event as CustomEvent).detail;
       if (detail?.action) {
-        this.fsm.send({ type: detail.action, payload: detail.payload || {} });
+        const { action, ...rest } = detail;
+        this.fsm.send({ type: action, payload: detail.payload || rest || {} });
       }
     };
     this.templateEventDisposers.push(
@@ -606,7 +545,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * Watches FSM context and updates DOM on changes
    */
   private setupReactiveEffects(): void {
-    const contentArea = this.shadowRoot?.querySelector('#ux-content');
+    const contentArea = this.querySelector('#ux-content, #ux-view-content');
     if (!contentArea) return;
 
     // Simple reactive binding: {{signal}} in templates
@@ -706,7 +645,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    * Show error state
    */
   private showErrorState(error: Error): void {
-    const contentArea = this.shadowRoot?.querySelector('#ux-content');
+    const contentArea = this.querySelector('#ux-content, #ux-view-content');
     if (!contentArea) return;
 
     contentArea.innerHTML = '';
@@ -772,7 +711,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   protected getAssignedViewElements(slotName: string | null): Element[] {
     const slotSelector = slotName ? `slot[name="${slotName}"]` : 'slot:not([name])';
-    const slot = this.shadowRoot?.querySelector(slotSelector) as HTMLSlotElement;
+    const slot = this.querySelector(slotSelector) as HTMLSlotElement;
     if (!slot) return [];
     return getAssignedElements(slot);
   }

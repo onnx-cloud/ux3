@@ -826,16 +826,22 @@ export function createInspectorShell(
   }
 
   // =========================================================================
-  // Subscribe to devTools for activePanel changes
+  // Subscribe to devTools for open state and activePanel changes
   // =========================================================================
   if (devTools && typeof devTools.subscribe === 'function') {
-    disposers.push(
-      devTools.subscribe((snapshot: any) => {
-        if (snapshot.activePanel && snapshot.activePanel !== activePanel) {
-          switchPanel(snapshot.activePanel);
+    const subscribeResult = devTools.subscribe((snapshot: any) => {
+      if (typeof snapshot.open === 'boolean') {
+        if (snapshot.open && minimized) {
+          toggleMinimized();
+        } else if (!snapshot.open && !minimized) {
+          toggleMinimized();
         }
-      })
-    );
+      }
+      if (snapshot.activePanel && snapshot.activePanel !== activePanel) {
+        switchPanel(snapshot.activePanel);
+      }
+    });
+    disposers.push(subscribeResult);
   }
 
   // =========================================================================

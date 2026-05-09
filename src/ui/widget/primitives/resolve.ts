@@ -52,7 +52,12 @@ import { UxFilterBuilder } from './filter-builder.js';
 import { UxPivotTable } from './pivot-table.js';
 import { UxReportBuilder } from './report-builder.js';
 import { UxTableVirtual } from './table-virtual.js';
+import { UxTable } from './table.js';
 import { UxDataGrid } from './data-grid.js';
+import { UxSplash } from './splash-screen.js';
+import { UxRadioGroup } from './radio-group.js';
+import { UxLink } from './link.js';
+import { UxChatMessages } from './chat-messages.js';
 
 export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
@@ -115,6 +120,11 @@ export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
     case 'pivot-table': return UxPivotTable;
     case 'report-builder': return UxReportBuilder;
     case 'table-virtual': return UxTableVirtual;
+    case 'table': return UxTable;
+    case 'splash': return UxSplash;
+    case 'radio-group': return UxRadioGroup;
+    case 'link': return UxLink;
+    case 'chat-messages': return UxChatMessages;
     default: return UxRegion;
   }
 }

@@ -90,6 +90,14 @@ export class UxButton extends LifecycleComponent {
           event.stopPropagation();
           return;
         }
+        if (this.getAttribute('type') === 'submit') {
+          const form = this.closest('form');
+          if (form) {
+            event.preventDefault();
+            event.stopPropagation();
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+          }
+        }
       });
     }
   }

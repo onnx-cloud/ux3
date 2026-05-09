@@ -1,0 +1,23 @@
+prompts:
+  builder:
+    - name: ux3-new-view
+      description: "Scaffold a complete UX3 view: YAML FSM config, Handlebars template, i18n catalog, and route registration"
+      handler: resolvePrompt
+      includeResources:
+        - /schema/view
+        - /schema/i18n
+    - name: ux3-add-widget
+      description: "Add a custom widget or primitive component following UX3 conventions (shadow DOM, lifecycle, FSM binding)"
+      handler: resolvePrompt
+      includeResources:
+        - /widgets/all
+    - name: ux3-add-service
+      description: "Register a new service with proper adapter configuration and FSM invoker wiring"
+      handler: resolvePrompt
+      includeResources:
+        - /project/services
+    - name: ux3-fsm-flow
+      description: "Design and debug an FSM state machine flow with guards, actions, invokers, and declarative transitions"
+      handler: resolvePrompt
+      includeResources:
+        - /schema/view

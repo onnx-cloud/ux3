@@ -4,7 +4,11 @@
  * Components override hook methods instead of raw custom-element callbacks.
  * This keeps lifecycle behavior declarative and guarantees cleanup.
  */
-export abstract class LifecycleComponent extends HTMLElement {
+const _HTMLElement: typeof HTMLElement = typeof HTMLElement !== 'undefined'
+  ? HTMLElement
+  : (class {} as unknown as typeof HTMLElement);
+
+export abstract class LifecycleComponent extends _HTMLElement {
   private readonly managedCleanups = new Set<() => void>();
 
   connectedCallback(): void {

@@ -55,6 +55,9 @@ export const devCommand = new Command()
     try {
       const projectDir = project ? path.resolve(project) : process.cwd();
       const generatedDir = path.join(projectDir, 'generated');
+      // Clean cached generated files so template/FSM changes always take effect
+      try { fs.rmSync(generatedDir, { recursive: true, force: true }); } catch {}
+      fs.mkdirSync(generatedDir, { recursive: true });
       const port = parseInt(options.port, 10);
 
       // Load schemas

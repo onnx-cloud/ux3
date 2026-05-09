@@ -160,15 +160,14 @@ describe('AppContext helper methods', () => {
   });
 
   it('loads and installs plugins declared in config.plugins', async () => {
-    const chartsPath = require('path').join(process.cwd(), 'packages/@ux3/plugin-charts-js/src/index.ts');
-    // config.site must exist so plugins can register assets without blowing up
-    const cfg: any = { ...baseConfig, plugins: [chartsPath], site: {} };
+    const chartsPlugin = require('path').join(process.cwd(), 'packages/@ux3/plugin-charts-js/src/index.ts');
+    const cfg: any = { ...baseConfig, site: {} };
     const ctx: any = await createAppContext(cfg);
-    // plugin loader runs automatically, but ensure any async installs finish
-    if (ctx.registerPlugin && typeof ctx.registerPlugin === 'function') {
-      // we can't easily await all plugins here; we depend on loader already awaiting
+    const pluginModule = require(chartsPlugin);
+    const plugin = pluginModule?.default || pluginModule;
+    if (ctx.registerPlugin && plugin) {
+      await ctx.registerPlugin(plugin);
     }
-    // charts plugin should have registered its demo route
     expect(ctx.nav.routes.find((r:any)=>r.path==='/charts')).toBeTruthy();
   });
 

@@ -70,6 +70,7 @@ export class StateMachine<T extends Record<string, any>> {
    */
   private crossMachineLookup: ((namespace: string) => StateMachine<any> | null) | null = null;
 
+  // Type-safe setter for cross-machine lookup (used by FSMRegistry)
   setFSMLookup(lookup: (namespace: string) => StateMachine<any> | null): void {
     this.crossMachineLookup = lookup;
   }
@@ -87,7 +88,9 @@ export class StateMachine<T extends Record<string, any>> {
    */
   private enterCompoundChildren(stateName: string): void {
     const cfg = this.config.states[stateName];
-    if (!cfg?.states || (cfg.type && cfg.type !== 'compound' && cfg.type !== 'parallel')) return;
+    if (!cfg) return;
+    if (cfg.type === 'atomic' || cfg.type === 'final') return;
+    if (!cfg.states) return;
 
     let childName: string | undefined;
     if (cfg.history && this.historyMap.has(stateName)) {
@@ -108,13 +111,15 @@ export class StateMachine<T extends Record<string, any>> {
    */
   private exitCompoundChildren(stateName: string): void {
     const cfg = this.config.states[stateName];
+    if (!cfg) return;
+    if (cfg.type === 'atomic' || cfg.type === 'final') return;
     const childName = this.activeChildren.get(stateName);
     if (!childName) return;
 
     this.exitCompoundChildren(childName);
     this.executeStateActions('exit', childName);
 
-    if (cfg?.history === 'shallow' || cfg?.history === 'deep') {
+    if (cfg.history === 'shallow' || cfg.history === 'deep') {
       this.historyMap.set(stateName, childName);
     }
     this.activeChildren.delete(stateName);
@@ -176,27 +181,34 @@ export class StateMachine<T extends Record<string, any>> {
    */
   private evaluateGuard(guard: string | ((context: T) => boolean)): boolean {
     if (typeof guard === 'function') return guard(this.context);
-    if (typeof guard === 'string' && guard.includes(':')) {
-      const [namespace, requiredState] = guard.split(':');
-      const otherFsm = this.crossMachineLookup?.(namespace);
-      if (!otherFsm) return false;
-      return otherFsm.matches(requiredState) || otherFsm.matchesPath(requiredState);
+    if (typeof guard === 'string') {
+      if (guard.includes(':')) {
+        const [namespace, requiredState] = guard.split(':');
+        const otherFsm = this.crossMachineLookup?.(namespace);
+        if (!otherFsm) return false;
+        return otherFsm.matches(requiredState) || otherFsm.matchesPath(requiredState);
+      }
+      if (guard in this.context) {
+        return !!this.context[guard];
+      }
+      defaultLogger.warn('fsm.guard.unresolved', `String guard "${guard}" not found in context.`, { state: this.state });
+      return true;
     }
     return false;
   }
 
   /**
    * Handle cross-machine transitions
-   * Format: target = 'namespace.state' sends event to sibling FSM
+   * Format: target = 'namespace:state' transitions sibling FSM
    */
   private handleCrossMachineTransition(target: string): boolean {
-    if (!target.includes('.') || target.startsWith('.') || target.startsWith('#')) return false;
-    const dotIdx = target.indexOf('.');
-    const namespace = target.substring(0, dotIdx);
-    const stateName = target.substring(dotIdx + 1);
+    if (!target.includes(':')) return false;
+    const [namespace, ...rest] = target.split(':');
+    const stateName = rest.join(':');
+    if (!namespace || !stateName) return false;
     const otherFsm = this.crossMachineLookup?.(namespace);
     if (!otherFsm) return false;
-    otherFsm.send({ type: stateName });
+    otherFsm.transitionTo(stateName);
     return true;
   }
 
@@ -231,10 +243,10 @@ export class StateMachine<T extends Record<string, any>> {
   }
 
   /**
-   * Direct state transition (used for errorTarget, etc)
+   * Direct state transition (used for errorTarget, cross-machine, etc)
    * Performs exit/entry actions and invokes new state
    */
-  private transitionTo(targetState: string): void {
+  transitionTo(targetState: string): void {
     if (!this.config.states[targetState]) {
       const error = new Error(`FSM transition failed: target state "${targetState}" not found`);
       defaultLogger.error('fsm.transition.failed', error, { targetState, state: this.state });
@@ -349,10 +361,63 @@ export class StateMachine<T extends Record<string, any>> {
       });
     }
 
+    // Declarative context mutation: set fixed values without a TypeScript action function.
+    if (transitionConfig.set && typeof transitionConfig.set === 'object') {
+      const updates: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(transitionConfig.set)) {
+        updates[key] = val;
+      }
+      this.setState(updates as Partial<T>);
+    }
+
+    // Declarative boolean toggle: flip a key in context without a TypeScript action function.
+    if (typeof transitionConfig.toggle === 'string') {
+      const key = transitionConfig.toggle;
+      const current = (this.context as any)[key];
+      (this.context as any)[key] = !current;
+    }
+
+    // Declarative boolean toggles (array form): flip multiple keys.
+    if (Array.isArray(transitionConfig.toggle)) {
+      for (const key of transitionConfig.toggle) {
+        if (typeof key === 'string') {
+          (this.context as any)[key] = !((this.context as any)[key]);
+        }
+      }
+    }
+
+    // Standard declarative action: navigate to a route (client-side).
+    if (typeof transitionConfig.navigate === 'string') {
+      if (typeof window !== 'undefined') {
+        const router = (window as any).__ux3App?.router;
+        if (router && typeof router.navigate === 'function') {
+          router.navigate(transitionConfig.navigate);
+        } else {
+          window.location.hash = transitionConfig.navigate;
+        }
+      }
+    }
+
+    // Standard declarative action: dispatch a DOM event.
+    if (typeof transitionConfig.dispatch === 'string') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(transitionConfig.dispatch, {
+          bubbles: true, composed: true,
+        }));
+      }
+    }
+
+    // Standard declarative action: log a diagnostic message.
+    if (typeof transitionConfig.log === 'string') {
+      defaultLogger.info(`[FSM ${this.config.id}] ${transitionConfig.log}`, {
+        state: this.state, event: event?.type,
+      });
+    }
+
     if (transitionConfig.target) {
       const resolved = this.resolveTarget(transitionConfig.target);
 
-      // Try cross-machine transition first: 'namespace.state'
+      // Try cross-machine transition first: 'namespace:state'
       if (this.handleCrossMachineTransition(transitionConfig.target)) {
         emitDevTools('fsm', 'cross-machine', {
           from: this.state,
@@ -385,6 +450,12 @@ export class StateMachine<T extends Record<string, any>> {
       }
 
       // Handle root-level transition
+      if (!this.config.states[resolved.rootState]) {
+        const error = new Error(`[FSM ${this.config.id}] Transition failed: target state "${resolved.rootState}" not found in states`);
+        defaultLogger.error('fsm.transition.failed', error, { target: resolved.rootState, state: this.state });
+        throw error;
+      }
+
       this.exitCompoundChildren(this.state);
       this.executeStateActions('exit', this.state);
 
@@ -396,11 +467,18 @@ export class StateMachine<T extends Record<string, any>> {
 
       // If target had a child path, navigate to it
       if (resolved.childPath) {
-        const childCfg = this.config.states[this.state];
-        if (childCfg?.states?.[resolved.childPath]) {
-          this.activeChildren.set(this.state, resolved.childPath);
-          this.executeStateActions('entry', resolved.childPath);
-          this.handleStateInvoke(resolved.childPath);
+        const parts = resolved.childPath.split('.');
+        let currentParent = this.state;
+        for (const childName of parts) {
+          const parentCfg = this.config.states[currentParent];
+          if (parentCfg?.states?.[childName]) {
+            this.activeChildren.set(currentParent, childName);
+            this.executeStateActions('entry', childName);
+            this.handleStateInvoke(childName);
+            currentParent = childName;
+          } else {
+            break;
+          }
         }
       }
 
@@ -435,6 +513,10 @@ export class StateMachine<T extends Record<string, any>> {
           return other.matches(requiredState) || other.matchesPath(requiredState);
         };
       }
+      if (guard in this.context) {
+        return () => !!this.context[guard];
+      }
+      defaultLogger.warn('fsm.guard.unresolved', `String guard "${guard}" not found in context — allowing transition.`, { state: this.state });
       return null;
     }
     return null;

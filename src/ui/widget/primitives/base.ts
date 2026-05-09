@@ -1,6 +1,7 @@
 import { LifecycleComponent } from '../../lifecycle-component.js';
 import type { PrimitiveDefinition } from './types.js';
-import { DEF_BY_TAG, TOGGLE_KIND } from './types.js';
+import { TOGGLE_KIND } from './types.js';
+import { DEF_BY_TAG } from './registry.js';
 import { emitReadyOnce } from './helpers.js';
 import { FSMRegistry, extractNamespace, extractState } from '../../../fsm/registry.js';
 import type { StateMachine } from '../../../fsm/state-machine.js';
@@ -19,8 +20,14 @@ export class UxBase extends LifecycleComponent {
   protected onConnected(): void {
     this.ensureRole();
     this.ensureTabIndex();
+    this.inferUxStyle();
     this.bindFSM();
     emitReadyOnce(this);
+  }
+
+  private inferUxStyle(): void {
+    if (this.hasAttribute('ux-style') || this.hasAttribute('data-style')) return;
+    this.setAttribute('ux-style', this.localName);
   }
 
   protected onDisconnected(): void {

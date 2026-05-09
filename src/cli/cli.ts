@@ -17,6 +17,8 @@ import { styleCommand } from './commands/style.js';
 import { generateCommand } from './commands/generate.js';
 import { syncCommand } from './commands/sync.js';
 import { translateCommand } from './commands/translate.js';
+import { routesCommand } from './commands/routes.js';
+import { fsmCommand } from './commands/fsm.js';
 import { createRequire } from 'module';
 
 const _require = createRequire(import.meta.url);
@@ -40,6 +42,8 @@ program.addCommand(styleCommand);
 program.addCommand(generateCommand);
 program.addCommand(syncCommand);
 program.addCommand(translateCommand);
+program.addCommand(routesCommand);
+program.addCommand(fsmCommand);
 
 program.parse(process.argv);
 

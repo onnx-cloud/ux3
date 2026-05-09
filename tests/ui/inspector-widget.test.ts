@@ -210,7 +210,7 @@ describe('createI18nPanel', () => {
     const ctx = makeCtx({ config: { i18n: { nav: { dashboard: '' } } } });
     const panel = createI18nPanel(ctx);
     const row = panel.querySelector('tbody tr') as HTMLElement;
-    expect(row.style.color).toBe('rgb(255, 68, 68)');
+    expect(row.style.color).toBe('var(--ins-error,#f44)');
   });
 
   it('filters by search query', async () => {

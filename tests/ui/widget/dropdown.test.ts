@@ -101,8 +101,10 @@ describe('UxDropdown - Dropdown Component', () => {
 
     const openSpy = vi.fn();
     const closeSpy = vi.fn();
-    dropdown.addEventListener('ux:open', openSpy);
-    dropdown.addEventListener('ux:close', closeSpy);
+    dropdown.addEventListener('ux:event', ((e: CustomEvent) => {
+      if (e.detail?.action === 'OPEN') openSpy();
+      if (e.detail?.action === 'CLOSE') closeSpy();
+    }) as EventListener);
 
     const toggle = dropdown.shadowRoot?.querySelector('.dropdown-toggle') as HTMLButtonElement;
     toggle.click();

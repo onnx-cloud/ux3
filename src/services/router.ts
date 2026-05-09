@@ -8,6 +8,7 @@ import type { StateMachine } from '../fsm/state-machine.js';
 export interface RouteConfig {
   path: string;
   view: string;
+  label?: string;
 }
 
 export interface RouteMatch {
@@ -61,12 +62,10 @@ export class Router {
     const navRoutes: NavRoute[] = [];
 
     for (const route of this.routes) {
-      // Extract path parameters
       const paramMatch = route.path.match(/:(\w+)/g);
       const params = paramMatch ? paramMatch.map(p => p.slice(1)) : undefined;
 
-      // Derive i18n label key from view name (convention: nav.{view})
-      const label = `nav.${route.view}`;
+      const label = route.label || `nav.${route.view}`;
 
       navRoutes.push({
         path: route.path,
@@ -84,7 +83,6 @@ export class Router {
         params: {},
       },
       canNavigate: (targetView: string) => {
-        // Check if the target view exists and has a registered FSM.
         if (this.machines.has(targetView)) return true;
         if (this.machines.has(`${targetView}FSM`)) return true;
         return false;
@@ -92,7 +90,12 @@ export class Router {
       getLabel: (route: NavRoute, i18nData: Record<string, any> = i18n) => {
         if (!route.label) return route.view;
 
-        // Resolve i18n key
+        // Plain-text labels (no dots, or dots but not an i18n key path): use directly
+        if (!route.label.includes('.')) return route.label;
+        if (!route.label.startsWith('nav.') && !route.label.startsWith('header.') && !route.label.startsWith('i18n.')) {
+          return route.label;
+        }
+
         const parts = route.label.split('.');
         let value: unknown = i18nData;
         for (const part of parts) {
@@ -104,7 +107,7 @@ export class Router {
         }
 
         if (typeof value === 'string') return value;
-        return route.view;
+        return route.label;
       },
     };
   }
@@ -170,8 +173,9 @@ export class Router {
   /**
    * Dynamically add a route and refresh nav config
    */
-  addRoute(path: string, view: string): void {
-    this.routes.push({ path, view });
+  addRoute(path: string, view: string, label?: string): void {
+    if (this.routes.some((r) => r.path === path)) return;
+    this.routes.push({ path, view, label });
     this.navConfig = this.buildNavConfig(this.i18n);
   }
 

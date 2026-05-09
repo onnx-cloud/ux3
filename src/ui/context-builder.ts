@@ -26,6 +26,58 @@ import type { Plugin } from '../plugin/registry.js';
 import { builtInDevToolsPlugin, mountInspector } from './plugins/built-in.js';
 import { createLocaleService, type LocaleService } from '../services/locale-runtime.js';
 import { createAppFSM, transitionAppFSM, type AppFSMContext } from './app-fsm.js';
+import { DEFAULT_STYLES } from '../build/default-styles.js';
+
+function injectTokenCss(tokens: Record<string, any>): void {
+  const lines: string[] = [];
+  const flatten = (obj: Record<string, any>, prefix: string) => {
+    for (const [k, v] of Object.entries(obj)) {
+      const prop = `${prefix}-${k}`;
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        flatten(v, prop);
+      } else if (typeof v === 'string' || typeof v === 'number') {
+        lines.push(`  ${prop}: ${v};`);
+      }
+    }
+  };
+
+  const hasColors = tokens.colors || (tokens as any).Colors;
+  if (hasColors) {
+    const light = (hasColors as any).light;
+    const dark = (hasColors as any).dark;
+    if (light && typeof light === 'object') flatten(light, '--color');
+    if (dark && typeof dark === 'object') {
+      lines.push('');
+      lines.push('[data-color-scheme="dark"] {');
+      const darkLines: string[] = [];
+      const fd = (obj: Record<string, any>, p: string): void => {
+        for (const [k, v] of Object.entries(obj)) {
+          const prop = `${p}-${k}`;
+          if (v && typeof v === 'object' && !Array.isArray(v)) { fd(v, prop); }
+          else if (typeof v === 'string' || typeof v === 'number') { darkLines.push(`  ${prop}: ${v};`); }
+        }
+      };
+      fd(dark, '--color');
+      lines.push(...darkLines);
+      lines.push('}');
+    }
+  }
+  if (tokens.spacing && typeof tokens.spacing === 'object') flatten(tokens.spacing, '--spacing');
+  if (tokens.typography && typeof tokens.typography === 'object') flatten(tokens.typography, '--typography');
+
+  if (lines.length > 0) {
+    lines.push('');
+    lines.push('  font-family: var(--typography-fontFamily-sans, Inter), system-ui, sans-serif;');
+    lines.push('  font-size: var(--typography-fontSize-base, 0.875rem);');
+    lines.push('  line-height: var(--typography-lineHeight-normal, 1.5);');
+    lines.push('  color: var(--color-text, #111827);');
+    lines.push('  background-color: var(--color-bg, #ffffff);');
+    const style = document.createElement('style');
+    style.id = 'ux3-tokens';
+    style.textContent = `:root {\n${lines.join('\n')}\n}`;
+    document.head.appendChild(style);
+  }
+}
 
 /**
  * Generated configuration structure
@@ -524,11 +576,11 @@ export class AppContextBuilder {
       (this.templates as any)[name] = template;
     };
 
-    context.registerRoute = (path, viewName) => {
+    context.registerRoute = (path, viewName, label?) => {
       if (!this.router) {
         throw new Error('router not initialized; call withRouter before registering routes');
       }
-      this.router.addRoute(path, viewName);
+      this.router.addRoute(path, viewName, label);
       // refresh nav config
       context.nav = this.router.getNavConfig();
     };
@@ -566,8 +618,17 @@ export class AppContextBuilder {
     };
 
     // keep a global style registry in sync so that runtime class injection works
+    // ConfigGenerator already seeded config.styles with DEFAULT_STYLES, but we
+    // re-register here to guarantee availability even for SSR-less bootstraps.
+    registerStyles(DEFAULT_STYLES);
     registerStyles(context.styles || {});
     initStyleRegistry();
+
+    // Inject CSS custom properties from ux/token/*.yaml so that var(--color-*)
+    // references in style classes resolve to the correct theme values.
+    if (this.config.tokens && typeof document !== 'undefined') {
+      try { injectTokenCss(this.config.tokens); } catch { /* token CSS injection is best-effort */ }
+    }
 
     // Live browser context updates for guards/services/ui consumers.
     this.stopBrowserObserver?.();
@@ -604,6 +665,8 @@ export interface HydrationOptions {
   reattachListeners?: boolean;
   reconnectServices?: boolean;
   validateVersion?: boolean;
+  /** Hook to install browser-side plugins after context creation, before FSMs start. */
+  installPlugins?: (app: AppContext) => Promise<void>;
 }
 
 /**
@@ -620,7 +683,23 @@ export async function hydrate(
   config: GeneratedConfig,
   options: HydrationOptions = {}
 ): Promise<AppContext> {
+  defaultLogger.info('[AppContext] hydrate start', { hasPlugins: !!options.installPlugins });
   const app = await createAppContext(config);
+
+  if (options.installPlugins) {
+    defaultLogger.info('[AppContext] installing plugins via hook');
+    await options.installPlugins(app);
+    defaultLogger.info('[AppContext] plugins installed', { services: Object.keys(app.services) });
+  }
+
+  // Wire client-side routing AFTER plugins are installed so invokers have services.
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    try {
+      setupNavigation(app);
+    } catch (err) {
+      defaultLogger.warn('[AppContext] setupNavigation failed', { error: String(err) });
+    }
+  }
 
   if (options.recoverState && typeof window !== 'undefined') {
     const initial = (window as any).__INITIAL_STATE__;
@@ -716,11 +795,12 @@ export async function createAppContext(
     });
   };
 
-  // Install plugins from config (dev-tools is built-in, others via dynamic import for Node.js).
-  // Browser build: the generated __entry__.ts calls installPlugins() after createAppContext().
+  // Install plugins from config — only built-in plugins are handled here.
+  // CDN-based plugin services (maps, graphs, charts, auth) are registered
+  // via the generated installPlugins() hook called by hydrate().
   const entries: any[] = Array.isArray(config.plugins) ? [...config.plugins] : [];
 
-  // Dev-tools is always available as a framework feature
+  // Auto-install dev-tools when development mode is enabled
   const hasDevTools = entries.some((e: any) =>
     (typeof e === 'string' ? e : e?.name) === '@ux3/plugin-dev-tools'
   );
@@ -732,6 +812,7 @@ export async function createAppContext(
     try {
       const pkgName = typeof entry === 'string' ? entry : entry?.name;
       if (!pkgName) continue;
+
       if (pkgName === '@ux3/plugin-dev-tools') {
         if (context.registerPlugin) {
           await context.registerPlugin(builtInDevToolsPlugin);
@@ -739,28 +820,7 @@ export async function createAppContext(
         }
         continue;
       }
-      // Node.js-only fallback: try loading from workspace packages or filesystem paths
-      if (typeof process !== 'undefined') {
-        try {
-          let loadPath: string;
-          if (pkgName.startsWith('@ux3/plugin-')) {
-            const simple = pkgName.replace('@ux3/', '');
-            loadPath = require('path').join(process.cwd(), 'packages/@ux3', simple, 'src', 'index.ts');
-          } else {
-            loadPath = pkgName; // filesystem path
-          }
-          let plugin = require(loadPath);
-          plugin = plugin?.default || plugin;
-          if (typeof entry === 'object' && entry.config) {
-            plugin.config = { ...(plugin.config || {}), ...entry.config };
-          }
-          if (context.registerPlugin && plugin) {
-            await context.registerPlugin(plugin);
-            recordInstalledPlugin(plugin);
-          }
-        } catch { /* Node.js plugin not found */ }
-      }
-    } catch { /* plugin load failed */ }
+    } catch { /* skip broken entries */ }
   }
 
   // if content manifest was generated, install the built-in content plugin
@@ -778,41 +838,33 @@ export async function createAppContext(
 
   mountInspector(context);
 
-  // Bridge framework logger output into the devtools event stream.
+  // Bridge all framework logger output into the devtools event stream.
+  // Without this bridge, framework logs are invisible when devtools is open
+  // (they go to console.log but devtools captures events, not console output).
   if (typeof window !== 'undefined' && (window as any).__ux3DevTools) {
     try {
-      if (typeof defaultLogger.warn !== 'function' || typeof defaultLogger.error !== 'function') {
-        // Logger has been spied/mocked — skip bridge to avoid breaking tests
-      } else {
-        const devTools = (window as any).__ux3DevTools;
-        const originalWarn = defaultLogger.warn.bind(defaultLogger);
-        const originalError = defaultLogger.error.bind(defaultLogger);
-        defaultLogger.warn = (message: string, context?: Record<string, unknown>) => {
-          originalWarn(message, context);
-          devTools.emit('logger', 'warn', { message, context });
-        };
-        defaultLogger.error = (message: string, error?: Error, context?: Record<string, unknown>) => {
-          originalError(message, error, context);
-          devTools.emit('logger', 'error', { message, error: error?.message, context });
+      const devTools = (window as any).__ux3DevTools;
+      const levels = ['debug', 'info', 'warn', 'error'] as const;
+      const originals: Record<string, Function> = {};
+      for (const level of levels) {
+        const orig = (defaultLogger as any)[level];
+        if (typeof orig !== 'function') continue;
+        originals[level] = orig.bind(defaultLogger);
+        (defaultLogger as any)[level] = (...args: any[]) => {
+          originals[level](...args);
+          const message = typeof args[0] === 'string' ? args[0] : '';
+          const context = args.length > 1 && typeof args[args.length - 1] === 'object' ? args[args.length - 1] : undefined;
+          devTools.emit('logger', level, { message, context, timestamp: Date.now() });
         };
       }
     } catch {
-      // Logger bridge unavailable
+      // Logger bridge unavailable — logs go to console only
     }
   }
 
   // Transition FSM through service lifecycle phases
   await transitionAppFSM(appFSM, 'BUILD_COMPLETE', context);
   await transitionAppFSM(appFSM, 'SERVICES_CONNECTED', context);
-
-  // Wire client-side routing: mounts the initial view and handles history events.
-  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    try {
-      setupNavigation(context);
-    } catch (err) {
-      defaultLogger.warn('[AppContext] setupNavigation failed', { error: String(err) });
-    }
-  }
 
   await transitionAppFSM(appFSM, 'ROUTING_READY', context);
 

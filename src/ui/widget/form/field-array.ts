@@ -22,7 +22,8 @@ export class UxFieldArray extends LifecycleComponent {
   protected onConnected(): void {
     this.template = this.querySelector('template[slot="item"]');
     if (!this.template) {
-      console.warn('ux-field-array requires a template with slot="item"');
+      this.innerHTML = '<slot></slot>';
+      return;
     }
     this.render();
   }

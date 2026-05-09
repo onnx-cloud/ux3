@@ -86,13 +86,14 @@ export class UxAudio extends UxBase {
     const src = escapeAttr(this.getAttribute('src') ?? '');
     const controls = this.hasAttribute('controls') ? 'controls' : '';
     const loop = this.hasAttribute('loop') ? 'loop' : '';
+    const nodownload = this.hasAttribute('download') ? '' : 'controlsList="nodownload"';
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; min-width: var(--ux-audio-min-width, 18rem); }
         audio { width: 100%; }
       </style>
       ${src
-        ? `<audio src="${src}" ${controls} ${loop} part="audio"></audio>`
+        ? `<audio src="${src}" ${controls} ${loop} ${nodownload} part="audio"></audio>`
         : `<slot></slot>`}
     `;
   }

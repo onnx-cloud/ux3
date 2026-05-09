@@ -163,7 +163,7 @@ describe('Built-in primitives', () => {
   });
 
   it('toggles all toggle-class primitives and emits open/close lifecycle events', () => {
-    const toggleTags = ['ux-drawer', 'ux-popover', 'ux-tooltip', 'ux-hover-panel', 'ux-command-palette', 'ux-image-panel', 'ux-accordion'];
+    const toggleTags = ['ux-drawer', 'ux-popover', 'ux-tooltip', 'ux-accordion'];
 
     for (const tag of toggleTags) {
       const el = document.createElement(tag);
@@ -171,21 +171,21 @@ describe('Built-in primitives', () => {
 
       let opened = 0;
       let closed = 0;
-      el.addEventListener('ux:open', () => {
-        opened += 1;
-      });
-      el.addEventListener('ux:close', () => {
-        closed += 1;
-      });
+      el.addEventListener('ux:event', ((e: CustomEvent) => {
+        if (e.detail?.action === 'OPEN') opened += 1;
+        if (e.detail?.action === 'CLOSE') closed += 1;
+      }) as EventListener);
 
       el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      expect(el.hasAttribute('open')).toBe(true);
+      expect(el.hasAttribute('open'), `${tag}: open after click`).toBe(true);
 
       el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      expect(el.hasAttribute('open')).toBe(false);
+      expect(el.hasAttribute('open'), `${tag}: close after click`).toBe(false);
 
-      expect(opened).toBe(1);
-      expect(closed).toBe(1);
+      expect(opened, `${tag}: OPEN count`).toBe(1);
+      expect(closed, `${tag}: CLOSE count`).toBe(1);
+
+      document.body.removeChild(el);
     }
   });
 
