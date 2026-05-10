@@ -152,12 +152,12 @@ export class AppContextBuilder {
       for (const [name, machineConfig] of Object.entries(this.config.machines)) {
         const machine = new StateMachine(machineConfig as any);
         this.machines.set(name, machine);
-        // Register in FSMRegistry so navigation handler can look up by name
-        FSMRegistry.register(name, machine);
+        const machineId = (machineConfig as any).id || name.replace(/FSM$/, '');
+        FSMRegistry.register(machineId, machine);
 
         // debug log creation
         import('../security/observability.js').then(({ defaultLogger }) => {
-          defaultLogger.debug('machine.initialized', { name });
+          defaultLogger.debug('machine.initialized', { name, id: machineId });
         });
 
         // Subscribe to state changes for telemetry (and will be logged if debug)

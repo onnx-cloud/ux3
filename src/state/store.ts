@@ -177,6 +177,17 @@ export class Store<T extends Record<string, any>> {
   }
 
   /**
+   * Patch state with an updater function.
+   * Returns the new state for chaining.
+   */
+  patch(updater: (state: T) => T): T {
+    const next = updater(this.state);
+    this.state = next;
+    this.notifyListeners();
+    return this.state;
+  }
+
+  /**
    * Create LocalStorage adapter
    */
   private createLocalStorageAdapter(): StorageAdapter {

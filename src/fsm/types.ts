@@ -90,6 +90,10 @@ export interface MachineConfig<T extends Record<string, any>> {
   parent?: string;
   delegates?: string[];
   strict?: boolean;
+  /** Auto-generate a loading state that invokes this source and transitions to `initial` on success */
+  entry?: string;
+  /** Error target state for the auto-generated entry state (defaults to entry state itself) */
+  entryError?: string;
 }
 
 export interface MachineContext<T extends Record<string, any>> {

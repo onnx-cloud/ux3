@@ -33,17 +33,41 @@ export class UxWorkflow extends UxBase {
       status: (el as HTMLElement).dataset.status || 'pending',
     }));
 
+    // Use custom edges from [data-edge] elements if present
+    const customEdges: { from: number; to: number }[] = [];
+    for (const el of edgeEls) {
+      const from = parseInt((el as HTMLElement).dataset.from || '', 10);
+      const to = parseInt((el as HTMLElement).dataset.to || '', 10);
+      if (!isNaN(from) && !isNaN(to)) customEdges.push({ from, to });
+    }
+
     const statusColors: Record<string, string> = { done: '#10b981', active: '#3b82f6', pending: '#d1d5db' };
 
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      l.setAttribute('class', 'edge');
-      l.setAttribute('x1', String(nodes[i].x + 60));
-      l.setAttribute('y1', '40');
-      l.setAttribute('x2', String(nodes[i + 1].x));
-      l.setAttribute('y2', '40');
-      l.setAttribute('stroke', statusColors[nodes[i].status] || '#d1d5db');
-      svg.appendChild(l);
+    if (customEdges.length > 0) {
+      for (const edge of customEdges) {
+        const fromNode = nodes.find(n => n.id === String(edge.from));
+        const toNode = nodes.find(n => n.id === String(edge.to));
+        if (!fromNode || !toNode) continue;
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('class', 'edge');
+        l.setAttribute('x1', String(fromNode.x + 60));
+        l.setAttribute('y1', '40');
+        l.setAttribute('x2', String(toNode.x));
+        l.setAttribute('y2', '40');
+        l.setAttribute('stroke', statusColors[fromNode.status] || '#d1d5db');
+        svg.appendChild(l);
+      }
+    } else {
+      for (let i = 0; i < nodes.length - 1; i++) {
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('class', 'edge');
+        l.setAttribute('x1', String(nodes[i].x + 60));
+        l.setAttribute('y1', '40');
+        l.setAttribute('x2', String(nodes[i + 1].x));
+        l.setAttribute('y2', '40');
+        l.setAttribute('stroke', statusColors[nodes[i].status] || '#d1d5db');
+        svg.appendChild(l);
+      }
     }
 
     for (const n of nodes) {

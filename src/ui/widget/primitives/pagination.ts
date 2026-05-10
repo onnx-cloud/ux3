@@ -49,13 +49,26 @@ export class UxPagination extends UxBase {
     if (c <= 1) prev.disabled = true;
     this.appendChild(prev);
 
-    for (let i = 1; i <= t; i++) {
-      const btn = document.createElement('button');
-      btn.setAttribute('data-action', 'GOTO');
-      btn.setAttribute('data-page', String(i));
-      btn.textContent = String(i);
-      if (i === c) btn.className = 'active';
-      this.appendChild(btn);
+    if (t <= 7) {
+      for (let i = 1; i <= t; i++) this.appendPageButton(i, i === c);
+    } else {
+      this.appendPageButton(1, c === 1);
+      if (c > 3) {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'info';
+        ellipsis.textContent = '...';
+        this.appendChild(ellipsis);
+      }
+      const start = Math.max(2, c - 1);
+      const end = Math.min(t - 1, c + 1);
+      for (let i = start; i <= end; i++) this.appendPageButton(i, i === c);
+      if (c < t - 2) {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'info';
+        ellipsis.textContent = '...';
+        this.appendChild(ellipsis);
+      }
+      this.appendPageButton(t, c === t);
     }
 
     const next = document.createElement('button');
@@ -69,31 +82,42 @@ export class UxPagination extends UxBase {
     info.textContent = `${c} / ${t}`;
     this.appendChild(info);
 
-    this.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
-      if (!btn) return;
-      const action = btn.getAttribute('data-action')!;
-      const page = btn.getAttribute('data-page');
-      const pageNum = page ? parseInt(page, 10) : undefined;
+    this.addEventListener('click', (e) => this.onPageClick(e));
+  }
 
-      if (action === 'GOTO' && pageNum) {
-        this.currentPage = pageNum;
-        this.setAttribute('current', String(pageNum));
-        this.render();
-      } else if (action === 'PREV' && this.currentPage > 1) {
-        this.currentPage--;
-        this.setAttribute('current', String(this.currentPage));
-        this.render();
-      } else if (action === 'NEXT' && this.currentPage < this.totalPages) {
-        this.currentPage++;
-        this.setAttribute('current', String(this.currentPage));
-        this.render();
-      }
+  private appendPageButton(page: number, active: boolean): void {
+    const btn = document.createElement('button');
+    btn.setAttribute('data-action', 'GOTO');
+    btn.setAttribute('data-page', String(page));
+    btn.textContent = String(page);
+    if (active) btn.className = 'active';
+    this.appendChild(btn);
+  }
 
-      this.dispatchEvent(new CustomEvent('ux:event', {
-        bubbles: true, composed: true,
-        detail: { action, page: pageNum },
-      }));
-    });
+  private onPageClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
+    if (!btn) return;
+    const action = btn.getAttribute('data-action')!;
+    const page = btn.getAttribute('data-page');
+    const pageNum = page ? parseInt(page, 10) : undefined;
+
+    if (action === 'GOTO' && pageNum) {
+      this.currentPage = pageNum;
+      this.setAttribute('current', String(pageNum));
+      this.render();
+    } else if (action === 'PREV' && this.currentPage > 1) {
+      this.currentPage--;
+      this.setAttribute('current', String(this.currentPage));
+      this.render();
+    } else if (action === 'NEXT' && this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.setAttribute('current', String(this.currentPage));
+      this.render();
+    }
+
+    this.dispatchEvent(new CustomEvent('ux:event', {
+      bubbles: true, composed: true,
+      detail: { action, page: pageNum },
+    }));
   }
 }

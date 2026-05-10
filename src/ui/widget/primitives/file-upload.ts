@@ -1,80 +1,117 @@
-/**
- * UX3 File Upload Component (light DOM)
- */
 import { UxBase } from './base.js';
-
-const STYLE_ID = 'ux-file-upload-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `
-    ux-file-upload { display: block; }
-    ux-file-upload .zone { border: 2px dashed #d1d5db; border-radius: 0.5rem; padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s; }
-    ux-file-upload .zone:hover, ux-file-upload .zone.dragging { border-color: #3b82f6; background: #eff6ff; }
-    ux-file-upload .label { color: #6b7280; }
-    ux-file-upload .file { padding: 0.5rem 0; font-size: 0.875rem; }
-    ux-file-upload progress { width: 100%; margin-top: 0.5rem; }
-  `;
-  document.head.appendChild(s);
-}
 
 export class UxFileUpload extends UxBase {
   private filesEl!: HTMLDivElement;
+  private progressEl!: HTMLProgressElement;
+  private zoneEl!: HTMLDivElement;
+  private fileInput!: HTMLInputElement;
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot!.innerHTML = `
+      <style>
+        :host { display: block; }
+        .zone { border: 2px dashed var(--ux-upload-border, #d1d5db); border-radius: 0.5rem; padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+        .zone:hover, .zone.dragging { border-color: var(--ux-upload-active, #3b82f6); background: var(--ux-upload-bg, #eff6ff); }
+        .label { color: var(--ux-upload-label, #6b7280); }
+        .files { margin-top: 0.75rem; }
+        .file { padding: 0.5rem 0; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
+        .file .name { flex: 1; }
+        .file .remove { background: none; border: none; cursor: pointer; color: #9ca3af; }
+        .file .remove:hover { color: #ef4444; }
+        progress { width: 100%; height: 6px; margin-top: 0.75rem; display: block; border-radius: 3px; }
+        progress::-webkit-progress-bar { background: #f3f4f6; border-radius: 3px; }
+        progress::-webkit-progress-value { background: var(--ux-upload-progress, #3b82f6); border-radius: 3px; }
+      </style>
+      <div class="zone">
+        <div class="label">Drop files or click to upload</div>
+        <div class="files"></div>
+        <progress max="100" value="0" hidden></progress>
+        <input type="file" multiple style="display:none">
+      </div>
+    `;
 
-    const zone = document.createElement('div');
-    zone.className = 'zone';
+    this.zoneEl = this.shadowRoot!.querySelector('.zone')!;
+    this.filesEl = this.shadowRoot!.querySelector('.files')!;
+    this.progressEl = this.shadowRoot!.querySelector('progress')!;
+    this.fileInput = this.shadowRoot!.querySelector('input')!;
 
-    const label = document.createElement('div');
-    label.className = 'label';
-    label.textContent = 'Drop files or click to upload';
-
-    this.filesEl = document.createElement('div');
-    this.filesEl.className = 'files';
-
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.multiple = true;
-    fileInput.style.display = 'none';
-
-    const progress = document.createElement('progress');
-    progress.max = 100;
-    progress.value = 0;
-    progress.hidden = true;
-
-    zone.appendChild(label);
-    zone.appendChild(this.filesEl);
-    zone.appendChild(fileInput);
-    zone.appendChild(progress);
-
-    this.innerHTML = '';
-    this.appendChild(zone);
-
-    zone.addEventListener('click', () => fileInput.click());
-    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragging'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
-    zone.addEventListener('drop', (e) => {
+    this.zoneEl.addEventListener('click', () => this.fileInput.click());
+    this.zoneEl.addEventListener('dragover', (e) => { e.preventDefault(); this.zoneEl.classList.add('dragging'); });
+    this.zoneEl.addEventListener('dragleave', () => this.zoneEl.classList.remove('dragging'));
+    this.zoneEl.addEventListener('drop', (e) => {
       e.preventDefault();
-      zone.classList.remove('dragging');
+      this.zoneEl.classList.remove('dragging');
       this.handleFiles((e as DragEvent).dataTransfer?.files || null);
     });
-
-    fileInput.addEventListener('change', () => this.handleFiles(fileInput.files));
+    this.fileInput.addEventListener('change', () => this.handleFiles(this.fileInput.files));
   }
 
   private handleFiles(files: FileList | null): void {
     if (!files?.length) return;
     const names = Array.from(files).map(f => f.name);
+
+    this.filesEl.innerHTML = names.map((n) =>
+      `<div class="file"><span class="name">${this.escape(n)}</span><button class="remove" data-name="${this.escape(n)}">&times;</button></div>`
+    ).join('');
+
+    this.filesEl.querySelectorAll('.remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        (btn.closest('.file') as HTMLElement)?.remove();
+        const remaining = this.filesEl.querySelectorAll('.file');
+        if (remaining.length === 0) this.progressEl.hidden = true;
+      });
+    });
+
+    // If an upload URL is configured, POST the files with progress
+    const uploadUrl = this.getAttribute('upload-url');
+    if (uploadUrl) {
+      this.uploadFiles(files, uploadUrl);
+    }
+
     this.dispatchEvent(new CustomEvent('ux:event', {
       bubbles: true, composed: true,
       detail: { action: 'UPLOAD', files, names },
     }));
-    this.filesEl.innerHTML = names.map(n => `<div class="file">${n}</div>`).join('');
+  }
+
+  private uploadFiles(files: FileList, url: string): void {
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+
+    this.progressEl.hidden = false;
+    this.progressEl.value = 0;
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        this.progressEl.value = Math.round((e.loaded / e.total) * 100);
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      this.progressEl.value = 100;
+      this.dispatchEvent(new CustomEvent('ux:event', {
+        bubbles: true, composed: true,
+        detail: { action: 'UPLOAD:COMPLETE', status: xhr.status },
+      }));
+    });
+
+    xhr.addEventListener('error', () => {
+      this.dispatchEvent(new CustomEvent('ux:event', {
+        bubbles: true, composed: true,
+        detail: { action: 'UPLOAD:ERROR' },
+      }));
+    });
+
+    xhr.send(formData);
+  }
+
+  private escape(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 }

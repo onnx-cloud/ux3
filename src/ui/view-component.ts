@@ -487,6 +487,15 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const mapped = applyResultMap(result, inv.map);
       if (mapped && typeof mapped === 'object') {
         this.fsm.setState(mapped as any);
+        const devTools = (window as any).__ux3DevTools;
+        if (devTools) {
+          devTools.emit('view', 'invoke:done', {
+            view: this.getAttribute('ux-view'),
+            state,
+            keys: Object.keys(mapped),
+            loaded: mapped?.loaded,
+          });
+        }
       }
 
       (this.fsm as any).setState?.({ error: null });

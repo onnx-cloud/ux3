@@ -60,14 +60,46 @@ export class StateMachine<T extends Record<string, any>> {
   private historyMap: Map<string, string> = new Map();
 
   constructor(config: MachineConfig<T>) {
-    this.config = config;
-    this.state = config.initial;
-    this.context = typeof config.context === 'function' 
-      ? config.context() 
-      : { ...(config.context || {} as T) };
+    this.config = this.applyEntrySugar(config);
+    this.state = this.config.initial;
+    this.context = typeof this.config.context === 'function'
+      ? this.config.context()
+      : { ...(this.config.context || {} as T) };
 
     this.executeStateActions('entry', this.state);
     this.enterCompoundChildren(this.state);
+  }
+
+  /**
+   * If config.entry is set, auto-generate an entry state that invokes
+   * the named source and transitions to config.initial on success.
+   * Collapses the loading → invoke → success/error pattern into one line.
+   */
+  private applyEntrySugar(config: MachineConfig<T>): MachineConfig<T> {
+    if (!config.entry) return config;
+
+    const entryStateName = `__${config.initial}__entry`;
+    const errorTarget = config.entryError || entryStateName;
+
+    const entryState: StateConfig<T> = {
+      invoke: {
+        src: config.entry,
+        onDone: config.initial,
+      },
+      on: {
+        SUCCESS: config.initial,
+        ERROR: errorTarget,
+      },
+    };
+
+    return {
+      ...config,
+      initial: entryStateName,
+      states: {
+        [entryStateName]: entryState,
+        ...config.states,
+      },
+    };
   }
 
   /**

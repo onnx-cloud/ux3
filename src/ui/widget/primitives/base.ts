@@ -6,12 +6,18 @@ import { emitReadyOnce } from './helpers.js';
 import { FSMRegistry, extractNamespace, extractState } from '../../../fsm/registry.js';
 import type { StateMachine } from '../../../fsm/state-machine.js';
 
+function resolveDotPath(obj: Record<string, any>, path: string): any {
+  return path.split('.').reduce((acc, key) =>
+    (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+}
+
 export class UxBase extends LifecycleComponent {
   private boundFSM: StateMachine<any> | null = null;
   private fsmUnsubscribe: (() => void) | null = null;
   private fsmNamespace: string = '';
   private fsmState: string = '';
   private previousDisplay: string = '';
+  protected _boundDataRef: any = undefined;
 
   protected get definition(): PrimitiveDefinition | undefined {
     return DEF_BY_TAG.get(this.localName);
@@ -21,7 +27,10 @@ export class UxBase extends LifecycleComponent {
     this.ensureRole();
     this.ensureTabIndex();
     this.inferUxStyle();
-    this.bindFSM();
+    queueMicrotask(() => {
+      this.bindFSM();
+      this.resolveDataFrom();
+    });
     emitReadyOnce(this);
   }
 
@@ -45,7 +54,22 @@ export class UxBase extends LifecycleComponent {
     this.fsmState = extractState(uxState);
 
     const fsm = FSMRegistry.get(this.fsmNamespace);
-    if (!fsm) return;
+    if (!fsm) {
+      const devTools = (window as any).__ux3DevTools;
+      if (devTools) {
+        const registered = FSMRegistry.list();
+        devTools.emit('ux-base', 'fsm-not-found', {
+          tag: this.localName,
+          namespace: this.fsmNamespace,
+          uxState,
+          registered,
+          hint: registered.length === 0
+            ? 'No FSMs registered. Check that withMachines() ran before widgets mount.'
+            : `Registered: ${registered.join(', ')}. The FSM may be registered under a different key (e.g., "${this.fsmNamespace}FSM").`,
+        });
+      }
+      return;
+    }
 
     this.boundFSM = fsm;
     this.fsmUnsubscribe = fsm.subscribe((state, context) => {
@@ -66,8 +90,64 @@ export class UxBase extends LifecycleComponent {
     }
 
     this.style.display = match ? this.previousDisplay : 'none';
+    this.resolveDataFrom(context);
     this.resolveDataBindings(context);
   }
+
+  /**
+   * Resolve data-from or data-source binding.
+   * Priority: data-from (FSM context) > data-source (service) > slotted children.
+   */
+  private resolveDataFrom(context?: Record<string, any>): void {
+    const dataFrom = this.getAttribute('data-from');
+    if (dataFrom && context) {
+      const value = resolveDotPath(context, dataFrom);
+      if (value !== undefined && value !== this._boundDataRef) {
+        this._boundDataRef = value;
+        this.applyData(value);
+      }
+      return;
+    }
+
+    if (!context) {
+      const dataSource = this.getAttribute('data-source');
+      const dataMethod = this.getAttribute('data-method');
+      if (dataSource && dataMethod) {
+        this.resolveDataFromSource(dataSource, dataMethod);
+        return;
+      }
+    }
+  }
+
+  /**
+   * Fetch data from a named service.
+   * Called once at onConnected() when data-from is absent but data-source is set.
+   */
+  private async resolveDataFromSource(source: string, method: string): Promise<void> {
+    try {
+      const app = (window as any).__ux3App;
+      const svc = app?.services?.[source];
+      if (!svc) return;
+
+      let params: any = {};
+      const rawParams = this.getAttribute('data-params');
+      if (rawParams) {
+        try { params = JSON.parse(rawParams); } catch {}
+      }
+
+      const result = await svc.execute({ method, params });
+      if (result !== undefined && result !== this._boundDataRef) {
+        this._boundDataRef = result;
+        this.applyData(result);
+      }
+    } catch {}
+  }
+
+  /**
+   * Override in subclass to handle data binding.
+   * Receives the resolved data object (from data-from or data-source).
+   */
+  protected applyData(_data: any): void {}
 
   sendToFSM(type: string, payload?: Record<string, any>): void {
     if (!this.boundFSM) return;

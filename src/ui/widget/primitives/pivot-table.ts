@@ -40,6 +40,7 @@ export class UxPivotTable extends UxBase {
 
     const allCols = this.cols.length ? [...new Set(this.data.map(r => this.cols.map(c => r[c]).join('|')))] : [''];
     const valKey = this.values[0];
+    const aggregation = this.getAttribute('aggregation') || 'sum';
 
     let html = '<style>:host{display:block;overflow:auto;}table{border-collapse:collapse;width:100%}th,td{padding:0.5rem;border:1px solid #e5e7eb;font-size:0.8125rem;text-align:right}th{background:#f9fafb;font-weight:600}tfoot td{font-weight:600;background:#f9fafb}</style><table>';
     html += '<thead><tr>' + this.rows.map(r => `<th>${r}</th>`).join('');
@@ -59,18 +60,18 @@ export class UxPivotTable extends UxBase {
 
       for (const col of allCols) {
         const subset = col ? rows.filter(r => this.cols.map(c => r[c]).join('|') === col) : rows;
-        const sum = subset.reduce((acc, r) => acc + (parseFloat(r[valKey]) || 0), 0);
-        if (col || !this.cols.length) html += `<td>${sum}</td>`;
+        const val = this.aggregate(subset, valKey, aggregation);
+        if (col || !this.cols.length) html += `<td>${val}</td>`;
       }
-      totalForAll += rows.reduce((acc, r) => acc + (parseFloat(r[valKey]) || 0), 0);
+      totalForAll += this.aggregate(rows, valKey, 'sum');
       html += '</tr>';
     }
 
     html += `<tfoot><tr><td colspan="${this.rows.length}" style="text-align:left">Total</td>`;
     if (allCols[0] !== '') {
       for (const col of allCols) {
-        const sum = this.data.filter(r => this.cols.map(c => r[c]).join('|') === col).reduce((a, r) => a + (parseFloat(r[valKey]) || 0), 0);
-        html += `<td>${sum}</td>`;
+        const val = this.aggregate(this.data.filter(r => this.cols.map(c => r[c]).join('|') === col), valKey, aggregation);
+        html += `<td>${val}</td>`;
       }
     } else {
       html += `<td>${totalForAll}</td>`;
@@ -79,5 +80,16 @@ export class UxPivotTable extends UxBase {
 
     this.attachShadow({ mode: 'open' });
     this.shadowRoot!.innerHTML = html;
+  }
+
+  private aggregate(rows: Record<string, any>[], key: string, agg: string): number {
+    const values = rows.map(r => parseFloat(r[key]) || 0);
+    switch (agg) {
+      case 'count': return values.length;
+      case 'avg': return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+      case 'min': return values.length ? Math.min(...values) : 0;
+      case 'max': return values.length ? Math.max(...values) : 0;
+      default: return values.reduce((a, b) => a + b, 0);
+    }
   }
 }
