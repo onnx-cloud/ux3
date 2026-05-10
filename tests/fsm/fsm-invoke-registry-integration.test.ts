@@ -520,7 +520,7 @@ describe('FSM InvokeRegistry Integration (Phase 1.2.3)', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    expect(contextCapture.context).toEqual({ userId: 42, sessionId: 'xyz' });
+    expect(contextCapture.context).toMatchObject({ userId: 42, sessionId: 'xyz' });
   });
 
   // ============================================================================

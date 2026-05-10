@@ -313,17 +313,18 @@ test.describe('Kitchen sink component showcase', () => {
     }
   });
 
-  test('navigation links point to the 5 category pages', async ({ page }) => {
+  test('navigation links point to the 6 category pages', async ({ page }) => {
     await waitForShowcase(page);
 
     const navLinks = page.locator('ux-topbar nav a');
-    await expect(navLinks).toHaveCount(5);
+    await expect(navLinks).toHaveCount(6);
 
     await expect(navLinks.nth(0)).toHaveAttribute('href', '/components');
     await expect(navLinks.nth(1)).toHaveAttribute('href', '/patterns');
     await expect(navLinks.nth(2)).toHaveAttribute('href', '/integrations');
     await expect(navLinks.nth(3)).toHaveAttribute('href', '/platform');
     await expect(navLinks.nth(4)).toHaveAttribute('href', '/about');
+    await expect(navLinks.nth(5)).toHaveAttribute('href', '/widgets');
   });
 
   test('patterns page has validation form', async ({ page }) => {

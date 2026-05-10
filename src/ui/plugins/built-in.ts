@@ -9,8 +9,8 @@
  * Delegates to the @ux3/plugin-dev-tools package as the single source of truth
  * for devtools install behaviour, flag resolution, and the inspector shell.
  */
-import { DevToolsPlugin } from '../../../packages/@ux3/plugin-dev-tools/src/index.js';
-import { createInspectorShell } from '../../../packages/@ux3/plugin-dev-tools/src/inspector/inspector-shell.js';
+import { DevToolsPlugin } from '@ux3/plugin-dev-tools/index';
+import { createInspectorShell } from '@ux3/plugin-dev-tools/inspector/inspector-shell';
 
 function extractDevToolsPluginConfig(entry: any): Record<string, unknown> | null {
   if (!entry) return null;

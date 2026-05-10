@@ -1,37 +1,25 @@
-import { Service } from './base.js';
-import { HTTPService } from './http.js';
+import { BaseServiceAdapter } from './base.js';
 import type { RequestConfig, ServiceConfig } from './types.js';
 import * as path from 'path';
 
 const isNode = typeof process !== 'undefined' && process.release?.name === 'node';
 
-export class FileService extends Service<RequestConfig, any> {
-  private http = new HTTPService(this.config);
-
+export class FileService extends BaseServiceAdapter<RequestConfig, unknown> {
   constructor(config: ServiceConfig = {}) {
-    super(config);
+    super('file', config);
   }
 
-  async fetch(request: RequestConfig): Promise<any> {
+  async transport(request: RequestConfig): Promise<unknown> {
     const baseUrl = request.baseUrl || this.config.baseUrl || '';
-
-    if (!baseUrl) {
-      throw new Error('FileService requires a baseUrl or request.baseUrl');
-    }
-
-
-    if (!baseUrl.startsWith('file://')) {
-      throw new Error('oops.missing.file.url');
-    }
-
-    if (isNode) {
-      return this.readLocalFile(this.toLocalPath(baseUrl));
-    }
-
-    throw new Error(
-      `oops.node.file.service`
-    );
+    if (!baseUrl) throw new Error('FileService requires a baseUrl or request.baseUrl');
+    if (!baseUrl.startsWith('file://')) throw new Error('FileService requires a file:// URL');
+    if (!isNode) throw new Error('Local file access is only supported in Node environments');
+    return this.readLocalFile(this.toLocalPath(baseUrl));
   }
+
+  async execute(request: RequestConfig): Promise<unknown> { return this.transport(request); }
+
+  async fetch(request: RequestConfig): Promise<unknown> { return this.execute(request); }
 
   private toLocalPath(location: string): string {
     if (location.startsWith('file://')) {
@@ -41,31 +29,17 @@ export class FileService extends Service<RequestConfig, any> {
         return location.replace(/^file:\/\//, '');
       }
     }
-
-    if (path.isAbsolute(location)) {
-      return location;
-    }
-
+    if (path.isAbsolute(location)) return location;
     return path.resolve(process.cwd(), location);
   }
 
-  private async readLocalFile(filePath: string): Promise<any> {
-    if (!isNode) {
-      throw new Error('Local file access is only supported in Node environments.');
-    }
-
+  private async readLocalFile(filePath: string): Promise<unknown> {
     const fs = new Function('id', 'return require(id)')('fs');
     const raw = await fs.promises.readFile(filePath, 'utf-8');
     const ext = path.extname(filePath).toLowerCase();
-
     if (ext === '.json') {
-      try {
-        return JSON.parse(raw);
-      } catch (err) {
-        throw new Error(`Failed to parse JSON file ${filePath}: ${err}`);
-      }
+      return JSON.parse(raw);
     }
-
     return raw;
   }
 }

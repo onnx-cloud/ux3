@@ -1,33 +1,28 @@
-/**
- * JSON-RPC Service
- * JSON-RPC 2.0 protocol implementation for RPC calls
- */
-
-import { Service } from './base.js';
-import type { JSONRPCRequest, JSONRPCResponse } from './types.js';
+import { BaseServiceAdapter } from './base.js';
+import type { JSONRPCRequest, JSONRPCResponse, ServiceConfig } from './types.js';
+import { ServiceError, ServiceErrorCode } from './types.js';
 import { HTTPService } from './http.js';
 
-export class JSONRPCService extends Service<JSONRPCRequest, any> {
+export class JSONRPCService extends BaseServiceAdapter<JSONRPCRequest, unknown> {
   private http: HTTPService;
   private requestId = 0;
-  private pendingRequests = new Map<
-    string | number,
-    { resolve: (value: any) => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }
-  >();
+  private maxBatchSize: number;
 
-  constructor(config: any) {
-    super(config);
+  constructor(config: ServiceConfig = {}) {
+    super('jsonrpc', config);
     this.http = new HTTPService(config);
+    this.maxBatchSize = 20;
   }
 
-  /**
-   * Call RPC method
-   */
-  async call<T = any>(
-    method: string,
-    params?: any,
-    timeout: number = this.config.timeout || 30000
-  ): Promise<T> {
+  async transport(request: JSONRPCRequest, signal?: AbortSignal): Promise<unknown> {
+    return this.executeRequest(request, this.config.timeout || 30000, signal);
+  }
+
+  async execute(request: JSONRPCRequest, signal?: AbortSignal): Promise<unknown> {
+    return this.transport(request, signal);
+  }
+
+  async call<T = unknown>(method: string, params?: unknown, timeout?: number): Promise<T> {
     const id = this.generateId();
     const request: JSONRPCRequest = {
       jsonrpc: '2.0',
@@ -35,35 +30,28 @@ export class JSONRPCService extends Service<JSONRPCRequest, any> {
       params,
       id,
     };
-
-    return this.executeRequest<T>(request, timeout);
+    return this.executeRequest<T>(request, timeout ?? this.config.timeout ?? 30000);
   }
 
-  /**
-   * Call RPC method (notification - no response)
-   */
-  async notify(method: string, params?: any): Promise<void> {
+  async notify(method: string, params?: unknown): Promise<void> {
     const request: JSONRPCRequest = {
       jsonrpc: '2.0',
       method,
       params,
     };
-
-    // Notifications don't have id and don't expect response
-    await this.http.post(this.config.baseUrl, request).catch(() => {
-      // Ignore errors for notifications
-    });
+    this.http.post(this.config.baseUrl, request).catch(() => {});
   }
 
-  /**
-   * Batch requests
-   */
-  async batch<T = any>(
-    requests: Array<{ method: string; params?: any }>,
-    _timeout?: number
-  ): Promise<T[]> {
+  async batch<T = unknown>(requests: Array<{ method: string; params?: unknown }>): Promise<T[]> {
+    if (requests.length > this.maxBatchSize) {
+      throw new ServiceError(
+        `Batch size ${requests.length} exceeds limit of ${this.maxBatchSize}`,
+        ServiceErrorCode.VALIDATION
+      );
+    }
+
     const rpcRequests: JSONRPCRequest[] = requests.map(({ method, params }) => ({
-      jsonrpc: '2.0',
+      jsonrpc: '2.0' as const,
       method,
       params,
       id: this.generateId(),
@@ -72,85 +60,77 @@ export class JSONRPCService extends Service<JSONRPCRequest, any> {
     const response = await this.http.post(this.config.baseUrl, rpcRequests);
 
     if (!response.ok) {
-      throw new Error(`RPC batch request failed: ${response.status}`);
+      throw new ServiceError(
+        `RPC batch request failed: ${response.status}`,
+        ServiceErrorCode.UNKNOWN,
+        { status: response.status }
+      );
     }
 
-    const responses: JSONRPCResponse[] = response.data;
+    const responses = response.data as JSONRPCResponse[];
     return responses.map(r => {
       if (r.error) {
-        throw new Error(r.error.message);
+        throw new ServiceError(r.error.message, ServiceErrorCode.UNKNOWN);
       }
       return r.result;
     }) as T[];
   }
 
-  /**
-   * Fetch via JSON-RPC
-   */
-  async fetch(request: JSONRPCRequest): Promise<any> {
-    return this.executeRequest(request);
+  async fetch(request: JSONRPCRequest): Promise<unknown> {
+    return this.executeRequest(request, this.config.timeout || 30000);
   }
 
-  /**
-   * Execute RPC request
-   */
-  private async executeRequest<T = any>(
+  private async executeRequest<T = unknown>(
     request: JSONRPCRequest,
-    timeout: number = this.config.timeout || 30000
+    timeout: number,
+    signal?: AbortSignal
   ): Promise<T> {
-    // Use timeout parameter to avoid unused warning
-    void timeout;
-    return new Promise((resolve, reject) => {
-      const requestTimeout = setTimeout(() => {
-        if (request.id) {
-          this.pendingRequests.delete(request.id);
-        }
-        reject(new Error('RPC request timeout'));
-      }, timeout);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
 
-      if (request.id) {
-        this.pendingRequests.set(request.id, {
-          resolve,
-          reject,
-          timeout: requestTimeout,
-        });
+    if (signal) {
+      signal.addEventListener('abort', () => controller.abort(), { once: true });
+    }
+
+    try {
+      const response = await this.http.post(this.config.baseUrl, request);
+
+      if (!response.ok) {
+        throw new ServiceError(
+          `RPC request failed: ${response.status}`,
+          ServiceErrorCode.UNKNOWN,
+          { status: response.status }
+        );
       }
 
-      // Send request via HTTP
-      this.http
-        .post(this.config.baseUrl, request)
-        .then((response: any) => {
-          if (!response.ok) {
-            throw new Error(`RPC request failed: ${response.status}`);
-          }
+      const rpcResponse = response.data as JSONRPCResponse<T>;
 
-          const rpcResponse: JSONRPCResponse<T> = response.data;
+      if (rpcResponse.error) {
+        throw new ServiceError(
+          rpcResponse.error.message,
+          ServiceErrorCode.UNKNOWN,
+          { retryable: false }
+        );
+      }
 
-          if (rpcResponse.error) {
-            reject(new Error(rpcResponse.error.message));
-          } else {
-            resolve(rpcResponse.result as T);
-          }
-
-          clearTimeout(requestTimeout);
-          if (request.id) {
-            this.pendingRequests.delete(request.id);
-          }
-        })
-        .catch((error: Error) => {
-          clearTimeout(requestTimeout);
-          if (request.id) {
-            this.pendingRequests.delete(request.id);
-          }
-          reject(error);
-        });
-    });
+      return rpcResponse.result as T;
+    } catch (error) {
+      if (controller.signal.aborted && !signal?.aborted) {
+        throw new ServiceError('RPC request timeout', ServiceErrorCode.TIMEOUT, { retryable: true });
+      }
+      if (signal?.aborted || (error instanceof Error && error.name === 'AbortError')) {
+        throw new ServiceError('Request aborted', ServiceErrorCode.ABORTED);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
-  /**
-   * Generate unique request ID
-   */
-  private generateId(): string | number {
-    return ++this.requestId;
+  private generateId(): string {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return `${Date.now()}-${++this.requestId}`;
   }
 }

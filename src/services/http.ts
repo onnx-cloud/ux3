@@ -1,22 +1,28 @@
-/**
- * HTTP Service
- * HTTP/HTTPS data adapter with caching, auth, and retry
- */
+import { BaseServiceAdapter } from './base.js';
+import type { RequestConfig, ServiceResponse, ServiceConfig } from './types.js';
+import { ServiceError, ServiceErrorCode } from './types.js';
 
-import { Service } from './base.js';
-import type { RequestConfig, ServiceResponse } from './types.js';
+export interface HttpServiceConfig extends ServiceConfig {
+  auth?: { scheme: 'bearer'; token: string } | { scheme: 'basic'; username: string; password: string };
+  csrf?: { headerName: string; cookieName: string };
+  maxRedirects?: number;
+  maxBodySize?: number;
+  validateResponse?: (data: unknown) => boolean;
+}
 
-export class HTTPService extends Service<RequestConfig, any> {
-  private cache = new Map<string, { data: any; timestamp: number }>();
-  private cacheTimeout = 60000; // 1 minute
+export class HTTPService extends BaseServiceAdapter<RequestConfig, unknown> {
+  private cache = new Map<string, { data: unknown; timestamp: number }>();
+  private cacheTimeout = 60_000;
+  private maxBodySize: number;
 
-  /**
-   * Fetch data via HTTP
-   */
-  async fetch(request: RequestConfig): Promise<any> {
+  constructor(config: HttpServiceConfig = {}) {
+    super('http', config);
+    this.maxBodySize = (config as HttpServiceConfig).maxBodySize ?? 10 * 1024 * 1024;
+  }
+
+  async transport(request: RequestConfig, signal?: AbortSignal): Promise<unknown> {
     const cacheKey = this.getCacheKey(request);
 
-    // Check cache
     if (request.method === 'GET' && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)!;
       if (Date.now() - cached.timestamp < this.cacheTimeout) {
@@ -25,131 +31,134 @@ export class HTTPService extends Service<RequestConfig, any> {
       this.cache.delete(cacheKey);
     }
 
-    // Execute with middlewares and retry
-    return this.withRetry(() =>
-      this.executeMiddlewares({
-        ...request,
-        method: request.method || 'GET',
-      })
-    );
+    return this.withRetry(() => this.performRequest(request, signal));
   }
 
-  /**
-   * Perform HTTP request
-   */
-  async request<T = any>(config: RequestConfig): Promise<ServiceResponse<T>> {
+  async execute(request: RequestConfig, signal?: AbortSignal): Promise<unknown> {
+    return this.executeMiddlewares(request, signal);
+  }
+
+  async fetch(request: RequestConfig): Promise<unknown> {
+    return this.execute(request);
+  }
+
+  private async performRequest(config: RequestConfig, signal?: AbortSignal): Promise<unknown> {
     const url = this.buildUrl(config);
-    const options = this.buildFetchOptions(config);
+    const cacheKey = this.getCacheKey(config);
+    const options = this.buildFetchOptions(config, signal);
 
-    try {
-      const response = await this.withTimeout(
-        fetch(url, options),
-        config.timeout
+    const response = await this.withTimeout(
+      fetch(url, options),
+      config.timeout ?? this.config.timeout
+    );
+
+    if (response.status >= 400) {
+      const code = response.status === 401 ? ServiceErrorCode.UNAUTHORIZED
+        : response.status === 403 ? ServiceErrorCode.FORBIDDEN
+        : response.status === 404 ? ServiceErrorCode.NOT_FOUND
+        : response.status === 429 ? ServiceErrorCode.RATE_LIMITED
+        : ServiceErrorCode.UNKNOWN;
+
+      throw new ServiceError(
+        `HTTP ${response.status}: ${response.statusText}`,
+        code,
+        { status: response.status, retryable: response.status === 429 || response.status >= 500 }
       );
+    }
 
-      const data = await this.parseResponse(response);
-      const result: ServiceResponse<T> = {
-        method: options.method || 'GET',
-        ok: response.ok,
-        status: response.status,
+    const data = await this.parseResponse(response);
+
+    if (this.maxBodySize > 0) {
+      const bodyStr = typeof data === 'string' ? data : JSON.stringify(data);
+      if (new Blob([bodyStr]).size > this.maxBodySize) {
+        throw new ServiceError(
+          `Response body exceeds max size of ${this.maxBodySize} bytes`,
+          ServiceErrorCode.VALIDATION,
+          { status: response.status }
+        );
+      }
+    }
+
+    if (config.method === 'GET' && response.ok) {
+      this.cache.set(cacheKey, { data, timestamp: Date.now() });
+    }
+
+    return data;
+  }
+
+  async request<T = unknown>(config: RequestConfig): Promise<ServiceResponse<T>> {
+    try {
+      const data = await this.execute(config);
+      return {
+        method: config.method || 'GET',
+        ok: true,
+        status: 200,
         data: data as T,
       };
-
-      // Cache successful GET requests
-      if (config.method === 'GET' && response.ok) {
-        this.cache.set(this.getCacheKey(config), {
-          data: result.data,
-          timestamp: Date.now(),
-        });
-      }
-
-      return result;
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return {
+          method: config.method || 'request',
+          ok: false,
+          status: error.status || 0,
+          data: null as unknown as T,
+          error,
+        };
+      }
       return {
-        method: options.method || 'request',
+        method: config.method || 'request',
         ok: false,
         status: 0,
-        data: null as any,
-        error: error as Error,
+        data: null as unknown as T,
+        error: error instanceof Error ? error : new Error(String(error)),
       };
     }
   }
 
-  /**
-   * GET request
-   */
-  async get<T = any>(url: string, config?: RequestConfig): Promise<ServiceResponse<T>> {
+  async get<T = unknown>(url: string, config?: RequestConfig): Promise<ServiceResponse<T>> {
     return this.request<T>({ ...config, method: 'GET', baseUrl: url });
   }
 
-  /**
-   * POST request
-   */
-  async post<T = any>(
-    url: string,
-    data?: any,
-    config?: RequestConfig
-  ): Promise<ServiceResponse<T>> {
-    return this.request<T>({
-      ...config,
-      method: 'POST',
-      baseUrl: url,
-      data,
-    });
+  async post<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<ServiceResponse<T>> {
+    return this.request<T>({ ...config, method: 'POST', baseUrl: url, data });
   }
 
-  /**
-   * PUT request
-   */
-  async put<T = any>(
-    url: string,
-    data?: any,
-    config?: RequestConfig
-  ): Promise<ServiceResponse<T>> {
-    return this.request<T>({
-      ...config,
-      method: 'PUT',
-      baseUrl: url,
-      data,
-    });
+  async put<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<ServiceResponse<T>> {
+    return this.request<T>({ ...config, method: 'PUT', baseUrl: url, data });
   }
 
-  /**
-   * DELETE request
-   */
-  async delete<T = any>(url: string, config?: RequestConfig): Promise<ServiceResponse<T>> {
+  async delete<T = unknown>(url: string, config?: RequestConfig): Promise<ServiceResponse<T>> {
     return this.request<T>({ ...config, method: 'DELETE', baseUrl: url });
   }
 
-  /**
-   * Build full URL
-   */
+  async patch<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<ServiceResponse<T>> {
+    return this.request<T>({ ...config, method: 'PATCH', baseUrl: url, data });
+  }
+
   private buildUrl(config: RequestConfig): string {
     const baseUrl = config.baseUrl || this.config.baseUrl || '';
-    const url = new URL(baseUrl, typeof window !== 'undefined' ? window.location.origin : '');
+    if (!baseUrl) throw new ServiceError('No baseUrl configured', ServiceErrorCode.VALIDATION);
+
+    const url = new URL(baseUrl, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
 
     if (config.params) {
-      Object.entries(config.params).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(config.params)) {
         if (value !== null && value !== undefined) {
           url.searchParams.append(key, String(value));
         }
-      });
+      }
     }
 
     return url.toString();
   }
 
-  /**
-   * Build fetch options
-   */
-  private buildFetchOptions(config: RequestConfig): RequestInit {
-    const headers: HeadersInit = {
+  private buildFetchOptions(config: RequestConfig, signal?: AbortSignal): RequestInit {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...this.config.headers,
-      ...config.headers,
+      ...(this.config.headers || {}),
+      ...(config.headers || {}),
     };
 
-    // Add auth token if provided
     if (config.auth?.token) {
       headers['Authorization'] = `Bearer ${config.auth.token}`;
     }
@@ -159,51 +168,35 @@ export class HTTPService extends Service<RequestConfig, any> {
       headers,
     };
 
-    // Add body for POST/PUT/PATCH
-    if (config.data && ['POST', 'PUT', 'PATCH'].includes(config.method || 'GET')) {
-      options.body =
-        typeof config.data === 'string' ? config.data : JSON.stringify(config.data);
+    if (signal) {
+      options.signal = signal;
+    }
+
+    if (config.data && ['POST', 'PUT', 'PATCH'].includes(config.method || '')) {
+      options.body = typeof config.data === 'string' ? config.data : JSON.stringify(config.data);
     }
 
     return options;
   }
 
-  /**
-   * Parse response
-   */
-  private async parseResponse(response: Response): Promise<any> {
+  private async parseResponse(response: Response): Promise<unknown> {
     const contentType = response.headers.get('content-type');
-
-    if (contentType?.includes('application/json')) {
-      return response.json();
-    } else if (contentType?.includes('text')) {
-      return response.text();
-    } else {
-      return response.blob();
-    }
+    if (contentType?.includes('application/json')) return response.json();
+    if (contentType?.includes('text')) return response.text();
+    return response.blob();
   }
 
-  /**
-   * Generate cache key
-   */
   private getCacheKey(config: RequestConfig): string {
     return `${config.method || 'GET'}:${config.baseUrl}:${JSON.stringify(config.params || {})}`;
   }
 
-  /**
-   * Clear cache
-   */
   clearCache(): void {
     this.cache.clear();
   }
 
-  /**
-   * Set cache timeout
-   */
   setCacheTimeout(ms: number): void {
     this.cacheTimeout = ms;
   }
 }
 
-// Backwards compatibility: export a class alias for environments that expect a class constructor
 export class HttpService extends HTTPService {}

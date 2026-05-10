@@ -8,6 +8,19 @@ import type { AppContext } from './app.js';
 import { StructuredLogger } from '../logger/logger.js';
 import { LifecycleComponent } from './lifecycle-component.js';
 
+function resolveDotPath(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce((acc: any, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+}
+
+function applyResultMap(result: any, map: Record<string, string> | undefined): Record<string, unknown> {
+  if (!map || typeof result !== 'object' || result === null) return result ?? {};
+  const mapped: Record<string, unknown> = {};
+  for (const [contextKey, resultPath] of Object.entries(map)) {
+    mapped[contextKey] = resolveDotPath(result, resultPath);
+  }
+  return mapped;
+}
+
 // expose global for runtime
 declare global {
   interface Window {
@@ -372,6 +385,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         });
       }
 
+      this.applyShowHideBindings();
+
       this.emitTelemetry('fsm:state-change', {
         view: this.getAttribute('ux-view'),
         state,
@@ -419,17 +434,20 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
     // Rebind reactive effects
     this.setupReactiveEffects();
+
+    // Apply context-driven visibility
+    this.applyShowHideBindings();
   }
 
   /**
    * Attempt to invoke configured action when entering a state.
    * Supports service adapter invocations or local functions.
+   *
+   * Auto-manages context.loading (true→false lifecycle) and context.error
+   * (error message on failure, null on success).
    */
   private async handleStateInvoke(state: string): Promise<void> {
     try {
-      // Prefer the class-level FSM_CONFIG which has resolved function
-      // references (e.g. logic.initIntegrations), then fall back to
-      // the machine config from getMachineConfig().
       const ctor = (this as any).constructor;
       const classConfig = ctor.FSM_CONFIG ?? ctor.fsmConfig;
       let fsmConfig = classConfig;
@@ -443,6 +461,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const stateCfg = fsmConfig?.states?.[state];
       if (!stateCfg || !stateCfg.invoke) return;
 
+      (this.fsm as any).setState?.({ loading: true });
+      try {
       const inv: any = stateCfg.invoke;
       let result: any;
 
@@ -453,25 +473,32 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         result = await (svc as any)[method](inv.input);
       } else if (inv.src) {
         if (typeof inv.src === 'function') {
-          result = await inv.src(inv.input, this.fsm.getContext());
+          result = await inv.src(inv.input, this.getContext());
         } else if (typeof inv.src === 'string') {
           const fn = (window as any)[inv.src];
           if (typeof fn === 'function') {
-            result = await fn(inv.input, this.fsm.getContext());
+            result = await fn(inv.input, this.getContext());
           } else {
             throw new Error(`Invoke source not found: ${inv.src}`);
           }
         }
       }
 
-      if (result && typeof result === 'object') {
-        this.fsm.setState(result);
+      const mapped = applyResultMap(result, inv.map);
+      if (mapped && typeof mapped === 'object') {
+        this.fsm.setState(mapped as any);
       }
+
+      (this.fsm as any).setState?.({ error: null });
 
       if (inv.onDone && typeof inv.onDone === 'string') {
         this.fsm.transitionTo(inv.onDone);
       }
+      } finally {
+        (this.fsm as any).setState?.({ loading: false });
+      }
     } catch (err) {
+      (this.fsm as any).setState?.({ error: String(err), loading: false });
       this.fsm.send('ERROR');
       throw err;
     }
@@ -480,64 +507,104 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   /**
    * Setup event delegation
    * Binds FSM transitions to element events via the ux-event directive.
-   * Format: ux-event="eventName:FSM_ACTION"
+   * Format: ux-event="eventName:FSM_ACTION"  (explicit)
+   *         ux-event="eventName"              (action inferred from element)
    * Example: ux-event="click:SUBMIT", ux-event="submit:SAVE"
+   *          ux-event="click" on Save button → action derived as "SAVE"
    */
   private setupEventListeners(): void {
     const contentArea = this.querySelector('#ux-content, #ux-view-content');
     if (!contentArea) return;
 
-    // Query only [ux-event] — the legacy ux-on:* syntax has been removed.
     const elements = contentArea.querySelectorAll('[ux-event]');
     
     elements.forEach((element) => {
       const uxEvent = element.getAttribute('ux-event');
       if (!uxEvent) return;
-      const colonIdx = uxEvent.indexOf(':');
-      if (colonIdx < 0) return;
-      const eventName = uxEvent.slice(0, colonIdx);
-      const action = uxEvent.slice(colonIdx + 1);
-      if (!eventName || !action) return;
+      const parsed = this.parseUxEvent(element as HTMLElement, uxEvent);
+      if (!parsed) return;
 
       const listener = (event: Event) => {
         if (element.tagName === 'FORM' && event.type === 'submit') {
           event.preventDefault();
         }
         const payload = this.extractPayload(element as HTMLElement, event);
-        this.fsm.send({ type: action, payload });
+        this.fsm.send({ type: parsed.action, payload, fromDOM: true, sourceElement: element as HTMLElement });
       };
-      this.templateEventDisposers.push(this.listen(element, eventName, listener));
+      this.templateEventDisposers.push(this.listen(element, parsed.event, listener));
     });
 
     const eventHandler = (event: Event) => {
       const detail = (event as CustomEvent).detail;
       if (detail?.action) {
         const { action, ...rest } = detail;
-        this.fsm.send({ type: action, payload: detail.payload || rest || {} });
+        this.fsm.send({ type: action, payload: detail.payload || rest || {}, fromDOM: true });
       }
     };
     this.templateEventDisposers.push(
       this.listen(contentArea, 'ux:event', eventHandler)
     );
 
-    // Listen for ux:change from widgets (pass through to FSM if ux-event is set)
     const changeHandler = (event: Event) => {
       const target = event.target as HTMLElement;
       if (!target) return;
       const uxEvent = target.getAttribute('ux-event');
       if (!uxEvent) return;
-      const colonIdx = uxEvent.indexOf(':');
-      if (colonIdx < 0) return;
-      const eventName = uxEvent.slice(0, colonIdx);
-      if (eventName !== 'change') return;
-      const action = uxEvent.slice(colonIdx + 1);
-      if (!action) return;
+      const parsed = this.parseUxEvent(target, uxEvent);
+      if (!parsed || parsed.event !== 'change') return;
       const detail = (event as CustomEvent).detail;
-      this.fsm.send({ type: action, payload: detail || {} });
+      this.fsm.send({ type: parsed.action, payload: detail || {}, fromDOM: true });
     };
     this.templateEventDisposers.push(
       this.listen(contentArea, 'ux:change', changeHandler)
     );
+  }
+
+  /**
+   * Parse ux-event attribute into { event, action }.
+   * With colon: "click:SAVE" → { event: "click", action: "SAVE" }
+   * Without colon: "click" on <ux-button>Save</ux-button> → { event: "click", action: "SAVE" }
+   *                "change" on <ux-input name="query"> → { event: "change", action: "CHANGE_QUERY" }
+   */
+  private parseUxEvent(element: HTMLElement, uxEvent: string): { event: string; action: string } | null {
+    const colonIdx = uxEvent.indexOf(':');
+    const eventName = colonIdx >= 0 ? uxEvent.slice(0, colonIdx).trim() : uxEvent.trim();
+    const explicitAction = colonIdx >= 0 ? uxEvent.slice(colonIdx + 1).trim() : '';
+
+    if (!eventName) return null;
+
+    const action = explicitAction || this.deriveActionName(element, eventName);
+    if (!action) return null;
+
+    return { event: eventName, action };
+  }
+
+  private deriveActionName(element: HTMLElement, domEvent: string): string {
+    const tag = element.tagName;
+    const text = element.textContent?.trim() || '';
+
+    if (tag === 'FORM' && domEvent === 'submit') {
+      const submitBtn = element.querySelector('[type="submit"], ux-button[type="submit"]');
+      if (submitBtn) {
+        const btnText = submitBtn.textContent?.trim();
+        if (btnText) return btnText.replace(/\s+/g, '_').toUpperCase();
+      }
+      return 'SUBMIT';
+    }
+
+    if (text && text.length <= 40 && !text.includes('<')) {
+      return text.replace(/\s+/g, '_').toUpperCase();
+    }
+
+    const name = element.getAttribute('name');
+    if (name) {
+      const prefix = domEvent.toUpperCase();
+      return `${prefix}_${name.replace(/\s+/g, '_').toUpperCase()}`;
+    }
+
+    const prefix = domEvent.toUpperCase();
+    const tagName = tag.replace(/^UX-/, '');
+    return tagName ? `${prefix}_${tagName}` : prefix;
   }
 
   /**
@@ -569,6 +636,34 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   }
 
   /**
+   * Apply ux-show / ux-hide bindings based on current FSM context.
+   * Evaluates simple dot-path expressions like "context.loading" or
+   * "context.results.length" and toggles element visibility.
+   */
+  private applyShowHideBindings(): void {
+    const contentArea = this.querySelector('#ux-content, #ux-view-content');
+    if (!contentArea) return;
+
+    const ctx = this.fsm?.getContext?.() as Record<string, unknown> ?? {};
+
+    const evalExpr = (expr: string): boolean => {
+      const path = expr.startsWith('context.') ? expr.slice(8) : expr;
+      const val = path.split('.').reduce<any>((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), ctx);
+      return !!val;
+    };
+
+    contentArea.querySelectorAll('[ux-show]').forEach((el: Element) => {
+      const expr = el.getAttribute('ux-show')!;
+      (el as HTMLElement).style.display = evalExpr(expr) ? '' : 'none';
+    });
+
+    contentArea.querySelectorAll('[ux-hide]').forEach((el: Element) => {
+      const expr = el.getAttribute('ux-hide')!;
+      (el as HTMLElement).style.display = evalExpr(expr) ? 'none' : '';
+    });
+  }
+
+  /**
    * Extract payload from form or element
    */
   private extractPayload(
@@ -589,6 +684,22 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         ...attrPayload,
         value: element.value,
       };
+    }
+
+    if (element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) {
+      return {
+        ...attrPayload,
+        value: element.value,
+      };
+    }
+
+    const value = (element as any).value;
+    if (value !== undefined && value !== null && typeof value !== 'object') {
+      const name = element.getAttribute('name');
+      if (name) {
+        return { ...attrPayload, [name]: value };
+      }
+      return { ...attrPayload, value };
     }
 
     return attrPayload;

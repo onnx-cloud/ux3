@@ -1,13 +1,29 @@
+/**
+ * UX3 Link Component (light DOM)
+ */
 import { UxBase } from './base.js';
+
+const STYLE_ID = 'ux-link-style';
+
+function ensureStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+  const s = document.createElement('style');
+  s.id = STYLE_ID;
+  s.textContent = `
+    ux-link { display: inline; }
+    ux-link a { color: var(--color-link, #3b82f6); cursor: pointer; text-decoration: none; }
+    ux-link a:hover { text-decoration: underline; }
+  `;
+  document.head.appendChild(s);
+}
 
 export class UxLink extends UxBase {
   private anchor: HTMLAnchorElement | null = null;
 
   protected onConnected(): void {
     super.onConnected();
-    if (!this.shadowRoot) {
-      this.attachShadow({ mode: 'open' });
-    }
+    ensureStyles();
     this.render();
   }
 
@@ -16,21 +32,14 @@ export class UxLink extends UxBase {
     const target = this.getAttribute('target') || '';
     const label = this.textContent?.trim() || href;
 
-    this.shadowRoot!.innerHTML = `
-      <style>
-        :host { display: inline; }
-        a {
-          color: var(--color-link, #3b82f6);
-          cursor: pointer;
-          text-decoration: none;
-        }
-        a:hover { text-decoration: underline; }
-      </style>
-      <a href="${href}"${target ? ` target="${target}" rel="noopener"` : ''}>${label}</a>
-    `;
-
-    this.anchor = this.shadowRoot!.querySelector('a');
-    this.anchor?.addEventListener('click', this.onAnchorClick);
+    this.innerHTML = '';
+    const a = document.createElement('a');
+    a.href = href;
+    if (target) { a.target = target; a.rel = 'noopener'; }
+    a.textContent = label;
+    this.appendChild(a);
+    this.anchor = a;
+    this.anchor.addEventListener('click', this.onAnchorClick);
   }
 
   private readonly onAnchorClick = (e: Event) => {
@@ -44,15 +53,11 @@ export class UxLink extends UxBase {
       return;
     }
 
-    // External links: let the browser handle normal navigation
     if (href.startsWith('http://') || href.startsWith('https://')) {
-      const target = this.getAttribute('target');
-      if (target === '_blank') return; // browser handles
-      // Same-window external navigation — let browser handle
+      if (this.getAttribute('target') === '_blank') return;
       return;
     }
 
-    // Internal route navigation — dispatch for the parent view's navigation handler
     e.preventDefault();
     this.dispatchEvent(new CustomEvent('ux:navigate', {
       bubbles: true, composed: true,
@@ -63,14 +68,11 @@ export class UxLink extends UxBase {
   private openInModal(modalId: string, href: string): void {
     const modal = document.getElementById(modalId);
     if (!modal) return;
-
-    // If the modal has a method to load content, use it
     if (typeof (modal as any).load === 'function') {
       (modal as any).load(href);
     }
-
     (modal as any).open?.();
-    (modal as any).setAttribute('open', '');
+    (modal as any).setAttribute?.('open', '');
   }
 
   protected onDisconnected(): void {

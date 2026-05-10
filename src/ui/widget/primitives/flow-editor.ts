@@ -90,7 +90,12 @@ export class UxFlowEditor extends UxBase {
     const nodeId = g.querySelector('[data-node]')?.getAttribute('data-node') || '';
     const match = /translate\(([\d.]+),\s*([\d.]+)\)/.exec(g.getAttribute('transform') || '');
     if (!match) return;
-    this.dragging = { node: nodeId, ox: e.clientX - parseFloat(match[1]), oy: e.clientY - parseFloat(match[2]) };
+    const rect = this.svg.getBoundingClientRect();
+    this.dragging = {
+      node: nodeId,
+      ox: e.clientX - rect.left - parseFloat(match[1]),
+      oy: e.clientY - rect.top - parseFloat(match[2]),
+    };
   }
 
   private startConnect(e: MouseEvent): void {
@@ -106,13 +111,16 @@ export class UxFlowEditor extends UxBase {
   }
 
   private onMove(e: MouseEvent): void {
+    const rect = this.svg.getBoundingClientRect();
     if (this.dragging) {
       const node = this.nodes.find(n => n.id === this.dragging!.node);
-      if (node) { node.x = e.clientX - this.dragging.ox; node.y = e.clientY - this.dragging.oy; }
+      if (node) {
+        node.x = e.clientX - rect.left - this.dragging.ox;
+        node.y = e.clientY - rect.top - this.dragging.oy;
+      }
       this.render();
     }
     if (this.connecting) {
-      const rect = this.svg.getBoundingClientRect();
       this.connecting.line.setAttribute('x2', String(e.clientX - rect.left));
       this.connecting.line.setAttribute('y2', String(e.clientY - rect.top));
     }

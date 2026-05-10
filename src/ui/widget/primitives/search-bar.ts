@@ -1,4 +1,25 @@
+/**
+ * UX3 Search Bar Component (light DOM)
+ */
 import { UxBase } from './base.js';
+
+const STYLE_ID = 'ux-search-bar-style';
+
+function ensureStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+  const s = document.createElement('style');
+  s.id = STYLE_ID;
+  s.textContent = `
+    ux-search-bar { display: inline-flex; align-items: center; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0 0.75rem; background: white; }
+    ux-search-bar:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+    ux-search-bar .icon { color: #9ca3af; margin-right: 0.5rem; }
+    ux-search-bar input { border: none; padding: 0.5rem 0; outline: none; flex: 1; font: inherit; }
+    ux-search-bar .clear { display: none; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1rem; }
+    ux-search-bar .clear.visible { display: inline; }
+  `;
+  document.head.appendChild(s);
+}
 
 export class UxSearchBar extends UxBase {
   private input!: HTMLInputElement;
@@ -6,25 +27,24 @@ export class UxSearchBar extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
+    ensureStyles();
     const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
 
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot!.innerHTML = `
-      <style>
-        :host { display: inline-flex; align-items: center; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0 0.75rem; background: white; }
-        :host(:focus-within) { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
-        .icon { color: #9ca3af; margin-right: 0.5rem; }
-        input { border: none; padding: 0.5rem 0; outline: none; flex: 1; font: inherit; }
-        .clear { display: none; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1rem; }
-        .clear.visible { display: inline; }
-      </style>
-      <span class="icon">\uD83D\uDD0D</span>
-      <input type="search" placeholder="Search...">
-      <button class="clear">&times;</button>
-    `;
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = '\uD83D\uDD0D';
 
-    this.input = this.shadowRoot!.querySelector('input')!;
-    const clear = this.shadowRoot!.querySelector('.clear')!;
+    this.input = document.createElement('input');
+    this.input.type = 'search';
+    this.input.setAttribute('placeholder', 'Search...');
+
+    const clear = document.createElement('button');
+    clear.className = 'clear';
+    clear.textContent = '\u00D7';
+
+    this.appendChild(icon);
+    this.appendChild(this.input);
+    this.appendChild(clear);
 
     this.input.addEventListener('input', () => {
       clear.classList.toggle('visible', this.input.value.length > 0);
@@ -42,7 +62,7 @@ export class UxSearchBar extends UxBase {
   private emit(): void {
     this.dispatchEvent(new CustomEvent('ux:event', {
       bubbles: true, composed: true,
-      detail: { action: 'SEARCH', query: this.input.value }
+      detail: { action: 'SEARCH', query: this.input.value },
     }));
   }
 }

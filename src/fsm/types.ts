@@ -7,12 +7,22 @@ export type GuardCondition<T extends Record<string, any>> = (context: T) => bool
 export interface StateEvent {
   type: string;
   payload?: Record<string, any>;
+  fromDOM?: boolean;
+  sourceElement?: HTMLElement;
 }
 
 export interface TransitionConfig<T extends Record<string, any>> {
   target?: string;
   guard?: GuardCondition<T>;
   actions?: Array<ActionFn<T>>;
+  payload?: boolean;
+  set?: Record<string, unknown>;
+  toggle?: string | string[];
+  navigate?: string;
+  dispatch?: string;
+  log?: string;
+  sendTo?: string;
+  validate?: boolean | string;
 }
 
 export type ServiceFn = (params?: any) => Promise<any>;
@@ -33,6 +43,9 @@ export interface InvokeSrc {
   input?: any;
   maxRetries?: number;
   retryDelay?: number | ((attempt: number) => number);
+  map?: Record<string, string>;
+  onDone?: string;
+  onError?: string;
 }
 
 export interface InvokeService {
@@ -41,6 +54,9 @@ export interface InvokeService {
   input?: any;
   maxRetries?: number;
   retryDelay?: number | ((attempt: number) => number);
+  map?: Record<string, string>;
+  onDone?: string;
+  onError?: string;
 }
 
 export type InvokeConfig<T extends Record<string, any> = Record<string, any>> =
@@ -51,7 +67,7 @@ export type InvokeConfig<T extends Record<string, any> = Record<string, any>> =
  * Individual state configuration
  */
 export interface StateConfig<T extends Record<string, any>> {
-  type?: 'atomic' | 'compound' | 'parallel';
+  type?: 'atomic' | 'compound' | 'parallel' | 'final';
   on?: Record<string, TransitionConfig<T> | string>;
   entry?: Array<(context: T) => void | Partial<T> | Promise<Partial<T>>>;
   exit?: Array<(context: T) => void | Partial<T> | Promise<Partial<T>>>;

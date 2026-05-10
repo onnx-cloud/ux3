@@ -4,8 +4,8 @@ import fsSync from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import type { GeneratedConfig } from '../../ui/context-builder.js';
-import * as translateModule from '../../../packages/@ux3/plugin-translate/src/build-time.ts';
-import type { BuildTimeTranslateConfig } from '../../../packages/@ux3/plugin-translate/src/build-time.ts';
+import * as translateModule from '@ux3/plugin-translate/build-time';
+import type { BuildTimeTranslateConfig } from '@ux3/plugin-translate/build-time';
 import { resolveConfigTemplates } from '../../utils/env-template.js';
 
 const _require = createRequire(import.meta.url);

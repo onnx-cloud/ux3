@@ -209,7 +209,7 @@ export class MCPHost {
       hotReload: appContext?.config?.development?.hotReload === true,
       mcpEnabled: appContext?.config?.development?.mcp?.enabled !== false,
       lastBuild: Date.now(),
-      locale: appContext?.locale?.primary,
+      locale: (appContext?.locale as any)?.primary,
       route: typeof window !== 'undefined' ? window.location.pathname : undefined,
     });
   }

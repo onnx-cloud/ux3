@@ -31,6 +31,19 @@ function getRetryDelay(baseDelay: number | ((attempt: number) => number), attemp
   return baseDelay * Math.pow(2, attempt);
 }
 
+function resolveDotPath(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce((acc: any, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+}
+
+function applyResultMap(result: any, map: Record<string, string> | undefined): Record<string, unknown> {
+  if (!map || typeof result !== 'object' || result === null) return result ?? {};
+  const mapped: Record<string, unknown> = {};
+  for (const [contextKey, resultPath] of Object.entries(map)) {
+    mapped[contextKey] = resolveDotPath(result, resultPath);
+  }
+  return mapped;
+}
+
 /**
  * StateMachine - Core FSM engine
  */
@@ -191,7 +204,7 @@ export class StateMachine<T extends Record<string, any>> {
       if (guard in this.context) {
         return !!this.context[guard];
       }
-      defaultLogger.warn('fsm.guard.unresolved', `String guard "${guard}" not found in context.`, { state: this.state });
+      defaultLogger.warn(`[fsm.guard.unresolved] String guard "${guard}" not found in context.`, { state: this.state });
       return true;
     }
     return false;
@@ -317,6 +330,19 @@ export class StateMachine<T extends Record<string, any>> {
 
     emitDevTools('fsm', event.type, { from: this.state, id: this.config.id });
 
+    // Declarative validation: validate: true runs HTML5 Constraint Validation
+    // on the source element (form or input). validate: "service:method" calls
+    // the named service with the event payload + context; the service must be
+    // synchronous or the developer should use a guard instead.
+    if (transitionConfig.validate === true) {
+      const form = event.sourceElement?.closest?.('form') as HTMLFormElement | null
+        ?? event.sourceElement as HTMLFormElement | null;
+      if (form && typeof form.reportValidity === 'function' && !form.reportValidity()) {
+        emitDevTools('fsm', 'validate.rejected', { event: event.type, from: this.state, id: this.config.id });
+        return;
+      }
+    }
+
     if (transitionConfig.guard) {
       const guardFn = this.resolveGuardFunction(transitionConfig.guard);
       if (guardFn && !guardFn()) {
@@ -412,6 +438,29 @@ export class StateMachine<T extends Record<string, any>> {
       defaultLogger.info(`[FSM ${this.config.id}] ${transitionConfig.log}`, {
         state: this.state, event: event?.type,
       });
+    }
+
+    // Scoped event bus: send an event to another FSM in the same app.
+    // Format: sendTo: fsmName:eventName
+    // The target FSM receives the event with the current context as payload.
+    if (typeof transitionConfig.sendTo === 'string') {
+      const colonIdx = transitionConfig.sendTo.indexOf(':');
+      if (colonIdx > 0) {
+        const targetFsm = transitionConfig.sendTo.slice(0, colonIdx);
+        const targetEvent = transitionConfig.sendTo.slice(colonIdx + 1);
+        const other = this.crossMachineLookup?.(targetFsm);
+        if (other) {
+          other.send({ type: targetEvent, payload: { ...this.context }, fromDOM: true });
+        }
+      }
+    }
+
+    // Auto-merge event payload into context for DOM-sourced events.
+    // Every transition triggered by DOM interaction merges the element's
+    // data (form fields, input values, ux-event-value) into context.
+    // Opt out with `payload: false` in the transition config.
+    if (event.fromDOM && transitionConfig.payload !== false && event.payload && Object.keys(event.payload).length > 0) {
+      Object.assign(this.context, event.payload);
     }
 
     if (transitionConfig.target) {
@@ -516,7 +565,7 @@ export class StateMachine<T extends Record<string, any>> {
       if (guard in this.context) {
         return () => !!this.context[guard];
       }
-      defaultLogger.warn('fsm.guard.unresolved', `String guard "${guard}" not found in context — allowing transition.`, { state: this.state });
+      defaultLogger.warn(`[fsm.guard.unresolved] String guard "${guard}" not found in context — allowing transition.`, { state: this.state });
       return null;
     }
     return null;
@@ -527,6 +576,9 @@ export class StateMachine<T extends Record<string, any>> {
    * 
    * Phase 1.2.3: Uses InvokeRegistry if available for centralized handling,
    * otherwise falls back to local handler-based logic for backwards compatibility.
+   *
+   * Phase 2 — auto loading/error: sets context.loading=true before invoke,
+   * clears it in finally. Sets context.error on failure, clears on success.
    */
   private async handleStateInvoke(stateName: string): Promise<void> {
     const stateConfig = this.config.states[stateName];
@@ -536,7 +588,10 @@ export class StateMachine<T extends Record<string, any>> {
 
     const invokeConfig = stateConfig.invoke as any;
 
-    // Phase 1.2.3: Try to use InvokeRegistry for service invokes
+    (this.context as any).loading = true;
+    this.notifyListeners();
+
+    try {
     if (this.invokeRegistry && invokeConfig.service) {
       try {
         const result = await this.invokeRegistry.executeServiceInvoke(
@@ -551,26 +606,22 @@ export class StateMachine<T extends Record<string, any>> {
         );
 
         if (result.success) {
-          // Handle result
-          if (result.data && typeof result.data === 'object') {
-            this.setState(result.data as Partial<T>);
-          }
-          // Success - send SUCCESS event
-          this.send({ type: 'SUCCESS', payload: result.data });
+          (this.context as any).error = null;
+          const data = applyResultMap(result.data, invokeConfig.map);
+          this.setState(data as Partial<T>);
+          this.send({ type: 'SUCCESS', payload: data });
         } else {
-          // Invoke failed
           throw result.error || new Error('Service invoke failed');
         }
         return;
       } catch (error) {
-        // Fall through to error handling below
         const lastError = error as Error;
+        (this.context as any).error = lastError.message || 'Unknown error';
         const errorContext: any = {
           code: (lastError as any)?.code || 'UNKNOWN_ERROR',
           message: lastError?.message || 'Unknown error',
         };
 
-        // Execute errorActions if configured
         const errorActions = stateConfig.errorActions;
         if (errorActions) {
           errorActions.forEach((action) => {
@@ -585,19 +636,15 @@ export class StateMachine<T extends Record<string, any>> {
           });
         }
 
-        // Transition to error state if configured
         if (stateConfig.errorTarget) {
-          // Direct state transition to errorTarget (not via event)
           this.transitionTo(stateConfig.errorTarget);
         } else {
-          // Send generic ERROR event
           this.send({ type: 'ERROR', payload: errorContext });
         }
         return;
       }
     }
 
-    // Fallback: Use local handler-based logic (Phase 1.1 behavior)
     const maxRetries = invokeConfig.maxRetries ?? 0;
     const baseRetryDelay = invokeConfig.retryDelay ?? 1000;
 
@@ -605,29 +652,25 @@ export class StateMachine<T extends Record<string, any>> {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        // Resolve the invoke source
         const handler = this.resolveInvokeHandler(invokeConfig.src || invokeConfig.service);
         
-        // Call the handler with input and context
         const result = await handler(invokeConfig.input || invokeConfig.params, this.context);
 
-        // Handle result
         if (result && typeof result === 'object') {
           if (result.error) {
-            // Error object returned from service
             throw new Error(result.error.message || 'Service error');
           }
-          // Update context with result
-          this.setState(result as Partial<T>);
+          const mapped = applyResultMap(result, invokeConfig.map);
+          this.setState(mapped as Partial<T>);
         }
+        (this.context as any).error = null;
 
-        // Success - send SUCCESS event
-        this.send({ type: 'SUCCESS', payload: result });
+        const mapped = applyResultMap(result, invokeConfig.map);
+        this.send({ type: 'SUCCESS', payload: mapped });
         return;
       } catch (error) {
         lastError = error as Error;
 
-        // If this is not the last attempt, wait and retry
         if (attempt < maxRetries) {
           const delay = getRetryDelay(baseRetryDelay, attempt);
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -636,13 +679,12 @@ export class StateMachine<T extends Record<string, any>> {
       }
     }
 
-    // All retries exhausted - handle error
     const errorContext: any = {
       code: (lastError as any)?.code || 'UNKNOWN_ERROR',
       message: lastError?.message || 'Unknown error',
     };
+    (this.context as any).error = lastError?.message || 'Unknown error';
 
-    // Execute errorActions if configured
     const errorActions = stateConfig.errorActions;
     if (errorActions) {
       errorActions.forEach((action) => {
@@ -657,15 +699,17 @@ export class StateMachine<T extends Record<string, any>> {
       });
     }
 
-    // Transition to errorTarget if configured
     if (stateConfig.errorTarget) {
       if (this.state === stateName) {
         this.setState({ error: errorContext } as unknown as Partial<T>);
         this.transitionTo(stateConfig.errorTarget);
       }
     } else {
-      // No errorTarget - send ERROR event to let views handle it
       this.send({ type: 'ERROR', payload: { error: errorContext } });
+    }
+    } finally {
+      (this.context as any).loading = false;
+      this.notifyListeners();
     }
   }
 

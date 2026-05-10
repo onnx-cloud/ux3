@@ -7,12 +7,18 @@
     "strict": false,
     "resolveJsonModule": true,
     "noEmit": false,
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     "paths": { 
       "@ux3/*": [
         "./src/*",
         "./packages/@ux3/*/src"
+      ],
+      "@ux3/plugin-dev-tools/*": [
+        "./packages/@ux3/plugin-dev-tools/src/*"
+      ],
+      "@ux3/plugin-translate/*": [
+        "./packages/@ux3/plugin-translate/src/*"
       ]
     }
   },

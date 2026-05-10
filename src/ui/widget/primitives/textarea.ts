@@ -1,8 +1,37 @@
 import { UxBase } from './base.js';
-import { escapeAttr, escapeText, emitReadyOnce } from './helpers.js';
+
+const STYLE_ID = 'ux-textarea-style';
+
+function ensureStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+    ux-textarea { display: inline-block; width: 100%; }
+    ux-textarea textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--ux-textarea-padding, 0.5rem 0.625rem);
+      border: var(--ux-textarea-border, 1px solid var(--ux-color-border, #cbd5e1));
+      border-radius: var(--ux-textarea-radius, 0.375rem);
+      background: var(--ux-textarea-bg, #ffffff);
+      color: var(--ux-textarea-text, #0f172a);
+      font: inherit;
+      resize: var(--ux-textarea-resize, vertical);
+    }
+    ux-textarea textarea:focus-visible {
+      outline: var(--ux-textarea-focus-ring, 2px solid var(--ux-color-accent, #2563eb));
+      outline-offset: var(--ux-textarea-focus-offset, 1px);
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 export class UxTextarea extends UxBase {
   private textareaEl: HTMLTextAreaElement | null = null;
+  private _rendered = false;
 
   static get observedAttributes(): string[] {
     return ['value', 'placeholder', 'name', 'rows', 'disabled'];
@@ -10,19 +39,17 @@ export class UxTextarea extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    if (!this.shadowRoot) {
-      this.attachShadow({ mode: 'open' });
+    ensureStyles();
+    if (!this._rendered) {
+      this._rendered = true;
+      this.render();
     }
-    this.render();
-    emitReadyOnce(this);
   }
 
   protected onAttributeChanged(name: string): void {
-    if (!this.isConnected) {
-      return;
-    }
+    if (!this.isConnected) return;
     if (name === 'value') {
-      if (this.textareaEl && this.textareaEl !== this.shadowRoot?.activeElement) {
+      if (this.textareaEl && this.textareaEl !== document.activeElement) {
         this.textareaEl.value = this.getAttribute('value') ?? '';
       }
       return;
@@ -31,7 +58,8 @@ export class UxTextarea extends UxBase {
   }
 
   private render(): void {
-    if (!this.shadowRoot) {
+    if (this.textareaEl) {
+      this.updateAttributes();
       return;
     }
 
@@ -39,32 +67,31 @@ export class UxTextarea extends UxBase {
     const placeholder = this.getAttribute('placeholder') ?? '';
     const name = this.getAttribute('name') ?? '';
     const rows = this.getAttribute('rows') ?? '4';
-    const disabled = this.hasAttribute('disabled') ? 'disabled' : '';
+    const disabled = this.hasAttribute('disabled');
 
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: inline-block; width: 100%; }
-        textarea {
-          width: 100%;
-          box-sizing: border-box;
-          padding: var(--ux-textarea-padding, 0.5rem 0.625rem);
-          border: var(--ux-textarea-border, 1px solid var(--ux-color-border, #cbd5e1));
-          border-radius: var(--ux-textarea-radius, 0.375rem);
-          background: var(--ux-textarea-bg, #ffffff);
-          color: var(--ux-textarea-text, #0f172a);
-          font: inherit;
-          resize: var(--ux-textarea-resize, vertical);
-        }
-        textarea:focus-visible {
-          outline: var(--ux-textarea-focus-ring, 2px solid var(--ux-color-accent, #2563eb));
-          outline-offset: var(--ux-textarea-focus-offset, 1px);
-        }
-      </style>
-      <textarea part="textarea" rows="${escapeAttr(rows)}" placeholder="${escapeAttr(placeholder)}" name="${escapeAttr(name)}" ${disabled}>${escapeText(value)}</textarea>
-    `;
+    const el = document.createElement('textarea');
+    el.rows = parseInt(rows, 10) || 4;
+    el.placeholder = placeholder;
+    el.name = name;
+    el.textContent = value;
+    if (disabled) el.disabled = true;
+    el.setAttribute('part', 'textarea');
 
-    this.textareaEl = this.shadowRoot.querySelector('textarea');
-    this.textareaEl?.addEventListener('input', this.onInput);
+    this.appendChild(el);
+    this.textareaEl = el;
+
+    el.addEventListener('input', this.onInput);
+  }
+
+  private updateAttributes(): void {
+    if (!this.textareaEl) return;
+    const placeholder = this.getAttribute('placeholder') ?? '';
+    const name = this.getAttribute('name') ?? '';
+    const rows = parseInt(this.getAttribute('rows') ?? '4', 10) || 4;
+    this.textareaEl.placeholder = placeholder;
+    this.textareaEl.name = name;
+    this.textareaEl.rows = rows;
+    this.textareaEl.disabled = this.hasAttribute('disabled');
   }
 
   private readonly onInput = (event: Event): void => {

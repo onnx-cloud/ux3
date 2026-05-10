@@ -1,5 +1,7 @@
 import { UxBase } from './base.js';
 
+interface GanttTask { id: string; label: string; start: Date; end: Date; }
+
 export class UxGantt extends UxBase {
   private tasks: GanttTask[] = [];
   private start: Date = new Date();
@@ -7,6 +9,8 @@ export class UxGantt extends UxBase {
   private resizeHandle: { task: string; side: 'left' | 'right'; el: HTMLElement } | null = null;
   private _onMove: ((e: MouseEvent) => void) | null = null;
   private _onUp: (() => void) | null = null;
+  private _built = false;
+  private totalDays = 60;
 
   protected onConnected(): void {
     super.onConnected();
@@ -20,27 +24,25 @@ export class UxGantt extends UxBase {
       this.start = new Date(Math.min(...this.tasks.map(t => t.start.getTime())));
       this.end = new Date(Math.max(...this.tasks.map(t => t.end.getTime())));
     }
-    this.build();
+    if (!this._built) {
+      this._built = true;
+      this.attachShadow({ mode: 'open' });
+    }
+    this.render();
   }
 
   protected onDisconnected(): void {
-    if (this._onMove) {
-      document.removeEventListener('mousemove', this._onMove);
-      this._onMove = null;
-    }
-    if (this._onUp) {
-      document.removeEventListener('mouseup', this._onUp);
-      this._onUp = null;
-    }
+    if (this._onMove) { document.removeEventListener('mousemove', this._onMove); this._onMove = null; }
+    if (this._onUp) { document.removeEventListener('mouseup', this._onUp); this._onUp = null; }
     this.resizeHandle = null;
     super.onDisconnected();
   }
 
-  private build(): void {
-    const totalDays = Math.max(1, (this.end.getTime() - this.start.getTime()) / 86400000);
-    const colWd = 24; // px per day
+  private render(): void {
+    const colWd = 24;
+    const totalDays = Math.max(1, Math.ceil((this.end.getTime() - this.start.getTime()) / 86400000));
+    this.totalDays = totalDays;
 
-    this.attachShadow({ mode: 'open' });
     let header = '';
     const cur = new Date(this.start);
     while (cur <= this.end) {
@@ -50,9 +52,7 @@ export class UxGantt extends UxBase {
 
     this.shadowRoot!.innerHTML = `
       <style>
-        :host {
-          display: block; overflow-x: auto;
-        }
+        :host { display: block; overflow-x: auto; }
         .gantt { display: flex; flex-direction: column; min-width: ${totalDays * colWd}px; }
         .header-row { display: flex; border-bottom: 1px solid var(--ux-gantt-border, #d1d5db); position: sticky; top: 0; background: var(--ux-gantt-bg, #fff); }
         .day-cell { flex: 0 0 ${colWd}px; padding: 4px 2px; font-size: 0.625rem; text-align: center; border-right: 1px solid var(--ux-gantt-grid, #f3f4f6); }
@@ -66,7 +66,7 @@ export class UxGantt extends UxBase {
           display: flex; align-items: center; padding: 0 4px; font-size: 0.625rem; color: white; overflow: hidden;
           min-width: 24px;
         }
-        .bar::before, .bar::after { content: ''; position: absolute; top: 0; width: 4px; height: 100%; cursor: col-resize; }
+        .bar::before, .bar::after { content: ''; position: absolute; top: 0; width: 6px; height: 100%; cursor: col-resize; }
         .bar::before { left: 0; }
         .bar::after { right: 0; }
         .bg-grid { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; }
@@ -88,49 +88,59 @@ export class UxGantt extends UxBase {
       </div>
     `;
 
-    // Drag to resize bars
+    this.setupBarListeners();
+  }
+
+  private setupBarListeners(): void {
     this.shadowRoot!.querySelectorAll('.bar').forEach(bar => {
       const el = bar as HTMLElement;
       el.addEventListener('mousedown', (e) => {
         const rect = el.getBoundingClientRect();
-        const side = e.clientX - rect.left < 6 ? 'left' : 'right';
+        const side = e.clientX - rect.left < 8 ? 'left' : 'right';
         this.resizeHandle = { task: el.dataset.bar!, side, el };
         e.preventDefault();
       });
     });
 
-    if (this._onUp) {
-      document.removeEventListener('mouseup', this._onUp);
-    }
-    if (this._onMove) {
-      document.removeEventListener('mousemove', this._onMove);
-    }
+    if (this._onUp) { document.removeEventListener('mouseup', this._onUp); }
+    if (this._onMove) { document.removeEventListener('mousemove', this._onMove); }
+
+    const colWd = 24;
 
     this._onMove = (e: MouseEvent) => {
       if (!this.resizeHandle) return;
       const task = this.tasks.find(t => t.id === this.resizeHandle!.task);
       if (!task) return;
-      const rect = this.shadowRoot!.querySelector('.gantt')!.getBoundingClientRect();
+      const ganttEl = this.shadowRoot!.querySelector('.gantt');
+      if (!ganttEl) return;
+      const rect = ganttEl.getBoundingClientRect();
       const px = e.clientX - rect.left - 120;
       const days = px / colWd;
       const ms = this.start.getTime() + days * 86400000;
       if (this.resizeHandle.side === 'left') task.start = new Date(ms);
       else task.end = new Date(ms);
-      this.build();
+
+      // Update bar position without full rebuild
+      const left = (task.start.getTime() - this.start.getTime()) / 86400000 * colWd;
+      const w = Math.max(24, (task.end.getTime() - task.start.getTime()) / 86400000 * colWd);
+      const barEl = this.shadowRoot!.querySelector(`[data-bar="${task.id}"]`) as HTMLElement;
+      if (barEl) {
+        barEl.style.left = `${left}px`;
+        barEl.style.width = `${w}px`;
+      }
     };
 
     this._onUp = () => {
       if (this.resizeHandle) {
         this.dispatchEvent(new CustomEvent('ux:event', {
           bubbles: true, composed: true,
-          detail: { action: 'RESIZE', task: this.resizeHandle.task, start: this.tasks.find(t => t.id === this.resizeHandle!.task)?.start, end: this.tasks.find(t => t.id === this.resizeHandle!.task)?.end }
+          detail: { action: 'RESIZE', task: this.resizeHandle.task },
         }));
       }
       this.resizeHandle = null;
     };
+
     document.addEventListener('mousemove', this._onMove);
     document.addEventListener('mouseup', this._onUp, { once: true });
   }
 }
-
-interface GanttTask { id: string; label: string; start: Date; end: Date; }

@@ -195,10 +195,7 @@ export class AppContextBuilder {
           defaultLogger.debug('service.spec', { name, spec: serviceSpec });
         });
         const service = ServiceFactory.create(name, serviceSpec);
-        // Attach name to service so hooks can identify it, guard against non-writable .name
-        if (service && !(service as any).name) {
-          try { (service as any).name = name; } catch { Object.defineProperty(service, 'name', { value: name, writable: true, configurable: true }); }
-        }
+        try { (service as any).name = name; } catch { Object.defineProperty(service, 'name', { value: name, writable: true, configurable: true }); }
         this.services.set(name, service);
         
         // Emit REGISTER lifecycle phase for this service

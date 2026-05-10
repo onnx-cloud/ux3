@@ -1,24 +1,39 @@
-/**
- * Services Index
- * Export all service implementations
- */
-
-export { Service } from './base.js';
-export type { Middleware, ErrorHandler, ServiceConfig, RequestConfig } from './types.js';
-export { HTTPService } from './http.js';
-export type { WebSocketConfig } from './websocket.js';
-export { WebSocketService } from './websocket.js';
-export { JSONRPCService } from './jsonrpc.js';
-export { Router } from './router.js';
+export { BaseServiceAdapter, BaseService } from './base.js';
+export { sleep } from './sleep.js';
+export {
+  ServiceError,
+  ServiceErrorCode,
+} from './types.js';
 export type {
+  Middleware,
+  ErrorHandler,
+  ServiceConfig,
+  RequestConfig,
+  ResponseData,
   ServiceResponse,
+  SubscriptionUnsubscribe,
   WebSocketMessage,
   JSONRPCRequest,
   JSONRPCResponse,
   SubscriptionHandler,
-  SubscriptionUnsubscribe,
+  Subscriber,
+  ServiceAdapter,
+  Service,
 } from './types.js';
+export { HTTPService, HttpService } from './http.js';
+export type { HttpServiceConfig } from './http.js';
+export type { WebSocketConfig } from './websocket.js';
+export { WebSocketService, ConnectionState } from './websocket.js';
+export { JSONRPCService } from './jsonrpc.js';
+export { Router } from './router.js';
+export type {
+  NavRoute,
+  NavConfig,
+  RouteConfig,
+  RouteMatch,
+} from './router.js';
 export {
+  requestIdMiddleware,
   loggingMiddleware,
   timeoutWarningMiddleware,
   requestMutationMiddleware,
@@ -29,14 +44,19 @@ export {
   composeMiddleware,
   productionMiddlewareStack,
   developmentMiddlewareStack,
+  testMiddlewareStack,
+  rateLimitMiddleware,
+  sanitizeResponseMiddleware,
+  metricsMiddleware,
+  timeoutMiddleware,
+  deduplicationMiddleware,
+  cacheMiddleware,
+  staleWhileRevalidateMiddleware,
+  authMiddleware,
+  AuthProvider,
 } from './middleware.js';
 export type { LogContext } from './middleware.js';
-export type {
-  NavRoute,
-  NavConfig,
-  RouteConfig,
-  RouteMatch,
-} from './router.js';export {
+export {
   InvokeRegistry,
   initializeGlobalInvokeRegistry,
   getGlobalInvokeRegistry,
@@ -47,3 +67,10 @@ export type {
   InvokeOptions,
   InvokeListener,
 } from './invoke-registry.js';
+export { InvokeCache } from './invoke-cache.js';
+export type { CacheEntry } from './invoke-cache.js';
+export { InvokeMetrics } from './invoke-metrics.js';
+export type { InvokeMetricsSnapshot } from './invoke-metrics.js';
+
+export { ServiceContainer, DefaultServiceContainer } from './container.js';
+export type { ServiceCallOptions, ServiceCallResult } from './container.js';

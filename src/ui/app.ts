@@ -39,7 +39,7 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   registerService?: (name: string, factory: ServiceFactory) => void;
   registerComponent?: (name: string, factory: ComponentFactory) => void;
   registerView?: (name: string, template: string) => void;
-  registerRoute?: (path: string, viewName: string) => void;
+  registerRoute?: (path: string, viewName: string, label?: string) => void;
   registerMachine?: (namespace: string, fsm: StateMachine<C>) => void;
   /**
    * Convenience for programmatically installing another plugin at runtime.

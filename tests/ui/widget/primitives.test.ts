@@ -199,7 +199,7 @@ describe('Built-in primitives', () => {
       emittedValue = (event as CustomEvent).detail.value;
     });
 
-    const inner = input.shadowRoot?.querySelector('input') as HTMLInputElement;
+    const inner = input.querySelector('input') as HTMLInputElement;
     inner.value = 'user@example.com';
     inner.dispatchEvent(new Event('input', { bubbles: true }));
 

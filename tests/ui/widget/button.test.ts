@@ -1,5 +1,5 @@
 /**
- * UxButton Component Unit Tests
+ * UxButton Component Unit Tests (light DOM)
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -28,6 +28,15 @@ describe('UxButton - Button Component', () => {
     expect(button.getAttribute('type')).toBe('button');
   });
 
+  it('contains a native <button> child in light DOM', () => {
+    const button = document.createElement('ux-button') as UxButton;
+    button.textContent = 'Save';
+    container.appendChild(button);
+    const innerButton = button.querySelector('button');
+    expect(innerButton).toBeTruthy();
+    expect(innerButton!.textContent).toBe('Save');
+  });
+
   it('shows loading state and disables the button', async () => {
     const button = document.createElement('ux-button') as UxButton;
     button.textContent = 'Save';
@@ -37,9 +46,9 @@ describe('UxButton - Button Component', () => {
     await Promise.resolve();
 
     expect(button.getAttribute('aria-busy')).toBe('true');
-    const innerButton = button.shadowRoot?.querySelector('button') as HTMLButtonElement;
+    const innerButton = button.querySelector('button') as HTMLButtonElement;
     expect(innerButton.disabled).toBe(true);
-    expect(button.shadowRoot?.querySelector('.spinner')).toBeTruthy();
+    expect(button.querySelector('.spinner')).toBeTruthy();
   });
 
   it('removes loading state when attribute is cleared', async () => {
@@ -53,7 +62,7 @@ describe('UxButton - Button Component', () => {
     await Promise.resolve();
 
     expect(button.getAttribute('aria-busy')).toBeNull();
-    expect(button.shadowRoot?.querySelector('.spinner')).toBeNull();
+    expect(button.querySelector('.spinner')).toBeNull();
   });
 
   it('applies variant and size attributes', () => {
@@ -64,5 +73,51 @@ describe('UxButton - Button Component', () => {
 
     expect(button.getAttribute('variant')).toBe('danger');
     expect(button.getAttribute('size')).toBe('lg');
+  });
+
+  it('dispatches submit event on closest light-DOM form when type=submit', async () => {
+    const { UxButton: Btn } = await import('../../../src/ui/widget/button.js');
+
+    const form = document.createElement('form');
+    const button = document.createElement('ux-button') as any;
+    button.setAttribute('type', 'submit');
+    button.textContent = 'Submit';
+    form.appendChild(button);
+    document.body.appendChild(form);
+
+    const submitSpy = { fired: false };
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitSpy.fired = true;
+    });
+
+    const inner = button.querySelector('button');
+    expect(inner).toBeTruthy();
+    inner!.click();
+
+    expect(submitSpy.fired).toBe(true);
+
+    document.body.removeChild(form);
+  });
+
+  it('does not dispatch submit when type is not submit', async () => {
+    const { UxButton: Btn } = await import('../../../src/ui/widget/button.js');
+
+    const form = document.createElement('form');
+    const button = document.createElement('ux-button') as any;
+    button.setAttribute('type', 'button');
+    button.textContent = 'Click';
+    form.appendChild(button);
+    document.body.appendChild(form);
+
+    const submitSpy = { fired: false };
+    form.addEventListener('submit', () => { submitSpy.fired = true; });
+
+    const inner = button.querySelector('button');
+    inner!.click();
+
+    expect(submitSpy.fired).toBe(false);
+
+    document.body.removeChild(form);
   });
 });

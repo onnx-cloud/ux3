@@ -33,8 +33,19 @@ export class UxTabs extends UxBase {
   private fsmKey(): string {
     const attr = this.getAttribute('data-fsm-key');
     if (attr) return attr;
-    const data = this.getAttribute('data-tabs') || '';
-    return `tab_${data}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40) || 'tab_default';
+    const data = this.getAttribute('data-tabs');
+    if (data) {
+      return `tab_${data}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40);
+    }
+    const panels = this.querySelectorAll('ux-tab-panel');
+    if (panels.length > 0) {
+      const labelHash = Array.from(panels)
+        .map(p => p.getAttribute('label') || '')
+        .filter(Boolean)
+        .join('_');
+      return `tab_${labelHash}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40) || 'tab_default';
+    }
+    return 'tab_default';
   }
 
   /**
@@ -89,9 +100,22 @@ export class UxTabs extends UxBase {
   }
 
   private generateTabsFromData() {
+    if (this.querySelector('[role="tab"], ux-tab')) return;
+
     const data = this.getAttribute('data-tabs');
-    if (!data || this.querySelector('[role="tab"], ux-tab')) return;
-    const labels = data.split(/[|█,]/).map(s => s.trim()).filter(Boolean);
+    let labels: string[] = [];
+
+    if (data) {
+      labels = data.split(/[|█,]/).map(s => s.trim()).filter(Boolean);
+    } else {
+      const panels = this.querySelectorAll('ux-tab-panel');
+      if (panels.length === 0) return;
+      labels = Array.from(panels)
+        .map(p => p.getAttribute('label') || '')
+        .filter(Boolean);
+      if (labels.length === 0) return;
+    }
+
     labels.forEach((label, i) => {
       const tab = document.createElement('ux-tab');
       tab.textContent = label;

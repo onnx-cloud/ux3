@@ -1,5 +1,30 @@
+/**
+ * UX3 Media Components — light DOM (ux-image, ux-video, ux-audio)
+ */
 import { UxBase } from './base.js';
-import { escapeAttr } from './helpers.js';
+
+const STYLE_ID = 'ux-media-style';
+
+function ensureStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+  const s = document.createElement('style');
+  s.id = STYLE_ID;
+  s.textContent = `
+    ux-image { display: inline-block; }
+    ux-image img { max-width: 100%; height: auto; border-radius: var(--ux-image-radius, 0.375rem); display: block; }
+    ux-video { display: block; }
+    ux-video video { max-width: 100%; border-radius: var(--ux-video-radius, 0.375rem); display: block; }
+    ux-audio { display: block; min-width: var(--ux-audio-min-width, 18rem); }
+    ux-audio audio { width: 100%; }
+  `;
+  document.head.appendChild(s);
+}
+
+function attrVal(el: Element, name: string, fallback: string = ''): string {
+  const v = el.getAttribute(name);
+  return v !== null ? v : fallback;
+}
 
 export class UxImage extends UxBase {
   static get observedAttributes(): string[] {
@@ -8,7 +33,7 @@ export class UxImage extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    ensureStyles();
     this.render();
   }
 
@@ -17,18 +42,14 @@ export class UxImage extends UxBase {
   }
 
   private render(): void {
-    if (!this.shadowRoot) return;
-    const src = escapeAttr(this.getAttribute('src') ?? '');
-    const alt = escapeAttr(this.getAttribute('alt') ?? this.textContent?.trim() ?? '');
-    const width = this.getAttribute('width') ? `width="${escapeAttr(this.getAttribute('width')!)}"` : '';
-    const height = this.getAttribute('height') ? `height="${escapeAttr(this.getAttribute('height')!)}"` : '';
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: inline-block; }
-        img { max-width: 100%; height: auto; border-radius: var(--ux-image-radius, 0.375rem); display: block; }
-      </style>
-      ${src ? `<img src="${src}" alt="${alt}" ${width} ${height} part="img" />` : `<slot></slot>`}
-    `;
+    const src = attrVal(this, 'src');
+    const alt = attrVal(this, 'alt', this.textContent?.trim() || '');
+    const w = attrVal(this, 'width');
+    const h = attrVal(this, 'height');
+
+    if (src) {
+      this.innerHTML = `<img src="${src}" alt="${alt}"${w ? ` width="${w}"` : ''}${h ? ` height="${h}"` : ''} part="img" />`;
+    }
   }
 }
 
@@ -39,7 +60,7 @@ export class UxVideo extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    ensureStyles();
     this.render();
   }
 
@@ -48,21 +69,15 @@ export class UxVideo extends UxBase {
   }
 
   private render(): void {
-    if (!this.shadowRoot) return;
-    const src = escapeAttr(this.getAttribute('src') ?? '');
-    const controls = this.hasAttribute('controls') ? 'controls' : '';
-    const muted = this.hasAttribute('muted') ? 'muted' : '';
-    const loop = this.hasAttribute('loop') ? 'loop' : '';
-    const autoplay = this.hasAttribute('autoplay') ? 'autoplay' : '';
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: block; }
-        video { max-width: 100%; border-radius: var(--ux-video-radius, 0.375rem); display: block; }
-      </style>
-      ${src
-        ? `<video src="${src}" ${controls} ${muted} ${loop} ${autoplay} part="video"></video>`
-        : `<slot></slot>`}
-    `;
+    const src = attrVal(this, 'src');
+    const controls = this.hasAttribute('controls') ? ' controls' : '';
+    const muted = this.hasAttribute('muted') ? ' muted' : '';
+    const loop = this.hasAttribute('loop') ? ' loop' : '';
+    const autoplay = this.hasAttribute('autoplay') ? ' autoplay' : '';
+
+    if (src) {
+      this.innerHTML = `<video src="${src}"${controls}${muted}${loop}${autoplay} part="video"></video>`;
+    }
   }
 }
 
@@ -73,7 +88,7 @@ export class UxAudio extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    ensureStyles();
     this.render();
   }
 
@@ -82,19 +97,13 @@ export class UxAudio extends UxBase {
   }
 
   private render(): void {
-    if (!this.shadowRoot) return;
-    const src = escapeAttr(this.getAttribute('src') ?? '');
-    const controls = this.hasAttribute('controls') ? 'controls' : '';
-    const loop = this.hasAttribute('loop') ? 'loop' : '';
-    const nodownload = this.hasAttribute('download') ? '' : 'controlsList="nodownload"';
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: block; min-width: var(--ux-audio-min-width, 18rem); }
-        audio { width: 100%; }
-      </style>
-      ${src
-        ? `<audio src="${src}" ${controls} ${loop} ${nodownload} part="audio"></audio>`
-        : `<slot></slot>`}
-    `;
+    const src = attrVal(this, 'src');
+    const controls = this.hasAttribute('controls') ? ' controls' : '';
+    const loop = this.hasAttribute('loop') ? ' loop' : '';
+    const nodownload = this.hasAttribute('download') ? '' : ' controlsList="nodownload"';
+
+    if (src) {
+      this.innerHTML = `<audio src="${src}"${controls}${loop}${nodownload} part="audio"></audio>`;
+    }
   }
 }

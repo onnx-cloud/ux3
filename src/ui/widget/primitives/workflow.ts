@@ -19,35 +19,52 @@ export class UxWorkflow extends UxBase {
 
   private renderFromData(): void {
     const svg = this.shadowRoot!.querySelector('svg')!;
-    const nodeEls = Array.from(this.querySelectorAll('[data-node]'));
+    const stepEls = Array.from(this.querySelectorAll('[data-step]'));
     const edgeEls = Array.from(this.querySelectorAll('[data-edge]'));
-    const nodes = nodeEls.map((el, i) => ({
-      id: (el as HTMLElement).dataset.node!,
-      x: parseFloat((el as HTMLElement).dataset.x || String(50 + i * 150)),
-      y: parseFloat((el as HTMLElement).dataset.y || '60'),
-      label: (el as HTMLElement).dataset.label || (el as HTMLElement).dataset.node!,
+    const stepCount = stepEls.length || 1;
+    const svgWidth = stepCount * 140 + 20;
+    svg.setAttribute('viewBox', `0 0 ${svgWidth} 80`);
+
+    const nodes = stepEls.map((el, i) => ({
+      id: String(i + 1),
+      x: 20 + i * 140,
+      y: 20,
+      label: (el as HTMLElement).dataset.label || `Step ${i + 1}`,
+      status: (el as HTMLElement).dataset.status || 'pending',
     }));
 
-    for (const edge of edgeEls) {
-      const from = nodes.find(n => n.id === (edge as HTMLElement).dataset.from);
-      const to = nodes.find(n => n.id === (edge as HTMLElement).dataset.to);
-      if (from && to) {
-        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        l.setAttribute('class', 'edge');
-        l.setAttribute('x1', String(from.x + 60)); l.setAttribute('y1', String(from.y + 20));
-        l.setAttribute('x2', String(to.x)); l.setAttribute('y2', String(to.y + 20));
-        svg.appendChild(l);
-      }
+    const statusColors: Record<string, string> = { done: '#10b981', active: '#3b82f6', pending: '#d1d5db' };
+
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('class', 'edge');
+      l.setAttribute('x1', String(nodes[i].x + 60));
+      l.setAttribute('y1', '40');
+      l.setAttribute('x2', String(nodes[i + 1].x));
+      l.setAttribute('y2', '40');
+      l.setAttribute('stroke', statusColors[nodes[i].status] || '#d1d5db');
+      svg.appendChild(l);
     }
+
     for (const n of nodes) {
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.setAttribute('class', 'node');
       g.setAttribute('transform', `translate(${n.x},${n.y})`);
       const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      r.setAttribute('width', '120'); r.setAttribute('height', '40');
+      r.setAttribute('width', '120');
+      r.setAttribute('height', '40');
+      r.setAttribute('fill', statusColors[n.status] === '#3b82f6' ? '#dbeafe' : '#fff');
+      r.setAttribute('stroke', statusColors[n.status] || '#d1d5db');
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', '60'); t.setAttribute('y', '20'); t.textContent = n.label;
-      g.appendChild(r); g.appendChild(t); svg.appendChild(g);
+      t.setAttribute('x', '60');
+      t.setAttribute('y', '20');
+      t.textContent = n.label;
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'central');
+      t.setAttribute('font-size', '12');
+      g.appendChild(r);
+      g.appendChild(t);
+      svg.appendChild(g);
     }
   }
 }

@@ -1,16 +1,14 @@
-/**
- * Service Base Class
- * Abstract foundation for data service adapters
- */
+import type { Middleware, ErrorHandler, ServiceConfig, ServiceAdapter } from './types.js';
+import { sleep } from './sleep.js';
 
-import type { Middleware, ErrorHandler, ServiceConfig, Service } from './types.js';
-
-export abstract class BaseService<T = any, R = any> {
-  protected config: ServiceConfig;
+export abstract class BaseServiceAdapter<TReq = unknown, TRes = unknown> implements ServiceAdapter<TReq, TRes> {
+  readonly name: string;
+  readonly config: ServiceConfig;
   protected middlewares: Middleware[] = [];
   protected errorHandlers: ErrorHandler[] = [];
 
-  constructor(config: ServiceConfig = {}) {
+  constructor(name: string, config: ServiceConfig = {}) {
+    this.name = name;
     this.config = {
       timeout: 30000,
       retries: 3,
@@ -19,96 +17,69 @@ export abstract class BaseService<T = any, R = any> {
     };
   }
 
-  /**
-   * Add middleware to request/response pipeline
-   */
-  addMiddleware(middleware: Middleware): Service<T, R> {
+  abstract transport(request: TReq, signal?: AbortSignal): Promise<TRes>;
+
+  async execute(request: TReq, signal?: AbortSignal): Promise<TRes> {
+    return this.executeMiddlewares(request, signal);
+  }
+
+  addMiddleware(middleware: Middleware): this {
     this.middlewares.push(middleware);
     return this;
   }
 
-  /**
-   * Add error handler for recovery
-   */
-  addErrorHandler(handler: ErrorHandler): Service<T, R> {
+  addErrorHandler(handler: ErrorHandler): this {
     this.errorHandlers.push(handler);
     return this;
   }
 
-  /**
-   * Core fetch method - implemented by subclasses
-   */
-  abstract fetch(request: T): Promise<R>;
+  destroy?(): void | Promise<void>;
 
-  /**
-   * Execute middlewares in order
-   */
-  protected async executeMiddlewares(request: T): Promise<R> {
+  protected async executeMiddlewares(request: TReq, signal?: AbortSignal): Promise<TRes> {
+    if (signal?.aborted) throw Object.assign(new Error('Aborted'), { name: 'AbortError' });
+
     let index = 0;
-
-    const next = async (req: T): Promise<R> => {
+    const next = async (req: TReq): Promise<TRes> => {
       if (index >= this.middlewares.length) {
-        return this.fetch(req);
+        return this.transport(req, signal);
       }
-
       const middleware = this.middlewares[index++];
-      // Middleware is generic but typed to accept our T and return Promise<R>
-      return (middleware(req, next) as Promise<R>);
+      return (middleware(req, next) as Promise<TRes>);
     };
-
     return next(request);
   }
 
-  /**
-   * Execute error handlers with retry logic
-   */
-  protected async executeErrorHandlers(error: Error): Promise<R> {
+  protected async executeErrorHandlers(error: Error, request: TReq): Promise<TRes> {
     for (const handler of this.errorHandlers) {
       try {
-        // Handler is typed to return Promise<any> but we expect R
-        const handlerResult = handler(error, () => this.fetch({} as T));
-        return (await handlerResult) as R;
-      } catch (e) {
+        const result = handler(error, () => this.transport(request));
+        return (await result) as TRes;
+      } catch {
         continue;
       }
     }
     throw error;
   }
 
-  /**
-   * Retry logic with exponential backoff
-   */
   protected async withRetry<V>(
     fn: () => Promise<V>,
     retries: number = this.config.retries!,
     delay: number = this.config.retryDelay!
   ): Promise<V> {
     let lastError: Error | null = null;
-
     for (let i = 0; i < retries; i++) {
       try {
         return await fn();
       } catch (error) {
-        lastError = error as Error;
+        lastError = error instanceof Error ? error : new Error(String(error));
         if (i < retries - 1) {
-          await this.sleep(delay * Math.pow(2, i));
+          await sleep(delay * Math.pow(2, i));
         }
       }
     }
-
     throw lastError || new Error('Max retries exceeded');
   }
 
-  /**
-   * Sleep utility
-   */
-  protected sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Timeout utility
-   */
   protected async withTimeout<V>(
     promise: Promise<V>,
     timeout: number = this.config.timeout!
@@ -122,5 +93,18 @@ export abstract class BaseService<T = any, R = any> {
   }
 }
 
-// Backwards compatibility: some modules expect a `Service` export
-export { BaseService as Service };
+export class BaseService<T = unknown, R = unknown> extends BaseServiceAdapter<T, R> {
+  constructor(config: ServiceConfig = {}) {
+    super('', config);
+  }
+
+  async transport(request: T, signal?: AbortSignal): Promise<R> {
+    throw new Error('transport() must be implemented by subclass');
+  }
+
+  async fetch(request: T): Promise<R> {
+    return this.execute(request);
+  }
+}
+
+export { sleep } from './sleep.js';

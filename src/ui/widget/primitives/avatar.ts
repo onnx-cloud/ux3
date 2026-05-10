@@ -1,23 +1,36 @@
+/**
+ * UX3 Avatar Component (light DOM)
+ */
 import { UxBase } from './base.js';
+
+const STYLE_ID = 'ux-avatar-style';
+
+function ensureStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+  const s = document.createElement('style');
+  s.id = STYLE_ID;
+  s.textContent = `
+    ux-avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; background: #e5e7eb; color: #6b7280; font-weight: 600; }
+    ux-avatar[size="sm"] { width: 2rem; height: 2rem; font-size: 0.8rem; }
+    ux-avatar[size="md"], ux-avatar:not([size]) { width: 2.5rem; height: 2.5rem; font-size: 1rem; }
+    ux-avatar[size="lg"] { width: 3.5rem; height: 3.5rem; font-size: 1.4rem; }
+    ux-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  `;
+  document.head.appendChild(s);
+}
 
 export class UxAvatar extends UxBase {
   protected onConnected(): void {
     super.onConnected();
+    ensureStyles();
+
     const src = this.getAttribute('src');
     const name = this.getAttribute('name') || '';
-    const size = this.getAttribute('size') || 'md';
-    const dims = { sm: '2rem', md: '2.5rem', lg: '3.5rem' } as const;
-    const d = dims[size as keyof typeof dims] || dims.md;
-    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot!.innerHTML = `
-      <style>
-        :host { display: inline-flex; align-items: center; justify-content: center; width: ${d}; height: ${d}; border-radius: 50%; overflow: hidden; background: #e5e7eb; color: #6b7280; font-weight: 600; font-size: calc(${d} * 0.4); }
-        img { width: 100%; height: 100%; object-fit: cover; }
-      </style>
-      ${src ? `<img src="${src}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-      <span style="${src ? 'display:none' : ''}">${initials || '\uD83D\uDC64'}</span>
-    `;
+    this.innerHTML = src
+      ? `<img src="${src}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><span style="display:none">${initials || '\uD83D\uDC64'}</span>`
+      : initials || '\uD83D\uDC64';
   }
 }

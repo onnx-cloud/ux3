@@ -1,8 +1,24 @@
 import { UxBase } from './base.js';
 
+const STYLE_ID = 'ux-select-style';
+
+function ensureStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+    ux-select { display: inline-block; }
+    ux-select select { width: 100%; font: inherit; color: inherit; }
+  `;
+  document.head.appendChild(style);
+}
+
 export class UxSelect extends UxBase {
   private selectEl: HTMLSelectElement | null = null;
   private observer: MutationObserver | null = null;
+  private _rendered = false;
 
   static get observedAttributes(): string[] {
     return ['value', 'name', 'disabled'];
@@ -10,8 +26,11 @@ export class UxSelect extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
-    this.render();
+    ensureStyles();
+    if (!this._rendered) {
+      this._rendered = true;
+      this.render();
+    }
     this.observeOptions();
   }
 
@@ -31,15 +50,11 @@ export class UxSelect extends UxBase {
   }
 
   private render(): void {
-    if (!this.shadowRoot) return;
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: inline-block; }
-        select { width: 100%; font: inherit; color: inherit; }
-      </style>
-      <select part="select"></select>`;
-    this.selectEl = this.shadowRoot.querySelector('select');
-    if (!this.selectEl) return;
+    const el = document.createElement('select');
+    el.setAttribute('part', 'select');
+    this.appendChild(el);
+    this.selectEl = el;
+
     this.syncOptions();
     const value = this.getAttribute('value') || '';
     if (value) this.selectEl.value = value;
@@ -49,7 +64,7 @@ export class UxSelect extends UxBase {
 
   private syncOptions(): void {
     if (!this.selectEl) return;
-    const options = Array.from(this.querySelectorAll('option'));
+    const options = Array.from(this.querySelectorAll(':scope > option')) as HTMLOptionElement[];
     this.selectEl.innerHTML = '';
     options.forEach(opt => {
       const o = document.createElement('option');
