@@ -1,9 +1,7 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 import { UxGraph } from './graph.js';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 const DEFAULT_CDN = 'https://unpkg.com/cytoscape@3.29.2/dist/cytoscape.min.js';
 
@@ -25,7 +23,7 @@ export const CytoscapePlugin: Plugin = {
     app.registerAsset?.({ type: 'script', src: cfg.cdn ?? DEFAULT_CDN });
 
     if (!customElements.get('ux-graph')) {
-      customElements.define('ux-graph', UxGraph);
+      try { customElements.define('ux-graph', UxGraph); } catch {}
     }
 
     app.registerService?.('graph', () => ({

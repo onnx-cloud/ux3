@@ -1,11 +1,9 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 import { UxDashboard } from './dashboard.js';
 import { UxKpiBoard } from './kpi-board.js';
 import { UxWorkflow } from './workflow.js';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 const DashboardPlugin: Plugin = {
   name: '@ux3/plugin-dashboard',

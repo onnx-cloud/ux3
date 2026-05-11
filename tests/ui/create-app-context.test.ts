@@ -159,8 +159,8 @@ describe('AppContext helper methods', () => {
     expect(called).toBe(true);
   });
 
-  it('loads and installs plugins declared in config.plugins', async () => {
-    const chartsPlugin = require('path').join(process.cwd(), 'packages/@ux3/plugin-charts-js/src/index.ts');
+  it('loads and installs plugin-chart-js', async () => {
+    const chartsPlugin = require('path').join(process.cwd(), 'packages/@ux3/plugin-chart-js/src/index.ts');
     const cfg: any = { ...baseConfig, site: {} };
     const ctx: any = await createAppContext(cfg);
     const pluginModule = require(chartsPlugin);
@@ -168,7 +168,7 @@ describe('AppContext helper methods', () => {
     if (ctx.registerPlugin && plugin) {
       await ctx.registerPlugin(plugin);
     }
-    expect(ctx.nav.routes.find((r:any)=>r.path==='/charts')).toBeTruthy();
+    expect(customElements.get('ux-chart-line')).toBeTruthy();
   });
 
   it('auto-installs content plugin when config.content exists', async () => {

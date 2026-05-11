@@ -1,8 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 export interface GoogleFontsConfig {
   /** Font families to load, e.g. ['Open Sans', 'Roboto'] */

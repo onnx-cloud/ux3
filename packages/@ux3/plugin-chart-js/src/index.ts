@@ -1,9 +1,7 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 import { UxChart } from './chart.js';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 const DEFAULT_CDN = 'https://cdn.jsdelivr.net/npm/chart.js';
 
@@ -25,9 +23,9 @@ export const ChartJsPlugin: Plugin = {
     const cfg = readConfig(app);
     app.registerAsset?.({ type: 'script', src: cfg.cdn ?? DEFAULT_CDN });
 
-    if (!customElements.get('ux-chart-line')) customElements.define('ux-chart-line', UxChart);
-    if (!customElements.get('ux-chart-bar')) customElements.define('ux-chart-bar', UxChart);
-    if (!customElements.get('ux-chart-donut')) customElements.define('ux-chart-donut', UxChart);
+    if (!customElements.get('ux-chart-line')) try { customElements.define('ux-chart-line', UxChart); } catch {}
+    if (!customElements.get('ux-chart-bar')) try { customElements.define('ux-chart-bar', UxChart); } catch {}
+    if (!customElements.get('ux-chart-donut')) try { customElements.define('ux-chart-donut', UxChart); } catch {}
 
     app.registerService?.('chart', () => ({
       async create(el: HTMLElement | string, config: Record<string, unknown>) {

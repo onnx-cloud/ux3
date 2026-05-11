@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChartJsPlugin } from '../../packages/@ux3/plugin-chart-js/src/index';
+
+const origDefine = customElements.define.bind(customElements);
 
 describe('ChartJsPlugin', () => {
   let mockApp: any;
@@ -43,7 +45,6 @@ describe('ChartJsPlugin', () => {
   });
 
   it('chart service create throws when element not found', async () => {
-    // Provide a global Chart constructor so the dynamic import fallback is not hit
     (globalThis as any).window = { Chart: class MockChart {} };
     ChartJsPlugin.install?.(mockApp);
     const factory = mockApp.registerService.mock.calls[0][1];

@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-oidc",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "OIDC/OAuth2 plugin for UX3 with provider presets",
   "type": "module",
   "main": "dist/index.js",

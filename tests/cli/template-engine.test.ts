@@ -268,7 +268,7 @@ describe('ux3 generate (integration)', () => {
 
   it('generate plugin creates plugin package files', async () => {
     const pluginDir = path.join(TMP, 'plugin-test');
-    const code = await runGenerate(['plugin', 'sentry', '--dir', pluginDir, '--project', project], project);
+    const code = await runGenerate(['plugin', 'telemetry', '--dir', pluginDir, '--project', project], project);
     expect(code).toBe(0);
     expect(await fs.pathExists(path.join(pluginDir, 'package.json'))).toBe(true);
     expect(await fs.pathExists(path.join(pluginDir, 'src', 'index.ts'))).toBe(true);

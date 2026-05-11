@@ -19,13 +19,13 @@ describe('PluginLoader', () => {
 
   it('loadFromPath can import a simple plugin module', async () => {
     const pluginPath = path.join(tmpRoot, 'myplugin.ts');
-    const code = `export default { name: 'foo', version: '1.0.0' };`;
+    const code = `export default { name: 'foo', version: '0.1.0' };`;
     await fs.writeFile(pluginPath, code);
 
     const loader = new PluginLoader();
     const p = await loader.loadFromPath(pluginPath);
     expect(p.name).toBe('foo');
-    expect(p.version).toBe('1.0.0');
+    expect(p.version).toBe('0.1.0');
   });
 
   it('loadProjectPlugins walks directory and returns plugins', async () => {

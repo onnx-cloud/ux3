@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-stripe",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Stripe payment integration for UX3 — PCI-compliant tokenization",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

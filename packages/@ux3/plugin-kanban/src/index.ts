@@ -1,9 +1,7 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 import { UxKanban } from './kanban.js';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 const KanbanPlugin: Plugin = {
   name: '@ux3/plugin-kanban',

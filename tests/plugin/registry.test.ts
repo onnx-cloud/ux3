@@ -4,7 +4,7 @@ import { PluginRegistry } from '@ux3/plugin/registry';
 describe('PluginRegistry', () => {
   it('registers and retrieves plugins', () => {
     const reg = new PluginRegistry();
-    const plugin = { name: 'foo', version: '1.0.0' };
+    const plugin = { name: 'foo', version: '0.1.0' };
     reg.register(plugin as any);
     expect(reg.has('foo')).toBe(true);
     expect(reg.load('foo')).toBe(plugin);
@@ -13,7 +13,7 @@ describe('PluginRegistry', () => {
 
   it('throws when registering duplicate name', () => {
     const reg = new PluginRegistry();
-    const plugin = { name: 'bar', version: '1.0.0' };
+    const plugin = { name: 'bar', version: '0.1.0' };
     reg.register(plugin as any);
     expect(() => reg.register(plugin as any)).toThrow(/already registered/);
   });

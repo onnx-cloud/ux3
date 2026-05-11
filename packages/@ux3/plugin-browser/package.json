@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-browser",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "UX3 browser detection plugin - injects browser state, device info, preferences, connectivity",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

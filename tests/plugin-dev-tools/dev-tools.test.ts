@@ -40,9 +40,9 @@ describe('@ux3/plugin-dev-tools', () => {
 
   it('records plugin snapshots', async () => {
     await DevToolsPlugin.install?.(app);
-    app.utils.devTools.recordPlugin({ name: '@ux3/plugin-dev-tools', version: '1.0.0', hooks: ['ready'], status: 'active' });
+    app.utils.devTools.recordPlugin({ name: '@ux3/plugin-dev-tools', version: '0.1.0', hooks: ['ready'], status: 'active' });
     expect(app.utils.devTools.getSnapshot().plugins).toEqual([
-      { name: '@ux3/plugin-dev-tools', version: '1.0.0', hooks: ['ready'], status: 'active' },
+      { name: '@ux3/plugin-dev-tools', version: '0.1.0', hooks: ['ready'], status: 'active' },
     ]);
   });
 });

@@ -168,7 +168,7 @@ export function createDataLayerProvider(): AnalyticsProvider {
 
 export const AnalyticsPlugin: Plugin = {
   name: '@ux3/plugin-analytics',
-  version: '1.0.0',
+  version: '0.1.0',
   description: 'Lightweight telemetry and analytics with pluggable providers, batching, and realtime mode.',
   install(app: AppContext) {
     const cfg: AnalyticsConfig = (app.config as any)?.plugins?.['@ux3/plugin-analytics'] ??

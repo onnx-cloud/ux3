@@ -179,7 +179,7 @@ function readConfig(app: any, pluginRef: any): IconesPluginConfig {
 
 export const IconesPlugin: Plugin = {
   name: '@ux3/plugin-icones',
-  version: '1.0.0',
+  version: '0.1.0',
   description: 'Icones/Iconify integration with Lucide as default collection',
   install(app) {
     const cfg = readConfig(app, IconesPlugin as any);

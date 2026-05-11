@@ -46,9 +46,7 @@ describe('CytoscapePlugin', () => {
     CytoscapePlugin.install?.(mockApp);
     const factory = mockApp.registerService.mock.calls[0][1];
     const service = factory();
-    expect(() => service.create(document.createElement('div'))).toThrow(
-      /Cytoscape.js is not loaded/
-    );
+    expect(() => service.create(document.createElement('div'))).toThrow(/not loaded/);
   });
 
   it('graph service creates instance when cytoscape global is present', () => {

@@ -2,7 +2,7 @@
 	"extends": "../../../tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "../../..",
-		"outDir": "../../../tmp/tsc/packages/ux3/plugin-sentry"
+		"outDir": "../../../tmp/tsc/packages/ux3/plugin-telemetry"
 	},
 	"include": ["src/**/*.ts"]
 }

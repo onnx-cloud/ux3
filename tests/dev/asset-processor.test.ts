@@ -61,7 +61,7 @@ describe('processAssets: bundle-pending regression', () => {
       },
     },
     runtime: bundleUrl
-      ? { bundle: bundleUrl, styles: [], version: '1.0.0', minified: false }
+      ? { bundle: bundleUrl, styles: [], version: '0.1.0', minified: false }
       : undefined,
   });
 

@@ -20,7 +20,7 @@ function pluralise(count: number, locale: string, key: string, i18nFn: (k: strin
 
 export const I18nPlugin: Plugin = {
   name: '@ux3/plugin-i18n',
-  version: '1.0.0',
+  version: '0.1.0',
   description: 'Enhanced i18n plugin with pluralisation and remote namespace loading',
   install(app) {
     const cfg: I18nPluginConfig = (app.config as any)?.plugins?.['@ux3/plugin-i18n'] ??

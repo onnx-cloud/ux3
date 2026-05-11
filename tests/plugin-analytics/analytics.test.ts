@@ -42,7 +42,7 @@ describe('AnalyticsPlugin', () => {
 
   it('should have correct plugin metadata', () => {
     expect(AnalyticsPlugin.name).toBe('@ux3/plugin-analytics');
-    expect(AnalyticsPlugin.version).toBe('1.0.0');
+    expect(AnalyticsPlugin.version).toBe('0.1.0');
     expect(AnalyticsPlugin.description).toContain('analytics');
   });
 

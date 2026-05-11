@@ -1,6 +1,6 @@
 {
   "name": "@ux3/test-harness",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Testing utilities and fixtures for UX3 Framework - FSM testing, mock services, view testing helpers",
   "type": "module",
   "exports": {

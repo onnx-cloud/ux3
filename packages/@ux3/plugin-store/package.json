@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-store",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Storage plugin for UX3 with support for localStorage, IndexedDB, remote sync, and hybrid patterns",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

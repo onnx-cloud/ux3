@@ -1,8 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 // Leaflet CDN assets – both JS and CSS are required for Leaflet to render correctly
 const LEAFLET_JS_CDN = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';

@@ -3,7 +3,7 @@ import type { AppContext } from '../../../../src/ui/app.js';
 import { createDevToolsService } from './services/dev-tools.service.js';
 import type { DevToolsApi, DevToolsPluginConfig } from './types.js';
 
-const version = '1.0.0';
+const version = '0.1.0';
 
 declare global {
   interface Window {

@@ -1,28 +1,28 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Skip this test file if the plugin module can't be imported
-// (it requires @sentry/browser as an optional peer dependency)
-let SentryPlugin: any = null;
+// (it requires @telemetry/browser as an optional peer dependency)
+let Telemetry Plugin: any = null;
 try {
-  const mod = require('@ux3/plugin-sentry');
-  SentryPlugin = mod.SentryPlugin;
+  const mod = require('@ux3/plugin-telemetry');
+  Telemetry Plugin = mod.Telemetry Plugin;
 } catch (e) {
-  // Sentry plugin not available - skip tests
+  // OpenTelemetry plugin not available - skip tests
 }
 
-const skipIfMissing = (SentryPlugin === null);
+const skipIfMissing = (Telemetry Plugin === null);
 
-describe('SentryPlugin', () => {
+describe('Telemetry Plugin', () => {
   let mockApp: any;
 
   beforeEach(() => {
     mockApp = {
       config: {
         plugins: {
-          '@ux3/plugin-sentry': {
-            dsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+          '@ux3/plugin-telemetry': {
+            dsn: 'https://examplePublicKey@o0.ingest.telemetry.io/0',
             environment: 'production',
-            release: '1.0.0'
+            release: '0.1.0'
           }
         }
       },
@@ -36,54 +36,54 @@ describe('SentryPlugin', () => {
   });
 
   it.skipIf(skipIfMissing)('should have correct plugin metadata', () => {
-    if (!SentryPlugin) return;
-    expect(SentryPlugin.name).toBe('@ux3/plugin-sentry');
-    expect(SentryPlugin.version).toBe('1.0.0');
-    expect(SentryPlugin.description).toContain('Sentry');
+    if (!Telemetry Plugin) return;
+    expect(Telemetry Plugin.name).toBe('@ux3/plugin-telemetry');
+    expect(Telemetry Plugin.version).toBe('0.1.0');
+    expect(Telemetry Plugin.description).toContain('Telemetry ');
   });
 
   it.skipIf(skipIfMissing)('should install plugin on app', () => {
-    if (!SentryPlugin) return;
+    if (!Telemetry Plugin) return;
     expect(() => {
-      SentryPlugin.install(mockApp);
+      Telemetry Plugin.install(mockApp);
     }).not.toThrow();
   });
 
-  it.skipIf(skipIfMissing)('should read sentry config from app.config', () => {
-    if (!SentryPlugin) return;
-    SentryPlugin.install(mockApp);
-    const config = mockApp.config.plugins['@ux3/plugin-sentry'];
-    expect(config.dsn).toContain('sentry.io');
+  it.skipIf(skipIfMissing)('should read telemetry config from app.config', () => {
+    if (!Telemetry Plugin) return;
+    Telemetry Plugin.install(mockApp);
+    const config = mockApp.config.plugins['@ux3/plugin-telemetry'];
+    expect(config.dsn).toContain('telemetry.io');
     expect(config.environment).toBe('production');
   });
 
-  it.skipIf(skipIfMissing)('should handle missing Sentry SDK gracefully', () => {
-    if (!SentryPlugin) return;
-    const appWithoutSentry = {
+  it.skipIf(skipIfMissing)('should handle missing OpenTelemetry SDK gracefully', () => {
+    if (!Telemetry Plugin) return;
+    const appWithoutOpenTelemetry = {
       config: { plugins: {} },
       logger: { subscribe: vi.fn() }
     };
     expect(() => {
-      SentryPlugin.install(appWithoutSentry);
+      Telemetry Plugin.install(appWithoutTelemetry );
     }).not.toThrow();
   });
 
-  it.skipIf(skipIfMissing)('should use console.error as fallback when Sentry unavailable', () => {
-    if (!SentryPlugin) return;
+  it.skipIf(skipIfMissing)('should use console.error as fallback when OpenTelemetry unavailable', () => {
+    if (!Telemetry Plugin) return;
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    SentryPlugin.install(mockApp);
+    Telemetry Plugin.install(mockApp);
     
     expect(mockApp.logger.subscribe).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it.skipIf(skipIfMissing)('should support environment configuration', () => {
-    if (!SentryPlugin) return;
+    if (!Telemetry Plugin) return;
     const appWithEnv = {
       config: {
         plugins: {
-          '@ux3/plugin-sentry': {
-            dsn: 'https://key@sentry.io/123',
+          '@ux3/plugin-telemetry': {
+            dsn: 'https://key@telemetry.io/123',
             environment: 'development'
           }
         }
@@ -92,21 +92,21 @@ describe('SentryPlugin', () => {
     };
     
     expect(() => {
-      SentryPlugin.install(appWithEnv);
+      Telemetry Plugin.install(appWithEnv);
     }).not.toThrow();
   });
 
   it.skipIf(skipIfMissing)('should support release tags', () => {
-    if (!SentryPlugin) return;
-    SentryPlugin.install(mockApp);
-    const config = mockApp.config.plugins['@ux3/plugin-sentry'];
-    expect(config.release).toBe('1.0.0');
+    if (!Telemetry Plugin) return;
+    Telemetry Plugin.install(mockApp);
+    const config = mockApp.config.plugins['@ux3/plugin-telemetry'];
+    expect(config.release).toBe('0.1.0');
   });
 
   // Placeholder test so the suite isn't empty if skipped
-  it.skipIf(!skipIfMissing)('@sentry/browser peer dependency not installed', () => {
-    // This test runs when @sentry/browser is not available
-    // It's a way to document that the plugin requires @sentry/browser
+  it.skipIf(!skipIfMissing)('@telemetry/browser peer dependency not installed', () => {
+    // This test runs when @telemetry/browser is not available
+    // It's a way to document that the plugin requires @telemetry/browser
     expect(true).toBe(true);
   });
 });

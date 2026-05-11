@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
 import { z } from 'zod';
 import { ToolRegistry } from './tools.js';
 import { ResourceRegistry } from './resources.js';
@@ -25,7 +26,6 @@ export function createSDKServer(projectDir: string, resourceBaseUrl?: string): M
 
   registerDevModeHandlers(host);
 
-  // Register all tools from the spec bundle
   const toolSpecs = host.getToolSpecs();
   for (const toolSpec of toolSpecs) {
     const inputSchema = toZodObject(toolSpec.input);
@@ -58,16 +58,14 @@ export function createSDKServer(projectDir: string, resourceBaseUrl?: string): M
             isError: true,
           };
         }
-      }
+      },
     );
   }
 
-  // Register resources from the spec bundle
   const resourceSpecs = host.getResourceSpecs();
   for (const resourceSpec of resourceSpecs) {
     const uri = resourceSpec.uri;
 
-    // Skip dynamic patterns
     if (uri.includes('{')) continue;
 
     server.registerResource(
@@ -88,222 +86,80 @@ export function createSDKServer(projectDir: string, resourceBaseUrl?: string): M
             },
           ],
         };
-      }
+      },
     );
   }
 
-  // Register prompts from the spec bundle
   const promptSpecs = host.getPromptSpecs();
   for (const promptSpec of promptSpecs) {
-    server.registerPrompt(
-      promptSpec.name,
-      {
-        description: promptSpec.description,
-      },
-      async () => {
-        try {
-          const text = await host.getPrompt(promptSpec.name);
-          return {
-            messages: [
-              {
-                role: 'user' as const,
-                content: { type: 'text' as const, text },
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            messages: [
-              {
-                role: 'user' as const,
-                content: {
-                  type: 'text' as const,
-                  text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+    const argsSchema = buildPromptArgsSchema(promptSpec);
+
+    if (argsSchema) {
+      server.registerPrompt(
+        promptSpec.name,
+        {
+          description: promptSpec.description,
+          argsSchema,
+        },
+        async (args: any) => {
+          try {
+            const result = await host.getPrompt(promptSpec.name, args);
+            return result;
+          } catch (error) {
+            return {
+              messages: [
+                {
+                  role: 'user' as const,
+                  content: {
+                    type: 'text' as const,
+                    text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                  },
                 },
-              },
-            ],
-          };
-        }
-      }
-    );
+              ],
+            };
+          }
+        },
+      );
+    } else {
+      server.registerPrompt(
+        promptSpec.name,
+        {
+          description: promptSpec.description,
+        },
+        async () => {
+          try {
+            const result = await host.getPrompt(promptSpec.name);
+            return result;
+          } catch (error) {
+            return {
+              messages: [
+                {
+                  role: 'user' as const,
+                  content: {
+                    type: 'text' as const,
+                    text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                  },
+                },
+              ],
+            };
+          }
+        },
+      );
+    }
   }
 
   return server;
 }
 
 function registerDevModeHandlers(host: MCPHost): void {
-  // Register prompt handlers — each returns a developer-focused guide
-  host.registerPromptHandler('ux3-new-view', async () => {
-    return renderPrompt('ux3-new-view', 'View YAML FSM config', `## UX3 View Response Format
-
-When asked to create a view, respond with:
-
-### 1. View YAML (\`ux/widget/{name}.yaml\`)
-\`\`\`yaml
-name: {view-name}
-layout: default         # default | blog | blank
-initial: index
-context:
-  {key}: {default}
-states:
-  index:
-    template: 'widget/{name}/index.html'
-    on:
-      EVENT_NAME:
-        target: index
-        actions: [{actionFn}]
-        set: { key: value }        # declarative set
-        toggle: {key}              # declarative toggle
-        navigate: /path            # declarative navigate
-        dispatch: eventName        # declarative dispatch
-\`\`\`
-
-### 2. Template (\`ux/widget/{name}/index.html\`)
-- Use HandlebarsLite syntax: \`{{ i18n.{scope}.key }}\`, \`{{ ctx.field }}\`
-- Use \`{{#each array}}\` for iteration, \`{{#if condition}}\` for guards
-- Bind events with \`ux-event="click:FSM_EVENT"\`
-- Use built-in widgets: \`<ux-tabs>\`, \`<ux-table>\`, \`<ux-card>\`, etc.
-- Pass event data with \`ux-event-value="key=value"\`
-
-### 3. Logic (\`ux/logic/{name}.ts\`)
-- Export \`ActionFn<T>\`, \`InvokerFn<T>\`, \`GuardFn<T>\` typed functions
-- Actions receive \`(context, event)\` and may mutate context or return a partial update
-- Invokers return a partial context object that is merged on completion
-
-### 4. i18n (\`ux/i18n/{locale}/{name}.yaml\`)
-- Flat key-value pairs: \`heading: My Heading\`
-- Reference in templates as \`{{ i18n.{name}.heading }}\`
-
-### 5. Route (\`ux/route/routes.yaml\`)
-- Add to \`routes:\` array: \`- path: /{route-path}\` / \`view: {name}\``);
-  });
-
-  host.registerPromptHandler('ux3-add-widget', async () => {
-    return renderPrompt('ux3-add-widget', 'Custom widget registration', `## UX3 Widget Creation Guide
-
-### Interactive Widget (shadow DOM)
-\`\`\`typescript
-// src/ui/widget/primitives/my-widget.ts
-import { UxBase } from './base.js';
-
-export class UxMyWidget extends UxBase {
-  static get observedAttributes(): string[] { return ['value']; }
-
-  protected onConnected(): void {
-    super.onConnected();
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
-    this.render();
-  }
-
-  protected onAttributeChanged(name: string, _old: string | null, _new: string | null): void {
-    if (this.isConnected) this.render();
-  }
-
-  private render(): void {
-    this.shadowRoot!.innerHTML = \`
-      <style>:host { display: block; }</style>
-      <slot></slot>
-    \`;
-  }
-}
-\`\`\`
-
-### Registration (3 steps)
-1. Add \`import { UxMyWidget } from './my-widget.js';\` to \`registry.ts\`
-2. Add definition: \`{ tag: 'ux-my-widget', role: 'region', kind: 'my-widget' }\` to \`ALL_PRIMITIVES\`
-3. Add \`'my-widget'\` to the \`PrimitiveKind\` union in \`types.ts\`
-
-### Resolving (2 steps)
-1. Add import + switch case to \`resolve.ts\`
-2. Add export to \`index.ts\``);
-  });
-
-  host.registerPromptHandler('ux3-add-service', async () => {
-    return renderPrompt('ux3-add-service', 'Service wiring', `## UX3 Service Registration Guide
-
-### Service YAML (\`ux/service/services.yaml\`)
-\`\`\`yaml
-services:
-  - name: {service-name}
-    type: http                # http | mock | oidc | plugin
-    adapter: custom           # for plugin types
-    config:
-      baseURL: /api/{path}
-      headers:
-        Authorization: Bearer {{token}}
-    connectOnStart: true
-\`\`\`
-
-### Invoker Usage
-\`\`\`typescript
-export const loadData: InvokerFn<MyContext> = async (ctx) => {
-  const app = (window as any).__ux3App;
-  const svc = app?.services?.{serviceName};
-  const data = await svc?.get('/endpoint');
-  return { items: data };
-};
-\`\`\`
-
-### FSM Wiring
-\`\`\`yaml
-states:
-  loading:
-    invoke: { src: loadData, onDone: index }
-  index:
-    template: 'widget/{name}/index.html'
-\`\`\``);
-  });
-
-  host.registerPromptHandler('ux3-fsm-flow', async () => {
-    return renderPrompt('ux3-fsm-flow', 'FSM state machine design', `## UX3 FSM Design Guide
-
-### Core Concepts
-- **States**: named states with templates, transitions, and invokers
-- **Transitions**: \`EVENT → target\` with optional guards, actions, declarative ops
-- **Context**: reactive key-value store, mutated by actions and invokers
-
-### Declarative Actions (no TypeScript needed)
-\`\`\`yaml
-on:
-  TOGGLE_FEATURE:
-    target: index
-    toggle: featureEnabled           # flip boolean
-    set: { mode: advanced }          # set fixed value
-    navigate: /dashboard             # client-side navigation
-    dispatch: app:refresh            # DOM event
-    log: "feature toggled"           # diagnostic log
-\`\`\`
-
-### Guards + Actions
-\`\`\`yaml
-on:
-  NEXT_STEP:
-    target: index
-    guard: canAdvance               # Fn(context) => boolean
-    actions: [nextStep]             # Fn(context, event) => void|Partial<T>
-\`\`\`
-
-### Service Invokers
-\`\`\`yaml
-states:
-  loading:
-    invoke: { src: loadFromService, onDone: index, onError: error }
-  index:
-    template: 'widget/{name}/index.html'
-  error:
-    template: 'widget/{name}/error.html'
-\`\`\`
-
-### Context Patterns
-- Boolean flags for UI state: \`modalOpen\`, \`submitting\`, \`validated\`
-- Nullable references: \`selectedItem: null\`, \`errorMessage: null\`
-- Derived state: compute in actions, store as context keys`);
-  });
-
   host.registerToolHandler('fsm.list', async (_args) => {
     const app = getApp();
     if (!app?.machines) {
-      return { machines: [], count: 0, note: 'No active FSM instances. Dev tools must be running in a browser context.' };
+      return {
+        machines: [],
+        count: 0,
+        note: 'No active FSM instances. Dev tools must be running in a browser context.',
+      };
     }
     const entries = Object.entries(app.machines).map(([name, machine]: [string, any]) => ({
       name,
@@ -403,7 +259,9 @@ states:
         innerText: (el as HTMLElement).innerText?.slice(0, 500) || '',
       };
     }
-    const uxElements = document.querySelectorAll('[class*="ux-"], [id*="ux-"], [ux-view], [ux-route]');
+    const uxElements = document.querySelectorAll(
+      '[class*="ux-"], [id*="ux-"], [ux-view], [ux-route]',
+    );
     return {
       documentTitle: document.title,
       bodyChildren: document.body.children.length,
@@ -414,9 +272,15 @@ states:
   host.registerToolHandler('rebuild.project', async () => {
     const app = getApp();
     if (app?.config?.development?.hotReload) {
-      return { success: true, message: 'Hot reload is active. Changes are applied automatically.' };
+      return {
+        success: true,
+        message: 'Hot reload is active. Changes are applied automatically.',
+      };
     }
-    return { success: false, message: 'Project rebuild requires dev server with hot reload enabled.' };
+    return {
+      success: false,
+      message: 'Project rebuild requires dev server with hot reload enabled.',
+    };
   });
 
   host.registerToolHandler('reload.view', async (args) => {
@@ -450,7 +314,10 @@ states:
   host.registerToolHandler('config.fsm-logging', async (args) => {
     const enabled = !!args.enabled;
     (globalThis as any).__ux3FSMLogging = enabled;
-    return { fsmLogging: enabled, message: `FSM logging ${enabled ? 'enabled' : 'disabled'}.` };
+    return {
+      fsmLogging: enabled,
+      message: `FSM logging ${enabled ? 'enabled' : 'disabled'}.`,
+    };
   });
 
   const app = getApp();
@@ -467,13 +334,42 @@ function safeStringify(value: unknown): string {
   }
 }
 
+function buildPromptArgsSchema(spec: any): Record<string, z.ZodTypeAny> | undefined {
+  const args: any[] = spec?.arguments;
+  if (!args || args.length === 0) return undefined;
+
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const arg of args) {
+    let schema: z.ZodTypeAny = z.string();
+    if (arg.enum && Array.isArray(arg.enum)) {
+      const enumValues = arg.enum.filter((v: unknown) => typeof v === 'string') as string[];
+      if (enumValues.length > 0) {
+        schema = completable(z.enum(enumValues as [string, ...string[]]), (value) => {
+          const v = value as string;
+          return enumValues.filter((e) => e.toLowerCase().includes(v.toLowerCase()));
+        });
+      }
+    }
+    if (arg.description) {
+      schema = schema.describe(arg.description);
+    }
+    if (arg.required === false) {
+      schema = schema.optional();
+    }
+    shape[arg.name] = schema;
+  }
+  return shape;
+}
+
 function toZodObject(inputSchema: any): z.ZodObject<Record<string, z.ZodTypeAny>> {
   if (!inputSchema || typeof inputSchema !== 'object') {
     return z.object({});
   }
 
   const props = (inputSchema.properties || {}) as Record<string, any>;
-  const requiredList = new Set<string>(Array.isArray(inputSchema.required) ? inputSchema.required : []);
+  const requiredList = new Set<string>(
+    Array.isArray(inputSchema.required) ? inputSchema.required : [],
+  );
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const [key, prop] of Object.entries(props)) {
@@ -511,7 +407,9 @@ function jsonTypeToZod(prop: any): z.ZodTypeAny {
     }
     case 'object': {
       const nestedProps = (prop.properties || {}) as Record<string, any>;
-      const nestedRequired = new Set<string>(Array.isArray(prop.required) ? prop.required : []);
+      const nestedRequired = new Set<string>(
+        Array.isArray(prop.required) ? prop.required : [],
+      );
       const nestedShape: Record<string, z.ZodTypeAny> = {};
       for (const [k, nestedProp] of Object.entries(nestedProps)) {
         const nestedSchema = jsonTypeToZod(nestedProp);
@@ -522,8 +420,4 @@ function jsonTypeToZod(prop: any): z.ZodTypeAny {
     default:
       return z.any();
   }
-}
-
-function renderPrompt(name: string, title: string, body: string): string {
-  return `# ${title}\n\n${body}\n\n---\n*Prompt: \`${name}\` — generated by UX3 MCP server*`;
 }

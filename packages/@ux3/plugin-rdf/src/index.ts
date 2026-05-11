@@ -1,8 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 const RDFLIB_CDN = 'https://unpkg.com/rdflib@2.2.33/dist/rdflib.min.js';
 const CM_CDN = 'https://unpkg.com/codemirror@6.0.1/lib/codemirror.js';

@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-webrtc",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "WebRTC video/audio calling for UX3 via SimplePeer",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

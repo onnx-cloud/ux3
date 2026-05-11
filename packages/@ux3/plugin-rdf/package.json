@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-rdf",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "RDF/SPARQL integration for UX3 — rdflib.js + CodeMirror",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

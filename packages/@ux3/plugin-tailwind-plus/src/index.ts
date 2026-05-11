@@ -1,8 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import type { AppContext } from '../../../../src/ui/app';
-import { createRequire } from 'module';
 
-const _plusRequire = createRequire(import.meta.url);
 export interface TailwindPlusWidgetDefinition {
   id: string;
   source: string;
@@ -120,7 +118,7 @@ export function mergeClasses(...classes: (string | undefined | null | boolean)[]
 // PLUGIN REGISTRATION
 // ============================================================================
 
-const { version: _plusVersion } = _plusRequire('../package.json') as { version: string };
+const { version: _plusVersion } = '0.1.0';
 
 export const TailwindPlusPlugin: Plugin = {
   name: '@ux3/plugin-tailwind-plus',

@@ -638,7 +638,7 @@ export class OidcService {
 
 export const OidcPlugin: Plugin = {
   name: '@ux3/plugin-oidc',
-  version: '1.0.0',
+  version: '0.1.0',
   description: 'OIDC/OAuth2 plugin with presets for Google, Okta, Auth0, and Cognito',
   install(app: AppContext) {
     const inlineConfig = ((this as any)?.config || (OidcPlugin as any)?.config) as OidcConfig | undefined;

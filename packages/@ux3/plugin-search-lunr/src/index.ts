@@ -1,8 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 const DEFAULT_CDN = 'https://unpkg.com/lunr/lunr.js';
 const DEFAULT_CACHE_KEY = 'ux3:search:index';

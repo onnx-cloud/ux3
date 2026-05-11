@@ -17,7 +17,7 @@ import type { BrowserState, BrowserPluginConfig } from './types.js';
 
 export const BrowserPlugin: Plugin = {
   name: '@ux3/plugin-browser',
-  version: '1.0.0',
+  version: '0.1.0',
   description: 'Detects and injects browser state (locale, device, preferences, connectivity)',
   ux3PeerVersion: '>=1.0.0',
 

@@ -6,7 +6,7 @@ import type { StoreConfig } from './types';
  */
 const StorePlugin = {
   name: '@ux3/plugin-store',
-  version: '1.0.0',
+  version: '0.1.0',
   description: 'Modular storage plugin with local, remote, and hybrid adapters',
   ux3PeerVersion: '>=1.0.0',
 

@@ -1,6 +1,6 @@
 {
   "name": "@ux3/plugin-gantt",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Gantt chart widget for UX3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

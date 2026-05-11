@@ -1,5 +1,4 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { UxFilterBuilder } from './filter-builder.js';
 
 const version = '0.1.0';
 

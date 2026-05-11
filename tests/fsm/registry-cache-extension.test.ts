@@ -243,7 +243,7 @@ describe('FSMRegistry Cache Extension - Phase 1.2', () => {
 
       // Pre-populate cache with initial data
       const initialData = {
-        version: '1.0.0',
+        version: '0.1.0',
         config: { debug: false },
         features: ['a', 'b', 'c']
       };

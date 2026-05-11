@@ -1,12 +1,10 @@
 import type { Plugin } from '../../../../src/plugin/registry';
-import { createRequire } from 'module';
 import { defaultLogger } from '../../../../src/security/observability.js';
 import { fileURLToPath } from 'node:url';
 export { applyBuildTimeTranslation } from './build-time.js';
 export type { BuildTimeTranslateConfig, BuildTimeTranslateResult } from './build-time.js';
 
-const _require = createRequire(import.meta.url);
-const { version } = _require('../package.json') as { version: string };
+const version = '0.1.0';
 
 export interface TranslateConfig {
   /** OpenAI-compatible chat completions endpoint */

@@ -24,11 +24,21 @@ export interface ResourceSpec {
   includeResources?: string[];
 }
 
+export interface PromptArgumentSpec {
+  name: string;
+  description?: string;
+  required?: boolean;
+  enum?: string[];
+}
+
 export interface PromptSpec {
   name: string;
   description: string;
   handler: string;
   includeResources?: string[];
+  arguments?: PromptArgumentSpec[];
+  virtual?: boolean;
+  content?: string;
 }
 
 export interface MCPToolSpecs {

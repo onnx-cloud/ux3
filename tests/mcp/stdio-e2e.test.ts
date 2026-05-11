@@ -42,7 +42,7 @@ describe('MCP stdio e2e', () => {
       stderr: 'pipe',
     });
 
-    const client = new Client({ name: 'ux3-mcp-e2e', version: '1.0.0' });
+    const client = new Client({ name: 'ux3-mcp-e2e', version: '0.1.0' });
     await client.connect(transport);
 
     const tools = await client.listTools();
