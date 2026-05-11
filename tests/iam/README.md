@@ -282,48 +282,48 @@ A mock `AppContext` provides:
 
 ### Testing State Transitions
 ```typescript
-authFSM.subscribe((state) => {
+auth.subscribe((state) => {
   if (state === 'submitting') {
     // Assert we're in expected state
     expect(state).toBe('submitting');
     // Continue to next transition
-    authFSM.send('SUCCESS');
+    auth.send('SUCCESS');
   }
 });
 
-authFSM.send('LOGIN');
+auth.send('LOGIN');
 ```
 
 ### Testing Event Dispatch
 ```typescript
-authFSM.send('LOGIN', {
+auth.send('LOGIN', {
   email: 'user@example.com',
   password: 'secret'
 });
 
-expect(authFSM.getState()).toBe('submitting');
+expect(auth.getState()).toBe('submitting');
 ```
 
 ### Testing Context Updates
 ```typescript
-authFSM.send('LOGIN', { email: 'user@example.com' });
-authFSM.send('SUCCESS', { token: 'jwt-123' });
+auth.send('LOGIN', { email: 'user@example.com' });
+auth.send('SUCCESS', { token: 'jwt-123' });
 
-const context = authFSM.getContext();
+const context = auth.getContext();
 expect(context.token).toBeDefined();
 ```
 
 ### Testing Multi-FSM Flows
 ```typescript
-authFSM.subscribe((state) => {
+auth.subscribe((state) => {
   if (state === 'success') {
     // Trigger dependent FSM
-    dashboardFSM.send('LOAD');
+    dashboard.send('LOAD');
   }
 });
 
-authFSM.send('LOGIN');
-authFSM.send('SUCCESS');
+auth.send('LOGIN');
+auth.send('SUCCESS');
 ```
 
 ## Coverage Goals

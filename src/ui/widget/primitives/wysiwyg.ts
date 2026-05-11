@@ -66,11 +66,16 @@ export class UxWysiwyg extends UxBase {
         <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
         <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
         <select data-cmd="formatBlock" title="Heading">
-          <option value="p">Paragraph</option>
-          <option value="h2">Heading 2</option>
-          <option value="h3">Heading 3</option>
-          <option value="h4">Heading 4</option>
+          <option value="h1">H1</option>
+          <option value="h2">H2</option>
+          <option value="h3">H3</option>
+          <option value="h4">H4</option>
+          <option value="p">P</option>
         </select>
+        <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
+        <button type="button" data-cmd="justifyLeft" title="Align left">⫷</button>
+        <button type="button" data-cmd="justifyCenter" title="Align center">≣</button>
+        <button type="button" data-cmd="justifyRight" title="Align right">⫸</button>
         <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
         <button type="button" data-cmd="insertOrderedList" title="Ordered list">OL</button>
         <button type="button" data-cmd="insertUnorderedList" title="Unordered list">UL</button>
@@ -149,7 +154,7 @@ export class UxWysiwyg extends UxBase {
     if (!toolbar) return;
     toolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
       const cmd = (btn as HTMLElement).dataset.cmd || '';
-      if (['bold','italic','underline','strikeThrough','insertOrderedList','insertUnorderedList'].includes(cmd)) {
+      if (['bold','italic','underline','strikeThrough','insertOrderedList','insertUnorderedList','justifyLeft','justifyCenter','justifyRight'].includes(cmd)) {
         btn.classList.toggle('active', document.queryCommandState(cmd));
       }
     });

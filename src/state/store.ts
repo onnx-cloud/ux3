@@ -264,7 +264,7 @@ export function createStore<T extends Record<string, any>>(config: StoreConfig<T
  */
 export function createStoreHook<T extends Record<string, any>>(store: Store<T>) {
   return {
-    state: store.getState(),
+    get state() { return store.getState(); },
     subscribe: store.subscribe.bind(store),
     commit: store.commit.bind(store),
     dispatch: store.dispatch.bind(store),

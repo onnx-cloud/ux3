@@ -9,12 +9,12 @@ beforeEach(() => {
   console.log('config keys', Object.keys(config));
   console.log('machines keys', config.machines && Object.keys(config.machines));
   FSMRegistry.clear();
-  FSMRegistry.register('loginFSM', new StateMachine(config.machines.loginFSM));
-  FSMRegistry.register('newsFSM', new StateMachine(config.machines.newsFSM));
-  FSMRegistry.register('accountFSM', new StateMachine(config.machines.accountFSM));
-  FSMRegistry.register('chatFSM', new StateMachine(config.machines.chatFSM));
-  FSMRegistry.register('dashboardFSM', new StateMachine(config.machines.dashboardFSM));
-  FSMRegistry.register('marketFSM', new StateMachine(config.machines.marketFSM));
+  FSMRegistry.register('login', new StateMachine(config.machines.login));
+  FSMRegistry.register('news', new StateMachine(config.machines.news));
+  FSMRegistry.register('account', new StateMachine(config.machines.account));
+  FSMRegistry.register('chat', new StateMachine(config.machines.chat));
+  FSMRegistry.register('dashboard', new StateMachine(config.machines.dashboard));
+  FSMRegistry.register('market', new StateMachine(config.machines.market));
 });
 
 describe('IAM declarative scenarios', () => {

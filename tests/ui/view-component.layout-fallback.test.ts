@@ -30,7 +30,7 @@ describe('ViewComponent layout fallback', () => {
     });
 
     (window as any).__ux3App = {
-      machines: { fallbackFSM: machine },
+      machines: { fallback: machine },
       services: {},
       widgets: { register: () => {}, create: () => null },
       styles: {},

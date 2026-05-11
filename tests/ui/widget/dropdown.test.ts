@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
-import { UxDropdown } from '../../../src/ui/widget/dropdown';
+import { UxDropdown } from '../../../src/ui/widget/primitives/dropdown';
 
 describe('UxDropdown - Dropdown Component', () => {
   let container: HTMLDivElement;

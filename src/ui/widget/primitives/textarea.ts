@@ -1,15 +1,8 @@
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-textarea-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    ux-textarea { display: inline-block; width: 100%; }
+const STYLE_CSS = `    ux-textarea { display: inline-block; width: 100%; }
     ux-textarea textarea {
       width: 100%;
       box-sizing: border-box;
@@ -24,11 +17,8 @@ function ensureStyles(): void {
     ux-textarea textarea:focus-visible {
       outline: var(--ux-textarea-focus-ring, 2px solid var(--ux-color-accent, #2563eb));
       outline-offset: var(--ux-textarea-focus-offset, 1px);
-    }
-  `;
-  document.head.appendChild(style);
-}
-
+    }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxTextarea extends UxBase {
   private textareaEl: HTMLTextAreaElement | null = null;
   private _rendered = false;
@@ -39,11 +29,33 @@ export class UxTextarea extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
+    this.syncAttrs();
     if (!this._rendered) {
       this._rendered = true;
       this.render();
     }
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'string' || typeof data === 'number') {
+      this.setAttribute('value', String(data));
+    } else if (data && typeof data === 'object') {
+      if ('value' in data) this.setAttribute('value', String(data.value ?? ''));
+      if ('placeholder' in data) this.setAttribute('placeholder', String(data.placeholder ?? ''));
+      if ('name' in data) this.setAttribute('name', String(data.name ?? ''));
+      if ('rows' in data) this.setAttribute('rows', String(data.rows ?? ''));
+      if (data.disabled != null) data.disabled ? this.setAttribute('disabled', '') : this.removeAttribute('disabled');
+    }
+    this.syncAttrs();
+  }
+
+  private syncAttrs(): void {
+    if (!this.textareaEl) return;
+    this.textareaEl.value = this.getAttribute('value') ?? '';
+    this.textareaEl.placeholder = this.getAttribute('placeholder') ?? '';
+    this.textareaEl.name = this.getAttribute('name') ?? '';
+    this.textareaEl.rows = parseInt(this.getAttribute('rows') ?? '4', 10) || 4;
+    this.textareaEl.disabled = this.hasAttribute('disabled');
   }
 
   protected onAttributeChanged(name: string): void {

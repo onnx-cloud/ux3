@@ -1,21 +1,11 @@
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-radio-group-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    ux-radio-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+const STYLE_CSS = `    ux-radio-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
     ux-radio-group label.option { display: inline-flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.875rem; color: var(--_rg-label, #334155); user-select: none; }
-    ux-radio-group label.option input[type=radio] { accent-color: var(--_rg-accent, #3b82f6); margin: 0; width: 1rem; height: 1rem; cursor: pointer; }
-  `;
-  document.head.appendChild(style);
-}
-
+    ux-radio-group label.option input[type=radio] { accent-color: var(--_rg-accent, #3b82f6); margin: 0; width: 1rem; height: 1rem; cursor: pointer; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxRadioGroup extends UxBase {
   static get observedAttributes(): string[] {
     return ['value'];
@@ -23,8 +13,7 @@ export class UxRadioGroup extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    this.setAttribute('role', 'radiogroup');
+this.setAttribute('role', 'radiogroup');
     this.render();
     this.addEventListener('click', this.onClick);
     this.addEventListener('keydown', this.onKeyDown);

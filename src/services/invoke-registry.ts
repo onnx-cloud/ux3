@@ -126,7 +126,7 @@ export class InvokeRegistry {
   private listeners: InvokeListener[] = [];
   private cache: Map<string, CacheEntry> = new Map();
   private cacheOrder: string[] = [];
-  private invokeStats: Map<string, { count: number; totalTime: number }> = new Map();
+  private invokeStats: Map<string, { count: number; totalTime: number; errors: number }> = new Map();
   private cacheStats: Map<string, { hits: number; misses: number }> = new Map();
   private maxCacheSize = 1000;
   private defaultCacheTTL: number = 5 * 60 * 1000; // 5 minutes default
@@ -253,7 +253,7 @@ export class InvokeRegistry {
         };
       }
       if (preResult.input !== undefined) {
-        (invoke as any).input = preResult.input;
+        invoke.input = preResult.input;
       }
     } catch (err) {
       defaultLogger.error('[InvokeRegistry] Pre-middleware error', err instanceof Error ? err : new Error(String(err)), {
@@ -328,16 +328,16 @@ export class InvokeRegistry {
 
     let lastError: Error | undefined;
     let retryCount = 0;
+    const method = invoke.method || 'fetch';
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         this.notifyListeners('start', {
           service: invoke.service,
-          method: invoke.method || 'fetch',
+          method,
           status: 'start'
         });
 
-        const method = invoke.method || 'fetch';
         const data = await (service as any)[method](invoke.input, context);
 
         this.notifyListeners('success', {
@@ -399,6 +399,7 @@ export class InvokeRegistry {
 
           await this.sleep(delay);
         } else {
+          this.recordInvokeStats(invoke.service, method, Date.now() - startTime, lastError);
           this.notifyListeners('error', {
             service: invoke.service,
             method: invoke.method || 'fetch',
@@ -473,7 +474,7 @@ export class InvokeRegistry {
         };
       }
       if (preResult.input !== undefined) {
-        (invoke as any).input = preResult.input;
+        invoke.input = preResult.input;
       }
     } catch (err) {
       defaultLogger.error('[InvokeRegistry] Pre-middleware error', err instanceof Error ? err : new Error(String(err)), {
@@ -809,7 +810,7 @@ export class InvokeRegistry {
     context: MiddlewareContext,
     invoke: InvokeService | InvokeSrc
   ): Promise<{ skip: boolean; input: any; result?: InvokeResult }> {
-    let input = (invoke as any).input;
+    let input = invoke.input;
     let skip = false;
     let result: InvokeResult | undefined;
 
@@ -917,12 +918,56 @@ export class InvokeRegistry {
   /**
    * Record statistics for an invoke
    */
-  private recordInvokeStats(service: string, method: string, duration: number): void {
+  private recordInvokeStats(service: string, method: string, duration: number, error?: Error): void {
     const key = `${service}.${method}`;
-    const stat = this.invokeStats.get(key) || { count: 0, totalTime: 0 };
+    const stat = this.invokeStats.get(key) || { count: 0, totalTime: 0, errors: 0 };
     stat.count++;
     stat.totalTime += duration;
+    if (error) stat.errors++;
     this.invokeStats.set(key, stat);
+  }
+
+  /**
+   * Get invoke metrics snapshot (mirrors InvokeMetrics API for drop-in compatibility).
+   */
+  metrics(service?: string, method?: string): {
+    entries: Record<string, { count: number; totalTime: number; avgTime: number; errors: number; errorRate: number }>;
+    totalCalls: number;
+    totalErrors: number;
+    overallErrorRate: number;
+  } {
+    let entries = Array.from(this.invokeStats.entries());
+    if (service) {
+      const prefix = method ? `${service}.${method}` : `${service}.`;
+      entries = entries.filter(([k]) => method ? k === prefix : k.startsWith(prefix));
+    }
+    const snapshot: Record<string, any> = {};
+    let totalCalls = 0;
+    let totalErrors = 0;
+    for (const [key, s] of entries) {
+      snapshot[key] = {
+        count: s.count,
+        totalTime: s.totalTime,
+        avgTime: s.count > 0 ? s.totalTime / s.count : 0,
+        errors: s.errors,
+        errorRate: s.count > 0 ? s.errors / s.count : 0,
+      };
+      totalCalls += s.count;
+      totalErrors += s.errors;
+    }
+    return {
+      entries: snapshot,
+      totalCalls,
+      totalErrors,
+      overallErrorRate: totalCalls > 0 ? totalErrors / totalCalls : 0,
+    };
+  }
+
+  /**
+   * Clear all invoke metrics.
+   */
+  clearMetrics(): void {
+    this.invokeStats.clear();
   }
 
   /**

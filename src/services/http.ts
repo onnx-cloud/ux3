@@ -22,7 +22,6 @@ export class HTTPService extends BaseServiceAdapter<RequestConfig, unknown> {
 
   async transport(request: RequestConfig, signal?: AbortSignal): Promise<unknown> {
     const cacheKey = this.getCacheKey(request);
-
     if (request.method === 'GET' && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)!;
       if (Date.now() - cached.timestamp < this.cacheTimeout) {

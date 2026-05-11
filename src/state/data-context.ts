@@ -1,5 +1,10 @@
 import { createStore, type Store } from './store.js';
 
+function safeClone<T>(value: T): T {
+  if (typeof structuredClone === 'function') return structuredClone(value) as T;
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export interface DataContextConfig<T extends Record<string, any>> {
   key: string;
   seed: () => T;
@@ -35,7 +40,7 @@ export function defineDataContext<T extends Record<string, any>>(config: DataCon
     for (const [name, fn] of Object.entries(config.actions)) {
       actions[name] = (_ctx: any, event: any) => {
         const current = store.getState() as T;
-        const cloned = structuredClone(current) as T;
+        const cloned = safeClone(current);
         const next = fn(cloned, event?.payload || {});
         store.patch(() => next);
         return next;

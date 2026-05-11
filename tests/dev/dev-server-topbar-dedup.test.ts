@@ -7,7 +7,7 @@ async function makeTemp() {
   await fs.ensureDir(tmpRoot);
   const temp = path.join(tmpRoot, `ux3-topbar-dedup-${Date.now()}`);
   await fs.ensureDir(temp);
-  await fs.ensureDir(path.join(temp, 'ux', 'view'));
+  await fs.ensureDir(path.join(temp, 'ux', 'widget'));
   await fs.ensureDir(path.join(temp, 'ux', 'layout'));
   await fs.ensureDir(path.join(temp, 'ux', 'i18n', 'en'));
   return temp;

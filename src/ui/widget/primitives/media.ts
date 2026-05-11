@@ -2,25 +2,16 @@
  * UX3 Media Components — light DOM (ux-image, ux-video, ux-audio)
  */
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-media-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `
-    ux-image { display: inline-block; }
+const STYLE_CSS = `    ux-image { display: inline-block; }
     ux-image img { max-width: 100%; height: auto; border-radius: var(--ux-image-radius, 0.375rem); display: block; }
     ux-video { display: block; }
     ux-video video { max-width: 100%; border-radius: var(--ux-video-radius, 0.375rem); display: block; }
     ux-audio { display: block; min-width: var(--ux-audio-min-width, 18rem); }
-    ux-audio audio { width: 100%; }
-  `;
-  document.head.appendChild(s);
-}
-
+    ux-audio audio { width: 100%; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 function attrVal(el: Element, name: string, fallback: string = ''): string {
   const v = el.getAttribute(name);
   return v !== null ? v : fallback;
@@ -33,11 +24,21 @@ export class UxImage extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    this.render();
+this.render();
   }
 
   protected onAttributeChanged(): void {
+    if (this.isConnected) this.render();
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'string') this.setAttribute('src', data);
+    else if (data && typeof data === 'object') {
+      if ('src' in data) this.setAttribute('src', String(data.src));
+      if ('alt' in data) this.setAttribute('alt', String(data.alt));
+      if ('width' in data) this.setAttribute('width', String(data.width));
+      if ('height' in data) this.setAttribute('height', String(data.height));
+    }
     if (this.isConnected) this.render();
   }
 
@@ -60,11 +61,22 @@ export class UxVideo extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    this.render();
+this.render();
   }
 
   protected onAttributeChanged(): void {
+    if (this.isConnected) this.render();
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'string') this.setAttribute('src', data);
+    else if (data && typeof data === 'object') {
+      if ('src' in data) this.setAttribute('src', String(data.src));
+      if ('controls' in data) data.controls ? this.setAttribute('controls', '') : this.removeAttribute('controls');
+      if ('muted' in data) data.muted ? this.setAttribute('muted', '') : this.removeAttribute('muted');
+      if ('loop' in data) data.loop ? this.setAttribute('loop', '') : this.removeAttribute('loop');
+      if ('autoplay' in data) data.autoplay ? this.setAttribute('autoplay', '') : this.removeAttribute('autoplay');
+    }
     if (this.isConnected) this.render();
   }
 
@@ -88,11 +100,22 @@ export class UxAudio extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    this.render();
+this.render();
   }
 
   protected onAttributeChanged(): void {
+    if (this.isConnected) this.render();
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'string') this.setAttribute('src', data);
+    else if (data && typeof data === 'object') {
+      if ('src' in data) this.setAttribute('src', String(data.src));
+      if ('controls' in data) data.controls ? this.setAttribute('controls', '') : this.removeAttribute('controls');
+      if ('loop' in data) data.loop ? this.setAttribute('loop', '') : this.removeAttribute('loop');
+      if ('autoplay' in data) data.autoplay ? this.setAttribute('autoplay', '') : this.removeAttribute('autoplay');
+      if ('download' in data) data.download ? this.setAttribute('download', '') : this.removeAttribute('download');
+    }
     if (this.isConnected) this.render();
   }
 

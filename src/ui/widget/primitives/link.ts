@@ -2,29 +2,19 @@
  * UX3 Link Component (light DOM)
  */
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-link-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `
-    ux-link { display: inline; }
+const STYLE_CSS = `    ux-link { display: inline; }
     ux-link a { color: var(--color-link, #3b82f6); cursor: pointer; text-decoration: none; }
-    ux-link a:hover { text-decoration: underline; }
-  `;
-  document.head.appendChild(s);
-}
-
+    ux-link a:hover { text-decoration: underline; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxLink extends UxBase {
   private anchor: HTMLAnchorElement | null = null;
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    this.render();
+this.render();
   }
 
   private render(): void {

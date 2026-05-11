@@ -15,11 +15,10 @@ import { StateMachine } from '../../../src/fsm/index.ts';
 import { config } from '../../../examples/tenant.saas/generated/config';
 
 const buildFSM = (name: string) => {
-  const machineKey = `${name}FSM`;
-  const machineConfig = config.machines[machineKey] ?? config.machines[name];
+  const machineConfig = config.machines[name];
 
   if (!machineConfig) {
-    throw new Error(`Tenant SaaS machine not found: ${machineKey}`);
+    throw new Error(`Tenant SaaS machine not found: ${name}`);
   }
 
   return new StateMachine(machineConfig as any);
@@ -34,7 +33,7 @@ describe('Tenant SaaS user journeys', () => {
 
     for (const requiredView of requiredRouteViews) {
       expect(views).toContain(requiredView);
-      expect(config.machines[`${requiredView}FSM`]).toBeDefined();
+      expect(config.machines[requiredView]).toBeDefined();
     }
 
     expect(paths).toContain('/');

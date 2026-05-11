@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UxConsentBanner } from '../../../src/ui/widget/consent-banner';
+import { UxConsentBanner } from '../../../src/ui/widget/shell/consent-banner';
 
 describe('UxConsentBanner - Consent Component', () => {
   let container: HTMLDivElement;

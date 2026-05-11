@@ -152,7 +152,7 @@ export class AppContextBuilder {
       for (const [name, machineConfig] of Object.entries(this.config.machines)) {
         const machine = new StateMachine(machineConfig as any);
         this.machines.set(name, machine);
-        const machineId = (machineConfig as any).id || name.replace(/FSM$/, '');
+        const machineId = (machineConfig as any).id || name;
         FSMRegistry.register(machineId, machine);
 
         // debug log creation
@@ -648,6 +648,17 @@ export class AppContextBuilder {
     if (typeof window !== 'undefined') {
       (window as any).__ux3App = context;
     }
+
+    context.destroy = (): void => {
+      for (const [name, service] of Object.entries(context.services)) {
+        if (service && typeof (service as any).destroy === 'function') {
+          try { (service as any).destroy(); } catch (e) { /* best effort */ }
+        }
+      }
+      for (const [name, machine] of Object.entries(context.machines)) {
+        try { machine.reset(); } catch { /* best effort */ }
+      }
+    };
 
     if (this.buildErrors.length > 0) {
       throw new Error('Build failed');

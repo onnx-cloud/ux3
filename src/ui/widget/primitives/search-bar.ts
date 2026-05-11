@@ -2,33 +2,23 @@
  * UX3 Search Bar Component (light DOM)
  */
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-search-bar-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `
-    ux-search-bar { display: inline-flex; align-items: center; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0 0.75rem; background: white; }
+const STYLE_CSS = `    ux-search-bar { display: inline-flex; align-items: center; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0 0.75rem; background: white; }
     ux-search-bar:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
     ux-search-bar .icon { color: #9ca3af; margin-right: 0.5rem; }
     ux-search-bar input { border: none; padding: 0.5rem 0; outline: none; flex: 1; font: inherit; }
     ux-search-bar .clear { display: none; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1rem; }
-    ux-search-bar .clear.visible { display: inline; }
-  `;
-  document.head.appendChild(s);
-}
-
+    ux-search-bar .clear.visible { display: inline; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxSearchBar extends UxBase {
   private input!: HTMLInputElement;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
+const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
 
     const icon = document.createElement('span');
     icon.className = 'icon';

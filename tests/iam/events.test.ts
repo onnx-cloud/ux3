@@ -13,9 +13,9 @@ describe('IAM Event Binding', () => {
   let chatFSM: StateMachine<any>;
 
   beforeEach(() => {
-    authFSM = new StateMachine(config.machines.authFSM);
-    accountFSM = new StateMachine(config.machines.accountFSM);
-    chatFSM = new StateMachine(config.machines.chatFSM);
+    authFSM = new StateMachine(config.machines.auth);
+    accountFSM = new StateMachine(config.machines.account);
+    chatFSM = new StateMachine(config.machines.chat);
   });
 
   describe('ux-event directive binding', () => {
@@ -24,7 +24,7 @@ describe('IAM Event Binding', () => {
       form.setAttribute('ux-event', 'SUBMIT');
 
       const handler = vi.fn();
-      authFSM.subscribe(handler);
+      auth.subscribe(handler);
 
       // Simulate form submission
       const submitEvent = new Event('submit', { bubbles: true });
@@ -39,7 +39,7 @@ describe('IAM Event Binding', () => {
       button.setAttribute('ux-event', 'EDIT');
 
       const handler = vi.fn();
-      accountFSM.subscribe(handler);
+      account.subscribe(handler);
 
       const clickEvent = new MouseEvent('click', { bubbles: true });
       button.dispatchEvent(clickEvent);
@@ -77,9 +77,9 @@ describe('IAM Event Binding', () => {
 
   describe('Event dispatch to ', () => {
     it('should dispatch LOGIN event to auth ', (done) => {
-      expect(authFSM.getState()).toBe('idle');
+      expect(auth.getState()).toBe('idle');
 
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         if (state === 'submitting') {
           expect(state).toBe('submitting');
           done();
@@ -87,14 +87,14 @@ describe('IAM Event Binding', () => {
       });
 
       // Simulate event dispatch
-      authFSM.send('LOGIN', { email: 'user@example.com', password: 'secret' });
+      auth.send('LOGIN', { email: 'user@example.com', password: 'secret' });
     });
 
     it('should dispatch EDIT event to account ', (done) => {
-      accountFSM.send('SUCCESS'); // Transition to viewing state
+      account.send('SUCCESS'); // Transition to viewing state
 
       let transitionCount = 0;
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         transitionCount++;
         if (transitionCount === 2 && state === 'editing') {
           expect(state).toBe('editing');
@@ -102,17 +102,17 @@ describe('IAM Event Binding', () => {
         }
       });
 
-      accountFSM.send('EDIT');
+      account.send('EDIT');
     });
 
     it('should dispatch SAVE event with form data', (done) => {
-      accountFSM.send('SUCCESS');
+      account.send('SUCCESS');
 
       let transitionCount = 0;
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         transitionCount++;
         if (transitionCount === 2 && state === 'editing') {
-          accountFSM.send('SAVE', { email: 'newemail@example.com' });
+          account.send('SAVE', { email: 'newemail@example.com' });
         }
         if (transitionCount === 3 && state === 'saving') {
           expect(state).toBe('saving');
@@ -120,34 +120,34 @@ describe('IAM Event Binding', () => {
         }
       });
 
-      accountFSM.send('EDIT');
+      account.send('EDIT');
     });
 
     it('should dispatch CONNECT event to chat ', (done) => {
-      expect(chatFSM.getState()).toBe('idle');
+      expect(chat.getState()).toBe('idle');
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'loading') {
           expect(state).toBe('loading');
           done();
         }
       });
 
-      chatFSM.send('CONNECT', { channel: 'general' });
+      chat.send('CONNECT', { channel: 'general' });
     });
 
     it('should dispatch message events while connected', (done) => {
-      chatFSM.send('CONNECT');
+      chat.send('CONNECT');
 
       let transitionCount = 0;
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         transitionCount++;
         if (transitionCount === 2 && state === 'loading') {
-          chatFSM.send('SUCCESS');
+          chat.send('SUCCESS');
         }
         if (transitionCount === 3 && state === 'connected') {
-          chatFSM.send('SEND_MESSAGE', { text: 'Hello!' });
-          expect(chatFSM.getState()).toBe('connected');
+          chat.send('SEND_MESSAGE', { text: 'Hello!' });
+          expect(chat.getState()).toBe('connected');
           done();
         }
       });
@@ -200,8 +200,8 @@ describe('IAM Event Binding', () => {
         timestamp: Date.now(),
       };
 
-      authFSM.send('LOGIN', payload);
-      const context = authFSM.getContext();
+      auth.send('LOGIN', payload);
+      const context = auth.getContext();
 
       expect(context).toBeDefined();
     });
@@ -359,16 +359,16 @@ describe('IAM Event Binding', () => {
   describe('Event error handling', () => {
     it('should handle invalid event names gracefully', () => {
       const invalidEvent = 'NONEXISTENT_EVENT';
-      const result = authFSM.send(invalidEvent as any);
+      const result = auth.send(invalidEvent as any);
 
       // FSM should handle gracefully (queue or ignore)
-      expect(authFSM.getState()).toBe('idle');
+      expect(auth.getState()).toBe('idle');
     });
 
     it('should handle missing payload gracefully', () => {
-      authFSM.send('LOGIN'); // No payload provided
+      auth.send('LOGIN'); // No payload provided
       // Should not crash, FSM handles undefined payload
-      expect(authFSM.getState()).toBe('submitting');
+      expect(auth.getState()).toBe('submitting');
     });
 
     it('should handle malformed JSON payload', () => {
@@ -383,9 +383,9 @@ describe('IAM Event Binding', () => {
     });
 
     it('should handle network errors during service calls', (done) => {
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         if (state === 'submitting') {
-          authFSM.send('FAILURE', { error: 'Network timeout' });
+          auth.send('FAILURE', { error: 'Network timeout' });
         }
         if (state === 'error') {
           expect(state).toBe('error');
@@ -393,7 +393,7 @@ describe('IAM Event Binding', () => {
         }
       });
 
-      authFSM.send('LOGIN', { email: 'user@example.com', password: 'secret' });
+      auth.send('LOGIN', { email: 'user@example.com', password: 'secret' });
     });
   });
 });

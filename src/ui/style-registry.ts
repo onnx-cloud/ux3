@@ -280,3 +280,26 @@ export function initStyleRegistry(): void {
     sweepDocumentStyles();
   }
 }
+
+// ── Light-DOM style injection (centralised, one-shot) ──────────────────────
+
+const _lightStyleInjected = new Set<string>();
+
+/**
+ * Register a light-DOM `<style>` block for a widget.
+ * Injects into `document.head` exactly once — safe to call at module load.
+ * Centralised light-DOM style injection — used by all primitive widgets.
+ */
+export function registerLightStyle(id: string, css: string): void {
+  if (_lightStyleInjected.has(id)) return;
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(id)) {
+    _lightStyleInjected.add(id);
+    return;
+  }
+  const el = document.createElement('style');
+  el.id = id;
+  el.textContent = css;
+  document.head.appendChild(el);
+  _lightStyleInjected.add(id);
+}

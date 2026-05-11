@@ -5,7 +5,6 @@ export abstract class BaseServiceAdapter<TReq = unknown, TRes = unknown> impleme
   readonly name: string;
   readonly config: ServiceConfig;
   protected middlewares: Middleware[] = [];
-  protected errorHandlers: ErrorHandler[] = [];
 
   constructor(name: string, config: ServiceConfig = {}) {
     this.name = name;
@@ -23,13 +22,20 @@ export abstract class BaseServiceAdapter<TReq = unknown, TRes = unknown> impleme
     return this.executeMiddlewares(request, signal);
   }
 
+  async fetch(request: TReq): Promise<TRes> {
+    return this.execute(request);
+  }
+
+  async call(method: string, params?: unknown): Promise<unknown> {
+    return this.execute({ method, params } as unknown as TReq);
+  }
+
   addMiddleware(middleware: Middleware): this {
     this.middlewares.push(middleware);
     return this;
   }
 
-  addErrorHandler(handler: ErrorHandler): this {
-    this.errorHandlers.push(handler);
+  addErrorHandler(_handler: ErrorHandler): this {
     return this;
   }
 
@@ -49,18 +55,6 @@ export abstract class BaseServiceAdapter<TReq = unknown, TRes = unknown> impleme
     return next(request);
   }
 
-  protected async executeErrorHandlers(error: Error, request: TReq): Promise<TRes> {
-    for (const handler of this.errorHandlers) {
-      try {
-        const result = handler(error, () => this.transport(request));
-        return (await result) as TRes;
-      } catch {
-        continue;
-      }
-    }
-    throw error;
-  }
-
   protected async withRetry<V>(
     fn: () => Promise<V>,
     retries: number = this.config.retries!,
@@ -72,6 +66,7 @@ export abstract class BaseServiceAdapter<TReq = unknown, TRes = unknown> impleme
         return await fn();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
+        if ((error as any)?.retryable === false) throw lastError;
         if (i < retries - 1) {
           await sleep(delay * Math.pow(2, i));
         }

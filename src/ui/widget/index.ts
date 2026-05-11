@@ -9,21 +9,21 @@ export type { WidgetConfig } from './widget.js';
 export { UxField, UxFieldArray } from './form/index.js';
 
 // Interaction components
-export { UxModal } from './modal.js';
-export { UxToastContainer, UxToast } from './toast.js';
-export { UxDropdown } from './dropdown.js';
+export { UxModal } from './primitives/modal.js';
+export { UxToastContainer, UxToast } from './shell/toast.js';
+export { UxDropdown } from './primitives/dropdown.js';
 
 // Presentation components
-export { UxButton } from './button.js';
-export { UxPanel } from './panel.js';
+export { UxButton } from './primitives/button.js';
+export { UxPanel } from './primitives/panel.js';
 export { registerBuiltInPrimitives } from './primitives/index.js';
 
 // Compliance components
-export { UxConsentBanner } from './consent-banner.js';
+export { UxConsentBanner } from './shell/consent-banner.js';
 
 // Navigation components
-export { UxNav } from './nav-panel.js';
+export { UxNav } from './shell/nav-panel.js';
 
 // Auth gate components
-export { UxGateAuth } from './gate-auth.js';
-export { UxGateAnon, UxGateRole, UxGateScope, UxGateFeature } from './gate-wrappers.js';
+export { UxGateAuth } from './shell/gate-auth.js';
+export { UxGateAnon, UxGateRole, UxGateScope, UxGateFeature } from './shell/gate-wrappers.js';

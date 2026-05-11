@@ -31,6 +31,8 @@ export class WebSocketService extends BaseServiceAdapter<WebSocketMessage, unkno
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private _connectionState: ConnectionState = ConnectionState.DISCONNECTED;
   private stateListeners: Array<(state: ConnectionState) => void> = [];
+  private boundOnline: (() => void) | null = null;
+  private boundOffline: (() => void) | null = null;
 
   constructor(config: WebSocketConfig) {
     super('websocket', config);
@@ -50,8 +52,10 @@ export class WebSocketService extends BaseServiceAdapter<WebSocketMessage, unkno
     }
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => this.handleOnline());
-      window.addEventListener('offline', () => this.handleOffline());
+      this.boundOnline = (): void => this.handleOnline();
+      this.boundOffline = (): void => this.handleOffline();
+      window.addEventListener('online', this.boundOnline);
+      window.addEventListener('offline', this.boundOffline);
     }
   }
 
@@ -76,8 +80,8 @@ export class WebSocketService extends BaseServiceAdapter<WebSocketMessage, unkno
     return this.fetch(_request);
   }
 
-  async execute(_request: WebSocketMessage, _signal?: AbortSignal): Promise<unknown> {
-    return this.fetch(_request);
+  async execute(request: WebSocketMessage, signal?: AbortSignal): Promise<unknown> {
+    return this.executeMiddlewares(request, signal);
   }
 
   async connect(): Promise<void> {
@@ -185,6 +189,14 @@ export class WebSocketService extends BaseServiceAdapter<WebSocketMessage, unkno
     this.subscriptions.clear();
     this.messageQueue = [];
     this.stateListeners = [];
+    if (this.boundOnline) {
+      window.removeEventListener('online', this.boundOnline);
+      this.boundOnline = null;
+    }
+    if (this.boundOffline) {
+      window.removeEventListener('offline', this.boundOffline);
+      this.boundOffline = null;
+    }
   }
 
   isConnected(): boolean {

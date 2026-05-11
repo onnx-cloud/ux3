@@ -1,0 +1,8 @@
+{
+  "name": "@ux3/plugin-chat",
+  "version": "1.0.0",
+  "description": "Chat UI widgets for UX3",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": true
+}

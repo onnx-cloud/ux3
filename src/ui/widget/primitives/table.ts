@@ -10,6 +10,37 @@ export class UxTable extends UxBase {
     this.setupSort();
   }
 
+  protected applyData(data: any): void {
+    if (!data) return;
+    let rows: Record<string, string>[] = [];
+    let cols: string[] = [];
+    if (Array.isArray(data)) {
+      rows = data;
+      cols = rows.length > 0 ? Object.keys(rows[0]) : [];
+    } else if (data.columns && Array.isArray(data.rows)) {
+      cols = data.columns;
+      rows = data.rows;
+    } else {
+      return;
+    }
+    let table = this.querySelector('table') as HTMLTableElement | null;
+    if (!table) {
+      table = document.createElement('table');
+      this.appendChild(table);
+    }
+    let html = '<thead><tr>';
+    for (const c of cols) html += `<th>${c}</th>`;
+    html += '</tr></thead><tbody>';
+    for (const r of rows) {
+      html += '<tr>';
+      for (const c of cols) html += `<td>${r[c] ?? ''}</td>`;
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+    this.setupSort();
+  }
+
   private setupSort(): void {
     const table = this.querySelector('table');
     if (!table) return;

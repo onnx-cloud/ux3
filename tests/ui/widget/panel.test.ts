@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { UxPanel } from '../../../src/ui/widget/panel';
+import { UxPanel } from '../../../src/ui/widget/primitives/panel';
 
 describe('UxPanel - Panel Component', () => {
   let container: HTMLDivElement;

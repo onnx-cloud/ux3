@@ -108,6 +108,31 @@ states:
 
 **Decision:** Styles are key→class-string mappings registered at config time, resolved at runtime via `[ux-style]` / `[data-style]` attributes. No CSS-in-JS.
 
+**Idiomatic widget styling — three tiers:**
+
+| Tier | Mechanism | Example | When |
+|---|---|---|---|
+| **Light-DOM CSS** | `registerLightStyle(id, css)` at module level | `ux-badge`, `ux-toggle`, `ux-spinner` | Every light-DOM primitive |
+| **Shadow-DOM CSS** | `attachShadow` + `getStyles()` / inline `<style>` | `ux-modal`, `ux-gantt` | Complex, isolated widgets |
+| **Class-string map** | `DEFAULT_STYLES` (core structural) + `TAILWIND_STYLES` (plugin overlay) | all primitives | Host-element class injection on hydration |
+
+**Light-DOM pattern:**
+
+```ts
+import { registerLightStyle } from '../../style-registry.js';
+
+const STYLE_ID = 'ux-widget-style';
+const STYLE_CSS = `
+  ux-widget { display: inline-block; }
+  ux-widget[variant="primary"] { background: var(--color-primary, #3b82f6); }
+`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
+```
+
+- Call `registerLightStyle` at **module level** (not in constructor / onConnected).
+- Always use CSS custom properties with hardcoded fallbacks: `var(--color-primary, #3b82f6)`.
+- The style registry deduplicates by id — safe to call from multiple modules.
+
 **Two forms (schema: `style.schema.json`):**
 
 ```yaml
@@ -135,8 +160,22 @@ button:
 - Hooks `ViewComponent.prototype.mountLayout` for auto-apply
 - Triggers `tailwind.refresh()` after injection for CDN mode
 
+**Style key lifecycle:**
+```
+default-styles.ts   (core — structural only: display, layout, spacing)
+        ↓
+context-builder.ts  →  registerStyles(DEFAULT_STYLES)
+        ↓
+plugin-tailwind-css  →  registerStyles(TAILWIND_STYLES)  (overrides with colours, borders, shadows)
+        ↓
+applyStyles(root)     →  hydrated class injection
+```
+
 **Invariants:**
 - Style keys are camelCase
+- Core `DEFAULT_STYLES` is structural only — no colours, borders, shadows, radii
+- `TAILWIND_STYLES` in `@ux3/plugin-tailwind-css` provides the full Tailwind overlay
+- All primitives use `registerLightStyle` for their own CSS — never `document.head.appendChild` directly
 - `kitchen-app`, `section`, `row`, `grid`, `button-row` are reserved structural keys
 - All templates use `ux-style="key"` attributes (never hard-coded classes in templates)
 
@@ -401,40 +440,114 @@ states:
 
 ## ADR-22: Widget architecture — primitives, plugins, composites
 
-**Decision:** Three-tier widget architecture:
+**Decision:** Three-tier widget architecture with plugin-first registration:
 
-| Tier | Mechanism | Example | When to use |
-|---|---|---|---|
-| **Primitive** | Web Component (<5 lines logic) | `ux-badge`, `ux-spinner`, `ux-toggle` | Simple DOM wrappers, attribute reflection |
-| **Plugin** | External library bridge | `@ux3/plugin-chart-js`, `@ux3/plugin-cytoscape` | "Ridiculous to rebuild" libraries |
-| **Composite** | YAML-only FSM + HTML template | `dashboard-shell`, `sign-in-form` | Composition-only widgets, 0 TypeScript |
+| Tier | Mechanism | Registration | Example | When to use |
+|---|---|---|---|---|
+| **Primitive** | Web Component extending `UxBase` | Core `ALL_PRIMITIVES` → `registerBuiltInPrimitives()` | `ux-badge`, `ux-spinner`, `ux-toggle`, `ux-form` | Simple DOM wrappers, attribute reflection, core UI |
+| **Plugin** | Web Component registered by plugin's `install()` | Plugin package via `ux3.yaml` declaration | `@ux3/plugin-calendar`, `@ux3/plugin-cytoscape`, `@ux3/plugin-chart-js` | Complex widgets, external library bridges |
+| **Composite** | YAML-only FSM + HTML template | FSM compiler | `dashboard-shell`, `sign-in-form` | Composition-only widgets, 0 TypeScript |
 
-**Primitive registry** (`src/ui/widget/primitives/types.ts`):
-- 116 registered primitives in the `PRIMITIVES` array
-- Each maps `tag` → ARIA `role` + `kind`
-- Lookup by tag via `DEF_BY_TAG` Map
-- Runtime discovery via `registerBuiltInPrimitives()` (iterates `PRIMITIVES`, resolves class, calls `customElements.define()`)
+**Plugin registration idiom:**
+```typescript
+// packages/@ux3/plugin-<name>/src/index.ts
+import type { Plugin } from '@ux3/plugin/registry';
+import { UxWidget } from '@ux3/ui/widget/primitives/widget-class';
 
-**Composites** live in `ux/widget/composites/`:
-- `.yaml` FSM definition (states, transitions, invoke)
-- `.html` template (layout + data-bind attributes)
-- Async invoke handlers in `ux/logic/composites.ts` (loadDashboard, loadFeed, loadGallery, loadTableData, validateSignUp)
+const WidgetPlugin: Plugin = {
+  name: '@ux3/plugin-<name>',
+  version: '0.1.0',
+  description: '<description>',
+  install() {
+    if (!customElements.get('ux-<widget>')) {
+      customElements.define('ux-<widget>', UxWidget);
+    }
+  },
+};
+export default WidgetPlugin;
+```
+
+**Invariants:**
+- Plugin packages import widget classes from core primitives (`@ux3/ui/widget/primitives/<widget>.js`) — no duplicate implementations
+- `ALL_PRIMITIVES` contains only core UI primitives, not plugin-owned widgets
+- Plugin widgets are declared in `ux3.yaml` under `plugins:`
+- `customElements.get()` guard prevents double registration
+
+### Data-driven component conventions (ADR-22 addendum)
+
+**Decision:** Widgets follow the `data-from` binding pattern for FSM context data, with `applyData()` as the single entry point.
+
+**Binding flow:**
+```
+ux-state="fmsNamespace.currentState"  →  FSM subscribe  →  resolveDataFrom("data.path")  →  applyData(value)
+```
+
+**Widget implementation idiom:**
+```typescript
+class UxWidget extends UxBase {
+  protected applyData(data: ExpectedShape): void {
+    // process bound data — no imperative DOM reads
+    this.render();
+  }
+
+  protected onConnected(): void {
+    super.onConnected();  // queues FSM binding + data-from resolution
+    // render initial/empty state; FSM data arrives asynchronously
+    // if _boundDataRef is set, use it; otherwise fall back to slot/attributes
+  }
+}
+```
+
+**Key rules:**
+1. `applyData()` is the SINGLE entry point for external data (from `data-from`, `data-source`, or `data-method`)
+2. `onConnected()` provides fallback data (slot children, HTML attributes) for progressive rendering
+3. `UxBase.resolveDataFrom()` is called `queueMicrotask` after mount — `applyData()` may fire after initial render
+4. Data shape should be plain objects/arrays — no class instances, no functions
+5. Widgets dispatch `ux:event` for user interactions; FSM actions handle persistence
+
+**Data source priority:**
+1. `data-from="path"` — FSM context dot-path (highest priority, reactive)
+2. `data-source="svc"` + `data-method="method"` — service invocation (async, one-shot)
+3. Slot children / HTML attributes — initial/fallback data (lowest priority)
 
 ---
 
-## ADR-23: Style architecture — ux-style and variants
+## ADR-23: Style architecture — three-tier widget styling
 
-**Decision:** Two-layer style system:
+**Decision:** Every primitive/widget gets styled through exactly one of three tiers:
 
-1. **`ux-style` attribute** — auto-inferred from custom element tag name. `StyleRegistry.applyStyles(root)` scans for `[ux-style]` / `[data-style]` attributes and injects resolved Tailwind class strings. Hooks into `ViewComponent.prototype.mountLayout` for auto-apply on render.
+1. **`registerLightStyle(id, css)`** — Light-DOM CSS injected once into `document.head`.
+   Used by every light-DOM primitive (badge, toggle, spinner, avatar, button, input, etc.).
+   CSS custom properties with hardcoded fallbacks: `var(--color-primary, #3b82f6)`.
+   Called at module level — NOT in constructor or `onConnected`.
 
-2. **CSS custom properties** — design tokens from `ux/token/*.yaml` compile to `:root` CSS variables (`--ux-color-primary`, etc.). Used for theming (light/dark), inspector styling (`--ins-error`, `--ins-text`), and framework chrome.
+2. **Shadow DOM** (`attachShadow` + `getStyles()` / inline CSS) — Self-contained styles
+   for complex widgets (modal, gantt, kanban, chart, flow-editor, dashboard, etc.).
+   No light-DOM style injection needed.  CSS custom properties penetrate shadow boundaries.
+
+3. **`ux-style` / `data-style` class-string map** — Applied automatically on hydration
+   via `applyStyles()`.  Core `DEFAULT_STYLES` provides structural classes (layout,
+   display, spacing); `@ux3/plugin-tailwind-css` overlays `TAILWIND_STYLES` with
+   Tailwind-rich visual classes (colours, borders, shadows, radii).
+
+**Boot order:**
+```
+registerLightStyle(...)     ← module-level (each primitive)
+registerStyles(DEFAULT_STYLES)       ← context-builder.ts (core structural)
+registerStyles(TAILWIND_STYLES)       ← plugin-tailwind-css install (overlay)
+applyStyles(root)                     ← hydration + per-view mount
+```
+
+**Splash screen:** Moved from core `_.html` to `@ux3/plugin-tailwind-css` install hook.
+Core layout stays clean — no inline scripts or polling.
+
+**Tailwind CSS bundling:** `bundleTailwindCss()` lives in `@ux3/plugin-tailwind-css/src/bundler.ts`.
+The core framework carries zero Tailwind runtime dependency.  `config-generator.ts` imports
+directly from the plugin package.  The old `src/build/tailwind-bundler.ts` shim is removed.
 
 **Invariants:**
-- Style keys in YAML are camelCase (resolved: `resolvedStyleKey`)
-- Reserved structural keys: `kitchen-app`, `section`, `row`, `grid`, `button-row`
-- Templates use `ux-style="key"` attributes — never hard-coded Tailwind classes
-- CSS custom properties never resolve in jsdom — tests must check the raw var string
-- `default-styles.ts` provides framework fallback styles for all built-in primitives
-
-**Runtime integration:** Tailwind CDN mode triggers `tailwind.refresh()` after style injection. `MutationObserver` handles dynamically-inserted content. `DOMContentLoaded` listener sweeps for hydration.
+- Never call `document.head.appendChild(document.createElement('style'))` directly — use `registerLightStyle`
+- Never hardcode colours — always `var(--color-*, fallback)`
+- Core `DEFAULT_STYLES` is structural only — no colours, borders, shadows, radii
+- Plugin `TAILWIND_STYLES` carries all visual enrichment
+- `ensureStyles()` is removed; `registerLightStyle` is the single canonical injection point

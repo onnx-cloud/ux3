@@ -2,16 +2,10 @@
  * UX3 ComboBox Component (light DOM)
  */
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-combobox-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `
-    ux-combobox { display: inline-block; position: relative; }
+const STYLE_CSS = `    ux-combobox { display: inline-block; position: relative; }
     ux-combobox .wrapper { display: flex; border: 1px solid #d1d5db; border-radius: 0.375rem; }
     ux-combobox .wrapper:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
     ux-combobox input { border: none; padding: 0.5rem 0.75rem; flex: 1; outline: none; font: inherit; }
@@ -20,11 +14,8 @@ function ensureStyles(): void {
     ux-combobox .open .dropdown { display: block; }
     ux-combobox .option { padding: 0.5rem 0.75rem; cursor: pointer; }
     ux-combobox .option:hover, ux-combobox .option.selected { background: #f3f4f6; }
-    ux-combobox .empty { padding: 0.5rem 0.75rem; color: #9ca3af; }
-  `;
-  document.head.appendChild(s);
-}
-
+    ux-combobox .empty { padding: 0.5rem 0.75rem; color: #9ca3af; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxComboBox extends UxBase {
   private input!: HTMLInputElement;
   private list!: HTMLDivElement;
@@ -35,12 +26,29 @@ export class UxComboBox extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
+    this.readSlotOptions();
+    this.build();
+  }
 
+  protected applyData(data: any): void {
+    if (typeof data === 'string' || typeof data === 'number') {
+      this.input.value = String(data);
+    } else if (data && typeof data === 'object') {
+      if ('value' in data && this.input) this.input.value = String(data.value ?? '');
+      if (Array.isArray(data.options)) {
+        this.options = data.options.map((o: any) => typeof o === 'string' ? o : o.label ?? o.value ?? '');
+        this.render();
+      }
+    }
+  }
+
+  private readSlotOptions(): void {
     this.options = Array.from(this.querySelectorAll('[data-option]')).map(
       el => (el as HTMLElement).dataset.option || el.textContent || ''
     );
+  }
 
+  private build(): void {
     this.wrapper = document.createElement('div');
     this.wrapper.className = 'wrapper';
 

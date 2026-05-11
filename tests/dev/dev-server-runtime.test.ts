@@ -17,15 +17,15 @@ describe('DevServer runtime asset injection', () => {
     await fs.ensureDir(tmpRoot);
     const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
-    await fs.ensureDir(path.join(temp, 'ux', 'view'));
+    await fs.ensureDir(path.join(temp, 'ux', 'widget'));
 
     // minimal index.yaml
     await fs.writeFile(
-      path.join(temp, 'ux', 'view', 'index.yaml'),
+      path.join(temp, 'ux', 'widget', 'index.yaml'),
       `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\n`
     );
-    await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="app">HELLO</div>`);
+    await fs.ensureDir(path.join(temp, 'ux', 'widget', 'home'));
+    await fs.writeFile(path.join(temp, 'ux', 'widget', 'home', 'index.html'), `<div id="app">HELLO</div>`);
 
     const { DevServer } = await import('@ux3/dev/dev-server.ts');
     const server = new DevServer(temp, 3700, 'localhost');

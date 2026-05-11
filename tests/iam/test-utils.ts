@@ -301,12 +301,12 @@ export const testScenarios = {
     newProfile: any = testData.updatedProfile
   ) => {
     const states: string[] = [];
-    accountFSM.subscribe((state) => states.push(state));
+    account.subscribe((state) => states.push(state));
 
-    accountFSM.send('SUCCESS'); // View state
-    accountFSM.send('EDIT');
-    accountFSM.send('SAVE', newProfile);
-    accountFSM.send('SUCCESS'); // Back to viewing
+    account.send('SUCCESS'); // View state
+    account.send('EDIT');
+    account.send('SAVE', newProfile);
+    account.send('SUCCESS'); // Back to viewing
 
     return { states, profile: newProfile };
   },
@@ -319,11 +319,11 @@ export const testScenarios = {
     message = testData.chatMessage
   ) => {
     const states: string[] = [];
-    chatFSM.subscribe((state) => states.push(state));
+    chat.subscribe((state) => states.push(state));
 
-    chatFSM.send('CONNECT', testData.chatSession);
-    chatFSM.send('SUCCESS');
-    chatFSM.send('SEND_MESSAGE', message);
+    chat.send('CONNECT', testData.chatSession);
+    chat.send('SUCCESS');
+    chat.send('SEND_MESSAGE', message);
 
     return { states, message };
   },

@@ -83,9 +83,7 @@ export class Router {
         params: {},
       },
       canNavigate: (targetView: string) => {
-        if (this.machines.has(targetView)) return true;
-        if (this.machines.has(`${targetView}FSM`)) return true;
-        return false;
+        return this.machines.has(targetView);
       },
       getLabel: (route: NavRoute, i18nData: Record<string, any> = i18n) => {
         if (!route.label) return route.view;

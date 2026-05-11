@@ -12,7 +12,7 @@ describe('IAM FSMs', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
-      const authConfig = config.machines.authFSM;
+      const authConfig = config.machines.auth;
       fsm = new StateMachine(authConfig);
     });
 
@@ -80,7 +80,7 @@ describe('IAM FSMs', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
-      const accountConfig = config.machines.accountFSM;
+      const accountConfig = config.machines.account;
       fsm = new StateMachine(accountConfig);
     });
 
@@ -147,7 +147,7 @@ describe('IAM FSMs', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
-      const chatConfig = config.machines.chatFSM;
+      const chatConfig = config.machines.chat;
       fsm = new StateMachine(chatConfig);
     });
 
@@ -195,7 +195,7 @@ describe('IAM FSMs', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
-      const dashboardConfig = config.machines.dashboardFSM;
+      const dashboardConfig = config.machines.dashboard;
       fsm = new StateMachine(dashboardConfig);
     });
 
@@ -234,7 +234,7 @@ describe('IAM FSMs', () => {
     let fsm: StateMachine<any>;
 
     beforeEach(() => {
-      const marketConfig = config.machines.marketFSM;
+      const marketConfig = config.machines.market;
       fsm = new StateMachine(marketConfig);
     });
 

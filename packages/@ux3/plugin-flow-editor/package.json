@@ -1,0 +1,8 @@
+{
+  "name": "@ux3/plugin-flow-editor",
+  "version": "1.0.0",
+  "description": "Flow editor widget for UX3",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": true
+}

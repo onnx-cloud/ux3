@@ -2,17 +2,17 @@ name: IAM login failure
 macros:
   login:
     - type: event
-      machine: loginFSM
+      machine: login
       name: SUBMIT
   fail:
     - type: event
-      machine: loginFSM
+      machine: login
       name: ERROR
       payload:
         error: 'Invalid credentials'
   retry:
     - type: event
-      machine: loginFSM
+      machine: login
       name: RETRY
 steps:
   - type: macro
@@ -20,10 +20,10 @@ steps:
   - type: macro
     name: fail
   - type: fsmState
-    machine: loginFSM
+    machine: login
     equals: error
   - type: macro
     name: retry
   - type: fsmState
-    machine: loginFSM
+    machine: login
     equals: idle

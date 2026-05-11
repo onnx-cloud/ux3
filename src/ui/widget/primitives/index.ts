@@ -1,11 +1,3 @@
-/**
- * UX3 built-in primitive components.
- *
- * Components in this module are concrete, production-safe elements that provide
- * semantic roles, keyboard behavior, state events, and slot-based rendering.
- * Richer widgets like ux-button and ux-modal remain sourced from their
- * dedicated implementations and are not overridden.
- */
 import { ALL_PRIMITIVES } from './registry.js';
 import { resolveClass } from './resolve.js';
 
@@ -29,8 +21,7 @@ export { UxWizard } from './wizard.js';
 export { UxCapture } from './capture.js';
 export { UxProgress } from './progress.js';
 export { UxSelect } from './select.js';
-export { UxChart } from './chart.js';
-export { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from './context-tools.js';
+export { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from '../shell/context-tools.js';
 export { UxCard } from './card.js';
 export { UxAlert } from './alert.js';
 export { UxSpinner } from './spinner.js';
@@ -50,23 +41,10 @@ export { UxDropZone } from './dropzone.js';
 export { UxSearchBar } from './search-bar.js';
 export { UxTreeNav } from './tree-nav.js';
 export { UxNotifications } from './notifications.js';
-export { UxQrCode } from './qr-code.js';
 export { UxDataGrid } from './data-grid.js';
-export { UxFlowEditor } from './flow-editor.js';
-export { UxWorkflow } from './workflow.js';
-export { UxCalendar } from './calendar.js';
-export { UxKanban } from './kanban.js';
-export { UxGantt } from './gantt.js';
-export { UxDashboard } from './dashboard.js';
-export { UxKpiBoard } from './kpi-board.js';
-export { UxQueryBuilder } from './query-builder.js';
-export { UxFilterBuilder } from './filter-builder.js';
-export { UxPivotTable } from './pivot-table.js';
-export { UxReportBuilder } from './report-builder.js';
 export { UxTableVirtual } from './table-virtual.js';
 export { UxTable } from './table.js';
 export { UxLink } from './link.js';
-export { UxChatMessages } from './chat-messages.js';
 export { resolveClass } from './resolve.js';
 export type { PrimitiveKind, PrimitiveDefinition } from './types.js';
 

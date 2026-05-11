@@ -59,6 +59,9 @@ export interface AppContext<C extends Record<string, unknown> = Record<string, u
   /** App root FSM — models the app lifecycle as states visible to devtools. */
   appFSM?: import('../fsm/state-machine.js').StateMachine<import('./app-fsm.js').AppFSMContext>;
 
+  /** Teardown all services and connections. Call on SPA navigation or app shutdown. */
+  destroy?: () => void;
+
   // full generated configuration (useful for plugins)
   config?: any;
 }

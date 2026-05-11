@@ -1,16 +1,9 @@
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-toggle-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    ux-toggle { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; }
-    ux-toggle .toggle-track { position: relative; width: 2.25rem; height: 1.25rem; border-radius: 9999px; background: var(--_sw-bg, #e2e8f0); transition: background 0.2s; }
+const STYLE_CSS = `    ux-toggle { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; }
+    ux-toggle .toggle-track { position: relative; width: 2.25rem; height: 1.25rem; border-radius: 9999px; background: var(--_sw-bg, #e2e8f0); transition: background 0.2s; flex-shrink: 0; }
     ux-toggle .toggle-track.on { background: var(--_sw-on, #3b82f6); }
     ux-toggle .toggle-thumb { position: absolute; top: 0.125rem; left: 0.125rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     ux-toggle .toggle-track.on .toggle-thumb { left: 1.125rem; }
@@ -19,11 +12,8 @@ function ensureStyles(): void {
     ux-toggle .toggle-box.on::after { content: ''; width: 0.375rem; height: 0.5625rem; border: solid #fff; border-width: 0 0.125rem 0.125rem 0; transform: rotate(45deg); margin-top: -0.0625rem; }
     ux-toggle .toggle-label { font-size: 0.875rem; color: var(--_cb-label, #334155); }
     ux-toggle[role="switch"] .toggle-label,
-    ux-toggle[role="checkbox"] .toggle-label { color: var(--_sw-label, #334155); }
-  `;
-  document.head.appendChild(style);
-}
-
+    ux-toggle[role="checkbox"] .toggle-label { color: var(--_sw-label, #334155); }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 const TOGGLE_OPEN_ACTIONS: Record<string, [string, string]> = {
   open: ['OPEN', 'CLOSE'],
   checked: ['CHECK', 'UNCHECK'],
@@ -37,9 +27,7 @@ export class UxToggle extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-
-    const stateAttr = this.getStateAttr();
+const stateAttr = this.getStateAttr();
     if (this.hasAttribute(stateAttr)) {
       this.applyAriaState(true);
     }
@@ -53,6 +41,24 @@ export class UxToggle extends UxBase {
 
     this.addEventListener('click', this.onToggleActivate);
     this.addEventListener('keydown', this.onKeyDown);
+  }
+
+  protected applyData(data: any): void {
+    const stateAttr = this.getStateAttr();
+    if (typeof data === 'boolean') {
+      this.toggleAttribute(stateAttr, data);
+    } else if (data && typeof data === 'object') {
+      let val: any = data[stateAttr];
+      if (val === undefined) val = data.checked ?? data.value;
+      if (typeof val === 'boolean' || typeof val === 'string') {
+        this.toggleAttribute(stateAttr, val === true || val === 'true' || val === '1');
+      } else if (val === undefined && 'label' in data && this.control) {
+        const labelEl = this.querySelector('.toggle-label');
+        if (labelEl) labelEl.textContent = String(data.label);
+      }
+    }
+    this.applyAriaState(this.hasAttribute(stateAttr));
+    this.updateVisual(this.hasAttribute(stateAttr));
   }
 
   protected onDisconnected(): void {

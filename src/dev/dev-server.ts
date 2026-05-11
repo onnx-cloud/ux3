@@ -11,6 +11,75 @@ import { MCPHTTPHandler } from '../mcp/http-handler.js';
 
 const frameworkRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+function generateWidgetData(): any {
+  return {
+    kanban: {
+      columns: [
+        { title: 'Todo', cards: [{ id: '1', title: 'Setup CI/CD pipeline' }, { id: '2', title: 'Add integration tests' }] },
+        { title: 'In Progress', cards: [{ id: '3', title: 'Refactor API layer' }] },
+        { title: 'Done', cards: [{ id: '4', title: 'Design system v2' }, { id: '5', title: 'Auth module' }] },
+      ],
+    },
+    gantt: {
+      tasks: [
+        { id: '1', label: 'Phase 1: Discovery', start: '2026-01-05', end: '2026-02-15', progress: 100, dependencies: [] },
+        { id: '2', label: 'Phase 2: Design', start: '2026-02-10', end: '2026-03-20', progress: 80, dependencies: ['1'] },
+        { id: '3', label: 'Phase 3: Development', start: '2026-03-15', end: '2026-05-10', progress: 45, dependencies: ['2'] },
+        { id: '4', label: 'Phase 4: Testing', start: '2026-05-01', end: '2026-06-15', progress: 0, dependencies: ['3'] },
+      ],
+    },
+    table: {
+      columns: ['ID', 'Name', 'Status', 'Amount', 'Date'],
+      rows: Array.from({ length: 60 }, (_, i) => ({
+        ID: String(i + 1),
+        Name: ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta'][i % 8],
+        Status: i % 3 === 0 ? 'Active' : i % 3 === 1 ? 'Inactive' : 'Pending',
+        Amount: `$${Math.floor(Math.random() * 900) + 100}`,
+        Date: `2026-${String((i % 5) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
+      })),
+    },
+    charts: {
+      line: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], values: [45, 52, 38, 65, 48, 70] },
+      bar: { labels: ['Q1', 'Q2', 'Q3', 'Q4'], values: [120, 145, 160, 175] },
+      donut: { labels: ['Mobile', 'Desktop', 'Tablet'], values: [55, 30, 15] },
+    },
+    dashboard: {
+      widgets: [
+        { id: '1', title: 'Revenue', value: '$1.2M', span: 1 },
+        { id: '2', title: 'Users', value: '8,420', span: 1 },
+        { id: '3', title: 'Orders', value: '1,842', span: 1 },
+      ],
+      kpis: [
+        { label: 'Uptime', value: '98.5%', delta: '+0.3%', trend: 'up' },
+        { label: 'Latency', value: '42ms', delta: '-5ms', trend: 'down' },
+        { label: 'Success Rate', value: '99.9%', delta: '+0.1%', trend: 'up' },
+      ],
+    },
+    notifications: [
+      { id: '1', type: 'info', title: 'System Update', message: 'Version 2.4.0 is now available', time: '2 min ago' },
+      { id: '2', type: 'success', title: 'Deployment Complete', message: 'Production deploy succeeded', time: '1 hour ago' },
+      { id: '3', type: 'warning', title: 'Disk Space', message: 'Disk usage at 85%', time: '3 hours ago' },
+      { id: '4', type: 'error', title: 'Build Failed', message: 'CI pipeline error in step 3', time: '5 hours ago' },
+    ],
+    tree: [
+      { label: 'Documents', children: [{ label: 'Reports', children: [{ label: 'Q1 Report' }, { label: 'Q2 Report' }] }, { label: 'Invoices', children: [{ label: '2026-001' }, { label: '2026-002' }] }] },
+    ],
+    flow: {
+      nodes: [
+        { id: '1', label: 'Start', type: 'start', x: 50, y: 80 },
+        { id: '2', label: 'Build', type: 'task', x: 200, y: 80 },
+        { id: '3', label: 'Test', type: 'task', x: 350, y: 80 },
+        { id: '4', label: 'Review', type: 'gateway', x: 500, y: 80 },
+        { id: '5', label: 'Deploy', type: 'task', x: 650, y: 80 },
+      ],
+      edges: [
+        { from: '1', to: '2' }, { from: '2', to: '3' }, { from: '3', to: '4' },
+        { from: '4', to: '5', label: 'Approved' }, { from: '4', to: '2', label: 'Rejected' },
+      ],
+    },
+  };
+}
+
 export interface DevServerOptions {
   verbose?: boolean;
   onError?: (error: Error) => void;
@@ -116,6 +185,50 @@ function buildNavConfig(
     canNavigate: (targetView?: string) => true, // In dev server, all views are navigable
     getLabel,
   };
+}
+
+/**
+ * Resolve a view template in dev mode.
+ * Always reads from the filesystem first so live edits are reflected immediately.
+ * Only falls back to manifest (compiled/build-time) templates when the source
+ * file does not exist on disk.
+ */
+async function resolveViewTemplate(
+  projectDir: string,
+  viewRootDir: string,
+  templateRel: string,
+  viewName: string
+): Promise<string> {
+  if (!templateRel) return '';
+
+  const rel = templateRel.replace(/^\//, '');
+
+  const candidates = [
+    path.join(projectDir, 'ux', rel),
+    path.join(viewRootDir, rel),
+    path.join(viewRootDir, viewName, rel),
+  ];
+
+  for (const fsPath of candidates) {
+    if (fsExtra.existsSync(fsPath)) {
+      return await fsp.readFile(fsPath, 'utf-8');
+    }
+  }
+
+  return '';
+}
+
+/**
+ * Extract template reference from a parsed view YAML object.
+ */
+function extractTemplateRef(view: any): string {
+  if (view.template) return view.template;
+  if (view.states) {
+    const stateName = view.initial || Object.keys(view.states)[0];
+    const stateConfig = view.states?.[stateName];
+    return (typeof stateConfig === 'string' ? stateConfig : stateConfig?.template) || '';
+  }
+  return '';
 }
 
 function resolveLocaleI18n(
@@ -364,6 +477,22 @@ export class DevServer {
             return;
           }
 
+          if (pathname === '/$/api/widgets/data') {
+            const widgetData = generateWidgetData();
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
+            res.end(JSON.stringify({ loaded: true, error: null, data: widgetData }, null, 2));
+            return;
+          }
+
+          if (pathname === '/$/rpc/widgets') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              jsonrpc: '2.0',
+              result: { loaded: true, error: null, data: generateWidgetData() },
+            }));
+            return;
+          }
+
           // Unknown /$/ path
           res.writeHead(404, { 'Content-Type': 'text/plain' });
           res.end('Not found');
@@ -389,84 +518,15 @@ export class DevServer {
               let view: any = {};
               try { view = YAML.parse(viewYaml); } catch (e) { console.warn('[DevServer] could not parse view YAML', e instanceof Error ? e.message : String(e)); }
 
-              // Resolve view template path (handle top-level and nested states for index fallback)
-              let templateRel = '';
-              if (view.template) {
-                templateRel = view.template;
-              } else if (view.states) {
-                const stateName = view.initial || 'index';
-                templateRel = (view.states[stateName] && view.states[stateName].template) || '';
-              }
-              let templateHtml = '';
+              // Resolve view template path
+              const templateRel = extractTemplateRef(view);
+              const templateHtml = await resolveViewTemplate(
+                this.projectDir, viewRootDir, templateRel,
+                (view && view.name) ? String(view.name) : 'index'
+              );
 
-              // Prefer compiled templates from in-memory manifest when available, otherwise read source file
-              try {
-                const m = String(templateRel).match(/^(?:widget|view)\/([^\/]+)(?:\/(.*))?$/);
-                const viewName = m ? m[1] : null;
-                const stateName = m && m[2] ? m[2].replace(/\.html$/, '') : undefined;
-
-                if (this.manifest && this.manifest.config && typeof this.manifest.config.templates === 'object') {
-                  const tplMap = (this.manifest.config as any).templates || {};
-                  // Prefer template map by the path-derived view name, but fall back to the current view's name (e.g., index) if not found
-                  const viewTpl = viewName ? (tplMap[viewName] || {}) : {};
-                  let candidate = (stateName && viewTpl[stateName]) || Object.values(viewTpl)[0];
-
-                  if (!candidate) {
-                    const currentViewName = (view && view.name) ? String(view.name) : 'index';
-                    const currentTpl = tplMap[currentViewName] || {};
-                    candidate = (stateName && currentTpl[stateName]) || Object.values(currentTpl)[0];
-                    if (candidate) { /* resolved template from manifest for current widget/state */ }
-                  } else {
-                    /* resolved template from manifest */
-                  }
-
-                  if (candidate) {
-                    templateHtml = String(candidate);
-                  }
-       }
-
-       // Fallback to filesystem when manifest doesn't provide template
-                if (!templateHtml) {
-                  let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//, ''));
-                  if (!fsExtra.existsSync(templatePath)) {
-                    const alt = path.join(this.projectDir, templateRel.replace(/^\//, ''));
-                    if (fsExtra.existsSync(alt)) templatePath = alt;
-                  }
-
-                  try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) {
-                    console.warn('[DevServer] could not read template at path', templatePath, e instanceof Error ? e.message : String(e));
-                  }
-                }
-                  if (!templateHtml) {
-                    let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//, ''));
-                    if (!fsExtra.existsSync(templatePath)) {
-                      const alt = path.join(this.projectDir, templateRel.replace(/^\//, ''));
-                      if (fsExtra.existsSync(alt)) {
-                        templatePath = alt;
-                      } else if (/^(widget|view)\//.test(templateRel.replace(/^\//, ''))) {
-                        // widget/view prefix not found; try the other one (widget↔view fallback)
-                        const bare = templateRel.replace(/^\//, '').replace(/^(widget|view)\//, '');
-                        const viewFallback = path.join(this.projectDir, 'ux', 'view', bare);
-                        const widgetFallback = path.join(this.projectDir, 'ux', 'widget', bare);
-                        if (fsExtra.existsSync(viewFallback)) templatePath = viewFallback;
-                        else if (fsExtra.existsSync(widgetFallback)) templatePath = widgetFallback;
-                      }
-                    }
-                    try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) { /* could not read */ }
-                  }
-              } catch (err) {
-                /* manifest/template resolution failed */
-              }
-
-              // If still missing, instruct developer to compile (fail-fast, don't guess)
-              if (!templateHtml) {
-                templateHtml = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
-              }
-              // Build nav config
               const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
               const nav = buildNavConfig(pathname, routes, i18n);
-              
-              // Final fallback to project-specific index widget logic
               const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
 
               const finalHtml = await resolveAndRenderLayout(this.projectDir, view, renderedTemplate, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav }, renderTemplate);
@@ -505,60 +565,14 @@ export class DevServer {
                 let view: any = {};
                 try { view = YAML.parse(viewYaml); } catch (e) { console.warn('[DevServer] could not parse view YAML', e instanceof Error ? e.message : String(e)); }
 
-                // Resolve view template path (handle top-level and nested states)
-                let templateRel = '';
-                if (view.template) {
-                  templateRel = view.template;
-                } else if (view.states) {
-                  const stateName = view.initial || 'index';
-                  templateRel = (view.states[stateName] && view.states[stateName].template) || '';
-                }
-                let templateHtml = '';
+                // Resolve view template path
+                const templateRel = extractTemplateRef(view);
+                const vName = (view && view.name) ? String(view.name) : path.basename(indexPath, '.yaml');
+                const templateHtml = await resolveViewTemplate(
+                  this.projectDir, viewRootDir, templateRel,
+                  vName
+                );
 
-                // Prefer manifest template first (compiled output), otherwise read source file
-                try {
-                  const m = String(templateRel).match(/^(?:widget|view)\/([^\/]+)(?:\/(.*))?$/);
-                  let viewName: string | null = null;
-                  let stateName: string | null = null;
-                  if (m) {
-                    viewName = m[1];
-                    stateName = m[2] ? m[2].replace(/\.html$/,'') : (view.initial || 'index');
-                  }
-
-                  if (viewName && this.manifest && this.manifest.config && typeof this.manifest.config.templates === 'object') {
-                    const tplMap = (this.manifest.config as any).templates || {};
-                    const viewTpl = tplMap[viewName] || {};
-                    const candidate = (viewTpl[stateName as string] || Object.values(viewTpl)[0]);
-                    if (candidate) {
-                      templateHtml = String(candidate);
-                      /* resolved template from manifest */
-                    }
-                  }
-
-                  if (!templateHtml) {
-                    let templatePath = path.join(this.projectDir, 'ux', templateRel.replace(/^\//, ''));
-                    if (!fsExtra.existsSync(templatePath)) {
-                      const alt = path.join(this.projectDir, templateRel.replace(/^\//, ''));
-                      if (fsExtra.existsSync(alt)) templatePath = alt;
-                    }
-
-                    // DEBUG: show paths and existence
-                    /* index path debug removed */
-                    try { templateHtml = await fsp.readFile(templatePath, 'utf-8'); } catch (e) { console.warn('[DevServer] could not read template at path', templatePath, e instanceof Error ? e.message : String(e)); }
-                  }
-                } catch (err) {
-                  console.warn('[DevServer] manifest template lookup failed', err instanceof Error ? err.message : String(err));
-                }
-
-                // If still missing, instruct developer to run compilation (fail-fast, don't guess)
-                if (!templateHtml) {
-                  const msg = `<div style="font-family:system-ui,Arial; padding:1rem"><h2>Missing view template</h2><p>The index view references <code>${templateRel}</code> but the template could not be found.</p><p>Run <code>npx ux3 compile</code> or <code>npm run build</code> to generate view artifacts, then refresh.</p></div>`;
-                  templateHtml = msg;
-                  // Note: do not throw or attempt additional fs guessing — stay within architecture contract
-                  console.warn(`[DevServer] Missing template: ${templateRel}. compile generated widgets.`);
-                }
-
-                // Render the template into layout, resolving layoutName/title similar to other index path
                 const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
                 const nav = buildNavConfig(pathname, routes, i18n);
                 const renderedTemplate = renderTemplate(templateHtml, { manifest: this.manifest ?? {}, projectName: path.basename(this.projectDir), i18n, site, nav });
@@ -630,47 +644,12 @@ export class DevServer {
               const i18n = getRuntimeI18n(this.manifest);
               const site = await getSiteConfig(this.projectDir, this.manifest);
 
-              // Resolve template path from top-level field OR from the initial/first state
-              let templateRel = '';
-              if (view.template) {
-                templateRel = view.template;
-              } else if (view.states) {
-                const stateName = view.initial || Object.keys(view.states)[0];
-                const stateConfig = view.states?.[stateName];
-                templateRel = (typeof stateConfig === 'string' ? stateConfig : stateConfig?.template) || '';
-              }
-              let templateHtml = '';
+              const templateRel = extractTemplateRef(view);
+              const templateHtml = await resolveViewTemplate(
+                this.projectDir, viewRootDir, templateRel, viewName
+              );
 
-              // Try compiled manifest template for this view first
-              try {
-                if (this.manifest && this.manifest.config && typeof this.manifest.config.templates === 'object') {
-                  const tplMap = (this.manifest.config as any).templates || {};
-                  const viewTpl = tplMap[viewName] || {};
-                  // Use specific state template or first available
-                  const stateName = (view.initial || Object.keys(view.states || {})[0] || 'index');
-                  const candidate = viewTpl[stateName] || Object.values(viewTpl)[0];
-                  if (candidate) {
-                    templateHtml = String(candidate);
-                  }
-                }
-
-                if (!templateHtml && templateRel) {
-                  // Try multiple resolution paths for bare filenames
-                  const tplCandidates = [
-                    path.join(this.projectDir, 'ux', templateRel.replace(/^\//,'')),
-                    path.join(viewRootDir, templateRel.replace(/^\//,'')),
-                    path.join(viewRootDir, viewName, templateRel.replace(/^\//,'')),
-                  ];
-                  for (const tp of tplCandidates) {
-                    if (fsExtra.existsSync(tp)) {
-                      templateHtml = await fsp.readFile(tp, 'utf-8');
-                      break;
-                    }
-                  }
-                }
-              } catch (e) { console.warn('[DevServer] template resolution failed', e instanceof Error ? e.message : String(e)); }
-
-              // For content views, look up the matching content item and expose it as `this`
+              // For content views, look up the matching content item
               const contentManifest: any = (this.manifest?.config as any)?.content;
               const contentItem = contentManifest?.items?.find(
                 (item: any) => item.frontmatter.path === pathname || `/${item.slug}` === pathname

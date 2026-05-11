@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { UxButton } from '../../../src/ui/widget/button';
+import { UxButton } from '../../../src/ui/widget/primitives/button';
 
 describe('UxButton - Button Component', () => {
   let container: HTMLDivElement;
@@ -76,7 +76,7 @@ describe('UxButton - Button Component', () => {
   });
 
   it('dispatches submit event on closest light-DOM form when type=submit', async () => {
-    const { UxButton: Btn } = await import('../../../src/ui/widget/button.js');
+    const { UxButton: Btn } = await import('../../../src/ui/widget/primitives/button.js');
 
     const form = document.createElement('form');
     const button = document.createElement('ux-button') as any;
@@ -101,7 +101,7 @@ describe('UxButton - Button Component', () => {
   });
 
   it('does not dispatch submit when type is not submit', async () => {
-    const { UxButton: Btn } = await import('../../../src/ui/widget/button.js');
+    const { UxButton: Btn } = await import('../../../src/ui/widget/primitives/button.js');
 
     const form = document.createElement('form');
     const button = document.createElement('ux-button') as any;

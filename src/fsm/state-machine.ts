@@ -3,9 +3,10 @@
  * ~300 LOC for core FSM engine
  */
 
-import type { StateEvent, StateConfig, MachineConfig, InvokeConfig } from './types.js';
+import type { StateEvent, StateConfig, MachineConfig, InvokeConfig, AsyncStateContext } from './types.js';
 import type { InvokeRegistry } from '../services/invoke-registry.js';
 import { defaultLogger } from '../security/observability.js';
+import { resolveDotPath, applyResultMap } from '../utils/resolve.js';
 
 type Listener<T> = (state: string, context: T) => void;
 
@@ -31,19 +32,6 @@ function getRetryDelay(baseDelay: number | ((attempt: number) => number), attemp
   return baseDelay * Math.pow(2, attempt);
 }
 
-function resolveDotPath(obj: Record<string, unknown>, path: string): unknown {
-  return path.split('.').reduce((acc: any, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
-}
-
-function applyResultMap(result: any, map: Record<string, string> | undefined): Record<string, unknown> {
-  if (!map || typeof result !== 'object' || result === null) return result ?? {};
-  const mapped: Record<string, unknown> = {};
-  for (const [contextKey, resultPath] of Object.entries(map)) {
-    mapped[contextKey] = resolveDotPath(result, resultPath);
-  }
-  return mapped;
-}
-
 /**
  * StateMachine - Core FSM engine
  */
@@ -55,9 +43,12 @@ export class StateMachine<T extends Record<string, any>> {
   private eventQueue: StateEvent[] = [];
   private processing = false;
   private invokeHandlers: Map<string, (...args: any[]) => Promise<any>> = new Map();
+  private actionHandlers: Map<string, (context: T, event: StateEvent) => any> = new Map();
   private invokeRegistry?: InvokeRegistry;
   private activeChildren: Map<string, string> = new Map();
   private historyMap: Map<string, string> = new Map();
+
+  private get sc(): T & AsyncStateContext { return this.context as T & AsyncStateContext; }
 
   constructor(config: MachineConfig<T>) {
     this.config = this.applyEntrySugar(config);
@@ -107,6 +98,14 @@ export class StateMachine<T extends Record<string, any>> {
    */
   registerInvokeHandler(name: string, handler: (...args: any[]) => Promise<any>): void {
     this.invokeHandlers.set(name, handler);
+  }
+
+  /**
+   * Register an action handler.
+   * Actions receive (context, event) and may return void or a Partial<T> update.
+   */
+  registerAction(name: string, handler: (context: T, event: StateEvent) => any): void {
+    this.actionHandlers.set(name, handler);
   }
 
   /**
@@ -385,11 +384,12 @@ export class StateMachine<T extends Record<string, any>> {
 
     if (Array.isArray(transitionConfig.actions)) {
       transitionConfig.actions.forEach((action) => {
-        if (!isFunction(action)) {
+        const resolved = this.resolveActionFunction(action);
+        if (!resolved) {
           return;
         }
         try {
-          const result = action(this.context, event);
+          const result = resolved(this.context, event);
           if (result && typeof (result as Promise<unknown>).then === 'function') {
             (result as Promise<any>)
               .then((update) => {
@@ -431,15 +431,15 @@ export class StateMachine<T extends Record<string, any>> {
     // Declarative boolean toggle: flip a key in context without a TypeScript action function.
     if (typeof transitionConfig.toggle === 'string') {
       const key = transitionConfig.toggle;
-      const current = (this.context as any)[key];
-      (this.context as any)[key] = !current;
+      const ctx = this.context as Record<string, unknown>;
+      ctx[key] = !ctx[key];
     }
 
-    // Declarative boolean toggles (array form): flip multiple keys.
     if (Array.isArray(transitionConfig.toggle)) {
       for (const key of transitionConfig.toggle) {
         if (typeof key === 'string') {
-          (this.context as any)[key] = !((this.context as any)[key]);
+          const ctx = this.context as Record<string, unknown>;
+          ctx[key] = !ctx[key];
         }
       }
     }
@@ -604,6 +604,26 @@ export class StateMachine<T extends Record<string, any>> {
   }
 
   /**
+   * Resolve an action that may be a function or string.
+   * String actions are resolved from actionHandlers, invokeHandlers, or window globals.
+   */
+  private resolveActionFunction(
+    action: string | ((context: T, event: StateEvent) => any)
+  ): ((context: T, event: StateEvent) => any) | null {
+    if (typeof action === 'function') return action;
+    if (typeof action === 'string') {
+      if (this.actionHandlers.has(action)) return this.actionHandlers.get(action)!;
+      if (this.invokeHandlers.has(action)) return this.invokeHandlers.get(action)!;
+      if (typeof window !== 'undefined') {
+        const fn = (window as any)[action];
+        if (typeof fn === 'function') return fn;
+      }
+      emitDevTools('fsm', 'action.unresolved', { action, state: this.state, id: this.config.id });
+    }
+    return null;
+  }
+
+  /**
    * Handle state invoke with retry logic
    * 
    * Phase 1.2.3: Uses InvokeRegistry if available for centralized handling,
@@ -620,62 +640,68 @@ export class StateMachine<T extends Record<string, any>> {
 
     const invokeConfig = stateConfig.invoke as any;
 
-    (this.context as any).loading = true;
+    this.sc.loading = true;
     this.notifyListeners();
 
     try {
-    if (this.invokeRegistry && invokeConfig.service) {
-      try {
-        const result = await this.invokeRegistry.executeServiceInvoke(
-          { 
-            service: invokeConfig.service,
-            method: invokeConfig.method || 'fetch',
-            input: invokeConfig.input,
-            maxRetries: invokeConfig.maxRetries,
-            retryDelay: invokeConfig.retryDelay
-          },
-          this.context
-        );
+      if (this.invokeRegistry && invokeConfig.service) {
+        try {
+          const result = await this.invokeRegistry.executeServiceInvoke(
+            { 
+              service: invokeConfig.service,
+              method: invokeConfig.method || 'fetch',
+              input: invokeConfig.input,
+              maxRetries: invokeConfig.maxRetries,
+              retryDelay: invokeConfig.retryDelay
+            },
+            this.context
+          );
 
-        if (result.success) {
-          (this.context as any).error = null;
-          const data = applyResultMap(result.data, invokeConfig.map);
-          this.setState(data as Partial<T>);
-          this.send({ type: 'SUCCESS', payload: data });
-        } else {
-          throw result.error || new Error('Service invoke failed');
-        }
-        return;
-      } catch (error) {
-        const lastError = error as Error;
-        (this.context as any).error = lastError.message || 'Unknown error';
-        const errorContext: any = {
-          code: (lastError as any)?.code || 'UNKNOWN_ERROR',
-          message: lastError?.message || 'Unknown error',
-        };
+          if (result.success) {
+            this.sc.error = null;
+            const data = applyResultMap(result.data, invokeConfig.map);
+            this.setState(data as Partial<T>);
+            this.send({ type: 'SUCCESS', payload: data });
+          } else {
+            throw result.error || new Error('Service invoke failed');
+          }
+          return;
+        } catch (error) {
+          const lastError = error as Error;
+          this.sc.error = lastError.message || 'Unknown error';
+          const errorContext: any = {
+            code: (lastError as any)?.code || 'UNKNOWN_ERROR',
+            message: lastError?.message || 'Unknown error',
+          };
 
-        const errorActions = stateConfig.errorActions;
-        if (errorActions) {
-          errorActions.forEach((action) => {
-            try {
-              action(this.context, lastError);
-            } catch (e) {
-              defaultLogger.error('fsm.errorAction.failed', e instanceof Error ? e : new Error(String(e)), {
-                state: stateName,
-                error: lastError,
-              });
-            }
-          });
-        }
+          const errorActions = stateConfig.errorActions;
+          if (errorActions) {
+            errorActions.forEach((action) => {
+              try {
+                action(this.context, lastError);
+              } catch (e) {
+                defaultLogger.error('fsm.errorAction.failed', e instanceof Error ? e : new Error(String(e)), {
+                  state: stateName,
+                  error: lastError,
+                });
+              }
+            });
+          }
 
-        if (stateConfig.errorTarget) {
-          this.transitionTo(stateConfig.errorTarget);
-        } else {
-          this.send({ type: 'ERROR', payload: errorContext });
+          if (stateConfig.errorTarget) {
+            this.transitionTo(stateConfig.errorTarget);
+          } else {
+            this.send({ type: 'ERROR', payload: errorContext });
+          }
+          return;
         }
+      }
+
+      if (invokeConfig.service && !this.invokeRegistry) {
+        this.sc.loading = false;
+        this.notifyListeners();
         return;
       }
-    }
 
     const maxRetries = invokeConfig.maxRetries ?? 0;
     const baseRetryDelay = invokeConfig.retryDelay ?? 1000;
@@ -695,7 +721,7 @@ export class StateMachine<T extends Record<string, any>> {
           const mapped = applyResultMap(result, invokeConfig.map);
           this.setState(mapped as Partial<T>);
         }
-        (this.context as any).error = null;
+        this.sc.error = null;
 
         const mapped = applyResultMap(result, invokeConfig.map);
         this.send({ type: 'SUCCESS', payload: mapped });
@@ -715,7 +741,7 @@ export class StateMachine<T extends Record<string, any>> {
       code: (lastError as any)?.code || 'UNKNOWN_ERROR',
       message: lastError?.message || 'Unknown error',
     };
-    (this.context as any).error = lastError?.message || 'Unknown error';
+    this.sc.error = lastError?.message || 'Unknown error';
 
     const errorActions = stateConfig.errorActions;
     if (errorActions) {
@@ -740,7 +766,7 @@ export class StateMachine<T extends Record<string, any>> {
       this.send({ type: 'ERROR', payload: { error: errorContext } });
     }
     } finally {
-      (this.context as any).loading = false;
+      this.sc.loading = false;
       this.notifyListeners();
     }
   }

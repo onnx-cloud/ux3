@@ -7,6 +7,7 @@
  */
 import type { PrimitiveDefinition, PrimitiveKind } from '../ui/widget/primitives/types.js';
 import { DEF_BY_TAG } from '../ui/widget/primitives/registry.js';
+import { UX_EVENT, UX_CHANGE } from '../utils/helpers.js';
 
 export interface WidgetDescriptor {
   tag: string;
@@ -59,8 +60,9 @@ export class WidgetRegistry {
   }
 
   private inferEvents(kind: PrimitiveKind): string[] {
-    const base = ['ux:event', 'ux:change'];
-    switch (kind) {
+    const base = [UX_EVENT, UX_CHANGE];
+    const k = kind as string;
+    switch (k) {
       case 'toggle':
       case 'checkbox':
       case 'switch':
@@ -101,7 +103,8 @@ export class WidgetRegistry {
 
   private inferAttributes(_tag: string, kind: PrimitiveKind): string[] {
     const base = ['ux-state'];
-    switch (kind) {
+    const k = kind as string;
+    switch (k) {
       case 'progress': return [...base, 'value', 'max', 'label'];
       case 'slider': return [...base, 'value', 'min', 'max', 'step'];
       case 'input':

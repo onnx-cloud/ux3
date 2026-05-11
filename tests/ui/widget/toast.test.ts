@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UxToastContainer } from '../../../src/ui/widget/toast';
+import { UxToastContainer } from '../../../src/ui/widget/shell/toast';
 
 describe('UxToastContainer - Toast Notifications', () => {
   let container: HTMLDivElement;

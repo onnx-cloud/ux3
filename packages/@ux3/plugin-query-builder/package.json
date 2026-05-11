@@ -1,0 +1,1 @@
+{"name":"@ux3/plugin-query-builder","version":"1.0.0","description":"Query builder widget for UX3","main":"dist/index.js","types":"dist/index.d.ts","sideEffects":true}

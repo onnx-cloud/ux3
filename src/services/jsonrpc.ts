@@ -19,7 +19,7 @@ export class JSONRPCService extends BaseServiceAdapter<JSONRPCRequest, unknown> 
   }
 
   async execute(request: JSONRPCRequest, signal?: AbortSignal): Promise<unknown> {
-    return this.transport(request, signal);
+    return this.executeMiddlewares(request, signal);
   }
 
   async call<T = unknown>(method: string, params?: unknown, timeout?: number): Promise<T> {

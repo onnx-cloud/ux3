@@ -34,7 +34,7 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
         },
       },
       machines: {
-        loginFSM: {
+        login: {
           id: 'login',
           initial: 'idle',
           context: { email: '', password: '', error: '' },
@@ -120,8 +120,8 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       builder.withMachines();
 
       const app = builder.build();
-      expect(app.machines['loginFSM']).toBeDefined();
-      expect(app.machines['loginFSM'].getState()).toBe('idle');
+      expect(app.machines['login']).toBeDefined();
+      expect(app.machines['login'].getState()).toBe('idle');
     });
 
     it('should return builder for chaining', () => {
@@ -135,7 +135,7 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       builder.withMachines();
 
       const app = builder.build();
-      const fsm = app.machines['loginFSM'];
+      const fsm = app.machines['login'];
 
       const states: string[] = [];
       fsm.subscribe((state) => {
@@ -152,7 +152,7 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       builder.withMachines();
 
       // After withMachines(), every machine must be in the global FSMRegistry
-      expect(FSMRegistry.get('loginFSM')).toBeDefined();
+      expect(FSMRegistry.get('login')).toBeDefined();
     });
   });
 
@@ -494,7 +494,7 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
         .withMachines()
         .build();
 
-      const fsm = app.machines['loginFSM'];
+      const fsm = app.machines['login'];
       expect(fsm.getState()).toBe('idle');
 
       fsm.send({ type: 'SUBMIT' });

@@ -7,19 +7,8 @@ import { StateMachine } from '../fsm/state-machine.js';
 import type { AppContext } from './app.js';
 import { StructuredLogger } from '../logger/logger.js';
 import { LifecycleComponent } from './lifecycle-component.js';
-
-function resolveDotPath(obj: Record<string, unknown>, path: string): unknown {
-  return path.split('.').reduce((acc: any, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
-}
-
-function applyResultMap(result: any, map: Record<string, string> | undefined): Record<string, unknown> {
-  if (!map || typeof result !== 'object' || result === null) return result ?? {};
-  const mapped: Record<string, unknown> = {};
-  for (const [contextKey, resultPath] of Object.entries(map)) {
-    mapped[contextKey] = resolveDotPath(result, resultPath);
-  }
-  return mapped;
-}
+import { resolveDotPath, applyResultMap } from '../utils/resolve.js';
+import { UX_EVENT, UX_CHANGE } from '../utils/helpers.js';
 
 // expose global for runtime
 declare global {
@@ -103,31 +92,50 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const layoutName = this.getAttribute('ux-layout') || 'default';
 
       // 3. Load FSM and layout
-      // Generated view names match the YAML key (e.g. 'news') but AppContextBuilder stores
-      // machines under the key 'news' or 'newsFSM' depending on older vs newer config.
-      // BUG-5: allow fallback to name + 'FSM' when the bare name is absent.
-      let machine = this.app.machines[fsmName];
-      if (!machine) {
-        machine = this.app.machines[`${fsmName}FSM`];
-        if (machine) {
-          this.logger.debug('fsm.fallback', { fsmName, fallback: `${fsmName}FSM` });
-        }
-      }
-      this.fsm = machine as any;
-      if (!this.fsm) {
+      if (!this.app.machines[fsmName]) {
         throw new Error(`FSM not found: '${fsmName}'. Available: ${Object.keys(this.app.machines).join(', ')}`);
       }
+      this.fsm = this.app.machines[fsmName] as any;
 
-      // Prefer app-level layout templates, but keep the generated in-class
-      // layout fallback so examples using only `ux/layout/_.html` still render.
-      const runtimeLayout = this.app.template(layoutName);
-      if (runtimeLayout) {
-        this.layout = runtimeLayout;
-      } else if (!this.layout) {
-        throw new Error(`Layout not found: ${layoutName}`);
+      // 3.5 Register action functions and invoke handlers from FSM_CONFIG
+      // Bridges the gap between view-compiler's function refs and
+      // config-generator's string action names, unifying into one canonical source.
+      const viewCtor = (this as any).constructor;
+      const classFsmConfig = viewCtor.FSM_CONFIG ?? viewCtor.fsmConfig;
+      if (classFsmConfig?.states && this.fsm) {
+        for (const stateVal of Object.values<any>(classFsmConfig.states)) {
+          if (stateVal?.on) {
+            for (const transition of Object.values<any>(stateVal.on)) {
+              if (transition?.actions && Array.isArray(transition.actions)) {
+                for (const action of transition.actions) {
+                  if (typeof action === 'function' && action.name) {
+                    this.fsm.registerAction(action.name, action);
+                  }
+                }
+              }
+            }
+          }
+          if (Array.isArray(stateVal?.entry)) {
+            for (const action of stateVal.entry) {
+              if (typeof action === 'function' && action.name) {
+                this.fsm.registerAction(action.name, action);
+              }
+            }
+          }
+          if (Array.isArray(stateVal?.exit)) {
+            for (const action of stateVal.exit) {
+              if (typeof action === 'function' && action.name) {
+                this.fsm.registerAction(action.name, action);
+              }
+            }
+          }
+          if (stateVal?.invoke?.src && typeof stateVal.invoke.src === 'function' && stateVal.invoke.src.name) {
+            this.fsm.registerInvokeHandler(stateVal.invoke.src.name, stateVal.invoke.src);
+          }
+        }
       }
 
-      // 4. Load templates for all FSM states (skip when subclass already provides them)
+      // 4. Load templates for all FSM states (skip when subclass already provides them) (renumber for clarity — step 4)
       if (this.templates.size === 0) {
         this.loadTemplates(viewName || fsmName);
       }
@@ -212,11 +220,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    */
   private loadTemplates(viewName: string): void {
     const fsmName = this.getAttribute('ux-fsm')!;
-    // same fallback logic as connectedCallback
-    let machine = this.app.machines[fsmName];
-    if (!machine) {
-      machine = this.app.machines[`${fsmName}FSM`];
-    }
+    const machine = this.app.machines[fsmName];
     // support both older and newer machine APIs
     type MaybeConfigArg = { getMachineConfig?: () => any; getStateConfig?: (arg?: unknown) => any };
     const cfgMachine = machine as MaybeConfigArg;
@@ -383,6 +387,23 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         this.handleStateInvoke(state).catch(err => {
           this.logger.error('state.invoke.error', { state, error: String(err) });
         });
+      } else {
+        // Re-render on every FSM tick to reflect context updates from same-state transitions
+        const contentArea = this.querySelector('#ux-content, #ux-view-content');
+        if (contentArea) {
+          const template = this.templates.get(state);
+          if (template) {
+            const ctx = this.fsm?.getContext ? this.fsm.getContext() : {};
+            const renderedHtml = this.app.render
+              ? this.app.render(template, { ctx })
+              : template;
+            contentArea.innerHTML = renderedHtml;
+            this.applyMappedStyles(contentArea);
+            this.removeEventListeners();
+            this.setupEventListeners();
+            this.setupReactiveEffects();
+          }
+        }
       }
 
       this.applyShowHideBindings();
@@ -403,7 +424,20 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   private renderState(state: string): void {
     const template = this.templates.get(state);
     if (!template) {
-      this.logger.warn('render.no_template', { state });
+      const ctor = (this as any).constructor;
+      const classConfig = ctor.FSM_CONFIG ?? ctor.fsmConfig;
+      let fsmConfig = classConfig;
+      if (!fsmConfig?.states?.[state]?.invoke) {
+        const cfgMachine: any = this.fsm;
+        fsmConfig =
+          typeof cfgMachine.getMachineConfig === 'function'
+            ? cfgMachine.getMachineConfig()
+            : cfgMachine.getStateConfig?.(undefined);
+      }
+      const stateCfg = fsmConfig?.states?.[state];
+      if (!stateCfg?.invoke) {
+        this.logger.warn('render.no_template', { state });
+      }
       return;
     }
 
@@ -461,7 +495,8 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       const stateCfg = fsmConfig?.states?.[state];
       if (!stateCfg || !stateCfg.invoke) return;
 
-      (this.fsm as any).setState?.({ loading: true });
+      this.fsm.setState({ loading: true } as any);
+
       try {
       const inv: any = stateCfg.invoke;
       let result: any;
@@ -498,16 +533,16 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         }
       }
 
-      (this.fsm as any).setState?.({ error: null });
+      this.fsm.setState({ error: null } as any);
 
       if (inv.onDone && typeof inv.onDone === 'string') {
         this.fsm.transitionTo(inv.onDone);
       }
       } finally {
-        (this.fsm as any).setState?.({ loading: false });
+        this.fsm.setState({ loading: false } as any);
       }
     } catch (err) {
-      (this.fsm as any).setState?.({ error: String(err), loading: false });
+      this.fsm.setState({ error: String(err), loading: false } as any);
       this.fsm.send('ERROR');
       throw err;
     }
@@ -551,7 +586,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       }
     };
     this.templateEventDisposers.push(
-      this.listen(contentArea, 'ux:event', eventHandler)
+      this.listen(contentArea, UX_EVENT, eventHandler)
     );
 
     const changeHandler = (event: Event) => {
@@ -565,7 +600,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       this.fsm.send({ type: parsed.action, payload: detail || {}, fromDOM: true });
     };
     this.templateEventDisposers.push(
-      this.listen(contentArea, 'ux:change', changeHandler)
+      this.listen(contentArea, UX_CHANGE, changeHandler)
     );
   }
 
@@ -624,24 +659,18 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     const contentArea = this.querySelector('#ux-content, #ux-view-content');
     if (!contentArea) return;
 
-    // Simple reactive binding: {{signal}} in templates
-    // This would be enhanced with a full reactivity system in production
-    const context = this.fsm.getContext();
-
-    for (const [key, value] of Object.entries(context)) {
-      const selector = `[data-bind="${key}"]`;
-      const elements = contentArea.querySelectorAll(selector);
-
-      elements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          if (el instanceof HTMLInputElement) {
-            el.value = String(value);
-          } else {
-            el.textContent = String(value);
-          }
-        }
-      });
-    }
+    const context = this.fsm.getContext() as Record<string, unknown>;
+    const bound = contentArea.querySelectorAll('[data-bind]');
+    bound.forEach((el) => {
+      const key = el.getAttribute('data-bind');
+      if (!key || !(key in context)) return;
+      const value = context[key];
+      if (el instanceof HTMLInputElement) {
+        el.value = String(value);
+      } else if (el instanceof HTMLElement) {
+        el.textContent = String(value);
+      }
+    });
   }
 
   /**

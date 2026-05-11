@@ -51,11 +51,11 @@ describe('IAM Integration Tests', () => {
   let marketFSM: StateMachine<any>;
 
   beforeEach(() => {
-    authFSM = new StateMachine(config.machines.authFSM);
-    accountFSM = new StateMachine(config.machines.accountFSM);
-    chatFSM = new StateMachine(config.machines.chatFSM);
-    dashboardFSM = new StateMachine(config.machines.dashboardFSM);
-    marketFSM = new StateMachine(config.machines.marketFSM);
+    authFSM = new StateMachine(config.machines.auth);
+    accountFSM = new StateMachine(config.machines.account);
+    chatFSM = new StateMachine(config.machines.chat);
+    dashboardFSM = new StateMachine(config.machines.dashboard);
+    marketFSM = new StateMachine(config.machines.market);
 
     vi.clearAllMocks();
   });
@@ -64,19 +64,19 @@ describe('IAM Integration Tests', () => {
     it('should complete login: idle → submitting → success', async () => {
       const states: string[] = [];
 
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         states.push(state);
       });
 
-      expect(authFSM.getState()).toBe('idle');
+      expect(auth.getState()).toBe('idle');
 
       // Simulate user input
-      authFSM.send('LOGIN', { email: 'user@example.com', password: 'secret' });
-      expect(authFSM.getState()).toBe('submitting');
+      auth.send('LOGIN', { email: 'user@example.com', password: 'secret' });
+      expect(auth.getState()).toBe('submitting');
 
       // Simulate service response
-      authFSM.send('SUCCESS', { token: 'jwt-token' });
-      expect(authFSM.getState()).toBe('success');
+      auth.send('SUCCESS', { token: 'jwt-token' });
+      expect(auth.getState()).toBe('success');
 
       expect(states).toContain('idle');
       expect(states).toContain('submitting');
@@ -86,18 +86,18 @@ describe('IAM Integration Tests', () => {
     it('should handle login error: idle → submitting → error → idle', async () => {
       const states: string[] = [];
 
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         states.push(state);
       });
 
-      authFSM.send('LOGIN');
-      expect(authFSM.getState()).toBe('submitting');
+      auth.send('LOGIN');
+      expect(auth.getState()).toBe('submitting');
 
-      authFSM.send('FAILURE', { error: 'Invalid credentials' });
-      expect(authFSM.getState()).toBe('error');
+      auth.send('FAILURE', { error: 'Invalid credentials' });
+      expect(auth.getState()).toBe('error');
 
-      authFSM.send('RETRY');
-      expect(authFSM.getState()).toBe('idle');
+      auth.send('RETRY');
+      expect(auth.getState()).toBe('idle');
 
       expect(states).toContain('submitting');
       expect(states).toContain('error');
@@ -105,10 +105,10 @@ describe('IAM Integration Tests', () => {
     });
 
     it('should persist login token in context', () => {
-      authFSM.send('LOGIN', { email: 'user@example.com' });
-      authFSM.send('SUCCESS', { token: 'jwt-token-123', userId: 'user-1' });
+      auth.send('LOGIN', { email: 'user@example.com' });
+      auth.send('SUCCESS', { token: 'jwt-token-123', userId: 'user-1' });
 
-      const context = authFSM.getContext();
+      const context = auth.getContext();
       expect(context.token).toBeDefined();
       expect(context.userId).toBeDefined();
     });
@@ -116,21 +116,21 @@ describe('IAM Integration Tests', () => {
     it('should allow retry after failed login', (done) => {
       let attemptCount = 0;
 
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         if (state === 'submitting') {
           attemptCount++;
           if (attemptCount === 1) {
-            authFSM.send('FAILURE');
+            auth.send('FAILURE');
           } else if (attemptCount === 2) {
-            authFSM.send('SUCCESS');
-            expect(authFSM.getState()).toBe('success');
+            auth.send('SUCCESS');
+            expect(auth.getState()).toBe('success');
             done();
           }
         }
       });
 
-      authFSM.send('LOGIN');
-      authFSM.send('RETRY');
+      auth.send('LOGIN');
+      auth.send('RETRY');
     });
   });
 
@@ -138,7 +138,7 @@ describe('IAM Integration Tests', () => {
     it('should view account: loading → viewing', (done) => {
       const states: string[] = [];
 
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         states.push(state);
         if (state === 'viewing') {
           expect(states).toContain('loading');
@@ -147,17 +147,17 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      accountFSM.send('SUCCESS');
+      account.send('SUCCESS');
     });
 
     it('should edit account: viewing → editing', (done) => {
-      accountFSM.send('SUCCESS'); // viewing state
+      account.send('SUCCESS'); // viewing state
 
       let transitions = 0;
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         transitions++;
         if (transitions === 2) {
-          accountFSM.send('EDIT');
+          account.send('EDIT');
         }
         if (state === 'editing') {
           expect(state).toBe('editing');
@@ -167,7 +167,7 @@ describe('IAM Integration Tests', () => {
     });
 
     it('should save account changes: editing → saving → viewing', (done) => {
-      accountFSM.send('SUCCESS'); // viewing state
+      account.send('SUCCESS'); // viewing state
 
       const newData = {
         email: 'newemail@example.com',
@@ -176,16 +176,16 @@ describe('IAM Integration Tests', () => {
       };
 
       let transitions = 0;
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         transitions++;
         if (transitions === 2) {
-          accountFSM.send('EDIT');
+          account.send('EDIT');
         } else if (transitions === 3 && state === 'editing') {
-          accountFSM.send('SAVE', newData);
+          account.send('SAVE', newData);
         } else if (transitions === 4 && state === 'saving') {
-          accountFSM.send('SUCCESS');
+          account.send('SUCCESS');
         } else if (transitions === 5 && state === 'viewing') {
-          const context = accountFSM.getContext();
+          const context = account.getContext();
           expect(context.email).toBeDefined();
           done();
         }
@@ -193,16 +193,16 @@ describe('IAM Integration Tests', () => {
     });
 
     it('should cancel edits: editing → viewing (preserving original)', (done) => {
-      accountFSM.send('SUCCESS'); // viewing state
+      account.send('SUCCESS'); // viewing state
       const originalContext = { email: 'original@example.com' };
 
       let transitions = 0;
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         transitions++;
         if (transitions === 2) {
-          accountFSM.send('EDIT');
+          account.send('EDIT');
         } else if (transitions === 3 && state === 'editing') {
-          accountFSM.send('CANCEL');
+          account.send('CANCEL');
         } else if (transitions === 4 && state === 'viewing') {
           expect(state).toBe('viewing');
           done();
@@ -211,17 +211,17 @@ describe('IAM Integration Tests', () => {
     });
 
     it('should handle save error: editing → saving → error → editing', (done) => {
-      accountFSM.send('SUCCESS'); // viewing state
+      account.send('SUCCESS'); // viewing state
 
       let transitions = 0;
-      accountFSM.subscribe((state) => {
+      account.subscribe((state) => {
         transitions++;
         if (transitions === 2) {
-          accountFSM.send('EDIT');
+          account.send('EDIT');
         } else if (transitions === 3 && state === 'editing') {
-          accountFSM.send('SAVE');
+          account.send('SAVE');
         } else if (transitions === 4 && state === 'saving') {
-          accountFSM.send('FAILURE', { error: 'Network error' });
+          account.send('FAILURE', { error: 'Network error' });
         } else if (transitions === 5 && state === 'error') {
           expect(state).toBe('error');
           done();
@@ -234,7 +234,7 @@ describe('IAM Integration Tests', () => {
     it('should connect to chat: idle → loading → connected', (done) => {
       const states: string[] = [];
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         states.push(state);
         if (state === 'connected') {
           expect(states).toContain('idle');
@@ -244,35 +244,35 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      chatFSM.send('CONNECT', { channel: 'general' });
-      chatFSM.send('SUCCESS');
+      chat.send('CONNECT', { channel: 'general' });
+      chat.send('SUCCESS');
     });
 
     it('should send messages while connected', (done) => {
       let readyToSend = false;
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'connected' && !readyToSend) {
           readyToSend = true;
-          chatFSM.send('SEND_MESSAGE', { text: 'Hello!' });
+          chat.send('SEND_MESSAGE', { text: 'Hello!' });
         }
         if (readyToSend) {
-          expect(chatFSM.getState()).toBe('connected');
+          expect(chat.getState()).toBe('connected');
           done();
         }
       });
 
-      chatFSM.send('CONNECT');
-      chatFSM.send('SUCCESS');
+      chat.send('CONNECT');
+      chat.send('SUCCESS');
     });
 
     it('should disconnect: connected → idle', (done) => {
       let connected = false;
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'connected' && !connected) {
           connected = true;
-          chatFSM.send('DISCONNECT');
+          chat.send('DISCONNECT');
         }
         if (connected && state === 'idle') {
           expect(state).toBe('idle');
@@ -280,20 +280,20 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      chatFSM.send('CONNECT');
-      chatFSM.send('SUCCESS');
+      chat.send('CONNECT');
+      chat.send('SUCCESS');
     });
 
     it('should handle connection error: loading → error → idle', (done) => {
       let attempts = 0;
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'loading' && attempts === 0) {
           attempts++;
-          chatFSM.send('FAILURE', { error: 'Connection failed' });
+          chat.send('FAILURE', { error: 'Connection failed' });
         }
         if (state === 'error') {
-          chatFSM.send('RETRY');
+          chat.send('RETRY');
         }
         if (state === 'idle' && attempts > 0) {
           expect(state).toBe('idle');
@@ -301,20 +301,20 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      chatFSM.send('CONNECT');
+      chat.send('CONNECT');
     });
 
     it('should persist session context while connected', (done) => {
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'connected') {
-          const context = chatFSM.getContext();
+          const context = chat.getContext();
           expect(context).toBeDefined();
           done();
         }
       });
 
-      chatFSM.send('CONNECT', { channel: 'general', userId: 'user-1' });
-      chatFSM.send('SUCCESS', { sessionId: 'session-123' });
+      chat.send('CONNECT', { channel: 'general', userId: 'user-1' });
+      chat.send('SUCCESS', { sessionId: 'session-123' });
     });
   });
 
@@ -322,7 +322,7 @@ describe('IAM Integration Tests', () => {
     it('should load dashboard: idle → loading → loaded', (done) => {
       const states: string[] = [];
 
-      dashboardFSM.subscribe((state) => {
+      dashboard.subscribe((state) => {
         states.push(state);
         if (state === 'loaded') {
           expect(states).toContain('idle');
@@ -332,36 +332,36 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      dashboardFSM.send('LOAD');
-      dashboardFSM.send('SUCCESS');
+      dashboard.send('LOAD');
+      dashboard.send('SUCCESS');
     });
 
     it('should handle load error: loading → error → idle', (done) => {
-      dashboardFSM.subscribe((state) => {
+      dashboard.subscribe((state) => {
         if (state === 'loading') {
-          dashboardFSM.send('FAILURE');
+          dashboard.send('FAILURE');
         }
         if (state === 'error') {
-          dashboardFSM.send('RELOAD');
-          expect(dashboardFSM.getState()).toBe('idle');
+          dashboard.send('RELOAD');
+          expect(dashboard.getState()).toBe('idle');
           done();
         }
       });
 
-      dashboardFSM.send('LOAD');
+      dashboard.send('LOAD');
     });
 
     it('should reload dashboard data', (done) => {
-      dashboardFSM.subscribe((state) => {
+      dashboard.subscribe((state) => {
         if (state === 'loaded') {
-          dashboardFSM.send('RELOAD');
-          expect(dashboardFSM.getState()).toBe('loading');
+          dashboard.send('RELOAD');
+          expect(dashboard.getState()).toBe('loading');
           done();
         }
       });
 
-      dashboardFSM.send('LOAD');
-      dashboardFSM.send('SUCCESS');
+      dashboard.send('LOAD');
+      dashboard.send('SUCCESS');
     });
   });
 
@@ -369,7 +369,7 @@ describe('IAM Integration Tests', () => {
     it('should view market data: idle → loading → loaded', (done) => {
       const states: string[] = [];
 
-      marketFSM.subscribe((state) => {
+      market.subscribe((state) => {
         states.push(state);
         if (state === 'loaded') {
           expect(states).toContain('idle');
@@ -379,41 +379,41 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      marketFSM.send('VIEW');
-      marketFSM.send('SUCCESS');
+      market.send('VIEW');
+      market.send('SUCCESS');
     });
 
     it('should filter market data without reload', (done) => {
-      marketFSM.subscribe((state) => {
+      market.subscribe((state) => {
         if (state === 'loaded') {
-          const stateBefore = marketFSM.getState();
-          marketFSM.send('FILTER', { symbol: 'AAPL' });
-          const stateAfter = marketFSM.getState();
+          const stateBefore = market.getState();
+          market.send('FILTER', { symbol: 'AAPL' });
+          const stateAfter = market.getState();
           expect(stateBefore).toBe(stateAfter);
           done();
         }
       });
 
-      marketFSM.send('VIEW');
-      marketFSM.send('SUCCESS');
+      market.send('VIEW');
+      market.send('SUCCESS');
     });
 
     it('should reload market data: loaded → loading → loaded', (done) => {
       let reloaded = false;
 
-      marketFSM.subscribe((state) => {
+      market.subscribe((state) => {
         if (state === 'loaded' && !reloaded) {
           reloaded = true;
-          marketFSM.send('RELOAD');
-          expect(marketFSM.getState()).toBe('loading');
+          market.send('RELOAD');
+          expect(market.getState()).toBe('loading');
         }
         if (reloaded && state === 'loaded') {
           done();
         }
       });
 
-      marketFSM.send('VIEW');
-      marketFSM.send('SUCCESS');
+      market.send('VIEW');
+      market.send('SUCCESS');
     });
   });
 
@@ -424,69 +424,69 @@ describe('IAM Integration Tests', () => {
         dashboard: [] as string[],
       };
 
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         states.auth.push(state);
       });
 
-      dashboardFSM.subscribe((state) => {
+      dashboard.subscribe((state) => {
         states.dashboard.push(state);
       });
 
-      authFSM.send('LOGIN');
-      dashboardFSM.send('LOAD');
+      auth.send('LOGIN');
+      dashboard.send('LOAD');
 
-      expect(authFSM.getState()).toBe('submitting');
-      expect(dashboardFSM.getState()).toBe('loading');
+      expect(auth.getState()).toBe('submitting');
+      expect(dashboard.getState()).toBe('loading');
 
-      authFSM.send('SUCCESS');
-      dashboardFSM.send('SUCCESS');
+      auth.send('SUCCESS');
+      dashboard.send('SUCCESS');
 
-      expect(authFSM.getState()).toBe('success');
-      expect(dashboardFSM.getState()).toBe('loaded');
+      expect(auth.getState()).toBe('success');
+      expect(dashboard.getState()).toBe('loaded');
 
       done();
     });
 
     it('should allow chat connection after login success', (done) => {
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         if (state === 'success') {
-          chatFSM.send('CONNECT', { userId: authFSM.getContext().userId });
+          chat.send('CONNECT', { userId: auth.getContext().userId });
         }
       });
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'connected') {
-          expect(authFSM.getState()).toBe('success');
-          expect(chatFSM.getState()).toBe('connected');
+          expect(auth.getState()).toBe('success');
+          expect(chat.getState()).toBe('connected');
           done();
         }
       });
 
-      authFSM.send('LOGIN');
-      authFSM.send('SUCCESS');
-      chatFSM.send('SUCCESS');
+      auth.send('LOGIN');
+      auth.send('SUCCESS');
+      chat.send('SUCCESS');
     });
 
     it('should maintain market data while chatting', (done) => {
-      marketFSM.subscribe((state) => {
+      market.subscribe((state) => {
         if (state === 'loaded') {
-          chatFSM.send('CONNECT');
-          chatFSM.send('SUCCESS');
+          chat.send('CONNECT');
+          chat.send('SUCCESS');
         }
       });
 
-      chatFSM.subscribe((state) => {
+      chat.subscribe((state) => {
         if (state === 'connected') {
-          expect(marketFSM.getState()).toBe('loaded');
-          chatFSM.send('SEND_MESSAGE');
-          expect(chatFSM.getState()).toBe('connected');
-          expect(marketFSM.getState()).toBe('loaded');
+          expect(market.getState()).toBe('loaded');
+          chat.send('SEND_MESSAGE');
+          expect(chat.getState()).toBe('connected');
+          expect(market.getState()).toBe('loaded');
           done();
         }
       });
 
-      marketFSM.send('VIEW');
-      marketFSM.send('SUCCESS');
+      market.send('VIEW');
+      market.send('SUCCESS');
     });
   });
 
@@ -494,13 +494,13 @@ describe('IAM Integration Tests', () => {
     it('should recover from auth failure and retry', (done) => {
       let attempts = 0;
 
-      authFSM.subscribe((state) => {
+      auth.subscribe((state) => {
         if (state === 'error') {
           attempts++;
-          authFSM.send('RETRY');
+          auth.send('RETRY');
         }
         if (state === 'submitting' && attempts >= 1) {
-          authFSM.send('SUCCESS');
+          auth.send('SUCCESS');
         }
         if (state === 'success') {
           expect(attempts).toBeGreaterThanOrEqual(1);
@@ -508,28 +508,28 @@ describe('IAM Integration Tests', () => {
         }
       });
 
-      authFSM.send('LOGIN');
-      authFSM.send('FAILURE');
+      auth.send('LOGIN');
+      auth.send('FAILURE');
     });
 
     it('should recover from network timeout', (done) => {
-      dashboardFSM.subscribe((state) => {
+      dashboard.subscribe((state) => {
         if (state === 'loading') {
-          dashboardFSM.send('FAILURE', { error: 'Timeout' });
+          dashboard.send('FAILURE', { error: 'Timeout' });
         }
         if (state === 'error') {
-          dashboardFSM.send('RELOAD');
+          dashboard.send('RELOAD');
         }
-        if (state === 'loading' && dashboardFSM.getState() !== 'loading') {
+        if (state === 'loading' && dashboard.getState() !== 'loading') {
           // Second load attempt
-          dashboardFSM.send('SUCCESS');
+          dashboard.send('SUCCESS');
         }
         if (state === 'loaded') {
           done();
         }
       });
 
-      dashboardFSM.send('LOAD');
+      dashboard.send('LOAD');
     });
   });
 });

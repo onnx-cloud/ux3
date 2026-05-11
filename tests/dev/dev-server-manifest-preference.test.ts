@@ -1,70 +1,63 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
-import os from 'os';
 
-describe('DevServer manifest preference', () => {
-  it('serves manifest template for index even when source exists', async () => {
+describe('DevServer template resolution (filesystem-first)', () => {
+  it('serves filesystem template even when manifest exists (index view)', async () => {
     const tmpRoot = path.join(process.cwd(), 'tmp');
     await fs.ensureDir(tmpRoot);
     const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
-    await fs.ensureDir(path.join(temp, 'ux', 'view'));
+    await fs.ensureDir(path.join(temp, 'ux', 'widget'));
+    await fs.ensureDir(path.join(temp, 'ux', 'widget', 'home'));
 
-    // create index.yaml referencing widget/home/index.html
+    await fs.writeFile(path.join(temp, 'ux', 'widget', 'home', 'index.html'), `<div id="view">FS</div>`);
     await fs.writeFile(
-      path.join(temp, 'ux', 'view', 'index.yaml'),
+      path.join(temp, 'ux', 'widget', 'index.yaml'),
       `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\n`
     );
 
-    // create source template that should be *ignored* when manifest exists
-    await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">FS</div>`);
-
-    // Start server and set manifest with compiled template containing app wrapper
     const { DevServer } = await import('@ux3/dev/dev-server');
-    const server = new DevServer(temp, 3620, 'localhost');
+    const server = new DevServer(temp, 3640, 'localhost');
     await server.start();
 
     server.setManifest({ config: { templates: { home: { index: '<div id="app">MANIFEST</div>' } } }, types: {}, invokes: {}, stats: { buildTime: 0 } });
 
-    const res = await fetch('http://localhost:3620/');
+    const res = await fetch('http://localhost:3640/');
     const html = await res.text();
 
-    expect(html).toContain('<div id="app">MANIFEST</div>');
-    expect(html).not.toContain('FS');
+    expect(html).toContain('<div id="view">FS</div>');
+    expect(html).not.toContain('<div id="app">MANIFEST</div>');
 
     await server.stop();
     await fs.remove(temp);
   });
 
-  it('serves manifest template for route when available', async () => {
+  it('serves filesystem template for route even when manifest exists', async () => {
     const tmpRoot = path.join(process.cwd(), 'tmp');
     await fs.ensureDir(tmpRoot);
     const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
-    await fs.ensureDir(path.join(temp, 'ux', 'view'));
+    await fs.ensureDir(path.join(temp, 'ux', 'widget'));
+    await fs.ensureDir(path.join(temp, 'ux', 'widget', 'home'));
 
-    // create view yaml and source template
     await fs.writeFile(
-      path.join(temp, 'ux', 'view', 'home.yaml'),
+      path.join(temp, 'ux', 'widget', 'home.yaml'),
       `template: 'widget/home/index.html'\n`
     );
-    await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), `<div id="view">FS</div>`);
+    await fs.writeFile(path.join(temp, 'ux', 'widget', 'home', 'index.html'), `<div id="view">FS</div>`);
 
     const { DevServer } = await import('@ux3/dev/dev-server');
-    const server = new DevServer(temp, 3621, 'localhost');
+    const server = new DevServer(temp, 3641, 'localhost');
     await server.start();
 
-    // set routes and compiled template
     server.setManifest({ config: { routes: [{ path: '/home', view: 'home' }], templates: { home: { index: '<div id="app">MANIFEST</div>' } } }, types: {}, invokes: {}, stats: { buildTime: 0 } });
 
-    const res = await fetch('http://localhost:3621/home');
+    const res = await fetch('http://localhost:3641/home');
     const html = await res.text();
 
-    expect(html).toContain('<div id="app">MANIFEST</div>');
-    expect(html).not.toContain('FS');
+    expect(html).toContain('<div id="view">FS</div>');
+    expect(html).not.toContain('<div id="app">MANIFEST</div>');
 
     await server.stop();
     await fs.remove(temp);

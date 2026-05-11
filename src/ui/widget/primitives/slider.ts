@@ -1,15 +1,8 @@
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-slider-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    ux-slider { display: block; width: 100%; }
+const STYLE_CSS = `    ux-slider { display: block; width: 100%; }
     ux-slider input[type=range] {
       width: 100%; height: 0.375rem; -webkit-appearance: none; appearance: none;
       background: var(--_s-bg, #e2e8f0); border-radius: 0.25rem; outline: none; cursor: pointer;
@@ -22,11 +15,8 @@ function ensureStyles(): void {
     ux-slider input[type=range]::-moz-range-thumb {
       width: 1.125rem; height: 1.125rem; border-radius: 50%;
       background: var(--_s-thumb, #3b82f6); cursor: pointer; border: none;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
+    }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxSlider extends UxBase {
   private range: HTMLInputElement | null = null;
   private _rendered = false;
@@ -37,13 +27,26 @@ export class UxSlider extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    if (!this.hasAttribute('min')) this.setAttribute('min', '0');
+if (!this.hasAttribute('min')) this.setAttribute('min', '0');
     if (!this.hasAttribute('max')) this.setAttribute('max', '100');
     if (!this.hasAttribute('value')) this.setAttribute('value', this.getAttribute('min') || '0');
     if (!this._rendered) {
       this._rendered = true;
       this.render();
+    }
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'number' || typeof data === 'string') {
+      this.setAttribute('value', String(data));
+    } else if (data && typeof data === 'object') {
+      if ('value' in data) this.setAttribute('value', String(data.value));
+      if ('min' in data) this.setAttribute('min', String(data.min));
+      if ('max' in data) this.setAttribute('max', String(data.max));
+    }
+    if (this.range) {
+      this.range.value = this.getAttribute('value') ?? '0';
+      this.setAttribute('aria-valuenow', this.range.value);
     }
   }
 

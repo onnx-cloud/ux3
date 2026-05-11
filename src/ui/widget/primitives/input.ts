@@ -1,16 +1,9 @@
 import { UxBase } from './base.js';
 import { escapeAttr, emitReadyOnce } from './helpers.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-input-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    ux-input {
+const STYLE_CSS = `    ux-input {
       display: inline-block;
     }
     ux-input input {
@@ -26,11 +19,8 @@ function ensureStyles(): void {
     ux-input input:focus-visible {
       outline: var(--ux-input-focus-ring, 2px solid #2563eb);
       outline-offset: var(--ux-input-focus-offset, 1px);
-    }
-  `;
-  document.head.appendChild(style);
-}
-
+    }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxInput extends UxBase {
   private inputEl: HTMLInputElement | null = null;
   private _rendered = false;
@@ -41,12 +31,34 @@ export class UxInput extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
+    this.syncAttrs();
     if (!this._rendered) {
       this._rendered = true;
       this.render();
     }
     emitReadyOnce(this);
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'string' || typeof data === 'number') {
+      this.setAttribute('value', String(data));
+    } else if (data && typeof data === 'object') {
+      if ('value' in data) this.setAttribute('value', String(data.value ?? ''));
+      if ('placeholder' in data) this.setAttribute('placeholder', String(data.placeholder ?? ''));
+      if ('name' in data) this.setAttribute('name', String(data.name ?? ''));
+      if ('type' in data) this.setAttribute('type', String(data.type ?? 'text'));
+      if (data.disabled != null) data.disabled ? this.setAttribute('disabled', '') : this.removeAttribute('disabled');
+    }
+    this.syncAttrs();
+  }
+
+  private syncAttrs(): void {
+    if (!this.inputEl) return;
+    this.inputEl.value = this.getAttribute('value') ?? '';
+    this.inputEl.type = this.getAttribute('type') ?? 'text';
+    this.inputEl.placeholder = this.getAttribute('placeholder') ?? '';
+    this.inputEl.name = this.getAttribute('name') ?? '';
+    this.inputEl.disabled = this.hasAttribute('disabled');
   }
 
   protected onAttributeChanged(name: string): void {

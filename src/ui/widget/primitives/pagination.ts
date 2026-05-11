@@ -2,25 +2,16 @@
  * UX3 Pagination Component (light DOM)
  */
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-pagination-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-  const s = document.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `
-    ux-pagination { display: flex; align-items: center; gap: 0.25rem; }
+const STYLE_CSS = `    ux-pagination { display: flex; align-items: center; gap: 0.25rem; }
     ux-pagination button { padding: 0.375rem 0.75rem; border: 1px solid var(--ux-pg-border, #d1d5db); background: var(--ux-pg-bg, #fff); border-radius: 0.25rem; cursor: pointer; font: inherit; font-size: 0.875rem; }
     ux-pagination button:hover:not(:disabled) { filter: brightness(0.95); }
     ux-pagination button:disabled { opacity: 0.5; cursor: default; }
     ux-pagination button.active { font-weight: 600; background: var(--ux-pg-active-bg, #3b82f6); color: var(--ux-pg-active-color, #fff); border-color: var(--ux-pg-active-bg); }
-    ux-pagination .info { padding: 0 0.5rem; color: #6b7280; font-size: 0.875rem; }
-  `;
-  document.head.appendChild(s);
-}
-
+    ux-pagination .info { padding: 0 0.5rem; color: #6b7280; font-size: 0.875rem; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxPagination extends UxBase {
   private currentPage: number = 1;
   private totalPages: number = 1;
@@ -28,13 +19,25 @@ export class UxPagination extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    this.currentPage = parseInt(this.getAttribute('current') || '1', 10);
-    this.totalPages = parseInt(this.getAttribute('total') || '1', 10);
+    this.syncFromAttrs();
     if (!this._rendered) {
       this._rendered = true;
       this.render();
     }
+  }
+
+  protected applyData(data: any): void {
+    if (data && typeof data === 'object') {
+      if ('current' in data) this.setAttribute('current', String(data.current));
+      if ('total' in data) this.setAttribute('total', String(data.total));
+      this.syncFromAttrs();
+      this.render();
+    }
+  }
+
+  private syncFromAttrs(): void {
+    this.currentPage = parseInt(this.getAttribute('current') || '1', 10);
+    this.totalPages = parseInt(this.getAttribute('total') || '1', 10);
   }
 
   private render(): void {

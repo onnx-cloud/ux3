@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UxModal } from '../../../src/ui/widget/modal';
+import { UxModal } from '../../../src/ui/widget/primitives/modal';
 
 describe('UxModal - Modal Component', () => {
   let container: HTMLDivElement;

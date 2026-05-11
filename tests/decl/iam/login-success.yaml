@@ -2,14 +2,14 @@ name: IAM login success
 macros:
   login:
     - type: event
-      machine: loginFSM
+      machine: login
       name: SUBMIT
       payload:
         email: 'user@example.com'
         password: 'secret'
   succeed:
     - type: event
-      machine: loginFSM
+      machine: login
       name: SUCCESS
       payload:
         token: 'jwt-token-123'
@@ -28,5 +28,5 @@ steps:
   - type: macro
     name: succeed
   - type: fsmState
-    machine: loginFSM
+    machine: login
     equals: success

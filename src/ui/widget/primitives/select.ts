@@ -1,20 +1,10 @@
 import { UxBase } from './base.js';
+import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-select-style';
-
-function ensureStyles(): void {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    ux-select { display: inline-block; }
-    ux-select select { width: 100%; font: inherit; color: inherit; }
-  `;
-  document.head.appendChild(style);
-}
-
+const STYLE_CSS = `    ux-select { display: inline-block; }
+    ux-select select { width: 100%; font: inherit; color: inherit; }`;
+registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxSelect extends UxBase {
   private selectEl: HTMLSelectElement | null = null;
   private observer: MutationObserver | null = null;
@@ -26,12 +16,41 @@ export class UxSelect extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-    ensureStyles();
-    if (!this._rendered) {
+if (!this._rendered) {
       this._rendered = true;
       this.render();
     }
     this.observeOptions();
+  }
+
+  protected applyData(data: any): void {
+    if (typeof data === 'string' || typeof data === 'number') {
+      this.setAttribute('value', String(data));
+    } else if (data && typeof data === 'object') {
+      if ('value' in data) this.setAttribute('value', String(data.value ?? ''));
+      if (Array.isArray(data.options)) {
+        const fragment = document.createDocumentFragment();
+        for (const o of data.options) {
+          if (typeof o === 'string') {
+            const opt = document.createElement('option');
+            opt.value = o;
+            opt.textContent = o;
+            fragment.appendChild(opt);
+          } else {
+            const opt = document.createElement('option');
+            opt.value = o.value ?? o.label ?? '';
+            opt.textContent = o.label ?? o.value ?? '';
+            fragment.appendChild(opt);
+          }
+        }
+        this.innerHTML = '';
+        this.appendChild(fragment);
+        this.syncOptions();
+      }
+    }
+    if (this.selectEl && this.getAttribute('value')) {
+      this.selectEl.value = this.getAttribute('value')!;
+    }
   }
 
   protected onDisconnected(): void {

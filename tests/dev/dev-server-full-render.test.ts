@@ -9,7 +9,7 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
     await fs.ensureDir(tmpRoot);
     const temp = path.join(tmpRoot, `ux3-devserver-${Date.now()}`);
     await fs.ensureDir(temp);
-    await fs.ensureDir(path.join(temp, 'ux', 'view'));
+    await fs.ensureDir(path.join(temp, 'ux', 'widget'));
     await fs.ensureDir(path.join(temp, 'ux', 'layout'));
 
     // layout with header + main placeholder
@@ -34,11 +34,11 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
   <div ux-style="widget">HELLO WIDGET</div>
   <div ux-style="actions"><button ux-event="RETRY">Retry</button></div>
 </div>`;
-    await fs.ensureDir(path.join(temp, 'ux', 'view', 'home'));
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), viewHtml);
+    await fs.ensureDir(path.join(temp, 'ux', 'widget', 'home'));
+    await fs.writeFile(path.join(temp, 'ux', 'widget', 'home', 'index.html'), viewHtml);
 
     // index.yaml referencing the view and declaring the layout
-    await fs.writeFile(path.join(temp, 'ux', 'view', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
+    await fs.writeFile(path.join(temp, 'ux', 'widget', 'index.yaml'), `name: index\ninitial: index\nstates:\n  index:\n    template: 'widget/home/index.html'\nlayout: default\n`);
 
     const { DevServer } = await import('@ux3/dev/dev-server.ts');
     const port = 3690;
@@ -49,7 +49,7 @@ describe('DevServer full page rendering (layout + chrome + view tree)', () => {
     const html = await res.text();
 
     // Quick local simulation of the layout insertion logic to reproduce potential parsing issues
-    const viewTemplate = await fs.readFile(path.join(temp, 'ux', 'view', 'home', 'index.html'), 'utf-8');
+    const viewTemplate = await fs.readFile(path.join(temp, 'ux', 'widget', 'home', 'index.html'), 'utf-8');
     const layoutHtmlRaw = await fs.readFile(path.join(temp, 'ux', 'layout', 'default.html'), 'utf-8');
     const normalized = layoutHtmlRaw.replace(/\{\{\{\s*content\s*\}\}\}/g, '{{ site.template }}').replace(/\{\{\s*>\s*layout\s*\}\}/g, '{{ site.template }}');
     function localRender(tpl: string, ctx: any = {}) {

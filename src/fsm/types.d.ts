@@ -14,7 +14,7 @@ export interface TransitionConfig<T extends Record<string, any>> {
 export type ServiceFn = (params?: any) => Promise<any>;
 export type GuardFn<T extends Record<string, any>> = (context: T) => boolean;
 export type ActionFn<T extends Record<string, any>> = (context: T, event: StateEvent) => void | Partial<T> | Promise<Partial<T>>;
-export type InvokerFn<T extends Record<string, any>, R = any> = (context: T, input?: any) => Promise<R>;
+export type InvokerFn<T extends Record<string, any>, R = any> = (...args: any[]) => Promise<R>;
 export interface InvokeSrc {
     src: string | ServiceFn;
     input?: any;

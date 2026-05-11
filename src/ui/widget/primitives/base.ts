@@ -27,11 +27,33 @@ export class UxBase extends LifecycleComponent {
     this.ensureRole();
     this.ensureTabIndex();
     this.inferUxStyle();
+    this.bindTwoWay();
     queueMicrotask(() => {
       this.bindFSM();
       this.resolveDataFrom();
     });
     emitReadyOnce(this);
+  }
+
+  private bindTwoWay(): void {
+    this.addEventListener('ux:change', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail || !this.boundFSM) return;
+      const key = this.resolveDataKey();
+      if (!key) return;
+      const value = detail.value !== undefined ? detail.value : detail[key];
+      if (value !== undefined) {
+        this.boundFSM.setState({ [key]: value });
+      }
+    });
+  }
+
+  private resolveDataKey(): string | null {
+    const dataFrom = this.getAttribute('data-from');
+    if (dataFrom) return dataFrom.split('.')[0];
+    const name = this.getAttribute('name');
+    if (name) return name;
+    return null;
   }
 
   private inferUxStyle(): void {
@@ -96,10 +118,14 @@ export class UxBase extends LifecycleComponent {
 
   /**
    * Resolve data-from or data-source binding.
-   * Priority: data-from (FSM context) > data-source (service) > slotted children.
+   * Priority: data-from (FSM context) > name (FSM context alias) > data-source (service) > slotted children.
    */
   private resolveDataFrom(context?: Record<string, any>): void {
-    const dataFrom = this.getAttribute('data-from');
+    let dataFrom = this.getAttribute('data-from');
+    if (!dataFrom && context) {
+      const name = this.getAttribute('name');
+      if (name && name in context) dataFrom = name;
+    }
     if (dataFrom && context) {
       const value = resolveDotPath(context, dataFrom);
       if (value !== undefined && value !== this._boundDataRef) {

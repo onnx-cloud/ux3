@@ -21,7 +21,7 @@ export class ServiceFactory {
 
   static hasAdapter(type: string): boolean {
     return this.customAdapters.has(type)
-      || ['http', 'websocket', 'jsonrpc', 'file', 's3', 'mock', 'plugin'].includes(type);
+      || ['http', 'websocket', 'jsonrpc', 'file', 's3', 'mock', 'plugin', 'mcp'].includes(type);
   }
 
   static create(name: string, spec: ServiceSpec): Service {
@@ -35,24 +35,26 @@ export class ServiceFactory {
       const factory = this.customAdapters.get(svcType)!;
       const svcConfig: ServiceConfig = ((spec.config || {}) as ServiceConfig);
       const adapter = factory(svcConfig);
-      (adapter as unknown as Record<string, unknown>).name = name;
+      if (typeof adapter === 'object' && adapter !== null) {
+        try { Object.defineProperty(adapter, 'name', { value: name, writable: true, configurable: true }); } catch {}
+      }
       return adapter as unknown as Service;
     }
 
     const { type: _t, adapter: _a, config: nestedCfg, ...flatCfg } = spec;
-    const svcConfig: ServiceConfig = nestedCfg ?? (flatCfg as unknown as ServiceConfig);
+    const svcConfig: ServiceConfig = nestedCfg ?? (flatCfg as ServiceConfig);
 
     switch (svcType) {
       case 'http':
-        return new HttpService(svcConfig) as unknown as Service;
+        return new HttpService(svcConfig);
       case 'websocket':
-        return new WebSocketService(svcConfig as Record<string, unknown> as never) as unknown as Service;
+        return new WebSocketService(svcConfig as Record<string, unknown> as never);
       case 'jsonrpc':
-        return new JSONRPCService(svcConfig) as unknown as Service;
+        return new JSONRPCService(svcConfig);
       case 'file':
-        return new FileService(svcConfig) as unknown as Service;
+        return new FileService(svcConfig);
       case 's3':
-        return new S3Service(svcConfig) as unknown as Service;
+        return new S3Service(svcConfig);
       case 'mock':
         return this.buildMockService(svcConfig);
       case 'plugin':
@@ -120,6 +122,6 @@ export class ServiceFactory {
       async update() { throw pluginError; },
       async find() { throw pluginError; },
       subscribe() { return { unsubscribe: () => {} }; },
-    } as unknown as Service;
+    };
   }
 }

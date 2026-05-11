@@ -18,8 +18,7 @@ import { UxWizard } from './wizard.js';
 import { UxCapture } from './capture.js';
 import { UxProgress } from './progress.js';
 import { UxSelect } from './select.js';
-import { UxChart } from './chart.js';
-import { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from './context-tools.js';
+import { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from '../shell/context-tools.js';
 import { UxCard } from './card.js';
 import { UxAlert } from './alert.js';
 import { UxSpinner } from './spinner.js';
@@ -39,25 +38,12 @@ import { UxDropZone } from './dropzone.js';
 import { UxSearchBar } from './search-bar.js';
 import { UxTreeNav } from './tree-nav.js';
 import { UxNotifications } from './notifications.js';
-import { UxQrCode } from './qr-code.js';
-import { UxFlowEditor } from './flow-editor.js';
-import { UxWorkflow } from './workflow.js';
-import { UxCalendar } from './calendar.js';
-import { UxKanban } from './kanban.js';
-import { UxGantt } from './gantt.js';
-import { UxDashboard } from './dashboard.js';
-import { UxKpiBoard } from './kpi-board.js';
-import { UxQueryBuilder } from './query-builder.js';
-import { UxFilterBuilder } from './filter-builder.js';
-import { UxPivotTable } from './pivot-table.js';
-import { UxReportBuilder } from './report-builder.js';
+import { UxDataGrid } from './data-grid.js';
 import { UxTableVirtual } from './table-virtual.js';
 import { UxTable } from './table.js';
-import { UxDataGrid } from './data-grid.js';
 import { UxSplash } from './splash-screen.js';
 import { UxRadioGroup } from './radio-group.js';
 import { UxLink } from './link.js';
-import { UxChatMessages } from './chat-messages.js';
 
 export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
@@ -82,7 +68,6 @@ export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
     case 'wysiwyg': return UxWysiwyg;
     case 'capture': return UxCapture;
     case 'progress': return UxProgress;
-    case 'chart': return UxChart;
     case 'select': return UxSelect;
     case 'network-status': return UxNetworkStatus;
     case 'theme-toggle': return UxThemeToggle;
@@ -106,25 +91,12 @@ export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
     case 'search-bar': return UxSearchBar;
     case 'tree-nav': return UxTreeNav;
     case 'notifications': return UxNotifications;
-    case 'qr-code': return UxQrCode;
     case 'data-grid': return UxDataGrid;
-    case 'flow-editor': return UxFlowEditor;
-    case 'workflow': return UxWorkflow;
-    case 'calendar': return UxCalendar;
-    case 'kanban': return UxKanban;
-    case 'gantt': return UxGantt;
-    case 'dashboard': return UxDashboard;
-    case 'kpi-board': return UxKpiBoard;
-    case 'query-builder': return UxQueryBuilder;
-    case 'filter-builder': return UxFilterBuilder;
-    case 'pivot-table': return UxPivotTable;
-    case 'report-builder': return UxReportBuilder;
     case 'table-virtual': return UxTableVirtual;
     case 'table': return UxTable;
     case 'splash': return UxSplash;
     case 'radio-group': return UxRadioGroup;
     case 'link': return UxLink;
-    case 'chat-messages': return UxChatMessages;
     default: return UxRegion;
   }
 }
