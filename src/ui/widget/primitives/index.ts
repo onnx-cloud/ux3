@@ -48,6 +48,7 @@ export { UxLink } from './link.js';
 export { UxMegaMenu } from './mega-menu.js';
 export { UxContextMenu } from './context-menu.js';
 export { resolveClass } from './resolve.js';
+import './lightbox.js';
 export type { PrimitiveKind, PrimitiveDefinition } from './types.js';
 
 export function registerBuiltInPrimitives(): void {

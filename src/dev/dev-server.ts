@@ -11,6 +11,43 @@ import { MCPHTTPHandler } from '../mcp/http-handler.js';
 
 const frameworkRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+function readRequestBody(req: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
+async function callLLM(messages: any[]): Promise<string> {
+  const endpoint = (process.env?.GROQ_OPENAI_ENDPOINT || '').trim();
+  const apiKey = (process.env?.GROQ_API_KEY || '').trim();
+  const model = (process.env?.GROQ_MODEL || 'openai/gpt-oss-120b').trim();
+
+  if (!endpoint || !apiKey) {
+    return `LLM not configured. Set GROQ_OPENAI_ENDPOINT, GROQ_API_KEY, and GROQ_MODEL in .env.\n\nYou said: "${messages[messages.length - 1]?.content?.slice(0, 100) || '...'}"`;
+  }
+
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: messages.map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : (m.content?.text || '') })),
+      max_tokens: 1024,
+    }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text().catch(() => '');
+    return `LLM API error (${resp.status}): ${err.slice(0, 200)}`;
+  }
+
+  const data = await resp.json();
+  return data?.choices?.[0]?.message?.content || data?.content || JSON.stringify(data);
+}
+
 function generateWidgetData(): any {
   return {
     kanban: {
@@ -482,6 +519,11 @@ export class DevServer {
             return;
           }
 
+          if (pathname === '/$/llm/chat') {
+            await this.handleLlmProxy(req, res);
+            return;
+          }
+
           if (pathname === '/$/api/widgets/data') {
             const widgetData = generateWidgetData();
             res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
@@ -798,6 +840,30 @@ export class DevServer {
       } catch (error) {
         this.clients.delete(client);
       }
+    }
+  }
+
+  private async handleLlmProxy(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' });
+      res.end(); return;
+    }
+    if (req.method !== 'POST') { res.writeHead(405); res.end('POST only'); return; }
+    try {
+      const body = await readRequestBody(req);
+      const rpc = JSON.parse(body);
+      if (!rpc?.params?.messages) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ jsonrpc: '2.0', error: { code: -32602, message: 'Missing messages' }, id: rpc?.id }));
+        return;
+      }
+      const messages = rpc.params.messages;
+      const response = await callLLM(messages);
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ jsonrpc: '2.0', result: { content: { type: 'text', text: response }, role: 'assistant' }, id: rpc.id }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ jsonrpc: '2.0', error: { code: -32603, message: e instanceof Error ? e.message : String(e) }, id: null }));
     }
   }
 

@@ -65,21 +65,6 @@ export class UxTabs extends UxBase {
     return 'tab_default';
   }
 
-  /**
-   * Restore the selected tab index from the parent FSM context.
-   */
-  private restoreSelectedIndex(): number {
-    const key = this.fsmKey();
-    const fsm = this.findParentFsm();
-    if (fsm) {
-      const ctx = fsm.getContext();
-      if (ctx && typeof ctx[key] === 'number') {
-        return ctx[key];
-      }
-    }
-    return 0;
-  }
-
   /** Walk up the DOM to find the nearest parent with an FSM. */
   private findParentFsm(): any {
     let el: HTMLElement | null = this;
@@ -97,9 +82,25 @@ export class UxTabs extends UxBase {
     const key = this.fsmKey();
     const fsm = this.findParentFsm();
     if (fsm) {
-      const ctx = fsm.getContext();
-      ctx[key] = index;
+      try { fsm.getContext()[key] = index; } catch {}
     }
+  }
+
+  /**
+   * Restore the selected tab index from the parent FSM context.
+   */
+  private restoreSelectedIndex(): number {
+    const key = this.fsmKey();
+    const fsm = this.findParentFsm();
+    if (fsm) {
+      try {
+        const ctx = fsm.getContext();
+        if (ctx && typeof ctx[key] === 'number') {
+          return ctx[key];
+        }
+      } catch {}
+    }
+    return 0;
   }
 
   protected onDisconnected(): void {

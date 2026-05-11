@@ -9,8 +9,8 @@ const STYLE_CSS = `    ux-pagination { display: flex; align-items: center; gap: 
     ux-pagination button { padding: 0.375rem 0.75rem; border: 1px solid var(--ux-pg-border, #d1d5db); background: var(--ux-pg-bg, #fff); border-radius: 0.25rem; cursor: pointer; font: inherit; font-size: 0.875rem; }
     ux-pagination button:hover:not(:disabled) { filter: brightness(0.95); }
     ux-pagination button:disabled { opacity: 0.5; cursor: default; }
-    ux-pagination button.active { font-weight: 600; background: var(--ux-pg-active-bg, #3b82f6); color: var(--ux-pg-active-color, #fff); border-color: var(--ux-pg-active-bg); }
-    ux-pagination .info { padding: 0 0.5rem; color: #6b7280; font-size: 0.875rem; }`;
+    ux-pagination button.active { font-weight: 600; background: var(--ux-pg-active-bg, var(--color-primary, #6b7280)); color: var(--ux-pg-active-color, #fff); border-color: var(--ux-pg-active-bg, var(--color-primary, #6b7280)); }
+    ux-pagination .info { padding: 0 0.5rem; color: var(--color-text-muted, #9ca3af); font-size: 0.875rem; }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxPagination extends UxBase {
   private currentPage: number = 1;

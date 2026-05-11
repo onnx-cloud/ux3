@@ -12,7 +12,7 @@ const STYLE_CSS = `    ux-select { display: inline-block; }
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 0.75rem center;
     }
-    ux-select select:focus { outline: none; border-color: var(--color-primary, #3b82f6); box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+    ux-select select:focus { outline: none; border-color: var(--color-primary, #6b7280); box-shadow: 0 0 0 2px rgba(107,114,128,.2); }
     ux-select select:disabled { opacity: 0.5; cursor: not-allowed; }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxSelect extends UxBase {

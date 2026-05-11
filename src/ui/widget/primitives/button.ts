@@ -26,7 +26,7 @@ const STYLE_CSS = `
   ux-button[size="md"] button, ux-button:not([size]) button { padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem); font-size: 1rem; }
   ux-button[size="lg"] button { padding: var(--spacing-sm, 0.75rem) var(--spacing-lg, 1.5rem); font-size: 1.125rem; }
   ux-button[variant="primary"] button, ux-button:not([variant]) button {
-    background-color: var(--color-primary, #3b82f6); color: white; border-color: var(--color-primary, #3b82f6);
+    background-color: var(--color-primary, #6b7280); color: white; border-color: var(--color-primary, #6b7280);
   }
   ux-button[variant="secondary"] button {
     background-color: var(--color-surface-tertiary, #e5e7eb); color: var(--color-text-default, #1f2937); border-color: var(--color-border-default, #d1d5db);
@@ -40,7 +40,7 @@ const STYLE_CSS = `
   ux-button[variant="warning"] button {
     background-color: var(--color-warning, #f59e0b); color: white; border-color: var(--color-warning, #f59e0b);
   }
-  ux-button button:focus-visible { outline: var(--focus-outline, 2px solid #3b82f6); outline-offset: var(--focus-outline-offset, 2px); }
+  ux-button button:focus-visible { outline: var(--focus-outline, 2px solid #6b7280); outline-offset: var(--focus-outline-offset, 2px); }
   ux-button[disabled] button, ux-button[loading] button { opacity: var(--opacity-disabled, 0.6); cursor: var(--cursor-disabled, not-allowed); }
   ux-button .spinner { display: inline-block; animation: spin 1s linear infinite; font-size: 1.2em; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

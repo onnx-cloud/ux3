@@ -55,12 +55,12 @@ export class UxLangSwitcher extends UxBase {
         :host { display: var(--ux-locale-display, inline-flex); align-items: center; gap: var(--ux-locale-gap, 0.375rem); }
         label { font: inherit; color: inherit; }
         select {
-          font: inherit; color: inherit;
-          background: var(--ux-color-surface, #ffffff);
-          border: 1px solid var(--ux-color-border, #cbd5e1);
-          border-radius: var(--ux-radius, 0.375rem);
-          padding: var(--ux-locale-select-padding, 0.25rem 0.5rem);
-          min-width: var(--ux-locale-select-min-width, 5.5rem);
+          font: inherit; color: var(--color-text, #111827);
+          background: var(--color-bg, #fff);
+          border: 1px solid var(--color-border, #d1d5db);
+          border-radius: 0.375rem;
+          padding: 0.25rem 0.5rem;
+          min-width: 5.5rem;
         }
       </style>
       ${label ? `<label part="label">${escapeText(label)}</label>` : ''}
@@ -137,12 +137,12 @@ export class UxThemeToggle extends UxBase {
       <style>
         :host { display: inline-block; }
         button {
-          font: inherit; color: inherit;
-          background: var(--ux-btn-bg, #ffffff);
-          border: var(--ux-btn-border, 1px solid #cbd5e1);
-          border-radius: var(--ux-btn-radius, 999px);
-          padding: var(--ux-btn-padding, 0.25rem 0.625rem);
-          cursor: var(--ux-btn-cursor, pointer);
+          font: inherit; color: var(--color-text, #111827);
+          background: var(--color-bg, #fff);
+          border: 1px solid var(--color-border, #d1d5db);
+          border-radius: 999px;
+          padding: 0.25rem 0.625rem;
+          cursor: pointer;
         }
       </style>
       <button part="button" type="button"></button>
@@ -208,9 +208,9 @@ export class UxNetworkStatus extends UxBase {
         .dot { width: var(--ux-status-dot-size, 0.625rem); height: var(--ux-status-dot-size, 0.625rem); border-radius: 50%; background: var(--ux-status-color, var(--ux-status-online, #16a34a)); transition: background var(--ux-status-transition, 0.2s ease); }
         :host([online]) .dot { background: var(--ux-status-color, var(--ux-status-online, #16a34a)); }
         :host(:not([online])) .dot { background: var(--ux-status-offline, #dc2626); }
-        .label { font: inherit; color: inherit; }
+        .label { font: inherit; color: var(--color-text, #111827); }
         ${hideLabel ? '.label { display: none; }' : ''}
-        .tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--ux-tooltip-bg, #0f172a); color: var(--ux-tooltip-color, #e2e8f0); border: 1px solid var(--ux-tooltip-border, #334155); border-radius: 6px; padding: 6px 10px; font-size: 11px; white-space: nowrap; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--color-text, #111827); color: var(--color-bg, #fff); border: 1px solid var(--color-border, #d1d5db); border-radius: 6px; padding: 6px 10px; font-size: 11px; white-space: nowrap; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         :host(:hover) .tooltip, :host(:focus-within) .tooltip { display: block; }
       </style>
       <span class="dot" aria-hidden="true"></span>
