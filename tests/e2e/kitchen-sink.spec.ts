@@ -41,7 +41,7 @@ test.describe('Kitchen sink component showcase', () => {
       'ux-icon-button',
       'ux-link',
       'ux-tabs',
-      'ux-tab-panel',
+      'ux-tab',
       'ux-accordion',
       'ux-menu',
       'ux-menu-item',

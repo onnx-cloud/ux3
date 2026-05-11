@@ -160,17 +160,24 @@ export function applyStyles(root: Document | ShadowRoot | HTMLElement = document
     }
 
     (container).querySelectorAll('[data-style], [ux-style]').forEach((el) => {
-      const key = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
-      const cls = resolveStyle(key);
+      const rawKey = el.getAttribute('data-style') || el.getAttribute('ux-style') || '';
+      const keys = rawKey.split(',').map(k => k.trim()).filter(Boolean);
+      const clsParts: string[] = [];
+      for (const key of keys) {
+        const resolved = resolveStyle(key);
+        if (resolved) {
+          clsParts.push(resolved);
+        } else {
+          warnOnce(key);
+        }
+      }
+      const cls = clsParts.join(' ');
       if (cls) {
         const el2 = el as HTMLElement;
-        // P0-1: merge with existing classes rather than overwriting
         const existing = el2.className.split(/\s+/).filter(Boolean);
         const incoming = cls.split(/\s+/).filter(Boolean);
         const merged = Array.from(new Set([...existing, ...incoming]));
         el2.className = merged.join(' ');
-      } else {
-        warnOnce(key);
       }
     });
 

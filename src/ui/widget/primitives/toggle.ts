@@ -10,7 +10,7 @@ const STYLE_CSS = `    ux-toggle { display: inline-flex; align-items: center; ga
     ux-toggle .toggle-box { width: 1rem; height: 1rem; border: 2px solid var(--_cb-border, #cbd5e1); border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
     ux-toggle .toggle-box.on { background: var(--_cb-on, #3b82f6); border-color: var(--_cb-on, #3b82f6); }
     ux-toggle .toggle-box.on::after { content: ''; width: 0.375rem; height: 0.5625rem; border: solid #fff; border-width: 0 0.125rem 0.125rem 0; transform: rotate(45deg); margin-top: -0.0625rem; }
-    ux-toggle .toggle-label { font-size: 0.875rem; color: var(--_cb-label, #334155); }
+    ux-toggle .toggle-label { font-size: 0.875rem; color: var(--_cb-label, #334155); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     ux-toggle[role="switch"] .toggle-label,
     ux-toggle[role="checkbox"] .toggle-label { color: var(--_sw-label, #334155); }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
@@ -137,7 +137,7 @@ const stateAttr = this.getStateAttr();
   };
 
   protected getStateAttr(): string {
-    return this.definition?.stateAttr ?? 'open';
+    return ((this.constructor as typeof UxBase & { primitiveDef?: { stateAttr?: string } }).primitiveDef?.stateAttr) ?? 'open';
   }
 
   protected applyAriaState(next: boolean): void {

@@ -44,6 +44,8 @@ import { UxTable } from './table.js';
 import { UxSplash } from './splash-screen.js';
 import { UxRadioGroup } from './radio-group.js';
 import { UxLink } from './link.js';
+import { UxMegaMenu } from './mega-menu.js';
+import { UxContextMenu } from './context-menu.js';
 
 export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
@@ -97,6 +99,8 @@ export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
     case 'splash': return UxSplash;
     case 'radio-group': return UxRadioGroup;
     case 'link': return UxLink;
+    case 'mega-menu': return UxMegaMenu;
+    case 'context-menu': return UxContextMenu;
     default: return UxRegion;
   }
 }

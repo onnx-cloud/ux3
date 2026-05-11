@@ -134,13 +134,18 @@ function buildNavConfig(
   routes: Array<{ path: string; view: string }>,
   i18n: Record<string, any> = {}
 ): Record<string, any> {
-  // Find current route
+  // Find current route (support wildcard patterns)
   let currentPath = pathname;
   let currentView = 'home';
   
   for (const route of routes) {
     if (route.path === pathname) {
       currentPath = route.path;
+      currentView = route.view;
+      break;
+    }
+    if (route.path.includes('*') && pathname.startsWith(route.path.replace(/\/\*$/, ''))) {
+      currentPath = pathname;
       currentView = route.view;
       break;
     }
@@ -842,8 +847,18 @@ export class DevServer {
 
     const routeSegments = route.split('/').filter(Boolean);
     const requestSegments = request.split('/').filter(Boolean);
-    if (routeSegments.length !== requestSegments.length) return false;
 
+    const wildcardIdx = routeSegments.indexOf('*');
+    if (wildcardIdx !== -1) {
+      if (requestSegments.length < wildcardIdx) return false;
+      const prefixSegments = routeSegments.slice(0, wildcardIdx);
+      const requestPrefix = requestSegments.slice(0, wildcardIdx);
+      return prefixSegments.every((segment, index) => {
+        return segment.startsWith(':') || segment === requestPrefix[index];
+      });
+    }
+
+    if (routeSegments.length !== requestSegments.length) return false;
     return routeSegments.every((segment, index) => {
       return segment.startsWith(':') || segment === requestSegments[index];
     });

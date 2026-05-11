@@ -1,7 +1,4 @@
 import { LifecycleComponent } from '../../lifecycle-component.js';
-import type { PrimitiveDefinition } from './types.js';
-import { TOGGLE_KIND } from './types.js';
-import { DEF_BY_TAG } from './registry.js';
 import { emitReadyOnce } from './helpers.js';
 import { FSMRegistry, extractNamespace, extractState } from '../../../fsm/registry.js';
 import type { StateMachine } from '../../../fsm/state-machine.js';
@@ -19,13 +16,8 @@ export class UxBase extends LifecycleComponent {
   private previousDisplay: string = '';
   protected _boundDataRef: any = undefined;
 
-  protected get definition(): PrimitiveDefinition | undefined {
-    return DEF_BY_TAG.get(this.localName);
-  }
-
   protected onConnected(): void {
     this.ensureRole();
-    this.ensureTabIndex();
     this.inferUxStyle();
     this.bindTwoWay();
     queueMicrotask(() => {
@@ -116,10 +108,6 @@ export class UxBase extends LifecycleComponent {
     this.resolveDataBindings(context);
   }
 
-  /**
-   * Resolve data-from or data-source binding.
-   * Priority: data-from (FSM context) > name (FSM context alias) > data-source (service) > slotted children.
-   */
   private resolveDataFrom(context?: Record<string, any>): void {
     let dataFrom = this.getAttribute('data-from');
     if (!dataFrom && context) {
@@ -127,7 +115,14 @@ export class UxBase extends LifecycleComponent {
       if (name && name in context) dataFrom = name;
     }
     if (dataFrom && context) {
-      const value = resolveDotPath(context, dataFrom);
+      let root: any = context;
+      let path = dataFrom;
+      // $ prefix resolves against the global app context
+      if (path.startsWith('$.')) {
+        root = (window as any).__ux3App || {};
+        path = path.slice(2);
+      }
+      const value = resolveDotPath(root, path);
       if (value !== undefined && value !== this._boundDataRef) {
         this._boundDataRef = value;
         this.applyData(value);
@@ -145,10 +140,6 @@ export class UxBase extends LifecycleComponent {
     }
   }
 
-  /**
-   * Fetch data from a named service.
-   * Called once at onConnected() when data-from is absent but data-source is set.
-   */
   private async resolveDataFromSource(source: string, method: string): Promise<void> {
     try {
       const app = (window as any).__ux3App;
@@ -169,10 +160,6 @@ export class UxBase extends LifecycleComponent {
     } catch {}
   }
 
-  /**
-   * Override in subclass to handle data binding.
-   * Receives the resolved data object (from data-from or data-source).
-   */
   protected applyData(_data: any): void {}
 
   sendToFSM(type: string, payload?: Record<string, any>): void {
@@ -195,19 +182,10 @@ export class UxBase extends LifecycleComponent {
   }
 
   protected ensureRole(): void {
-    const role = this.definition?.role;
+    const ctor = this.constructor as typeof UxBase & { primitiveDef?: { role?: string } };
+    const role = ctor.primitiveDef?.role;
     if (role && !this.hasAttribute('role')) {
       this.setAttribute('role', role);
-    }
-  }
-
-  protected ensureTabIndex(): void {
-    const def = this.definition;
-    if (!def) return;
-    if (TOGGLE_KIND.has(def.kind) || def.kind === 'value' || def.kind === 'slider') {
-      if (!this.hasAttribute('tabindex')) {
-        this.tabIndex = 0;
-      }
     }
   }
 }

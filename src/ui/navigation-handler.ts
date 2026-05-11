@@ -35,6 +35,24 @@ function matchPattern(
   pattern: string,
   pathname: string
 ): Record<string, string> | null {
+  const wildcardIdx = pattern.indexOf('*');
+  if (wildcardIdx !== -1) {
+    const prefix = pattern.slice(0, wildcardIdx).replace(/\/$/, '');
+    if (!pathname.startsWith(prefix)) return null;
+    const params: Record<string, string> = {};
+    const prefixSegments = prefix.split('/').filter(Boolean);
+    const pathSegments = pathname.split('/').filter(Boolean);
+    for (let i = 0; i < prefixSegments.length; i++) {
+      if (prefixSegments[i].startsWith(':')) {
+        params[prefixSegments[i].slice(1)] = pathSegments[i] || '';
+      }
+    }
+    const wildcardValue = pathname.slice(prefix.length).replace(/^\//, '');
+    params['*'] = wildcardValue;
+    params['_'] = wildcardValue;
+    return params;
+  }
+
   const regexStr =
     '^' + pattern.replace(/:([^/]+)/g, '(?<$1>[^/]+)') + '$';
   const m = pathname.match(new RegExp(regexStr));

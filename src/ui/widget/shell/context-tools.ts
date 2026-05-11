@@ -160,19 +160,6 @@ export class UxThemeToggle extends UxBase {
     html.setAttribute('data-color-scheme', theme);
     html.dataset.theme = theme;
     html.style.colorScheme = theme;
-    if (theme === 'dark') {
-      html.style.setProperty('--color-bg', '#111827');
-      html.style.setProperty('--color-text', '#f9fafb');
-      html.style.setProperty('--color-surface', '#1f2937');
-      html.style.setProperty('--color-border', '#4b5563');
-      html.style.setProperty('--color-muted', '#9ca3af');
-    } else {
-      html.style.removeProperty('--color-bg');
-      html.style.removeProperty('--color-text');
-      html.style.removeProperty('--color-surface');
-      html.style.removeProperty('--color-border');
-      html.style.removeProperty('--color-muted');
-    }
     this.setAttribute('theme', theme);
     this.toggleAttribute('checked', theme === 'dark');
     if (this.buttonEl) {

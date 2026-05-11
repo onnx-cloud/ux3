@@ -392,7 +392,7 @@ export const TAILWIND_STYLES: Record<string, string> = {
   // ── Tabs & Accordion ──────────────────────────────────────────────────────
   'ux-tabs':            'flex flex-col rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-1',
   'ux-tab':             'inline-flex items-center px-4 py-1.5 text-sm font-medium cursor-pointer rounded-md transition-colors text-[var(--color-text-muted,#6b7280)] hover:bg-[var(--color-bg-muted,#f1f5f9)]',
-  'ux-tab-panel':       'rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm',
+  'ux-tab':       'rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm',
   'tab-selected':       'bg-[var(--color-primary,#eff6ff)] text-[var(--color-primary,#1d4ed8)]',
   'ux-accordion':       'border border-[var(--color-border,#e2e8f0)] rounded-lg divide-y divide-[var(--color-border,#e2e8f0)]',
   'ux-menu':            'flex flex-col rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] overflow-hidden text-sm min-w-48',

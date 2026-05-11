@@ -3,7 +3,17 @@ import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-select-style';
 const STYLE_CSS = `    ux-select { display: inline-block; }
-    ux-select select { width: 100%; font: inherit; color: inherit; }`;
+    ux-select select {
+      width: 100%; font: inherit; color: var(--color-text, #0f172a);
+      background: var(--color-bg, #fff);
+      border: 1px solid var(--color-border, #d1d5db);
+      border-radius: 0.375rem; padding: 0.5rem 2rem 0.5rem 0.75rem;
+      appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.75rem center;
+    }
+    ux-select select:focus { outline: none; border-color: var(--color-primary, #3b82f6); box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+    ux-select select:disabled { opacity: 0.5; cursor: not-allowed; }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxSelect extends UxBase {
   private selectEl: HTMLSelectElement | null = null;

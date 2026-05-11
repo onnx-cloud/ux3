@@ -18,6 +18,7 @@ import type { AppContext } from './app.js';
 import type { ContentManifest } from '../services/content.js';
 import { HandlebarsLite } from '../hbs/index.js';
 import { registerStyles, initStyleRegistry } from './style-registry.js';
+import { registerBuiltInPrimitives } from './widget/primitives/index.js';
 import { setupNavigation } from './navigation-handler.js';
 import { HookRegistry, ServiceLifecyclePhase } from '../core/lifecycle.js';
 import { captureBrowserContext, observeBrowserContext, type BrowserContextOptions } from './browser-context.js';
@@ -29,14 +30,15 @@ import { createAppFSM, transitionAppFSM, type AppFSMContext } from './app-fsm.js
 import { DEFAULT_STYLES } from '../build/default-styles.js';
 
 function injectTokenCss(tokens: Record<string, any>): void {
-  const lines: string[] = [];
-  const flatten = (obj: Record<string, any>, prefix: string) => {
+  const lightLines: string[] = [];
+  const darkLines: string[] = [];
+  const flatten = (arr: string[], obj: Record<string, any>, prefix: string) => {
     for (const [k, v] of Object.entries(obj)) {
       const prop = `${prefix}-${k}`;
       if (v && typeof v === 'object' && !Array.isArray(v)) {
-        flatten(v, prop);
+        flatten(arr, v, prop);
       } else if (typeof v === 'string' || typeof v === 'number') {
-        lines.push(`  ${prop}: ${v};`);
+        arr.push(`  ${prop}: ${v};`);
       }
     }
   };
@@ -45,36 +47,24 @@ function injectTokenCss(tokens: Record<string, any>): void {
   if (hasColors) {
     const light = (hasColors as any).light;
     const dark = (hasColors as any).dark;
-    if (light && typeof light === 'object') flatten(light, '--color');
-    if (dark && typeof dark === 'object') {
-      lines.push('');
-      lines.push('[data-color-scheme="dark"] {');
-      const darkLines: string[] = [];
-      const fd = (obj: Record<string, any>, p: string): void => {
-        for (const [k, v] of Object.entries(obj)) {
-          const prop = `${p}-${k}`;
-          if (v && typeof v === 'object' && !Array.isArray(v)) { fd(v, prop); }
-          else if (typeof v === 'string' || typeof v === 'number') { darkLines.push(`  ${prop}: ${v};`); }
-        }
-      };
-      fd(dark, '--color');
-      lines.push(...darkLines);
-      lines.push('}');
-    }
+    if (light && typeof light === 'object') flatten(lightLines, light, '--color');
+    if (dark && typeof dark === 'object') flatten(darkLines, dark, '--color');
   }
-  if (tokens.spacing && typeof tokens.spacing === 'object') flatten(tokens.spacing, '--spacing');
-  if (tokens.typography && typeof tokens.typography === 'object') flatten(tokens.typography, '--typography');
+  if (tokens.spacing && typeof tokens.spacing === 'object') flatten(lightLines, tokens.spacing, '--spacing');
+  if (tokens.typography && typeof tokens.typography === 'object') flatten(lightLines, tokens.typography, '--typography');
 
-  if (lines.length > 0) {
-    lines.push('');
-    lines.push('  font-family: var(--typography-fontFamily-sans, Inter), system-ui, sans-serif;');
-    lines.push('  font-size: var(--typography-fontSize-base, 0.875rem);');
-    lines.push('  line-height: var(--typography-lineHeight-normal, 1.5);');
-    lines.push('  color: var(--color-text, #111827);');
-    lines.push('  background-color: var(--color-bg, #ffffff);');
+  if (lightLines.length > 0 || darkLines.length > 0) {
     const style = document.createElement('style');
     style.id = 'ux3-tokens';
-    style.textContent = `:root {\n${lines.join('\n')}\n}`;
+    let css = `:root {\n${lightLines.join('\n')}`;
+    css += `\n  font-family: Inter, system-ui, sans-serif;`;
+    css += `\n  color: var(--color-text, #0f172a);`;
+    css += `\n  background-color: var(--color-bg, #ffffff);`;
+    css += `\n}`;
+    if (darkLines.length > 0) {
+      css += `\n[data-color-scheme="dark"] {\n${darkLines.join('\n')}\n}`;
+    }
+    style.textContent = css;
     document.head.appendChild(style);
   }
 }
@@ -619,6 +609,7 @@ export class AppContextBuilder {
     // re-register here to guarantee availability even for SSR-less bootstraps.
     registerStyles(DEFAULT_STYLES);
     registerStyles(context.styles || {});
+    registerBuiltInPrimitives();
     initStyleRegistry();
 
     // Inject CSS custom properties from ux/token/*.yaml so that var(--color-*)

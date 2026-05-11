@@ -14,7 +14,7 @@ const BUILT_IN_TAGS = [
   'ux-modal',
   'ux-drawer',
   'ux-tabs',
-  'ux-tab-panel',
+  'ux-tab',
   'ux-accordion',
   'ux-menu',
   'ux-dropdown',

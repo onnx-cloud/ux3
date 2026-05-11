@@ -45,17 +45,21 @@ export { UxDataGrid } from './data-grid.js';
 export { UxTableVirtual } from './table-virtual.js';
 export { UxTable } from './table.js';
 export { UxLink } from './link.js';
+export { UxMegaMenu } from './mega-menu.js';
+export { UxContextMenu } from './context-menu.js';
 export { resolveClass } from './resolve.js';
 export type { PrimitiveKind, PrimitiveDefinition } from './types.js';
 
 export function registerBuiltInPrimitives(): void {
   for (const definition of ALL_PRIMITIVES) {
-    if (!customElements.get(definition.tag)) {
+    if (typeof customElements !== 'undefined' && !customElements.get(definition.tag)) {
       const BaseClass = resolveClass(definition.kind);
       const ElementClass = class extends BaseClass {};
+      Object.defineProperty(ElementClass, 'primitiveDef', { value: definition });
       customElements.define(definition.tag, ElementClass);
     }
   }
+  if (typeof window !== 'undefined') (window as any).__ux3PrimitivesDefined = true;
 }
 
 registerBuiltInPrimitives();

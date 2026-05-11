@@ -3,7 +3,7 @@ import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-progress-style';
 const STYLE_CSS = `
-  ux-progress { display: inline-block; width: 100%; max-width: var(--ux-progress-max-w, 24rem); }
+  ux-progress { display: inline-flex; width: 100%; max-width: var(--ux-progress-max-w, 24rem); }
   ux-progress .ux-pg-wrap { display: flex; align-items: center; gap: 0.5rem; width: 100%; height: 1.5rem; }
   ux-progress .ux-pg-track { flex: 1; height: var(--ux-progress-height, 0.5rem); background: var(--ux-progress-track-bg, var(--ux-color-track, #e2e8f0)); border-radius: var(--ux-progress-radius, 999px); overflow: hidden; }
   ux-progress .ux-pg-fill { height: 100%; background: var(--ux-progress-fill-bg, var(--ux-color-accent, #2563eb)); border-radius: var(--ux-progress-radius, 999px); transition: var(--ux-progress-transition, width 0.3s ease); }

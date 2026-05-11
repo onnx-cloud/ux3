@@ -95,8 +95,8 @@ export class UxTable extends UxBase {
       if (i === this.sortColumn) {
         const arrow = document.createElement('span');
         arrow.className = 'ux-sort-arrow';
-        arrow.textContent = this.sortAsc ? ' ▲' : ' ▼';
-        arrow.style.fontSize = '0.75em';
+        arrow.textContent = this.sortAsc ? '\u25B2' : '\u25BC';
+        arrow.style.cssText = 'display:inline-block;width:1em;font-size:0.65em;margin-left:4px;';
         th.appendChild(arrow);
       }
     });

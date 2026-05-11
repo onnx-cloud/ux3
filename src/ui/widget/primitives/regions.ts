@@ -9,7 +9,7 @@ export const regionPrimitives: PrimitiveDefinition[] = [
   { tag: 'ux-topbar', role: 'banner', kind: 'region' },
   { tag: 'ux-sidebar', role: 'navigation', kind: 'region' },
   { tag: 'ux-content', role: 'region', kind: 'region' },
-  { tag: 'ux-tab-panel', role: 'tabpanel', kind: 'region' },
+  { tag: 'ux-tab', role: 'tabpanel', kind: 'region' },
   { tag: 'ux-tab', role: 'tab', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-menu-item', role: 'menuitem', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-card-icon', role: 'img', kind: 'region' },
@@ -35,4 +35,5 @@ export const regionPrimitives: PrimitiveDefinition[] = [
   { tag: 'ux-hover-panel', role: 'dialog', kind: 'tooltip', stateAttr: 'open' },
   { tag: 'ux-icon-button', role: 'button', kind: 'toggle', stateAttr: 'pressed' },
   { tag: 'ux-chart-line-legend', role: 'list', kind: 'region' },
+  { tag: 'ux-context-menu-item', role: 'menuitem', kind: 'toggle', stateAttr: 'selected' },
 ];

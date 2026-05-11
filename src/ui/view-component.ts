@@ -282,15 +282,20 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
     }
 
     root.querySelectorAll('[ux-style], [data-style]').forEach((el) => {
-      const key = el.getAttribute('ux-style') || el.getAttribute('data-style') || '';
-      const mapped = styleMap[key];
-      if (!mapped || typeof mapped !== 'string') {
-        return;
+      const rawKey = el.getAttribute('ux-style') || el.getAttribute('data-style') || '';
+      const keys = rawKey.split(',').map(k => k.trim()).filter(Boolean);
+      const clsParts: string[] = [];
+      for (const key of keys) {
+        const mapped = styleMap[key];
+        if (mapped && typeof mapped === 'string') {
+          clsParts.push(mapped);
+        }
       }
+      if (clsParts.length === 0) return;
 
       const node = el as HTMLElement;
       const existing = node.className.split(/\s+/).filter(Boolean);
-      const incoming = mapped.split(/\s+/).filter(Boolean);
+      const incoming = clsParts.join(' ').split(/\s+/).filter(Boolean);
       node.className = Array.from(new Set([...existing, ...incoming])).join(' ');
     });
   }
@@ -617,10 +622,19 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
 
     if (!eventName) return null;
 
+    // When no colon, treat the value as the action and default the event to 'click'
+    if (!explicitAction && !this.isDomEvent(eventName)) {
+      return { event: 'click', action: eventName };
+    }
+
     const action = explicitAction || this.deriveActionName(element, eventName);
     if (!action) return null;
 
     return { event: eventName, action };
+  }
+
+  private isDomEvent(name: string): boolean {
+    return ['click','change','input','submit','focus','blur','keydown','keyup','mouseenter','mouseleave'].includes(name);
   }
 
   private deriveActionName(element: HTMLElement, domEvent: string): string {

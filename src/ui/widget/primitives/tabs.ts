@@ -14,14 +14,31 @@ export class UxTabs extends UxBase {
     this.generateTabsFromData();
     this.collectChildren();
     this.applyTabStyles();
-    // Restore tab index from FSM context if a fsm-key is set,
-    // otherwise from the data-selected-index attribute.
-    this.selectedIndex = this.restoreSelectedIndex();
-    if (this.selectedIndex > 0 && this.selectedIndex < this.tabs.length) {
-      this.selectTab(this.selectedIndex);
+    const synced = this.syncFromFsmState();
+    if (!synced) {
+      this.selectedIndex = this.restoreSelectedIndex();
+      if (this.selectedIndex > 0 && this.selectedIndex < this.tabs.length) {
+        this.selectTab(this.selectedIndex);
+      }
     }
     this.addEventListener('click', this.onTabClick);
     this.addEventListener('keydown', this.onTabKeyDown);
+  }
+
+  private syncFromFsmState(): boolean {
+    const fsm = this.findParentFsm();
+    if (!fsm) return false;
+    const state = fsm.getState?.() || '';
+    const leaf = state.split('.').pop() || '';
+    if (!leaf) return false;
+    for (let i = 0; i < this.panels.length; i++) {
+      const pState = this.panels[i].getAttribute('state');
+      if (pState === leaf) {
+        this.selectTab(i);
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -37,7 +54,7 @@ export class UxTabs extends UxBase {
     if (data) {
       return `tab_${data}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40);
     }
-    const panels = this.querySelectorAll('ux-tab-panel');
+    const panels = this.querySelectorAll('ux-tab');
     if (panels.length > 0) {
       const labelHash = Array.from(panels)
         .map(p => p.getAttribute('label') || '')
@@ -63,15 +80,15 @@ export class UxTabs extends UxBase {
     return 0;
   }
 
-  /** Walk shadow-DOM host to find the parent view component's FSM. */
+  /** Walk up the DOM to find the nearest parent with an FSM. */
   private findParentFsm(): any {
-    try {
-      const root = this.getRootNode() as ShadowRoot;
-      const host = root?.host as any;
-      if (host && host.fsm && typeof host.fsm.getContext === 'function') {
-        return host.fsm;
+    let el: HTMLElement | null = this;
+    while (el) {
+      if ((el as any).fsm && typeof (el as any).fsm.getContext === 'function') {
+        return (el as any).fsm;
       }
-    } catch { /* not in a shadow root or no FSM available */ }
+      el = el.parentElement || (el.getRootNode() as ShadowRoot)?.host as HTMLElement || null;
+    }
     return null;
   }
 
@@ -93,14 +110,13 @@ export class UxTabs extends UxBase {
 
   private buildTabBar() {
     this.tabBar = document.createElement('div');
-    this.tabBar.className = 'ux-tab-bar';
-    this.tabBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:2px;';
+    this.tabBar.className = resolveStyle('ux-tab-bar');
     this.tabBar.setAttribute('role', 'presentation');
     this.prepend(this.tabBar);
   }
 
   private generateTabsFromData() {
-    if (this.querySelector('[role="tab"], ux-tab')) return;
+    if (this.querySelector('[role="tab"]')) return;
 
     const data = this.getAttribute('data-tabs');
     let labels: string[] = [];
@@ -108,7 +124,7 @@ export class UxTabs extends UxBase {
     if (data) {
       labels = data.split(/[|█,]/).map(s => s.trim()).filter(Boolean);
     } else {
-      const panels = this.querySelectorAll('ux-tab-panel');
+      const panels = this.querySelectorAll('ux-tab');
       if (panels.length === 0) return;
       labels = Array.from(panels)
         .map(p => p.getAttribute('label') || '')
@@ -120,7 +136,8 @@ export class UxTabs extends UxBase {
       const tab = document.createElement('ux-tab');
       tab.textContent = label;
       tab.setAttribute('role', 'tab');
-      if (i === 0) tab.setAttribute('selected', '');
+      tab.className = resolveStyle('ux-tab-btn');
+      if (i === 0) { tab.setAttribute('selected', ''); this.applySelectedCls(tab); }
       if (this.tabBar) {
         this.tabBar.appendChild(tab);
       } else {
@@ -129,20 +146,23 @@ export class UxTabs extends UxBase {
     });
   }
 
-  private applyTabStyles() {
-    const tabCls = resolveStyle('tab') || resolveStyle('tabs');
-    const panelCls = resolveStyle('tab-panel');
-    const selCls = resolveStyle('tab-selected');
-    if (tabCls && selCls) {
-      this.tabs.forEach((t, i) => {
-        const existing = t.className.split(/\s+/).filter(Boolean);
-        const base = new Set([...existing, ...tabCls.split(/\s+/).filter(Boolean)]);
-        if (t.hasAttribute('selected')) {
-          for (const c of selCls.split(/\s+/).filter(Boolean)) base.add(c);
-        }
-        t.className = Array.from(base).join(' ');
-      });
+  private applySelectedCls(tab: HTMLElement) {
+    const extra = resolveStyle('ux-tab-btn-selected').split(/\s+/).filter(Boolean);
+    if (extra.length) {
+      const merged = Array.from(new Set([...tab.className.split(/\s+/).filter(Boolean), ...extra]));
+      tab.className = merged.join(' ');
     }
+  }
+
+  private removeSelectedCls(tab: HTMLElement) {
+    const extra = resolveStyle('ux-tab-btn-selected').split(/\s+/).filter(Boolean);
+    if (extra.length) {
+      tab.className = tab.className.split(/\s+/).filter(c => !extra.includes(c)).join(' ');
+    }
+  }
+
+  private applyTabStyles() {
+    const panelCls = resolveStyle('ux-tab-panel') || resolveStyle('ux-tab');
     if (panelCls) {
       this.panels.forEach(p => {
         if (!p.className) p.className = panelCls;
@@ -151,8 +171,8 @@ export class UxTabs extends UxBase {
   }
 
   private collectChildren() {
-    this.tabs = Array.from(this.querySelectorAll('[role="tab"], ux-tab, [ux-role="tab"]'));
-    this.panels = Array.from(this.querySelectorAll(':scope > [role="tabpanel"], :scope > ux-tab-panel'));
+    this.tabs = Array.from(this.querySelectorAll('[role="tab"]'));
+    this.panels = Array.from(this.querySelectorAll(':scope > ux-tab, :scope > [role="tabpanel"]'));
     if (this.tabs.length > 0 && !this.tabs.find((t) => t.getAttribute('aria-selected') === 'true')) {
       this.selectTab(0);
     }
@@ -167,7 +187,7 @@ export class UxTabs extends UxBase {
       this.persistSelectedIndex(idx);
       this.dispatchEvent(new CustomEvent('ux:change', {
         bubbles: true, composed: true,
-        detail: { selectedIndex: idx, selectedLabel: tab.textContent?.trim() || '' },
+        detail: { selectedIndex: idx, selectedLabel: this.tabs[idx]?.getAttribute('label') || `Tab ${idx + 1}` },
       }));
       this.dispatchFsmEvent(idx);
     }
@@ -197,7 +217,7 @@ export class UxTabs extends UxBase {
     if (!action) return;
     const payload: Record<string, unknown> = {
       selectedIndex: index,
-      selectedLabel: this.tabs[index]?.textContent?.trim() || '',
+      selectedLabel: this.tabs[index]?.getAttribute('label') || `Tab ${index + 1}`,
     };
     this.dispatchEvent(new CustomEvent('ux:event', {
       bubbles: true, composed: true,
@@ -207,22 +227,17 @@ export class UxTabs extends UxBase {
 
   private selectTab(index: number) {
     this.selectedIndex = index;
-    const selCls = resolveStyle('tab-selected');
     this.tabs.forEach((t, i) => {
       if (i === index) {
         t.setAttribute('aria-selected', 'true');
         t.setAttribute('selected', '');
         t.setAttribute('tabindex', '0');
-        if (selCls) {
-          const existing = t.className.split(/\s+/).filter(Boolean);
-          const merged = new Set([...existing, ...selCls.split(/\s+/).filter(Boolean)]);
-          t.className = Array.from(merged).join(' ');
-        }
+        this.applySelectedCls(t);
       } else {
         t.setAttribute('aria-selected', 'false');
         t.removeAttribute('selected');
         t.setAttribute('tabindex', '-1');
-        if (selCls) t.classList.remove(...selCls.split(/\s+/).filter(Boolean));
+        this.removeSelectedCls(t);
       }
     });
     this.panels.forEach((p, i) => {

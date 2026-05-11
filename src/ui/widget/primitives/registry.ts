@@ -43,6 +43,8 @@ import { UxTable } from './table.js';
 import { UxValue } from './value.js';
 import { UxSplash } from './splash-screen.js';
 import { UxRadioGroup } from './radio-group.js';
+import { UxMegaMenu } from './mega-menu.js';
+import { UxContextMenu } from './context-menu.js';
 import { regionPrimitives } from './regions.js';
 
 export const ALL_PRIMITIVES: PrimitiveDefinition[] = [
@@ -99,6 +101,8 @@ export const ALL_PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-splash', role: 'status', kind: 'splash' },
   { tag: 'ux-splash-screen', role: 'status', kind: 'splash' },
   { tag: 'ux-radio-group', role: 'radiogroup', kind: 'radio-group' },
+  { tag: 'ux-mega-menu', role: 'navigation', kind: 'mega-menu' },
+  { tag: 'ux-context-menu', role: 'menu', kind: 'context-menu', stateAttr: 'open' },
   ...regionPrimitives,
 ];
 
@@ -110,6 +114,6 @@ void [UxLink, UxTabs, UxAccordion, UxSlider, UxToggle, UxInput, UxTextarea,
   UxCard, UxAlert, UxSpinner, UxEmptyState, UxErrorPanel, UxBadge, UxAvatar,
   UxSkeleton, UxPage, UxComboBox, UxDatePicker, UxFileUpload, UxDropZone,
   UxSearchBar, UxTreeNav, UxNotifications, UxDataGrid,
-  UxTableVirtual, UxValue, UxSplash, UxRadioGroup, UxTable];
+  UxTableVirtual, UxValue, UxSplash, UxRadioGroup, UxTable, UxMegaMenu, UxContextMenu];
 
 export const DEF_BY_TAG = new Map(ALL_PRIMITIVES.map((def) => [def.tag, def]));

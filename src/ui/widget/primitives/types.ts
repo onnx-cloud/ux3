@@ -10,7 +10,7 @@ export type PrimitiveKind =
   | 'combobox' | 'date-picker' | 'file-upload' | 'dropzone'
   | 'search-bar' | 'tree-nav' | 'notifications'
   | 'data-grid' | 'table-virtual' | 'table'
-  | 'splash' | 'radio-group' | 'link';
+  | 'splash' | 'radio-group' | 'link' | 'mega-menu' | 'context-menu';
 
 export interface PrimitiveDefinition {
   tag: string;

@@ -6,10 +6,11 @@ async function main(): Promise<void> {
   const projectDirArgIndex = args.indexOf('--projectDir');
   const projectDir = projectDirArgIndex !== -1 ? args[projectDirArgIndex + 1] : process.cwd();
   const strict = args.includes('--strict') || args.includes('-s');
+  const clean = args.includes('--clean');
 
-  console.log(`[ux3 validate] projectDir=${projectDir} strict=${strict}`);
+  console.log(`[ux3 validate] projectDir=${projectDir} strict=${strict} clean=${clean}`);
 
-  const validator = new Validator({ projectDir, failOnWarnings: strict });
+  const validator = new Validator({ projectDir, failOnWarnings: strict, clean });
   const result = await validator.validate();
 
   if (result.errors.length > 0) {
