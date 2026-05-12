@@ -153,14 +153,14 @@ export async function callBatchTranslationApi(
     } catch { /* ignore */ }
 
     throw new Error(
-      `@ux3/plugin-translate: API request failed - HTTP ${response.status}${details}`
+      `@ux3/plugin-i18n: API request failed - HTTP ${response.status}${details}`
     );
   }
 
   const data = (await response.json()) as any;
   const rawContent: string = data?.choices?.[0]?.message?.content?.trim() ?? '';
   if (!rawContent) {
-    throw new Error('@ux3/plugin-translate: API returned empty response');
+    throw new Error('@ux3/plugin-i18n: API returned empty response');
   }
 
   let parsed: unknown;
@@ -171,12 +171,12 @@ export async function callBatchTranslationApi(
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      throw new Error('@ux3/plugin-translate: API returned invalid JSON: ' + rawContent.slice(0, 200));
+      throw new Error('@ux3/plugin-i18n: API returned invalid JSON: ' + rawContent.slice(0, 200));
     }
   }
 
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('@ux3/plugin-translate: API returned non-object response');
+    throw new Error('@ux3/plugin-i18n: API returned non-object response');
   }
 
   const result: Record<string, string> = {};
@@ -252,7 +252,7 @@ export async function applyBuildTimeTranslation(
   const source = i18n[sourceLocale];
   if (!source || Object.keys(source).length === 0) {
     throw new Error(
-      `@ux3/plugin-translate: source locale '${sourceLocale}' not found in config.i18n`
+      `@ux3/plugin-i18n: source locale '${sourceLocale}' not found in config.i18n`
     );
   }
 
@@ -270,7 +270,7 @@ export async function applyBuildTimeTranslation(
     '';
 
   if (!apiKey) {
-    throw new Error('@ux3/plugin-translate: apiKey is required (set config.apiKey or env GROQ_API_KEY)');
+    throw new Error('@ux3/plugin-i18n: apiKey is required (set config.apiKey or env GROQ_API_KEY)');
   }
 
   const targetLocales = (Array.isArray(pluginConfig.locales)

@@ -49,6 +49,40 @@ export default defineConfig({
         },
       },
 
+      // support ux-* packages under /packages
+      {
+        find: /^@ux3\/(ux-[^/]+)\/(.*)\.js$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/(ux-[^/]+)\/(.*)\.js$/);
+          if (m) return path.resolve(__dirname, `packages/@ux3/${m[1]}/src/${m[2]}.ts`);
+          return id;
+        },
+      },
+      {
+        find: /^@ux3\/(ux-[^/]+)\/(.*)$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/(ux-[^/]+)\/(.*)$/);
+          if (m) return path.resolve(__dirname, `packages/@ux3/${m[1]}/src/${m[2]}.ts`);
+          return id;
+        },
+      },
+      {
+        find: /^@ux3\/(ux-[^/]+)\.js$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/(ux-[^/]+)\.js$/);
+          if (m) return path.resolve(__dirname, `packages/@ux3/${m[1]}/src/index.ts`);
+          return id;
+        },
+      },
+      {
+        find: /^@ux3\/(ux-[^/]+)$/,
+        replacement: (id: string) => {
+          const m = id.match(/^@ux3\/(ux-[^/]+)$/);
+          if (m) return path.resolve(__dirname, `packages/@ux3/${m[1]}/src/index.ts`);
+          return id;
+        },
+      },
+
       // @ux3/hbs sub-path with .ts extension (e.g. '@ux3/hbs/lexer.ts')
       {
         find: /^@ux3\/hbs\/(.+)\.ts$/,

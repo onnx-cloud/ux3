@@ -27,7 +27,6 @@
     { "path": "packages/@ux3/plugin-stripe" },
     { "path": "packages/@ux3/ux-tailwind" },
     { "path": "packages/@ux3/plugin-telemetry" },
-    { "path": "packages/@ux3/plugin-translate" },
     { "path": "packages/@ux3/plugin-validation" },
     { "path": "packages/@ux3/plugin-webrtc" },
     { "path": "packages/@ux3/test-harness" }

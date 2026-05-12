@@ -69,9 +69,10 @@ export const DiagramsPlugin: Plugin = {
       customElements.define('ux-diagram', UxDiagram)
     }
 
-    // Hook into markdown renderer if available
-    if (app.markdown && typeof app.markdown.registerCodeBlockRenderer === 'function') {
-      app.markdown.registerCodeBlockRenderer('mermaid', (code: string, _lang: string) => {
+    // Hook into markdown renderer if available via services
+    const markdownService = app.services?.markdown as any
+    if (markdownService && typeof markdownService.registerCodeBlockRenderer === 'function') {
+      markdownService.registerCodeBlockRenderer('mermaid', (code: string, _lang: string) => {
         return renderMermaidDiagram(code)
       })
     }

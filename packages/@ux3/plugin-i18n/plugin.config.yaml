@@ -1,5 +1,5 @@
 name: "@ux3/plugin-i18n"
-displayName: I18n
+displayName: I18n & Translation
 author: UX3 Team
 categories:
   - utility
@@ -11,9 +11,16 @@ mcp:
       inputSchema:
         type: object
         additionalProperties: false
+    - name: i18n.translate
+      description: AI-powered translation service
+      inputSchema:
+        type: object
+        additionalProperties: false
   resources:
     - uri: plugin://i18n/docs
       mimeType: text/markdown
-      description: i18n plugin documentation
-  systemPrompt: You are an assistant helping developers use the i18n plugin for
-    UX3 Framework.
+      description: i18n and translation plugin documentation
+    - uri: plugin://i18n/locale-info
+      mimeType: text/markdown
+      description: Locale configuration and supported locales
+  systemPrompt: You are an assistant helping developers use the unified i18n and translation plugin for UX3 Framework. Support both runtime i18n features (pluralization, namespace loading) and AI-powered translation services.

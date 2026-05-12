@@ -155,7 +155,7 @@ describe('emitScaffold', () => {
     const yaml = path.join(outDir, 'login.yaml');
     expect(await fs.pathExists(yaml)).toBe(true);
     const content = await fs.readFile(yaml, 'utf-8');
-    expect(content).toContain('widget/login/idle.html');
+    expect(content).toContain('widget/login/index.html');
     expect(content).not.toContain('[[ name ]]');
   });
 

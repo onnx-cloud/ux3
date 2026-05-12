@@ -56,6 +56,8 @@ async function withRetry<T>(
     try {
       return await fn();
     } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') throw e;
+      if (e && (e as any).name === 'AbortError') throw e;
       const llmError = e instanceof LLMError ? e
         : new LLMError(`Unexpected error: ${e instanceof Error ? e.message : String(e)}`, 'unknown_error');
       lastError = llmError;
@@ -289,9 +291,5 @@ export function createLLMClient(config: LLMClientConfig): LLMClient {
   if (type === 'anthropic') {
     return new AnthropicClient(config);
   }
-  if (type === 'openai' || type === 'generic') {
-    return new OpenAIClient(config);
-  }
-
-  throw new Error(`Unknown LLM client type: ${type}`);
+  return new OpenAIClient(config);
 }

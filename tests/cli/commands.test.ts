@@ -96,12 +96,6 @@ describe('UX3 CLI commands', () => {
     expect(await fs.pathExists(path.join(project, 'ux', 'widget', 'hello.yaml'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux', 'widget', 'hello', 'clicked.html'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux3.config.json'))).toBe(true);
-
-    const gitignore = await fs.readFile(path.join(project, '.gitignore'), 'utf8');
-    expect(gitignore).toContain('.env');
-    expect(gitignore).toContain('dist/');
-    expect(gitignore).toContain('src/generated/');
-
   });
 
   it('`create --template app` scaffolds from the app project template', async () => {

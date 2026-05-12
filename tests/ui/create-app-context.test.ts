@@ -160,10 +160,9 @@ describe('AppContext helper methods', () => {
   });
 
   it('loads and installs plugin-chart-js', async () => {
-    const chartsPlugin = require('path').join(process.cwd(), 'packages/@ux3/ux-chart-js/src/index.ts');
     const cfg: any = { ...baseConfig, site: {} };
     const ctx: any = await createAppContext(cfg);
-    const pluginModule = require(chartsPlugin);
+    const pluginModule = await import('@ux3/ux-chart-js');
     const plugin = pluginModule?.default || pluginModule;
     if (ctx.registerPlugin && plugin) {
       await ctx.registerPlugin(plugin);

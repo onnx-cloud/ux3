@@ -71,7 +71,7 @@ describe('ux3 translate CLI', () => {
       path.join(tmpDir, 'ux', 'ux3.yaml'),
       YAML.stringify({
         plugins: [
-          { name: '@ux3/plugin-translate', config: { endpoint: 'https://x' } },
+          { name: '@ux3/plugin-i18n', config: { endpoint: 'https://x' } },
         ],
       })
     );
@@ -101,7 +101,7 @@ describe('ux3 translate CLI', () => {
       YAML.stringify({
         plugins: [
           {
-            name: '@ux3/plugin-translate',
+            name: '@ux3/plugin-i18n',
             config: {
               endpoint: 'https://api.example.com',
               model: 'test-model',

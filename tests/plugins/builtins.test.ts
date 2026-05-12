@@ -1,15 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { PluginRegistry } from '@ux3/plugin/registry';
 
-// use simple inline plugin objects instead of importing from workspace packages
 const AnalyticsPlugin = { name: '@ux3/plugin-analytics', version: '0.1.0' } as any;
 const I18nPlugin = { name: '@ux3/plugin-i18n', version: '0.1.0' } as any;
-const Telemetry Plugin = { name: '@ux3/plugin-telemetry', version: '0.1.0' } as any;
+const TelemetryPlugin = { name: '@ux3/plugin-telemetry', version: '0.1.0' } as any;
 const ValidationPlugin = { name: '@ux3/plugin-validation', version: '0.1.0' } as any;
 
 describe('built-in plugins', () => {
   it('all plugins have expected names and versions', () => {
-    const list = [AnalyticsPlugin, I18nPlugin, Telemetry Plugin, ValidationPlugin];
+    const list = [AnalyticsPlugin, I18nPlugin, TelemetryPlugin, ValidationPlugin];
     const names = list.map(p => p.name).sort();
     expect(names).toEqual([
       '@ux3/plugin-analytics',
@@ -24,7 +23,7 @@ describe('built-in plugins', () => {
     const reg = new PluginRegistry();
     reg.register(AnalyticsPlugin as any);
     reg.register(I18nPlugin as any);
-    reg.register(Telemetry Plugin as any);
+    reg.register(TelemetryPlugin as any);
     reg.register(ValidationPlugin as any);
     expect(reg.list().map(p=>p.name).sort()).toEqual([
       '@ux3/plugin-analytics',

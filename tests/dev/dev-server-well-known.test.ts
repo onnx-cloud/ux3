@@ -40,9 +40,9 @@ describe('DevServer public static file routing', () => {
     const projectDir = path.join(tmpRoot, `ux3-devserver-well-known-root-${Date.now()}`);
     await fs.ensureDir(projectDir);
 
-    const rootWellKnownDir = path.join(projectDir, '.well-known', 'appspecific');
-    await fs.ensureDir(rootWellKnownDir);
-    const manifestFile = path.join(rootWellKnownDir, 'com.chrome.devtools.json');
+    const wellKnownDir = path.join(projectDir, 'public', '.well-known', 'appspecific');
+    await fs.ensureDir(wellKnownDir);
+    const manifestFile = path.join(wellKnownDir, 'com.chrome.devtools.json');
     const manifestData = { name: 'ux3-dev-server-root', version: '2.0.0' };
     await fs.writeJson(manifestFile, manifestData, { spaces: 2 });
 

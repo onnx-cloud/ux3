@@ -223,6 +223,7 @@ class McpService {
     data: { history: AgentTurn[]; state: AgentState },
     config: AgentConfig,
     sessionId: string,
+    sessionConfig?: SessionConfig,
     signal?: AbortSignal,
   ): AsyncGenerator<AgentTurn> {
     data.state = 'thinking';
@@ -291,7 +292,7 @@ class McpService {
       const clientConfig = this.config.clients?.[config.client];
       const maxTokens = clientConfig?.maxTokens ?? 4096;
       const maxIterations = config.maxIterations ?? 10;
-      const parallel = config.parallelTools ?? 1;
+      const parallel = sessionConfig?.parallelTools ?? 1;
 
       for (let i = 0; i < maxIterations; i++) {
         if (signal?.aborted) break;
@@ -355,7 +356,7 @@ class McpService {
               if (!decision.allow) {
                 return {
                   b,
-                  result: JSON.stringify({ blocked: true, reason: decision.reason || 'blocked by policy' }),
+                  result: JSON.stringify({ blocked: true, reason: (decision as any).reason || 'blocked by policy' }),
                   turns,
                 };
               }
@@ -407,7 +408,8 @@ class McpService {
 
       data.state = 'idle';
     } catch (e: any) {
-      if (e?.name === 'AbortError') {
+      const isAbort = e?.name === 'AbortError' || e?.code === 'aborted' || e?.message?.includes('aborted');
+      if (isAbort) {
         data.state = 'idle';
         const ct: AgentTurn = {
           role: 'system',
@@ -444,13 +446,13 @@ class McpService {
     const config = this.config.agents[agentName];
     const sessionId = options.id || this.generateId();
     const maxIterations = config.maxIterations ?? 10;
-    const maxQueue = config.maxQueueLength ?? 50;
-    const steeringThrottle = config.maxSteeringInterval ?? 500;
+    const maxQueue = options.session?.maxQueueLength ?? 50;
+    const steeringThrottle = options.session?.maxSteeringInterval ?? 500;
     let lastSteerAt = 0;
     const srv = this;
 
     const data = reactive({ history: [] as AgentTurn[], state: 'idle' as AgentState });
-    let mode: AgentMode = options.mode || config.defaultMode || 'chat';
+    let mode: AgentMode = options.mode || options.session?.defaultMode || 'chat';
     let processing = false;
     let activeAbort: AbortController | null = null;
     const pending: Array<{ msg: { role: string; content: string }; sig?: AbortSignal; res: (t: AgentTurn) => void; rej: (e: unknown) => void }> = [];
@@ -464,7 +466,7 @@ class McpService {
           activeAbort = next.sig ? null : new AbortController();
           const effSig = next.sig || activeAbort?.signal;
           let last: AgentTurn | undefined;
-          for await (const turn of srv.runAgentLoop(next.msg, data, config, sessionId, effSig)) {
+          for await (const turn of srv.runAgentLoop(next.msg, data, config, sessionId, options.session, effSig)) {
             last = turn;
           }
           next.res(last!);

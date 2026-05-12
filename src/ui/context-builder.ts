@@ -446,7 +446,7 @@ export class AppContextBuilder {
       const entries = Array.isArray(this.config.plugins) ? this.config.plugins : [];
       for (const entry of entries) {
         const name = typeof entry === 'string' ? entry : entry?.name;
-        if (name !== '@ux3/plugin-translate') continue;
+        if (name !== '@ux3/plugin-i18n') continue;
         const cfg = (typeof entry === 'object' && entry?.config) ? entry.config : null;
         if (cfg && Array.isArray(cfg.locales)) return cfg.locales as string[];
       }

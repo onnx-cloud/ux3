@@ -1,16 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Skip this test file if the plugin module can't be imported
-// (it requires @telemetry/browser as an optional peer dependency)
-let Telemetry Plugin: any = null;
+let TelemetryPlugin: any = null;
 try {
   const mod = require('@ux3/plugin-telemetry');
-  Telemetry Plugin = mod.Telemetry Plugin;
+  TelemetryPlugin = mod.TelemetryPlugin;
 } catch (e) {
-  // OpenTelemetry plugin not available - skip tests
 }
 
-const skipIfMissing = (Telemetry Plugin === null);
+const skipIfMissing = (TelemetryPlugin === null);
 
 describe('Telemetry Plugin', () => {
   let mockApp: any;
@@ -36,49 +33,49 @@ describe('Telemetry Plugin', () => {
   });
 
   it.skipIf(skipIfMissing)('should have correct plugin metadata', () => {
-    if (!Telemetry Plugin) return;
-    expect(Telemetry Plugin.name).toBe('@ux3/plugin-telemetry');
-    expect(Telemetry Plugin.version).toBe('0.1.0');
-    expect(Telemetry Plugin.description).toContain('Telemetry ');
+    if (!TelemetryPlugin) return;
+    expect(TelemetryPlugin.name).toBe('@ux3/plugin-telemetry');
+    expect(TelemetryPlugin.version).toBe('0.1.0');
+    expect(TelemetryPlugin.description).toContain('Telemetry ');
   });
 
   it.skipIf(skipIfMissing)('should install plugin on app', () => {
-    if (!Telemetry Plugin) return;
+    if (!TelemetryPlugin) return;
     expect(() => {
-      Telemetry Plugin.install(mockApp);
+      TelemetryPlugin.install(mockApp);
     }).not.toThrow();
   });
 
   it.skipIf(skipIfMissing)('should read telemetry config from app.config', () => {
-    if (!Telemetry Plugin) return;
-    Telemetry Plugin.install(mockApp);
+    if (!TelemetryPlugin) return;
+    TelemetryPlugin.install(mockApp);
     const config = mockApp.config.plugins['@ux3/plugin-telemetry'];
     expect(config.dsn).toContain('telemetry.io');
     expect(config.environment).toBe('production');
   });
 
   it.skipIf(skipIfMissing)('should handle missing OpenTelemetry SDK gracefully', () => {
-    if (!Telemetry Plugin) return;
+    if (!TelemetryPlugin) return;
     const appWithoutOpenTelemetry = {
       config: { plugins: {} },
       logger: { subscribe: vi.fn() }
     };
     expect(() => {
-      Telemetry Plugin.install(appWithoutTelemetry );
+      TelemetryPlugin.install(appWithoutOpenTelemetry);
     }).not.toThrow();
   });
 
   it.skipIf(skipIfMissing)('should use console.error as fallback when OpenTelemetry unavailable', () => {
-    if (!Telemetry Plugin) return;
+    if (!TelemetryPlugin) return;
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    Telemetry Plugin.install(mockApp);
+    TelemetryPlugin.install(mockApp);
     
     expect(mockApp.logger.subscribe).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it.skipIf(skipIfMissing)('should support environment configuration', () => {
-    if (!Telemetry Plugin) return;
+    if (!TelemetryPlugin) return;
     const appWithEnv = {
       config: {
         plugins: {
@@ -92,21 +89,18 @@ describe('Telemetry Plugin', () => {
     };
     
     expect(() => {
-      Telemetry Plugin.install(appWithEnv);
+      TelemetryPlugin.install(appWithEnv);
     }).not.toThrow();
   });
 
   it.skipIf(skipIfMissing)('should support release tags', () => {
-    if (!Telemetry Plugin) return;
-    Telemetry Plugin.install(mockApp);
+    if (!TelemetryPlugin) return;
+    TelemetryPlugin.install(mockApp);
     const config = mockApp.config.plugins['@ux3/plugin-telemetry'];
     expect(config.release).toBe('0.1.0');
   });
 
-  // Placeholder test so the suite isn't empty if skipped
   it.skipIf(!skipIfMissing)('@telemetry/browser peer dependency not installed', () => {
-    // This test runs when @telemetry/browser is not available
-    // It's a way to document that the plugin requires @telemetry/browser
     expect(true).toBe(true);
   });
 });

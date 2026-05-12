@@ -4,16 +4,16 @@ import fsSync from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import type { GeneratedConfig } from '../../ui/context-builder.js';
-import * as translateModule from '@ux3/plugin-translate/build-time';
-import type { BuildTimeTranslateConfig } from '@ux3/plugin-translate/build-time';
+import * as translateModule from '@ux3/plugin-i18n/build-time';
+import type { BuildTimeTranslateConfig } from '@ux3/plugin-i18n/build-time';
 import { resolveConfigTemplates } from '../../utils/env-template.js';
 
 const _require = createRequire(import.meta.url);
 
 const applyBuildTimeTranslation =
-  (translateModule as { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation }).applyBuildTimeTranslation ||
-  (translateModule as { default?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation } }).default?.applyBuildTimeTranslation ||
-  (translateModule as { 'module.exports'?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-translate/src/build-time.ts').applyBuildTimeTranslation } })['module.exports']?.applyBuildTimeTranslation;
+  (translateModule as { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-i18n/src/build-time.ts').applyBuildTimeTranslation }).applyBuildTimeTranslation ||
+  (translateModule as { default?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-i18n/src/build-time.ts').applyBuildTimeTranslation } }).default?.applyBuildTimeTranslation ||
+  (translateModule as { 'module.exports'?: { applyBuildTimeTranslation?: typeof import('../../../packages/@ux3/plugin-i18n/src/build-time.ts').applyBuildTimeTranslation } })['module.exports']?.applyBuildTimeTranslation;
 
 interface TranslateOptions {
   force?: boolean;
@@ -222,12 +222,12 @@ export const translateCommand = new Command()
       : [];
     const translateEntry = pluginEntries.find(
       (entry: any) =>
-        (typeof entry === 'string' && entry === '@ux3/plugin-translate') ||
-        (entry && entry.name === '@ux3/plugin-translate')
+        (typeof entry === 'string' && entry === '@ux3/plugin-i18n') ||
+        (entry && entry.name === '@ux3/plugin-i18n')
     );
 
     if (!translateEntry) {
-      console.error('\n❌ No @ux3/plugin-translate configured in ux3.yaml plugins.');
+      console.error('\n❌ No @ux3/plugin-i18n configured in ux3.yaml plugins.');
       process.exit(1);
     }
 
