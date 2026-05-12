@@ -62,7 +62,7 @@ export class UxChatMessenger extends UxBase {
   }
 
   protected onDisconnected(): void {
-    this.composerEl?.removeEventListener('ux:send', this.onComposerSend as EventListener);
+    this.composerEl?.removeEventListener('ux:chat.send', this.onComposerSend as EventListener);
     this.stopBtn?.removeEventListener('click', this.onStop);
     this.cancelActiveRequest();
     super.onDisconnected();
@@ -102,7 +102,7 @@ export class UxChatMessenger extends UxBase {
 
   private setupListeners(): void {
     if (this.composerEl) {
-      this.composerEl.addEventListener('ux:send', this.onComposerSend as EventListener);
+      this.composerEl.addEventListener('ux:chat.send', this.onComposerSend as EventListener);
     }
     if (this.stopBtn) {
       this.stopBtn.addEventListener('click', this.onStop);
@@ -176,7 +176,7 @@ export class UxChatMessenger extends UxBase {
 
     this.messages.push(userMessage);
     this.updateMessagesView();
-    this.dispatchEvent(new CustomEvent('ux:send', {
+    this.dispatchEvent(new CustomEvent('ux:chat.send', {
       bubbles: true,
       composed: true,
       detail: { ...detail, sessionId: this.sessionId, agent: this.agentName, mode: this.mode },
@@ -207,7 +207,7 @@ export class UxChatMessenger extends UxBase {
       }
 
       this.updateStatus();
-      this.dispatchEvent(new CustomEvent('ux:message', {
+      this.dispatchEvent(new CustomEvent('ux:chat.message', {
         bubbles: true,
         composed: true,
         detail: { sessionId: session.id, messages: this.messages.slice() },

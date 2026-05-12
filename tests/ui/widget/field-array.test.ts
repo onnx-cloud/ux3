@@ -155,9 +155,9 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
       expect(removeBtn?.textContent).toContain('Remove');
     });
 
-    it('should emit ux:item-added event', () => {
+    it('should emit ux:list.item.add event', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-added', listener);
+      fieldArray.addEventListener('ux:list.item.add', listener);
       
       fieldArray.addItem({ street: '123 Main St' });
       
@@ -165,9 +165,9 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
       expect(listener.mock.calls[0][0].detail.index).toBe(0);
     });
 
-    it('should pass data to ux:item-added event', () => {
+    it('should pass data to ux:list.item.add event', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-added', listener);
+      fieldArray.addEventListener('ux:list.item.add', listener);
       
       const testData = { street: '123 Main St', city: 'Springfield' };
       fieldArray.addItem(testData);
@@ -177,7 +177,7 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
 
     it('should increment index for multiple items', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-added', listener);
+      fieldArray.addEventListener('ux:list.item.add', listener);
       
       fieldArray.addItem();
       fieldArray.addItem();
@@ -231,9 +231,9 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
       expect(fieldArray.getItemCount()).toBe(2);
     });
 
-    it('should emit ux:item-removed event', () => {
+    it('should emit ux:list.item.remove event', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-removed', listener);
+      fieldArray.addEventListener('ux:list.item.remove', listener);
       
       const wrapper = fieldArray.querySelector('.field-array-item-wrapper');
       if (wrapper && wrapper.parentElement === fieldArray) {
@@ -243,9 +243,9 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
       expect(listener).toHaveBeenCalled();
     });
 
-    it('should pass correct index in ux:item-removed event', () => {
+    it('should pass correct index in ux:list.item.remove event', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-removed', listener);
+      fieldArray.addEventListener('ux:list.item.remove', listener);
       
       const wrappers = fieldArray.querySelectorAll('.field-array-item-wrapper');
       const secondWrapper = wrappers[1];
@@ -259,7 +259,7 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
 
     it('should not remove non-existent item', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-removed', listener);
+      fieldArray.addEventListener('ux:list.item.remove', listener);
       
       const fakeElement = document.createElement('div');
       fieldArray.removeItem(fakeElement);
@@ -504,7 +504,7 @@ describe('UxFieldArray - Dynamic Field Array Component', () => {
 
     it('should maintain correct indices after removal', () => {
       const listener = vi.fn();
-      fieldArray.addEventListener('ux:item-removed', listener);
+      fieldArray.addEventListener('ux:list.item.remove', listener);
       
       fieldArray.addItem();
       fieldArray.addItem();

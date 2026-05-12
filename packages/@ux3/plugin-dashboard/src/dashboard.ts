@@ -62,7 +62,7 @@ export class UxDashboard extends UxBase {
     this.addEventListener('dragover', (e) => e.preventDefault());
     this.addEventListener('drop', (e) => {
       e.preventDefault();
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:dashboard.reorder', {
         bubbles: true, composed: true,
         detail: { action: 'REORDER', widget: e.dataTransfer!.getData('text/plain') }
       }));

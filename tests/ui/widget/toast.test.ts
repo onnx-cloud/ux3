@@ -30,7 +30,7 @@ describe('UxToastContainer - Toast Notifications', () => {
     container.appendChild(toastContainer);
 
     const openSpy = vi.fn();
-    toastContainer.addEventListener('ux:event', ((e: CustomEvent) => {
+    toastContainer.addEventListener('ux:toast.event', ((e: CustomEvent) => {
       if (e.detail?.action === 'OPEN') openSpy();
     }) as EventListener);
 
@@ -45,7 +45,7 @@ describe('UxToastContainer - Toast Notifications', () => {
     container.appendChild(toastContainer);
 
     const closeSpy = vi.fn();
-    toastContainer.addEventListener('ux:event', ((e: CustomEvent) => {
+    toastContainer.addEventListener('ux:toast.event', ((e: CustomEvent) => {
       if (e.detail?.action === 'CLOSE') closeSpy();
     }) as EventListener);
 

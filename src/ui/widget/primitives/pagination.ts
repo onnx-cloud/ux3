@@ -118,7 +118,7 @@ export class UxPagination extends UxBase {
       this.render();
     }
 
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:pagination.change', {
       bubbles: true, composed: true,
       detail: { action, page: pageNum },
     }));

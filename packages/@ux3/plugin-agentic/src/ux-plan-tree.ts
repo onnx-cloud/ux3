@@ -1,9 +1,19 @@
 export class UxPlanTree extends HTMLElement {
   private plan: any = null;
+  private engine: any = null;
+  private observerCleanup: (() => void) | null = null;
+  private nodeElements: Map<string, HTMLElement> = new Map();
 
   connectedCallback() {
     this.setAttribute('role', 'tree');
     this.render();
+  }
+
+  disconnectedCallback() {
+    if (this.observerCleanup) {
+      this.observerCleanup();
+      this.observerCleanup = null;
+    }
   }
 
   static get observedAttributes() { return ['plan']; }
@@ -19,11 +29,78 @@ export class UxPlanTree extends HTMLElement {
     this.render();
   }
 
+  setEngine(engine: any): void {
+    this.engine = engine;
+    if (this.observerCleanup) this.observerCleanup();
+
+    if (!engine || typeof engine.observe !== 'function') return;
+
+    this.observerCleanup = engine.observe((plan: any, node: any) => {
+      if (!this.plan || this.plan.id !== plan.id) {
+        this.plan = plan;
+        this.render();
+        return;
+      }
+      this.updateNodeElement(node);
+      this.updatePlanHeader(plan);
+    });
+
+    if (engine.activePlan) {
+      this.plan = engine.activePlan;
+      this.render();
+    }
+  }
+
+  private updatePlanHeader(plan: any): void {
+    const statusEl = this.querySelector('.ux-plan-status');
+    if (statusEl) {
+      statusEl.dataset.status = plan.status || 'created';
+      statusEl.textContent = plan.status || 'created';
+    }
+  }
+
+  private updateNodeElement(node: any): void {
+    const el = this.nodeElements.get(node.id);
+    if (!el) return;
+
+    const indicator = el.querySelector('.ux-plan-node-indicator') as HTMLElement;
+    if (indicator) {
+      indicator.dataset.status = node.status || 'pending';
+    }
+
+    const iterEl = el.querySelector('.ux-plan-node-iter') as HTMLElement;
+    if (iterEl) {
+      if (node.ctx?.iteration && node.ctx.iteration > 0) {
+        iterEl.textContent = `(#${node.ctx.iteration})`;
+        iterEl.style.display = '';
+      } else {
+        iterEl.style.display = 'none';
+      }
+    }
+
+    const phaseEl = el.querySelector('.ux-plan-node-phase') as HTMLElement;
+    if (phaseEl) {
+      if (node.ctx?.statePath?.length) {
+        phaseEl.textContent = node.ctx.statePath[node.ctx.statePath.length - 1] || node.ctx.statePath[0];
+        phaseEl.style.display = '';
+      } else {
+        phaseEl.style.display = 'none';
+      }
+    }
+
+    const traceHeader = el.querySelector('.ux-plan-trace-header') as HTMLElement;
+    if (traceHeader && node.ctx?.statePath?.length) {
+      traceHeader.textContent = '+ trace (' + node.ctx.statePath.join(' → ') + ')';
+    }
+  }
+
   private render(): void {
     if (!this.plan) {
       this.innerHTML = '<div class="ux-plan-empty">No plan loaded</div>';
       return;
     }
+
+    this.nodeElements.clear();
 
     const style = document.createElement('style');
     style.textContent = `
@@ -119,6 +196,8 @@ export class UxPlanTree extends HTMLElement {
     const el = document.createElement('div');
     el.className = 'ux-plan-node';
     el.style.paddingLeft = `${0.5 + depth * 1}rem`;
+    el.dataset.nodeId = node.id;
+    this.nodeElements.set(node.id, el);
 
     const indicator = document.createElement('div');
     indicator.className = 'ux-plan-node-indicator';
@@ -208,7 +287,7 @@ export class UxPlanTree extends HTMLElement {
     retryBtn.textContent = '↺';
     retryBtn.title = 'Retry';
     retryBtn.addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('ux:agentic-update', {
+      this.dispatchEvent(new CustomEvent('ux:agentic.update', {
         detail: { planId: this.plan?.id, nodeId: node.id, action: 'retry' },
         bubbles: true,
         composed: true,
@@ -220,7 +299,7 @@ export class UxPlanTree extends HTMLElement {
     skipBtn.textContent = '→';
     skipBtn.title = 'Skip';
     skipBtn.addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('ux:agentic-update', {
+      this.dispatchEvent(new CustomEvent('ux:agentic.update', {
         detail: { planId: this.plan?.id, nodeId: node.id, action: 'skip' },
         bubbles: true,
         composed: true,

@@ -49,7 +49,7 @@ export class UxCommandPalette extends UxBase {
       if (e.target === backdrop) this.close();
     });
 
-    this.addEventListener('ux:event', ((e: CustomEvent) => {
+    this.addEventListener('ux:command.execute', ((e: CustomEvent) => {
       if (e.detail?.action === 'OPEN') this.open();
       if (e.detail?.action === 'CLOSE') this.close();
     }) as EventListener);
@@ -111,7 +111,7 @@ export class UxCommandPalette extends UxBase {
     const items = this.list.querySelectorAll('.item');
     if (index < 0 || index >= items.length) return;
     const label = (items[index] as HTMLElement).textContent || '';
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:command.execute', {
       bubbles: true, composed: true,
       detail: { action: 'SELECT', label, index }
     }));

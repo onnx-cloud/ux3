@@ -108,7 +108,7 @@ if (!this._rendered) {
     if (!this.selectEl) return;
     const val = this.selectEl.value;
     this.setAttribute('value', val);
-    this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: val } }));
+    this.dispatchEvent(new CustomEvent('ux:input.change', { bubbles: true, detail: { value: val } }));
   };
 
   private observeOptions(): void {

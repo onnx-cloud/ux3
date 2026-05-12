@@ -117,7 +117,7 @@ export class UxDataGrid extends UxBase {
     });
     this.tableRows = headerRow ? [headerRow, ...dataRows] : dataRows;
     this.renderTable();
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:grid.sort', {
       bubbles: true, composed: true,
       detail: { action: 'GRID:SORT', column: col, direction: this._sortDir },
     }));
@@ -143,7 +143,7 @@ export class UxDataGrid extends UxBase {
       td.classList.remove('editing');
       td.textContent = input.value || val;
       const rowEl = td.parentElement as HTMLElement;
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:grid.edit', {
         bubbles: true, composed: true,
         detail: { action: 'GRID:EDIT', row: rowEl?.dataset?.row, col: td.cellIndex, value: input.value },
       }));

@@ -84,7 +84,7 @@ export class UxCapture extends UxBase {
         this.appendChild(stopBtn);
       }
 
-      this.dispatchEvent(new CustomEvent('ux:capture', {
+      this.dispatchEvent(new CustomEvent('ux:media.capture.start', {
         bubbles: true, composed: true,
         detail: { stream, kind: tag.replace('ux-', '').replace('-capture', '') },
       }));
@@ -126,7 +126,7 @@ export class UxCapture extends UxBase {
     this.innerHTML = '';
     this.started = false;
     this.addEventListener('click', this.startCapture);
-    this.dispatchEvent(new CustomEvent('ux:capture-stop', {
+    this.dispatchEvent(new CustomEvent('ux:media.capture.stop', {
       bubbles: true, composed: true, detail: {},
     }));
   }

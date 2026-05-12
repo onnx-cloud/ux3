@@ -42,7 +42,7 @@ this.setAttribute('role', 'radiogroup');
     if (!radio) return;
     const val = radio.value;
     this.setAttribute('value', val);
-    this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: val } }));
+    this.dispatchEvent(new CustomEvent('ux:input.change', { bubbles: true, detail: { value: val } }));
   };
 
   private readonly onKeyDown = (e: KeyboardEvent) => {

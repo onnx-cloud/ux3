@@ -6,7 +6,7 @@ export class UxSplash extends UxBase {
     this.setAttribute('role', 'status');
     this.addEventListener('click', () => {
       this.style.display = 'none';
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:splash.event', {
         bubbles: true, composed: true,
         detail: { action: 'DISMISS' },
       }));
@@ -16,7 +16,7 @@ export class UxSplash extends UxBase {
       if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         this.style.display = 'none';
-        this.dispatchEvent(new CustomEvent('ux:event', {
+        this.dispatchEvent(new CustomEvent('ux:splash.event', {
           bubbles: true, composed: true,
           detail: { action: 'DISMISS' },
         }));

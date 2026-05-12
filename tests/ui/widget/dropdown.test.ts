@@ -81,7 +81,7 @@ describe('UxDropdown - Dropdown Component', () => {
     await Promise.resolve();
 
     const uxChangeSpy = vi.fn();
-    dropdown.addEventListener('ux:change', uxChangeSpy);
+    dropdown.addEventListener('ux:input.change', uxChangeSpy);
 
     const toggle = dropdown.shadowRoot?.querySelector('.dropdown-toggle') as HTMLButtonElement;
     toggle.click();
@@ -101,7 +101,7 @@ describe('UxDropdown - Dropdown Component', () => {
 
     const openSpy = vi.fn();
     const closeSpy = vi.fn();
-    dropdown.addEventListener('ux:event', ((e: CustomEvent) => {
+    dropdown.addEventListener('ux:widget.event', ((e: CustomEvent) => {
       if (e.detail?.action === 'OPEN') openSpy();
       if (e.detail?.action === 'CLOSE') closeSpy();
     }) as EventListener);

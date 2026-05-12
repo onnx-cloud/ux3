@@ -109,13 +109,13 @@ const stateAttr = this.getStateAttr();
     this.toggleAttribute(stateAttr, next);
     this.applyAriaState(next);
     this.updateVisual(next);
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:input.change', {
       bubbles: true, composed: true,
       detail: { [stateAttr]: next },
     }));
     const pair = TOGGLE_OPEN_ACTIONS[stateAttr];
     if (pair) {
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:widget.event', {
         bubbles: true, composed: true,
         detail: { action: pair[next ? 0 : 1] },
       }));

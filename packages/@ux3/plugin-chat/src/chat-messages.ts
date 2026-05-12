@@ -42,14 +42,14 @@ export class UxChatMessages extends UxBase {
     this.shadowRoot?.addEventListener('contextmenu', this.onContextMenu);
     this.shadowRoot?.addEventListener('click', this.onBubbleClick);
     document.addEventListener('click', this.onDocClick);
-    this.addEventListener('ux:context-action', this.onContextAction);
+    this.addEventListener('ux:menu.action', this.onContextAction);
   }
 
   protected onDisconnected(): void {
     this.shadowRoot?.removeEventListener('contextmenu', this.onContextMenu);
     this.shadowRoot?.removeEventListener('click', this.onBubbleClick);
     document.removeEventListener('click', this.onDocClick);
-    this.removeEventListener('ux:context-action', this.onContextAction);
+    this.removeEventListener('ux:menu.action', this.onContextAction);
     super.onDisconnected();
   }
 
@@ -413,7 +413,7 @@ export class UxChatMessages extends UxBase {
   private setMessages(msgs: ChatMessage[]): void {
     this.messages = msgs;
     this.render();
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:chat.message.select', {
       bubbles: true, composed: true,
       detail: { value: msgs },
     }));

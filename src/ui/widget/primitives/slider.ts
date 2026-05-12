@@ -84,7 +84,7 @@ if (!this.hasAttribute('min')) this.setAttribute('min', '0');
       const v = (e.target as HTMLInputElement).value;
       this.setAttribute('value', v);
       this.setAttribute('aria-valuenow', v);
-      this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: v } }));
+      this.dispatchEvent(new CustomEvent('ux:input.change', { bubbles: true, detail: { value: v } }));
     });
 
     this.appendChild(input);
@@ -100,7 +100,7 @@ if (!this.hasAttribute('min')) this.setAttribute('min', '0');
           this.range.value = String(next);
           this.setAttribute('value', String(next));
           this.setAttribute('aria-valuenow', String(next));
-          this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: String(next) } }));
+          this.dispatchEvent(new CustomEvent('ux:input.change', { bubbles: true, detail: { value: String(next) } }));
         }
         e.preventDefault();
       }

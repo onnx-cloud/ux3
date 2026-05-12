@@ -81,7 +81,7 @@ export class UxToastContainer extends LifecycleComponent {
 
     this.toasts.set(id, toast);
 
-    this.dispatchEvent(new CustomEvent(UX_EVENT, {
+    this.dispatchEvent(new CustomEvent('ux:toast.event', {
       bubbles: true,
       composed: true,
       detail: { id, config, action: 'OPEN' }
@@ -107,7 +107,7 @@ export class UxToastContainer extends LifecycleComponent {
       toast.remove();
       this.toasts.delete(id);
 
-      this.dispatchEvent(new CustomEvent(UX_EVENT, {
+      this.dispatchEvent(new CustomEvent('ux:toast.event', {
         bubbles: true,
         composed: true,
         detail: { id, action: 'CLOSE' }

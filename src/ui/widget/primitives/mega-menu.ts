@@ -38,8 +38,8 @@ export class UxMegaMenu extends UxBase {
     this._styleEl.textContent = STYLE;
     this.appendChild(this._styleEl);
     window.addEventListener('popstate', () => this.render());
-    window.addEventListener('ux3:navigate', () => this.render());
-    window.addEventListener('ux:locale-change', () => this.render());
+    window.addEventListener('ux:app.route.navigate', () => this.render());
+    window.addEventListener('ux:i18n.locale.change', () => this.render());
   }
 
   protected applyData(_data: any): void {

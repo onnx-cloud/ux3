@@ -77,7 +77,7 @@ export class UxModal extends LifecycleComponent {
   }
 
   private emit(action: string) {
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:widget.modal.event', {
       bubbles: true, composed: true, detail: { action },
     }));
   }

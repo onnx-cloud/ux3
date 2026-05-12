@@ -67,7 +67,7 @@ export class UxDiagram extends HTMLElement {
       this.appendChild(svg)
 
       this.rendered = true
-      this.dispatchEvent(new CustomEvent('ux:diagram-rendered', { detail: { diagram } }))
+      this.dispatchEvent(new CustomEvent('ux:diagram.rendered', { detail: { diagram } }))
     } catch (e) {
       this.renderError((e as Error).message)
     }

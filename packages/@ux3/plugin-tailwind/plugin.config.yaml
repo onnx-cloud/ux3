@@ -1,0 +1,32 @@
+name: "@ux3/plugin-tailwind"
+displayName: Tailwind CSS & Plus
+author: UX3 Team
+categories:
+  - utility
+  - styling
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    # Core Tailwind CSS tools
+    - name: tailwind_css.info
+      description: Get information about Tailwind CSS utilities
+      inputSchema:
+        type: object
+        additionalProperties: false
+    
+    # Tailwind Plus tools
+    - name: tailwind_plus.info
+      description: Get information about Tailwind Plus widget registration
+      inputSchema:
+        type: object
+        additionalProperties: false
+  
+  resources:
+    - uri: plugin://tailwind/css/docs
+      mimeType: text/markdown
+      description: Tailwind CSS utilities documentation
+    - uri: plugin://tailwind/plus/docs
+      mimeType: text/markdown
+      description: Tailwind Plus widget documentation
+  
+  systemPrompt: You are an assistant helping developers use Tailwind CSS utilities and Plus widget registration for UX3 Framework. Provide guidance on color palettes, typography, layout utilities, component styles, and dynamic widget configuration from Tailwind CSS Plus.

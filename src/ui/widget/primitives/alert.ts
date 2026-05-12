@@ -28,7 +28,7 @@ const text = this.textContent?.trim() || '';
     dismiss.setAttribute('aria-label', 'Dismiss');
     dismiss.textContent = '\u00D7';
     dismiss.addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('ux:event', { bubbles: true, composed: true, detail: { action: 'DISMISS' } }));
+      this.dispatchEvent(new CustomEvent('ux:alert.dismiss', { bubbles: true, composed: true, detail: { action: 'DISMISS' } }));
       this.remove();
     });
     wrap.appendChild(dismiss);

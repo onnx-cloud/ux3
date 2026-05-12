@@ -10,6 +10,8 @@ export interface LLMClientConfig {
   apiKey?: string;
   maxTokens?: number;
   temperature?: number;
+  maxRetries?: number;
+  retryDelay?: number;
 }
 
 export interface SamplingRequest {
@@ -37,6 +39,36 @@ export class LLMError extends Error {
   }
 }
 
+function isRetryable(error: LLMError): boolean {
+  if (error.code === 'rate_limited') return true;
+  if (error.code === 'network_error') return true;
+  if (error.statusCode && error.statusCode >= 500) return true;
+  return false;
+}
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number,
+  retryDelay: number,
+): Promise<T> {
+  let lastError: LLMError | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const llmError = e instanceof LLMError ? e
+        : new LLMError(`Unexpected error: ${e instanceof Error ? e.message : String(e)}`, 'unknown_error');
+      lastError = llmError;
+
+      if (!isRetryable(llmError) || attempt >= maxRetries) throw llmError;
+
+      const delay = retryDelay * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError!;
+}
+
 /**
  * Base LLMClient interface.
  * Implementations handle provider-specific HTTP calls, format conversions, and error handling.
@@ -62,6 +94,12 @@ export class OpenAIClient implements LLMClient {
   }
 
   async call(req: SamplingRequest, signal?: AbortSignal): Promise<SamplingResult> {
+    const maxRetries = this.config.maxRetries ?? 0;
+    const retryDelay = this.config.retryDelay ?? 1000;
+    return withRetry(() => this.innerCall(req, signal), maxRetries, retryDelay);
+  }
+
+  private async innerCall(req: SamplingRequest, signal?: AbortSignal): Promise<SamplingResult> {
     const endpoint = this.config.endpoint || 'http://localhost:8080/v1/chat/completions';
     const body: any = {
       model: this.config.model || 'gpt-4o',
@@ -94,10 +132,13 @@ export class OpenAIClient implements LLMClient {
 
       if (!res.ok) {
         const text = await res.text();
+        const statusCode = res.status;
+        let code = `openai_${statusCode}`;
+        if (statusCode === 429) code = 'rate_limited';
         throw new LLMError(
-          `OpenAI API error: ${res.status} ${text}`,
-          `openai_${res.status}`,
-          res.status,
+          `OpenAI API error: ${statusCode} ${text}`,
+          code,
+          statusCode,
         );
       }
 
@@ -160,6 +201,12 @@ export class AnthropicClient implements LLMClient {
   }
 
   async call(req: SamplingRequest, signal?: AbortSignal): Promise<SamplingResult> {
+    const maxRetries = this.config.maxRetries ?? 0;
+    const retryDelay = this.config.retryDelay ?? 1000;
+    return withRetry(() => this.innerCall(req, signal), maxRetries, retryDelay);
+  }
+
+  private async innerCall(req: SamplingRequest, signal?: AbortSignal): Promise<SamplingResult> {
     const endpoint = this.config.endpoint || 'https://api.anthropic.com/v1/messages';
     const body: any = {
       model: this.config.model || 'claude-opus-4-1',

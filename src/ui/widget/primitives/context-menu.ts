@@ -32,7 +32,7 @@ export class UxContextMenu extends UxBase {
     if (!item) return;
     const action = item.getAttribute('data-action');
     if (action) {
-      this.dispatchEvent(new CustomEvent('ux:context-action', {
+      this.dispatchEvent(new CustomEvent('ux:menu.action', {
         bubbles: true, composed: true,
         detail: { action, element: item },
       }));

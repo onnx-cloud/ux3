@@ -92,7 +92,7 @@ export class UxMenu extends UxBase {
     });
     const value = this.items[index]?.getAttribute('value') || this.items[index]?.textContent?.trim() || '';
     this.setAttribute('value', value);
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:menu.selection.change', {
       bubbles: true,
       detail: { value, selectedIndex: index },
     }));

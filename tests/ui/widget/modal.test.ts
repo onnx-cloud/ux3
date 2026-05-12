@@ -32,7 +32,7 @@ describe('UxModal - Modal Component', () => {
     const modal = createModal();
     await Promise.resolve();
     const spy = vi.fn();
-    modal.addEventListener('ux:event', ((e: CustomEvent) => {
+    modal.addEventListener('ux:widget.modal.event', ((e: CustomEvent) => {
       if (e.detail?.action === 'CLOSE') spy();
     }) as EventListener);
     modal.openModal();

@@ -158,7 +158,7 @@ const states: Record<AppFSMState, StateConfig<AppFSMContext>> = {
         // Dispatch global ready event
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
-            new CustomEvent('ux3:ready', { detail: { app: ctx.app } })
+            new CustomEvent('ux:app.ready', { detail: { app: ctx.app } })
           );
         }
       }) as Action,

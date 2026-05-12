@@ -143,7 +143,7 @@ describe('Built-in primitives', () => {
     document.body.appendChild(sw);
 
     let detail: Record<string, boolean> | null = null;
-    sw.addEventListener('ux:change', (event: Event) => {
+    sw.addEventListener('ux:input.change', (event: Event) => {
       detail = (event as CustomEvent).detail;
     });
 
@@ -163,7 +163,7 @@ describe('Built-in primitives', () => {
 
       let opened = 0;
       let closed = 0;
-      el.addEventListener('ux:event', ((e: CustomEvent) => {
+      el.addEventListener('ux:widget.event', ((e: CustomEvent) => {
         if (e.detail?.action === 'OPEN') opened += 1;
         if (e.detail?.action === 'CLOSE') closed += 1;
       }) as EventListener);
@@ -202,7 +202,7 @@ describe('Built-in primitives', () => {
 
     const closeButton = drawer.querySelector('button.close-button') as HTMLButtonElement;
     let closed = false;
-    drawer.addEventListener('ux:event', (event: Event) => {
+    drawer.addEventListener('ux:drawer.event', (event: Event) => {
       if ((event as CustomEvent).detail?.action === 'CLOSE') closed = true;
     });
 
@@ -242,7 +242,7 @@ describe('Built-in primitives', () => {
     Object.defineProperty(window, 'innerWidth', { value: 420, configurable: true });
 
     let closed = false;
-    drawer.addEventListener('ux:event', (event: Event) => {
+    drawer.addEventListener('ux:drawer.event', (event: Event) => {
       if ((event as CustomEvent).detail?.action === 'CLOSE') closed = true;
     });
 
@@ -296,7 +296,7 @@ describe('Built-in primitives', () => {
     Object.defineProperty(window, 'innerWidth', { value: 420, configurable: true });
 
     let opened = false;
-    drawer.addEventListener('ux:event', (event: Event) => {
+    drawer.addEventListener('ux:drawer.event', (event: Event) => {
       if ((event as CustomEvent).detail?.action === 'OPEN') opened = true;
     });
 
@@ -356,7 +356,7 @@ describe('Built-in primitives', () => {
     document.body.appendChild(input);
 
     let emittedValue = '';
-    input.addEventListener('ux:change', (event: Event) => {
+    input.addEventListener('ux:input.change', (event: Event) => {
       emittedValue = (event as CustomEvent).detail.value;
     });
 
@@ -426,7 +426,7 @@ describe('Built-in primitives', () => {
     document.body.appendChild(switcher);
 
     let locale = '';
-    switcher.addEventListener('ux:locale-change', (event: Event) => {
+    switcher.addEventListener('ux:i18n.locale.change', (event: Event) => {
       locale = (event as CustomEvent).detail.locale;
     });
 
@@ -445,7 +445,7 @@ describe('Built-in primitives', () => {
     document.body.appendChild(toggle);
 
     let theme = '';
-    toggle.addEventListener('ux:theme-change', (event: Event) => {
+    toggle.addEventListener('ux:theme.change', (event: Event) => {
       theme = (event as CustomEvent).detail.theme;
     });
 

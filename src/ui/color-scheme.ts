@@ -35,7 +35,7 @@ export function setColorScheme(scheme: ColorScheme): void {
     // ignore storage errors
   }
   // Dispatch a custom event so other parts of the app can react
-  document.dispatchEvent(new CustomEvent('ux3:color-scheme-change', { detail: { scheme } }));
+  document.dispatchEvent(new CustomEvent('ux:app.theme.scheme.change', { detail: { scheme } }));
 }
 
 /**

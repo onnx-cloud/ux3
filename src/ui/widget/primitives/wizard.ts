@@ -23,7 +23,7 @@ export class UxWizard extends UxValue {
       s.style.display = i === index ? '' : 'none';
     });
     this.setAttribute('value', String(index));
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:wizard.step.change', {
       bubbles: true,
       detail: { step: index, total: this.steps.length },
     }));

@@ -243,7 +243,7 @@ export class UxNav extends HTMLElement {
     window.addEventListener('popstate', () => {
       requestAnimationFrame(() => this.render());
     });
-    window.addEventListener('ux3:navigate', () => this.render());
+    window.addEventListener('ux:app.route.navigate', () => this.render());
   }
 }
 

@@ -126,13 +126,30 @@ class McpService {
   private toolCache: Map<string, { tools: any[]; cachedAt: number }> = new Map();
   private toolCacheTTL: number = 60000;
   private llmClients: Map<string, LLMClient> = new Map();
+  private toolHandlers: Map<string, (args: Record<string, unknown>, signal?: AbortSignal) => Promise<unknown>> = new Map();
 
   constructor(config: McpPluginConfig = {}) {
     this.config = config;
-    // Pre-create LLM clients
     for (const [name, clientConfig] of Object.entries(config.clients || {})) {
       this.llmClients.set(name, createLLMClient(clientConfig));
     }
+  }
+
+  registerToolHandler(name: string, handler: (args: Record<string, unknown>, signal?: AbortSignal) => Promise<unknown>): void {
+    this.toolHandlers.set(name, handler);
+  }
+
+  private async executeToolWithHandlers(
+    toolName: string,
+    args: Record<string, unknown>,
+    servers: string[],
+    signal?: AbortSignal,
+  ): Promise<unknown> {
+    const localHandler = this.toolHandlers.get(toolName);
+    if (localHandler) {
+      return localHandler(args, signal);
+    }
+    return this.executeToolOnServers(toolName, args, servers, signal);
   }
 
   private getServer(name?: string): string | undefined {
@@ -233,11 +250,36 @@ class McpService {
     if (config.contextWindow && config.contextWindow > 0) {
       while (msgs.length > config.contextWindow) {
         if (config.contextStrategy === 'summarize') {
-          defaultLogger.warn('@ux3/plugin-mcp.contextStrategy.summarize.notImplemented', {
-            session: sessionId,
-            note: 'contextStrategy=summarize not yet implemented; falling back to sliding-window',
-          });
-          break;
+          const overflowCount = msgs.length - config.contextWindow;
+          let startIdx = msgs[0]?.role === 'system' ? 1 : 0;
+          if (overflowCount > 0 && startIdx < msgs.length) {
+            const overflowMsgs = msgs.splice(startIdx, overflowCount);
+            try {
+              const summaryPrompt = [
+                { role: 'system', content: 'Summarize the following conversation in 2-3 paragraphs. Preserve key decisions, facts, and action items.' },
+                ...overflowMsgs.map((m) => ({ role: m.role, content: m.content })),
+                { role: 'user', content: 'Provide a concise summary of the above conversation.' },
+              ];
+              const summaryResult = await this.sendSampleRaw(
+                { messages: summaryPrompt, maxTokens: 1024 },
+                config.client,
+              );
+              const summary = summaryResult.content
+                .filter((c: any) => c.type === 'text')
+                .map((c: any) => c.text || '')
+                .join('\n');
+              if (summary) {
+                msgs.splice(startIdx, 0, {
+                  role: 'system',
+                  content: `[Previous conversation summary]: ${summary}`,
+                });
+              }
+            } catch {
+              break;
+            }
+          } else {
+            break;
+          }
         }
         if (msgs[0].role === 'system') msgs.splice(1, 2);
         else msgs.splice(0, 2);
@@ -330,7 +372,7 @@ class McpService {
             turns.push(tc);
 
             try {
-              const tr = await this.executeToolOnServers(b.name!, b.input || {}, config.servers, signal);
+              const tr = await this.executeToolWithHandlers(b.name!, b.input || {}, config.servers, signal);
               const resultContent = typeof tr === 'string' ? tr : JSON.stringify(tr);
               const rt: AgentTurn = {
                 role: 'tool_result',

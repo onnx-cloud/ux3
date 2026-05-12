@@ -145,7 +145,7 @@ export class UxPanel extends LifecycleComponent {
     }
 
     // Emit expand/collapse event
-    const eventName = this.isExpanded ? 'ux:panel-expand' : 'ux:panel-collapse';
+    const eventName = this.isExpanded ? 'ux:panel.expand' : 'ux:panel.collapse';
     this.dispatchEvent(new CustomEvent(eventName, {
       bubbles: true,
       composed: true

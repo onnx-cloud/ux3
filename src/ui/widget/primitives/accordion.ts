@@ -39,7 +39,7 @@ export class UxAccordion extends UxToggle {
     this.querySelectorAll('[ux-accordion-item][open], details[open]').forEach((item) => {
       if (item !== target) item.removeAttribute('open');
     });
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:accordion.section.change', {
       bubbles: true,
       detail: { openItem: target },
     }));

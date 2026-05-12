@@ -55,7 +55,7 @@ export class UxLink extends UxBase {
     }
 
     e.preventDefault();
-    this.dispatchEvent(new CustomEvent('ux:navigate', {
+    this.dispatchEvent(new CustomEvent('ux:route.navigate', {
       bubbles: true, composed: true,
       detail: { path: href },
     }));

@@ -94,7 +94,7 @@ export class UxWysiwyg extends UxBase {
       this.updateToolbarState();
       const html = editor.innerHTML;
       this.setAttribute('value', html);
-      this.dispatchEvent(new CustomEvent('ux:change', { bubbles: true, detail: { value: html } }));
+      this.dispatchEvent(new CustomEvent('ux:editor.change', { bubbles: true, detail: { value: html } }));
     };
 
     editor.addEventListener('input', emitChange);
@@ -172,7 +172,7 @@ export class UxWysiwyg extends UxBase {
         editor.focus();
         document.execCommand('insertImage', false, reader.result as string);
         emitChange();
-         this.dispatchEvent(new CustomEvent('ux:event', {
+         this.dispatchEvent(new CustomEvent('ux:editor.action', {
           bubbles: true, composed: true,
           detail: { action: 'WYSIWYG:IMAGE', dataUrl: reader.result },
         }));

@@ -280,6 +280,19 @@ export class StateMachine<T extends Record<string, any>> {
   }
 
   /**
+   * Wait for all pending invokes and event queue to settle.
+   * Returns a promise that resolves when the machine is idle (not loading, no pending events).
+   */
+  async waitForSettle(): Promise<void> {
+    while (this.sc.loading || this.eventQueue.length > 0) {
+      if (this.eventQueue.length > 0 && !this.processing) {
+        this.processQueue();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+  }
+
+  /**
    * Get current context
    */
   getContext(): Readonly<T> {

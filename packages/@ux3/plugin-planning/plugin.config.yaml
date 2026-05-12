@@ -1,0 +1,72 @@
+name: "@ux3/plugin-planning"
+displayName: Planning & Scheduling
+author: UX3 Team
+categories:
+  - utility
+  - scheduling
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    # Calendar Tools
+    - name: calendar.info
+      description: Get information about calendar widget
+      inputSchema:
+        type: object
+        additionalProperties: false
+    - name: calendar.create
+      description: Create a new calendar configuration
+      inputSchema:
+        type: object
+        additionalProperties: false
+    
+    # Kanban Tools
+    - name: kanban.info
+      description: Get information about kanban board
+      inputSchema:
+        type: object
+        additionalProperties: false
+    - name: kanban.create
+      description: Create a new kanban configuration
+      inputSchema:
+        type: object
+        additionalProperties: false
+    
+    # Flow Editor Tools
+    - name: flow_editor.info
+      description: Get information about flow editor
+      inputSchema:
+        type: object
+        additionalProperties: false
+    - name: flow_editor.create
+      description: Create a new flow diagram
+      inputSchema:
+        type: object
+        additionalProperties: false
+    
+    # Gantt Tools
+    - name: gantt.info
+      description: Get information about gantt chart
+      inputSchema:
+        type: object
+        additionalProperties: false
+    - name: gantt.create
+      description: Create a new gantt chart
+      inputSchema:
+        type: object
+        additionalProperties: false
+  
+  resources:
+    - uri: plugin://planning/calendar/docs
+      mimeType: text/markdown
+      description: Calendar widget documentation
+    - uri: plugin://planning/kanban/docs
+      mimeType: text/markdown
+      description: Kanban board documentation
+    - uri: plugin://planning/flow-editor/docs
+      mimeType: text/markdown
+      description: Flow editor documentation
+    - uri: plugin://planning/gantt/docs
+      mimeType: text/markdown
+      description: Gantt chart documentation
+  
+  systemPrompt: You are an assistant helping developers use the planning and scheduling plugin suite (calendars, kanban boards, flow diagrams, gantt charts) for UX3 Framework.

@@ -38,7 +38,7 @@ export class UxBase extends LifecycleComponent {
   }
 
   private bindTwoWay(): void {
-    this.addEventListener('ux:change', (e: Event) => {
+    this.addEventListener('ux:input.change', (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail || !this.boundFSM) return;
       const key = this.resolveDataKey();

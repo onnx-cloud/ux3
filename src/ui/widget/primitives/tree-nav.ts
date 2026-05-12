@@ -48,7 +48,7 @@ export class UxTreeNav extends UxBase {
           if (next) li.setAttribute('aria-expanded', 'true');
           else li.setAttribute('aria-expanded', 'false');
         }
-        this.dispatchEvent(new CustomEvent('ux:event', {
+        this.dispatchEvent(new CustomEvent('ux:tree.action', {
           bubbles: true, composed: true,
           detail: { action: 'SELECT', label: (label.textContent || '').replace(/[▶▼]/, '').trim() },
         }));

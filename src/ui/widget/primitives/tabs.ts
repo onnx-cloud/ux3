@@ -186,7 +186,7 @@ export class UxTabs extends UxBase {
     if (idx >= 0) {
       this.selectTab(idx);
       this.persistSelectedIndex(idx);
-      this.dispatchEvent(new CustomEvent('ux:change', {
+      this.dispatchEvent(new CustomEvent('ux:navigation.tab.change', {
         bubbles: true, composed: true,
         detail: { selectedIndex: idx, selectedLabel: this.tabs[idx]?.getAttribute('label') || `Tab ${idx + 1}` },
       }));
@@ -220,7 +220,7 @@ export class UxTabs extends UxBase {
       selectedIndex: index,
       selectedLabel: this.tabs[index]?.getAttribute('label') || `Tab ${index + 1}`,
     };
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:widget.event', {
       bubbles: true, composed: true,
       detail: { action, payload },
     }));

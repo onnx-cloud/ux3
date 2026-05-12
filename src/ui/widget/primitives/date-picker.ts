@@ -15,7 +15,7 @@ export class UxDatePicker extends UxBase {
 const input = document.createElement('input');
     input.type = 'date';
     input.addEventListener('change', () => {
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:date.select', {
         bubbles: true, composed: true,
         detail: { action: 'SELECT', value: input.value },
       }));

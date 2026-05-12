@@ -297,7 +297,7 @@ export class UxField extends LifecycleComponent {
     this.controlDisposers.push(this.listen(this.control, 'change', (e: Event) => {
       const target = e.target as HTMLInputElement;
       this.dispatchEvent(
-        new CustomEvent('ux:field-change', {
+        new CustomEvent('ux:form.field.change', {
           detail: { name: this.name, value: target.value },
           bubbles: true,
           composed: true,

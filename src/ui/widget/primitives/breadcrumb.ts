@@ -6,7 +6,7 @@ export class UxBreadcrumb extends UxBase {
     this.setAttribute('aria-label', 'Breadcrumb');
     this.renderBreadcrumb();
     window.addEventListener('popstate', () => requestAnimationFrame(() => this.renderBreadcrumb()));
-    window.addEventListener('ux3:navigate', () => this.renderBreadcrumb());
+    window.addEventListener('ux:app.route.navigate', () => this.renderBreadcrumb());
   }
 
   private renderBreadcrumb(): void {

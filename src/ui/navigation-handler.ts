@@ -277,7 +277,7 @@ export function setupNavigation(appContext: AppContext): void {
   handleNavigationEvent(appContext);
 
   // Notify nav components that the app is ready and routes are available
-  window.dispatchEvent(new CustomEvent('ux3:navigate'));
+  window.dispatchEvent(new CustomEvent('ux:app.route.navigate'));
 }
 
 /**
@@ -338,7 +338,7 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
   }
   mountView(targetView, params);
   trackCurrentPath(resolvedPath);
-  window.dispatchEvent(new CustomEvent('ux3:navigate'));
+  window.dispatchEvent(new CustomEvent('ux:app.route.navigate'));
   defaultLogger.info(`[Navigation] Navigated to ${resolvedPath} (view: ${targetView})`);
   emitDevTools('navigation', 'navigate', { path: resolvedPath, view: targetView, params });
 }

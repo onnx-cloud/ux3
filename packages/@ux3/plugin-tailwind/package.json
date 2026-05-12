@@ -1,0 +1,1 @@
+{"name":"@ux3/plugin-tailwind","version":"0.2.0","description":"Unified Tailwind CSS styling utilities and dynamic Plus widget registration","main":"dist/index.js","types":"dist/index.d.ts","sideEffects":true}

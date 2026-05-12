@@ -458,7 +458,7 @@ describe('Phase 0–4 Production Readiness', () => {
     const before = JSON.stringify(widget.columns);
 
     const dispatch = (cards: string[], from: number, toCol: number) => {
-      widget.dispatchEvent(new CustomEvent('ux:event', {
+      widget.dispatchEvent(new CustomEvent('ux:kanban.move', {
         bubbles: true, composed: true,
         detail: { action: 'KANBAN:MOVE', cards, from: String(from), to: String(toCol) },
       }));

@@ -857,10 +857,10 @@ export function createInspectorShell(
   }
 
   window.addEventListener('popstate', onRouteChange);
-  window.addEventListener('ux3:route-change', onRouteChange);
+  window.addEventListener('ux:app.route.change', onRouteChange);
   disposers.push(() => {
     window.removeEventListener('popstate', onRouteChange);
-    window.removeEventListener('ux3:route-change', onRouteChange);
+    window.removeEventListener('ux:app.route.change', onRouteChange);
   });
 
   // =========================================================================

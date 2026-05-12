@@ -113,7 +113,7 @@ export class UxInput extends UxBase {
   private readonly onInput = (event: Event): void => {
     const value = (event.target as HTMLInputElement).value;
     this.setAttribute('value', value);
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:input.change', {
       bubbles: true,
       detail: { value },
     }));

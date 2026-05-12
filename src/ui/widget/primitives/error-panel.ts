@@ -30,7 +30,7 @@ const text = this.textContent?.trim() || 'An error occurred';
     this.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest('[data-action]');
       if (btn) {
-        this.dispatchEvent(new CustomEvent('ux:event', {
+        this.dispatchEvent(new CustomEvent('ux:error.action', {
           bubbles: true, composed: true,
           detail: { action: btn.getAttribute('data-action') },
         }));

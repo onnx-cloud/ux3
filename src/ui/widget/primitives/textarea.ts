@@ -109,7 +109,7 @@ export class UxTextarea extends UxBase {
   private readonly onInput = (event: Event): void => {
     const value = (event.target as HTMLTextAreaElement).value;
     this.setAttribute('value', value);
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:input.change', {
       bubbles: true,
       detail: { value },
     }));

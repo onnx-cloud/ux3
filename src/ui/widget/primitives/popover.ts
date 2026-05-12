@@ -12,7 +12,7 @@ export class UxPopover extends UxToggle {
       if (!this.contains(target)) {
         this.removeAttribute(stateAttr);
         this.applyAriaState(false);
-        this.dispatchEvent(new CustomEvent('ux:event', { bubbles: true, detail: { action: 'CLOSE' } }));
+        this.dispatchEvent(new CustomEvent('ux:popover.event', { bubbles: true, detail: { action: 'CLOSE' } }));
       }
     };
     document.addEventListener('click', this.boundClickOutside);

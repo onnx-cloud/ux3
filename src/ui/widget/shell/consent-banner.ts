@@ -177,7 +177,7 @@ export class UxConsentBanner extends LifecycleComponent {
     });
     this.saveConsentState(preferences);
 
-    this.dispatchEvent(new CustomEvent('ux:consent-accept', {
+    this.dispatchEvent(new CustomEvent('ux:consent.accept', {
       detail: { preferences },
       bubbles: true,
       composed: true
@@ -195,7 +195,7 @@ export class UxConsentBanner extends LifecycleComponent {
 
     this.saveConsentState(preferences, false);
 
-    this.dispatchEvent(new CustomEvent('ux:consent-reject', {
+    this.dispatchEvent(new CustomEvent('ux:consent.reject', {
       detail: { preferences },
       bubbles: true,
       composed: true
@@ -205,7 +205,7 @@ export class UxConsentBanner extends LifecycleComponent {
   }
 
   private handleDismiss() {
-    this.dispatchEvent(new CustomEvent('ux:consent-dismiss', {
+    this.dispatchEvent(new CustomEvent('ux:consent.dismiss', {
       bubbles: true,
       composed: true
     }));

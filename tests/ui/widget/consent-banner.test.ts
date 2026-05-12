@@ -37,7 +37,7 @@ describe('UxConsentBanner - Consent Component', () => {
     expect(acceptButton).toBeTruthy();
 
     const acceptSpy = vi.fn();
-    banner.addEventListener('ux:consent-accept', acceptSpy);
+    banner.addEventListener('ux:consent.accept', acceptSpy);
 
     acceptButton.click();
 
@@ -57,7 +57,7 @@ describe('UxConsentBanner - Consent Component', () => {
     expect(rejectButton).toBeTruthy();
 
     const rejectSpy = vi.fn();
-    banner.addEventListener('ux:consent-reject', rejectSpy);
+    banner.addEventListener('ux:consent.reject', rejectSpy);
 
     rejectButton.click();
 
@@ -74,7 +74,7 @@ describe('UxConsentBanner - Consent Component', () => {
 
     const dismissButton = banner.shadowRoot?.querySelector('.consent-close') as HTMLButtonElement;
     const dismissSpy = vi.fn();
-    banner.addEventListener('ux:consent-dismiss', dismissSpy);
+    banner.addEventListener('ux:consent.dismiss', dismissSpy);
 
     dismissButton.click();
 

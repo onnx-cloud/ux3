@@ -331,12 +331,12 @@ export class UxChatComposer extends UxBase {
       tags,
     };
 
-    this.dispatchEvent(new CustomEvent('ux:send', {
+    this.dispatchEvent(new CustomEvent('ux:chat.send', {
       bubbles: true,
       composed: true,
       detail: payload,
     }));
-    this.dispatchEvent(new CustomEvent('ux:submit', {
+    this.dispatchEvent(new CustomEvent('ux:chat.submit', {
       bubbles: true,
       composed: true,
       detail: payload,

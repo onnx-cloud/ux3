@@ -2,5 +2,5 @@ export function escapeAttr(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-export const UX_EVENT = 'ux:event';
-export const UX_CHANGE = 'ux:change';
+export const UX_EVENT = 'ux:widget.event';
+export const UX_CHANGE = 'ux:input.change';

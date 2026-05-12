@@ -1,8 +1,0 @@
-{
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "../../..",
-    "outDir": "../../../tmp/tsc/packages/ux3/plugin-kanban"
-  },
-  "include": ["src/**/*.ts"]
-}

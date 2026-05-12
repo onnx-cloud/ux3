@@ -81,7 +81,7 @@ export class UxTable extends UxBase {
 
     rows.forEach(row => tbody.appendChild(row));
     this.updateSortIndicators(table);
-    this.dispatchEvent(new CustomEvent('ux:sort', {
+    this.dispatchEvent(new CustomEvent('ux:table.sort', {
       bubbles: true, composed: true,
       detail: { column, ascending: this.sortAsc },
     }));

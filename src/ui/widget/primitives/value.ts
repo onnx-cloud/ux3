@@ -24,7 +24,7 @@ export class UxValue extends UxBase {
     }
     const next = newValue ?? '';
     this.syncA11yValue(next);
-    this.dispatchEvent(new CustomEvent('ux:change', {
+    this.dispatchEvent(new CustomEvent('ux:input.change', {
       bubbles: true,
       detail: { value: next },
     }));

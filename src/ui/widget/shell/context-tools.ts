@@ -91,8 +91,7 @@ export class UxLangSwitcher extends UxBase {
     const svc = app?.locale || app?.services?.locale;
     if (svc && typeof svc.setLocale === 'function') svc.setLocale(locale);
     window.dispatchEvent(new Event('languagechange'));
-    this.dispatchEvent(new CustomEvent(UX_CHANGE, { bubbles: true, detail: { locale } }));
-    this.dispatchEvent(new CustomEvent('ux:locale-change', { bubbles: true, detail: { locale } }));
+    this.dispatchEvent(new CustomEvent('ux:i18n.locale.change', { bubbles: true, detail: { locale } }));
   };
 }
 
@@ -172,8 +171,7 @@ export class UxThemeToggle extends UxBase {
     const next = this.getTheme() === 'dark' ? 'light' : 'dark';
     this.applyTheme(next);
     try { window.localStorage.setItem('ux3.color.scheme', next); } catch {}
-    this.dispatchEvent(new CustomEvent(UX_CHANGE, { bubbles: true, detail: { theme: next } }));
-    this.dispatchEvent(new CustomEvent('ux:theme-change', { bubbles: true, detail: { theme: next } }));
+    this.dispatchEvent(new CustomEvent('ux:theme.change', { bubbles: true, detail: { theme: next } }));
   };
 
   private readonly onKeyDown = (e: KeyboardEvent): void => {
@@ -223,7 +221,7 @@ export class UxNetworkStatus extends UxBase {
 
   private readonly onChange = (): void => {
     this.update();
-    this.dispatchEvent(new CustomEvent(UX_CHANGE, { bubbles: true, detail: { online: navigator.onLine } }));
+    this.dispatchEvent(new CustomEvent('ux:app.online.change', { bubbles: true, detail: { online: navigator.onLine } }));
   };
 
   private getLabel(): string {

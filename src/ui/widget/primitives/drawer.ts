@@ -266,7 +266,7 @@ export class UxDrawer extends UxToggle {
     }
     this.setAttribute('open', '');
     this.applyAriaState(true);
-    this.dispatchEvent(new CustomEvent('ux:event', { bubbles: true, detail: { action: 'OPEN' } }));
+    this.dispatchEvent(new CustomEvent('ux:drawer.event', { bubbles: true, detail: { action: 'OPEN' } }));
   }
 
   private closeDrawer(): void {
@@ -275,7 +275,7 @@ export class UxDrawer extends UxToggle {
     }
     this.removeAttribute('open');
     this.applyAriaState(false);
-    this.dispatchEvent(new CustomEvent('ux:event', { bubbles: true, detail: { action: 'CLOSE' } }));
+    this.dispatchEvent(new CustomEvent('ux:drawer.event', { bubbles: true, detail: { action: 'CLOSE' } }));
   }
 
   static get observedAttributes(): string[] {

@@ -115,7 +115,7 @@ export class UxComboBox extends UxBase {
     this.input.value = label;
     this.isOpen = false;
     this.render();
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:select.action', {
       bubbles: true, composed: true,
       detail: { action: 'SELECT', value: label },
     }));

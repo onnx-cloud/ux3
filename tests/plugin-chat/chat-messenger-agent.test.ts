@@ -49,11 +49,11 @@ describe('ux-chat-messenger MCP agent flow', () => {
     document.body.appendChild(el);
 
     const messageEvents: any[] = [];
-    el.addEventListener('ux:message', (e) => messageEvents.push((e as CustomEvent).detail));
+    el.addEventListener('ux:chat.message', (e) => messageEvents.push((e as CustomEvent).detail));
 
     const composer = el.shadowRoot?.querySelector('ux-chat-composer');
     expect(composer).toBeTruthy();
-    composer!.dispatchEvent(new CustomEvent('ux:send', {
+    composer!.dispatchEvent(new CustomEvent('ux:chat.send', {
       bubbles: true,
       composed: true,
       detail: { text: 'Hi there' },
@@ -86,7 +86,7 @@ describe('ux-chat-messenger MCP agent flow', () => {
     document.body.appendChild(el);
 
     const composer = el.shadowRoot?.querySelector('ux-chat-composer');
-    composer!.dispatchEvent(new CustomEvent('ux:send', {
+    composer!.dispatchEvent(new CustomEvent('ux:chat.send', {
       bubbles: true,
       composed: true,
       detail: { text: 'Hi' },
@@ -132,7 +132,7 @@ describe('ux-chat-messenger MCP agent flow', () => {
     document.body.appendChild(el);
 
     const composer = el.shadowRoot?.querySelector('ux-chat-composer');
-    composer!.dispatchEvent(new CustomEvent('ux:send', {
+    composer!.dispatchEvent(new CustomEvent('ux:chat.send', {
       bubbles: true,
       composed: true,
       detail: { text: 'stream test' },
@@ -178,7 +178,7 @@ describe('ux-chat-messenger MCP agent flow', () => {
     expect(stopBtn.disabled).toBe(true);
 
     const composer = el.shadowRoot?.querySelector('ux-chat-composer');
-    composer!.dispatchEvent(new CustomEvent('ux:send', {
+    composer!.dispatchEvent(new CustomEvent('ux:chat.send', {
       bubbles: true,
       composed: true,
       detail: { text: 'long-running task' },

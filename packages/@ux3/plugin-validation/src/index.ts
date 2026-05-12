@@ -51,7 +51,7 @@ export function validate(rules: ValidationRules, value: any): string | null {
 export const ValidationPlugin: Plugin = {
   name: '@ux3/plugin-validation',
   version: '0.1.0',
-  description: 'Built-in validation rules (required, minLength, maxLength, email, url, pattern).',
+  description: 'Built-in validation rules (required, minLength, maxLength, email, url, pattern)',
   install(app) {
     // expose the validate utility globally
     (app as any).utils = (app as any).utils || {};

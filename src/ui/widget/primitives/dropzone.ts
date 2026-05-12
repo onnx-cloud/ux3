@@ -28,7 +28,7 @@ const text = this.textContent?.trim() || 'Drop files here';
       e.preventDefault();
       dragCount = 0;
       zone.classList.remove('dragging');
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:dropzone.drop', {
         bubbles: true, composed: true,
         detail: { action: 'DROP', files: Array.from((e as DragEvent).dataTransfer?.files || []) },
       }));

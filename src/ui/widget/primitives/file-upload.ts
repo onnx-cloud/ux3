@@ -71,7 +71,7 @@ export class UxFileUpload extends UxBase {
       this.uploadFiles(files, uploadUrl);
     }
 
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:file.upload.start', {
       bubbles: true, composed: true,
       detail: { action: 'UPLOAD', files, names },
     }));
@@ -95,14 +95,14 @@ export class UxFileUpload extends UxBase {
 
     xhr.addEventListener('load', () => {
       this.progressEl.value = 100;
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:file.upload.complete', {
         bubbles: true, composed: true,
         detail: { action: 'UPLOAD:COMPLETE', status: xhr.status },
       }));
     });
 
     xhr.addEventListener('error', () => {
-      this.dispatchEvent(new CustomEvent('ux:event', {
+      this.dispatchEvent(new CustomEvent('ux:file.upload.error', {
         bubbles: true, composed: true,
         detail: { action: 'UPLOAD:ERROR' },
       }));

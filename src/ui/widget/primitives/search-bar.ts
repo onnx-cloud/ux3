@@ -50,7 +50,7 @@ const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
   }
 
   private emit(): void {
-    this.dispatchEvent(new CustomEvent('ux:event', {
+    this.dispatchEvent(new CustomEvent('ux:search.action', {
       bubbles: true, composed: true,
       detail: { action: 'SEARCH', query: this.input.value },
     }));
