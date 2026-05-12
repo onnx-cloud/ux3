@@ -1,0 +1,23 @@
+{
+  "name": "[[ name ]]",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ux3 dev",
+    "build": "ux3 build",
+    "preview": "ux3 preview",
+    "lint": "ux3 lint",
+    "check": "ux3 check"
+  },
+  "dependencies": {
+    "@ux3/core": "^[[ ux3Version ]]",
+    "@ux3/stdlib": "^[[ ux3Version ]]",
+    "@ux3/router": "^[[ ux3Version ]]",
+    "@ux3/forms": "^[[ ux3Version ]]",
+    "@ux3/store": "^[[ ux3Version ]]"
+  },
+  "devDependencies": {
+    "@ux3/cli": "^[[ ux3Version ]]",
+    "typescript": "^5.3.3"
+  }
+}

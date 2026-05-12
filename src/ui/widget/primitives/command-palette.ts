@@ -11,10 +11,11 @@ export class UxCommandPalette extends UxBase {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot!.innerHTML = `
       <style>
-        :host { display: none; justify-content: center; padding-top: 15vh; }
+        :host { display: none; justify-content: center; align-items: center; }
         :host([open]) { display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9999; }
+        .backdrop { width: 100%; min-height: 100%; display: flex; align-items: flex-start; justify-content: center; padding: 1rem; box-sizing: border-box; }
         .palette {
-          width: 560px; max-height: 400px;
+          width: min(92vw, 560px); max-height: 80vh;
           background: white; border-radius: 0.75rem;
           box-shadow: 0 10px 40px rgba(0,0,0,0.2);
           display: flex; flex-direction: column; overflow: hidden;
@@ -30,19 +31,22 @@ export class UxCommandPalette extends UxBase {
         .item:hover, .item.selected { background: #f3f4f6; }
         .group { padding: 0.5rem 1rem; font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
       </style>
-      <div class="palette" role="dialog" aria-label="Command palette">
-        <input type="text" placeholder="Search commands...">
-        <div class="results"></div>
+      <div class="backdrop">
+        <div class="palette" role="dialog" aria-label="Command palette">
+          <input type="text" placeholder="Search commands...">
+          <div class="results"></div>
+        </div>
       </div>
     `;
 
+    const backdrop = this.shadowRoot!.querySelector('.backdrop')!;
     this.input = this.shadowRoot!.querySelector('input')!;
     this.list = this.shadowRoot!.querySelector('.results')!;
 
     this.input.addEventListener('input', () => this.filter());
     this.input.addEventListener('keydown', (e) => this.onKey(e));
-    this.shadowRoot!.querySelector('.palette')!.addEventListener('click', (e) => {
-      if (e.target === this.shadowRoot!.querySelector('.palette')) this.close();
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) this.close();
     });
 
     this.addEventListener('ux:event', ((e: CustomEvent) => {

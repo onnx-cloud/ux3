@@ -2,9 +2,20 @@ import { UxBase } from '@ux3/ui/widget/primitives/base';
 
 type AgentMode = 'chat' | 'blocking' | 'queue' | 'steering';
 
+interface ChatMessagePart {
+  type: 'text' | 'tool_call' | 'tool_result' | 'markdown' | 'code';
+  text?: string;
+  toolName?: string;
+  toolCallId?: string;
+  args?: string;
+  result?: string;
+  language?: string;
+}
+
 interface ChatMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
+  role: 'user' | 'assistant' | 'system' | 'tool' | 'tool_call' | 'tool_result';
   content: string;
+  parts?: ChatMessagePart[];
   timestamp: number;
   metadata?: Record<string, unknown>;
 }
@@ -14,18 +25,23 @@ interface AgentSession {
   state: 'idle' | 'thinking' | 'tool_calling' | 'error';
   mode: AgentMode;
   send(message: { role: string; content: string }, signal?: AbortSignal): Promise<{ role: string; content: string | Record<string, unknown>; timestamp: number; metadata?: Record<string, unknown> }>;
+  stream(message: { role: string; content: string }, signal?: AbortSignal): AsyncIterable<{ role: string; content: string | Record<string, unknown>; timestamp: number; metadata?: Record<string, unknown> }>;
+  cancel(): void;
   setMode?(mode: AgentMode): void;
 }
 
 export class UxChatMessenger extends UxBase {
   private messagesEl: HTMLElement | null = null;
   private composerEl: HTMLElement | null = null;
+  private stopBtn: HTMLButtonElement | null = null;
+  private statusEl: HTMLElement | null = null;
   private messages: ChatMessage[] = [];
   private agentName: string | null = null;
   private sessionId: string | null = null;
   private mode: AgentMode = 'chat';
   private isSending = false;
   private useLightDom = false;
+  private activeAbortController: AbortController | null = null;
 
   static get observedAttributes(): string[] {
     return ['messages', 'placeholder', 'disabled', 'send-on', 'accept', 'allow-attachments', 'agent', 'session-id', 'mode'];
@@ -47,7 +63,22 @@ export class UxChatMessenger extends UxBase {
 
   protected onDisconnected(): void {
     this.composerEl?.removeEventListener('ux:send', this.onComposerSend as EventListener);
+    this.stopBtn?.removeEventListener('click', this.onStop);
+    this.cancelActiveRequest();
     super.onDisconnected();
+  }
+
+  private cancelActiveRequest(): void {
+    if (this.activeAbortController) {
+      this.activeAbortController.abort();
+      this.activeAbortController = null;
+    }
+    const session = this.getExistingSession();
+    if (session && typeof session.cancel === 'function') {
+      session.cancel();
+    }
+    this.isSending = false;
+    this.updateStatus();
   }
 
   private syncAttributes(): void {
@@ -65,11 +96,16 @@ export class UxChatMessenger extends UxBase {
     if (!host) return;
     this.messagesEl = host.querySelector('ux-chat-messages');
     this.composerEl = host.querySelector('ux-chat-composer');
+    this.stopBtn = host.querySelector('.stop-btn');
+    this.statusEl = host.querySelector('.status-indicator');
   }
 
   private setupListeners(): void {
     if (this.composerEl) {
       this.composerEl.addEventListener('ux:send', this.onComposerSend as EventListener);
+    }
+    if (this.stopBtn) {
+      this.stopBtn.addEventListener('click', this.onStop);
     }
   }
 
@@ -122,6 +158,10 @@ export class UxChatMessenger extends UxBase {
     });
   };
 
+  private readonly onStop = (): void => {
+    this.cancelActiveRequest();
+  };
+
   private async handleSend(detail: Record<string, any>): Promise<void> {
     const text = String(detail.text ?? detail.message ?? detail.messageText ?? '').trim();
     const attachments = Array.isArray(detail.attachments) ? detail.attachments : [];
@@ -154,27 +194,69 @@ export class UxChatMessenger extends UxBase {
 
     try {
       this.isSending = true;
-      const assistantTurn = await session.send({ role: 'user', content: text });
-      const assistantContent = typeof assistantTurn.content === 'string'
-        ? assistantTurn.content
-        : JSON.stringify(assistantTurn.content);
+      this.activeAbortController = new AbortController();
+      this.updateStatus();
 
-      this.messages.push({
-        role: 'assistant',
-        content: assistantContent,
-        timestamp: assistantTurn.timestamp || Date.now(),
-        metadata: assistantTurn.metadata,
-      });
-      this.updateMessagesView();
+      if (typeof session.stream === 'function') {
+        for await (const turn of session.stream({ role: 'user', content: text }, this.activeAbortController.signal)) {
+          this.appendTurn(turn, session);
+        }
+      } else {
+        const assistantTurn = await session.send({ role: 'user', content: text }, this.activeAbortController.signal);
+        this.appendTurn(assistantTurn, session);
+      }
+
+      this.updateStatus();
       this.dispatchEvent(new CustomEvent('ux:message', {
         bubbles: true,
         composed: true,
-        detail: { sessionId: session.id, message: assistantTurn, messages: this.messages.slice() },
+        detail: { sessionId: session.id, messages: this.messages.slice() },
       }));
-    } catch (error) {
-      this.addSystemMessage(`Agent error: ${String(error)}`);
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        this.addSystemMessage(`Agent error: ${String(error)}`);
+      }
     } finally {
       this.isSending = false;
+      this.activeAbortController = null;
+      this.updateStatus();
+    }
+  }
+
+  private appendTurn(turn: { role: string; content: string | Record<string, unknown>; timestamp: number; metadata?: Record<string, unknown> }, session: AgentSession): void {
+    const role = turn.role as ChatMessage['role'];
+    const content = typeof turn.content === 'string' ? turn.content : JSON.stringify(turn.content);
+
+    let parts: ChatMessagePart[] | undefined;
+
+    if (role === 'tool_call') {
+      const c = turn.content as Record<string, unknown>;
+      parts = [{
+        type: 'tool_call',
+        toolName: (c.name as string) || (turn.metadata?.toolName as string) || 'unknown',
+        toolCallId: (c.id as string) || (turn.metadata?.toolCallId as string),
+        args: c.args ? JSON.stringify(c.args) : undefined,
+      }];
+    } else if (role === 'tool_result') {
+      parts = [{
+        type: 'tool_result',
+        toolName: (turn.metadata?.toolName as string) || 'unknown',
+        toolCallId: (turn.metadata?.toolCallId as string),
+        result: content,
+      }];
+    }
+
+    this.messages.push({
+      role,
+      content,
+      parts,
+      timestamp: turn.timestamp || Date.now(),
+      metadata: turn.metadata,
+    });
+    this.updateMessagesView();
+
+    if (session.state) {
+      this.updateStatus(session.state);
     }
   }
 
@@ -199,6 +281,12 @@ export class UxChatMessenger extends UxBase {
     }
 
     return session;
+  }
+
+  private getExistingSession(): AgentSession | undefined {
+    const service = this.getMcpService();
+    if (!service || !this.sessionId) return undefined;
+    return service.getSession(this.sessionId);
   }
 
   private getMcpService(): any {
@@ -230,6 +318,12 @@ export class UxChatMessenger extends UxBase {
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="messenger">
+        <div class="messenger-header">
+          <span class="status-indicator" data-state="idle">Ready</span>
+          <button class="stop-btn" type="button" aria-label="Stop" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="1"/></svg>
+          </button>
+        </div>
         <ux-chat-messages messages='${this.escapeAttribute(messages)}'></ux-chat-messages>
         <ux-chat-composer
           placeholder="${this.escapeAttribute(placeholder)}"
@@ -252,6 +346,32 @@ export class UxChatMessenger extends UxBase {
     this.messagesEl.setAttribute('messages', JSON.stringify(this.messages));
   }
 
+  private updateStatus(state?: string): void {
+    if (!this.statusEl) return;
+    if (!state && this.isSending) state = 'thinking';
+    if (!state && !this.isSending) state = 'idle';
+
+    this.statusEl.dataset.state = state;
+
+    switch (state) {
+      case 'thinking':
+        this.statusEl.textContent = 'Thinking...';
+        break;
+      case 'tool_calling':
+        this.statusEl.textContent = 'Calling tool...';
+        break;
+      case 'error':
+        this.statusEl.textContent = 'Error';
+        break;
+      default:
+        this.statusEl.textContent = 'Ready';
+    }
+
+    if (this.stopBtn) {
+      this.stopBtn.disabled = !this.isSending;
+    }
+  }
+
   private addSystemMessage(text: string): void {
     this.messages.push({ role: 'system', content: text, timestamp: Date.now() });
     this.updateMessagesView();
@@ -268,9 +388,11 @@ export class UxChatMessenger extends UxBase {
   }
 
   private normalizeMessage(msg: any): ChatMessage {
+    const validRoles = ['user', 'assistant', 'system', 'tool', 'tool_call', 'tool_result'];
     return {
-      role: ['user', 'assistant', 'system', 'tool'].includes(msg?.role) ? msg.role : 'assistant',
+      role: validRoles.includes(msg?.role) ? msg.role : 'assistant',
       content: typeof msg?.content === 'string' ? msg.content : JSON.stringify(msg?.content ?? ''),
+      parts: Array.isArray(msg?.parts) ? msg.parts : undefined,
       timestamp: typeof msg?.timestamp === 'number' ? msg.timestamp : Date.now(),
       metadata: typeof msg?.metadata === 'object' && msg?.metadata !== null ? msg.metadata : undefined,
     };
@@ -298,6 +420,61 @@ export class UxChatMessenger extends UxBase {
         height: 100%;
         min-height: 0;
       }
+      .messenger-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.125rem 0.25rem;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+        flex-shrink: 0;
+      }
+      .status-indicator {
+        font-size: 0.625rem;
+        color: var(--color-text-muted, #9ca3af);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .status-indicator::before {
+        content: '';
+        display: inline-block;
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 50%;
+        background: var(--color-border, #d1d5db);
+      }
+      .status-indicator[data-state="thinking"]::before {
+        background: #eab308;
+        animation: pulse-status 1s ease-in-out infinite;
+      }
+      .status-indicator[data-state="tool_calling"]::before {
+        background: #3b82f6;
+        animation: pulse-status 0.5s ease-in-out infinite;
+      }
+      .status-indicator[data-state="error"]::before {
+        background: #ef4444;
+      }
+      @keyframes pulse-status {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+      .stop-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.25rem;
+        height: 1.25rem;
+        border: none;
+        border-radius: 0.25rem;
+        background: var(--color-bg-muted, #f3f4f6);
+        color: var(--color-error, #dc2626);
+        cursor: pointer;
+        padding: 0;
+        opacity: 0.6;
+        transition: opacity 0.15s;
+      }
+      .stop-btn:hover:not(:disabled) { opacity: 1; }
+      .stop-btn:disabled { opacity: 0.15; cursor: not-allowed; }
       ux-chat-messages {
         flex: 1 1 0;
         min-height: 0;

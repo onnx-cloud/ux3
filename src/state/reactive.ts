@@ -14,6 +14,8 @@
  * ```
  */
 
+export type Reactive<T> = T;
+
 import { defaultLogger } from '../security/observability.js';
 
 type EffectFn = () => void;

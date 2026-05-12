@@ -1,0 +1,16 @@
+{
+  "name": "@ux3/plugin-[[ name ]]",
+  "version": "0.1.0",
+  "description": "[[ Name ]] plugin for UX3",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@ux3/ux3": "^[[ ux3Version ]]"
+  },
+  "dependencies": {},
+  "keywords": ["ux3", "plugin", "[[ name ]]"]
+}

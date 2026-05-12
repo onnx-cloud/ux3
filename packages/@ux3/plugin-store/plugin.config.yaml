@@ -1,0 +1,19 @@
+name: "@ux3/plugin-store"
+displayName: Store
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: store.info
+      description: Get information about store plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://store/docs
+      mimeType: text/markdown
+      description: store plugin documentation
+  systemPrompt: You are an assistant helping developers use the store plugin for
+    UX3 Framework.

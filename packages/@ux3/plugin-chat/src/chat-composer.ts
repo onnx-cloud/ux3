@@ -91,6 +91,9 @@ export class UxChatComposer extends UxBase {
     this.sendBtn?.addEventListener('click', this.onSend);
     this.attachBtn?.addEventListener('click', this.onAttachClick);
     this.attachInput?.addEventListener('change', this.onFilesChosen);
+    this.addEventListener('drop', this.onDrop);
+    this.addEventListener('dragover', this.onDragOver);
+    this.addEventListener('dragleave', this.onDragLeave);
   }
 
   private readonly onKeydown = (e: KeyboardEvent): void => {
@@ -129,6 +132,30 @@ export class UxChatComposer extends UxBase {
     const items = Array.from(clipboardData.files || []);
     if (items.length === 0) return;
     e.preventDefault();
+    this.addFiles(items);
+  };
+
+  private readonly onDrop = (e: DragEvent): void => {
+    if (!this.hasAttribute('allow-attachments')) return;
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    const items = Array.from(e.dataTransfer?.files || []);
+    if (items.length === 0) return;
+    this.addFiles(items);
+  };
+
+  private readonly onDragOver = (e: DragEvent): void => {
+    if (!this.hasAttribute('allow-attachments')) return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = 'copy';
+    this.classList.add('drag-over');
+  };
+
+  private readonly onDragLeave = (): void => {
+    this.classList.remove('drag-over');
+  };
+
+  private addFiles(items: File[]): void {
     const maxFiles = Number(this.getAttribute('max-files') || 10);
     const maxFileSize = Number(this.getAttribute('max-file-size') || 10485760);
     for (const file of items) {
@@ -137,7 +164,7 @@ export class UxChatComposer extends UxBase {
       this.files.push(file);
     }
     this.renderFiles();
-  };
+  }
 
   private readonly onSend = (e: Event): void => {
     e.preventDefault();
@@ -151,15 +178,8 @@ export class UxChatComposer extends UxBase {
   private readonly onFilesChosen = (): void => {
     const input = this.attachInput;
     if (!input?.files?.length) return;
-    const maxFiles = Number(this.getAttribute('max-files') || 10);
-    const maxFileSize = Number(this.getAttribute('max-file-size') || 10485760);
-    for (const file of Array.from(input.files)) {
-      if (this.files.length >= maxFiles) break;
-      if (file.size > maxFileSize) continue;
-      this.files.push(file);
-    }
+    this.addFiles(Array.from(input.files));
     input.value = '';
-    this.renderFiles();
   };
 
   private renderFiles() {
@@ -396,6 +416,19 @@ export class UxChatComposer extends UxBase {
         display: block;
         flex-shrink: 0;
         box-sizing: border-box;
+        position: relative;
+      }
+      :host(.drag-over)::after {
+        content: 'Drop files here';
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--color-primary, #7c3aed); color: #fff;
+        border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
+        z-index: 100; opacity: 0.9; pointer-events: none;
+      }
+      :host(.drag-over) .composer {
+        border-color: var(--color-primary, #7c3aed);
+        border-style: dashed;
       }
       .files {
         display: flex; flex-wrap: wrap; gap: 0.25rem;

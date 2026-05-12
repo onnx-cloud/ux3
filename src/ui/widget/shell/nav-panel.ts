@@ -69,7 +69,12 @@ export class UxNav extends HTMLElement {
 
   private isNavigableView(route: any): boolean {
     const app = (window as any).__ux3App;
-    if (app?.machines && route.view in app.machines) return true;
+    if (app?.machines && route.view in app.machines) {
+      if (route.guard && app.nav?.canActivate) {
+        return app.nav.canActivate(route.path);
+      }
+      return true;
+    }
     return false;
   }
 

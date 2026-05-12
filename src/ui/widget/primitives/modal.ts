@@ -17,6 +17,7 @@ export class UxModal extends LifecycleComponent {
         this.removeAttribute('opened');
         this.emit('CLOSE');
       });
+      this.listen(this.dialog, 'click', this.onDialogClick);
     }
     if (this.hasAttribute('opened') && this.getAttribute('opened') !== 'false') {
       this.open();
@@ -46,6 +47,12 @@ export class UxModal extends LifecycleComponent {
   // backward-compatible aliases
   openModal() { this.open(); }
   closeModal() { this.close(); }
+
+  private onDialogClick = (event: MouseEvent): void => {
+    if (event.target === this.dialog) {
+      this.close();
+    }
+  };
 
   open() {
     if (!this.dialog) return;
@@ -90,7 +97,7 @@ export class UxModal extends LifecycleComponent {
     return `
       dialog {
         padding: 0; border: none; border-radius: 0.75rem;
-        max-width: 90vw; max-height: 85vh; width: 560px;
+        width: min(92vw, 560px); max-width: 92vw; max-height: 90vh;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         background: var(--color-bg, #fff);
         color: var(--color-text, #0f172a);

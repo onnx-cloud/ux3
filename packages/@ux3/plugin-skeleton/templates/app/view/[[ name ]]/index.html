@@ -1,0 +1,12 @@
+<div class="view-[[ name ]]">
+  {{#if error}}
+    <div class="error">
+      <p>{{error}}</p>
+    </div>
+  {{else if loading}}
+    <p>Loading…</p>
+  {{else}}
+    <h2>[[ Name ]]</h2>
+    <button ux-event="SUBMIT">Submit</button>
+  {{/if}}
+</div>

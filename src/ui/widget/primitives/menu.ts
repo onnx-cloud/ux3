@@ -14,7 +14,7 @@ export class UxMenu extends UxBase {
     this.collectItems();
     this.addEventListener('click', this.onItemClick);
     this.addEventListener('keydown', this.onMenuKeyDown);
-    this.addEventListener('mouseover', this.onItemHover);
+    this.addEventListener('pointerover', this.onItemHover);
   }
 
   protected onDisconnected(): void {
@@ -37,7 +37,10 @@ export class UxMenu extends UxBase {
     const item = (e.target as HTMLElement).closest('ux-menu-item, [role="menuitem"]') as HTMLElement;
     if (!item) return;
     const idx = this.items.indexOf(item);
-    if (idx >= 0) this.selectItem(idx);
+    if (idx >= 0) {
+      this.focusItem(idx);
+      this.selectItem(idx);
+    }
   };
 
   private readonly onItemHover = (e: Event) => {

@@ -1,0 +1,19 @@
+name: "@ux3/plugin-stripe"
+displayName: Stripe
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: stripe.info
+      description: Get information about stripe plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://stripe/docs
+      mimeType: text/markdown
+      description: stripe plugin documentation
+  systemPrompt: You are an assistant helping developers use the stripe plugin for
+    UX3 Framework.

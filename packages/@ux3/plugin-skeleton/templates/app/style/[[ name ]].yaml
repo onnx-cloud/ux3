@@ -1,0 +1,6 @@
+widget: [[ name ]]
+base: [[ name ]]
+variants:
+  default: [[ name ]]-default
+  primary: [[ name ]]-primary
+  danger: [[ name ]]-danger

@@ -384,7 +384,7 @@ export const TAILWIND_STYLES: Record<string, string> = {
 
   // ── Overlays ──────────────────────────────────────────────────────────────
   'ux-modal':           'fixed inset-0 z-50 flex items-center justify-center bg-black/40',
-  'ux-drawer':          'fixed inset-y-0 right-0 z-50 w-80 bg-[var(--color-bg,#fff)] shadow-xl',
+  'ux-drawer':          'fixed inset-y-0 right-0 z-50 w-full max-w-xs sm:w-80 bg-[var(--color-bg,#fff)] shadow-xl overflow-auto transition-transform duration-300 ease-out',
   'ux-tooltip':         'absolute z-50 px-2 py-1 text-xs text-white bg-[var(--color-text,#1e293b)] rounded shadow-lg',
   'ux-popover':         'absolute z-40 bg-[var(--color-bg,#fff)] border border-[var(--color-border,#e2e8f0)] rounded-lg shadow-lg p-3',
   'ux-hover-panel':     'rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm shadow-lg',

@@ -1,0 +1,19 @@
+name: "@ux3/plugin-validation"
+displayName: Validation
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: validation.info
+      description: Get information about validation plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://validation/docs
+      mimeType: text/markdown
+      description: validation plugin documentation
+  systemPrompt: You are an assistant helping developers use the validation plugin
+    for UX3 Framework.

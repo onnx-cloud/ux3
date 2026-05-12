@@ -551,3 +551,38 @@ tools:
         required: [section]
       handler: hints.view
       tags: [core, hints]
+
+  # ── Agentic Plan Tools ──
+
+  - name: agentic:createPlan
+    description: "Create a new hierarchical execution plan with a title, goal, and ordered steps."
+    input:
+      type: object
+      properties:
+        title: { type: string, description: "Plan title" }
+        goal: { type: string, description: "What the plan should accomplish" }
+        steps: { type: array, items: { type: string }, description: "Ordered list of step descriptions" }
+      required: [title, goal, steps]
+    handler: agentic:createPlan
+    tags: [core, agentic, mutate]
+
+  - name: agentic:executePlan
+    description: "Begin executing a plan. Steps are processed in order with observations recorded per node."
+    input:
+      type: object
+      properties:
+        planId: { type: string, description: "ID of the plan to execute" }
+      required: [planId]
+    handler: agentic:executePlan
+    tags: [core, agentic, mutate]
+
+  - name: agentic:stepPlan
+    description: "Execute a single step/node within a plan and advance to the next ready node."
+    input:
+      type: object
+      properties:
+        planId: { type: string, description: "Plan ID" }
+        nodeId: { type: string, description: "Node ID to execute" }
+      required: [planId, nodeId]
+    handler: agentic:stepPlan
+    tags: [core, agentic, mutate]

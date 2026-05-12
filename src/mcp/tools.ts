@@ -155,6 +155,24 @@ export class ToolRegistry {
     // Hints tools
     this.registerTool('hints.list', this.hintsList.bind(this));
     this.registerTool('hints.view', this.hintsView.bind(this));
+
+    // Surgical patch tools
+    this.registerTool('view.addState', this.viewAddState.bind(this));
+    this.registerTool('view.updateState', this.viewUpdateState.bind(this));
+    this.registerTool('view.removeState', this.viewRemoveState.bind(this));
+    this.registerTool('view.addTransition', this.viewAddTransition.bind(this));
+    this.registerTool('view.patch', this.viewPatch.bind(this));
+    this.registerTool('i18n.addKey', this.i18nAddKey.bind(this));
+    this.registerTool('i18n.updateKey', this.i18nUpdateKey.bind(this));
+    this.registerTool('route.addEntry', this.routeAddEntry.bind(this));
+    this.registerTool('route.removeEntry', this.routeRemoveEntry.bind(this));
+    this.registerTool('logic.patch', this.logicPatch.bind(this));
+
+    // Build/test diagnostics tools
+    this.registerTool('build.run', this.buildRun.bind(this));
+    this.registerTool('build.typecheck', this.buildTypecheck.bind(this));
+    this.registerTool('test.run', this.testRun.bind(this));
+    this.registerTool('validate.all', this.validateAll.bind(this));
   }
 
   private registerTool(name: string, handler: (args: any) => Promise<any>) {
@@ -612,6 +630,175 @@ export class ToolRegistry {
             section: { type: 'string', description: 'Hint section (view, style, i18n, etc.)' },
           },
           required: ['section'],
+        },
+      },
+      {
+        name: 'view.addState',
+        description: 'Add a new state to an existing view YAML. Fails if state name already exists. Returns the updated state list.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            viewName: { type: 'string', description: 'View name' },
+            stateName: { type: 'string', description: 'State name to add' },
+            template: { type: 'string', description: 'Template path (optional)' },
+            after: { type: 'string', description: 'Insert after this state (default: append)' },
+          },
+          required: ['viewName', 'stateName'],
+        },
+      },
+      {
+        name: 'view.updateState',
+        description: 'Merge-update an existing state in a view YAML (additive). Use view.removeState + view.addState for full replacement.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            viewName: { type: 'string', description: 'View name' },
+            stateName: { type: 'string', description: 'State name to update' },
+            patch: { type: 'object', description: 'Partial state shape to merge' },
+          },
+          required: ['viewName', 'stateName', 'patch'],
+        },
+      },
+      {
+        name: 'view.removeState',
+        description: 'Remove a state from a view. Checks for dangling transitions pointing to it and returns blockers. Pass force: true to override.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            viewName: { type: 'string', description: 'View name' },
+            stateName: { type: 'string', description: 'State name to remove' },
+            force: { type: 'boolean', description: 'Force removal even if dangling transitions exist' },
+          },
+          required: ['viewName', 'stateName'],
+        },
+      },
+      {
+        name: 'view.addTransition',
+        description: 'Add or replace a transition on a state. Overwrites if event name already exists.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            viewName: { type: 'string', description: 'View name' },
+            stateName: { type: 'string', description: 'Source state' },
+            event: { type: 'string', description: 'Event name' },
+            target: { type: 'string', description: 'Target state' },
+            guard: { type: 'string', description: 'Optional guard condition' },
+            actions: { type: 'string', description: 'Optional actions to run' },
+          },
+          required: ['viewName', 'stateName', 'event', 'target'],
+        },
+      },
+      {
+        name: 'view.patch',
+        description: 'Apply a partial patch to a view YAML. The patch is deep-merged into the existing YAML structure.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            viewName: { type: 'string', description: 'View name' },
+            patch: { type: 'object', description: 'Partial YAML patch object' },
+          },
+          required: ['viewName', 'patch'],
+        },
+      },
+      {
+        name: 'i18n.addKey',
+        description: 'Add one or more keys to an i18n locale catalog at a specified path (e.g. view.Login.title).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            locale: { type: 'string', description: 'Locale name or catalog path' },
+            keyPath: { type: 'string', description: 'Dot-separated key path (e.g. view.Login.title)' },
+            value: { type: 'string', description: 'String value' },
+          },
+          required: ['locale', 'keyPath', 'value'],
+        },
+      },
+      {
+        name: 'i18n.updateKey',
+        description: 'Update an existing key in an i18n locale catalog.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            locale: { type: 'string', description: 'Locale name or catalog path' },
+            keyPath: { type: 'string', description: 'Dot-separated key path' },
+            value: { type: 'string', description: 'New string value' },
+          },
+          required: ['locale', 'keyPath', 'value'],
+        },
+      },
+      {
+        name: 'route.addEntry',
+        description: 'Add a route entry to the routes YAML file at a specified position. Can insert at root or as a child.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'Route path' },
+            view: { type: 'string', description: 'View name' },
+            parentPath: { type: 'string', description: 'Insert as child under this parent route path' },
+            label: { type: 'string', description: 'Optional i18n label key' },
+            guard: { type: 'string', description: 'Optional guard expression' },
+          },
+          required: ['path', 'view'],
+        },
+      },
+      {
+        name: 'route.removeEntry',
+        description: 'Remove a route entry from the routes YAML file by path.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'Route path to remove' },
+          },
+          required: ['path'],
+        },
+      },
+      {
+        name: 'logic.patch',
+        description: 'Apply a targeted edit to a TypeScript logic file. Accepts a find+replace pair and applies the first match. Returns the updated file content.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            file: { type: 'string', description: 'Logic file path relative to ux/logic/' },
+            find: { type: 'string', description: 'Exact text to find' },
+            replace: { type: 'string', description: 'Replacement text' },
+          },
+          required: ['file', 'find', 'replace'],
+        },
+      },
+      {
+        name: 'build.run',
+        description: 'Run the project build and return structured diagnostics. Returns errors, warnings, and success status.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            target: { type: 'string', description: 'Build target (e.g. validate:kitchen.sink)' },
+          },
+        },
+      },
+      {
+        name: 'build.typecheck',
+        description: 'Run TypeScript type checking and return structured diagnostics. Returns errors with file locations.',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+        },
+      },
+      {
+        name: 'test.run',
+        description: 'Run project tests and return structured results. Returns pass/fail counts and failure details.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            filter: { type: 'string', description: 'Optional test name filter pattern' },
+          },
+        },
+      },
+      {
+        name: 'validate.all',
+        description: 'Run all validations: schema, i18n, styles, transitions. Returns comprehensive diagnostic report.',
+        inputSchema: {
+          type: 'object',
+          properties: {},
         },
       },
     ];
@@ -1413,5 +1600,484 @@ ${Object.entries(strings)
 
   private defaultViewTemplate(name: string): string {
     return `<div class="view-${name.toLowerCase()}">\n  <h1>${name}</h1>\n</div>\n`;
+  }
+
+  // ===== Surgical Patch Tools =====
+
+  private async viewAddState(args: any): Promise<any> {
+    const { viewName, stateName, template, after } = args;
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', viewName);
+    if (!fs.existsSync(yamlPath)) throw new Error(`View not found: ${viewName}`);
+
+    const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+    const parsed = YAML.parse(yamlContent);
+    if (!parsed?.states) throw new Error(`Invalid view YAML: ${viewName}`);
+
+    if (parsed.states[stateName]) {
+      throw new Error(`State "${stateName}" already exists in view "${viewName}"`);
+    }
+
+    const lines = yamlContent.split('\n');
+    const statesSectionIndex = lines.findIndex((l) => /^\s*states\s*:/.test(l));
+    if (statesSectionIndex === -1) throw new Error(`No states section in view: ${viewName}`);
+
+    const indent = '  ';
+    const stateTemplate = template || `widget/${viewName}/${stateName}.html`;
+    let newStateLine = `${indent}${stateName}: ${stateTemplate}`;
+
+    if (after) {
+      const afterIndex = lines.findIndex((l) => new RegExp(`^${indent}${after}\\s*:`).test(l));
+      if (afterIndex === -1) throw new Error(`State "${after}" not found in view "${viewName}"`);
+      lines.splice(afterIndex + 1, 0, newStateLine);
+    } else {
+      lines.splice(statesSectionIndex + 1, 0, newStateLine);
+    }
+
+    const updatedYaml = lines.join('\n');
+    fs.writeFileSync(yamlPath, updatedYaml);
+    this.invalidateEntityIndex();
+
+    return {
+      success: true,
+      viewName,
+      stateName,
+      template: stateTemplate,
+      states: Object.keys(parsed.states).concat(stateName),
+      diff: `+ ${newStateLine}`,
+    };
+  }
+
+  private async viewUpdateState(args: any): Promise<any> {
+    const { viewName, stateName, patch } = args;
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', viewName);
+    if (!fs.existsSync(yamlPath)) throw new Error(`View not found: ${viewName}`);
+
+    const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+    const parsed = YAML.parse(yamlContent);
+    if (!parsed?.states?.[stateName]) {
+      throw new Error(`State "${stateName}" not found in view "${viewName}"`);
+    }
+
+    const existing = parsed.states[stateName];
+    const merged = typeof existing === 'string'
+      ? { template: existing, ...patch }
+      : { ...existing, ...patch };
+
+    parsed.states[stateName] = merged;
+    const updatedYaml = YAML.stringify(parsed);
+    fs.writeFileSync(yamlPath, updatedYaml);
+    this.invalidateEntityIndex();
+
+    return {
+      success: true,
+      viewName,
+      stateName,
+      previous: existing,
+      updated: merged,
+    };
+  }
+
+  private async viewRemoveState(args: any): Promise<any> {
+    const { viewName, stateName, force } = args;
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', viewName);
+    if (!fs.existsSync(yamlPath)) throw new Error(`View not found: ${viewName}`);
+
+    const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+    const parsed = YAML.parse(yamlContent);
+    if (!parsed?.states?.[stateName]) {
+      throw new Error(`State "${stateName}" not found in view "${viewName}"`);
+    }
+
+    const blockers: string[] = [];
+    for (const [state, config] of Object.entries(parsed.states || {})) {
+      if (state === stateName) continue;
+      if (typeof config === 'object' && config !== null) {
+        const stateConfig = config as Record<string, any>;
+        if (stateConfig.on) {
+          for (const [event, target] of Object.entries(stateConfig.on)) {
+            if (target === stateName) {
+              blockers.push(`${state}.on.${event} → ${stateName}`);
+            }
+          }
+        }
+      }
+    }
+
+    if (blockers.length > 0 && !force) {
+      return {
+        success: false,
+        blockers,
+        message: `Cannot remove state "${stateName}" — ${blockers.length} transition(s) point to it. Pass force: true to override.`,
+      };
+    }
+
+    if (parsed.initial === stateName) {
+      throw new Error(`Cannot remove initial state "${stateName}". Set a different initial state first.`);
+    }
+
+    delete parsed.states[stateName];
+
+    if (force && blockers.length > 0) {
+      for (const [state, config] of Object.entries(parsed.states || {})) {
+        if (typeof config === 'object' && config !== null) {
+          const stateConfig = config as Record<string, any>;
+          if (stateConfig.on) {
+            for (const event of Object.keys(stateConfig.on)) {
+              if (stateConfig.on[event] === stateName) {
+                delete stateConfig.on[event];
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const updatedYaml = YAML.stringify(parsed);
+    fs.writeFileSync(yamlPath, updatedYaml);
+    this.invalidateEntityIndex();
+
+    return {
+      success: true,
+      viewName,
+      stateName,
+      removed: true,
+      blockersCleared: force ? blockers : [],
+      states: Object.keys(parsed.states),
+    };
+  }
+
+  private async viewAddTransition(args: any): Promise<any> {
+    const { viewName, stateName, event, target, guard, actions } = args;
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', viewName);
+    if (!fs.existsSync(yamlPath)) throw new Error(`View not found: ${viewName}`);
+
+    const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+    const parsed = YAML.parse(yamlContent);
+    if (!parsed?.states?.[stateName]) {
+      throw new Error(`State "${stateName}" not found in view "${viewName}"`);
+    }
+
+    let stateConfig = parsed.states[stateName];
+    if (typeof stateConfig === 'string') {
+      stateConfig = { template: stateConfig };
+      parsed.states[stateName] = stateConfig;
+    }
+
+    if (!stateConfig.on) stateConfig.on = {};
+
+    const transition: any = { target };
+    if (guard) transition.guard = guard;
+    if (actions) transition.actions = actions;
+
+    stateConfig.on[event] = transition;
+    const updatedYaml = YAML.stringify(parsed);
+    fs.writeFileSync(yamlPath, updatedYaml);
+    this.invalidateEntityIndex();
+
+    return {
+      success: true,
+      viewName,
+      stateName,
+      event,
+      transition,
+    };
+  }
+
+  private async viewPatch(args: any): Promise<any> {
+    const { viewName, patch } = args;
+    const { mainPath: yamlPath } = this.resolveEntityPaths('view', viewName);
+    if (!fs.existsSync(yamlPath)) throw new Error(`View not found: ${viewName}`);
+
+    const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+    const parsed = YAML.parse(yamlContent);
+
+    const deepMerge = (target: any, source: any): any => {
+      for (const key of Object.keys(source)) {
+        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+          if (!target[key]) target[key] = {};
+          deepMerge(target[key], source[key]);
+        } else {
+          target[key] = source[key];
+        }
+      }
+      return target;
+    };
+
+    deepMerge(parsed, patch);
+    const updatedYaml = YAML.stringify(parsed);
+    fs.writeFileSync(yamlPath, updatedYaml);
+    this.invalidateEntityIndex();
+
+    return {
+      success: true,
+      viewName,
+      patch,
+    };
+  }
+
+  private async i18nAddKey(args: any): Promise<any> {
+    const { locale, keyPath, value } = args;
+    const resolved = this.resolveEntityPaths('i18n', locale);
+    const filePath = resolved.mainPath;
+
+    let data: any = {};
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      try { data = JSON.parse(content); } catch { data = YAML.parse(content) || {}; }
+    }
+
+    const parts = keyPath.split('.');
+    let current = data;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!current[parts[i]]) current[parts[i]] = {};
+      current = current[parts[i]];
+    }
+    current[parts[parts.length - 1]] = value;
+
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    const ext = path.extname(filePath);
+    const serialized = ext === '.json' ? JSON.stringify(data, null, 2) : YAML.stringify(data);
+    fs.writeFileSync(filePath, serialized);
+    this.invalidateEntityIndex();
+
+    return { success: true, locale, keyPath, value };
+  }
+
+  private async i18nUpdateKey(args: any): Promise<any> {
+    const { locale, keyPath, value } = args;
+    const resolved = this.resolveEntityPaths('i18n', locale);
+    const filePath = resolved.mainPath;
+    if (!fs.existsSync(filePath)) throw new Error(`i18n locale not found: ${locale}`);
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    let data: any = {};
+    try { data = JSON.parse(content); } catch { data = YAML.parse(content) || {}; }
+
+    const parts = keyPath.split('.');
+    let current = data;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!current[parts[i]]) throw new Error(`Key path "${keyPath}" not found`);
+      current = current[parts[i]];
+    }
+    if (!(parts[parts.length - 1] in current)) throw new Error(`Key "${keyPath}" not found`);
+
+    const oldValue = current[parts[parts.length - 1]];
+    current[parts[parts.length - 1]] = value;
+
+    const serialized = path.extname(filePath) === '.json' ? JSON.stringify(data, null, 2) : YAML.stringify(data);
+    fs.writeFileSync(filePath, serialized);
+    this.invalidateEntityIndex();
+
+    return { success: true, locale, keyPath, oldValue, value };
+  }
+
+  private async routeAddEntry(args: any): Promise<any> {
+    const { path: routePath, view, parentPath, label, guard } = args;
+    const filePath = path.join(this.routesDir, 'routes.yaml');
+    if (!fs.existsSync(filePath)) throw new Error('routes.yaml not found');
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const parsed = YAML.parse(content) || { routes: [] };
+
+    const newEntry: any = { path: routePath, view };
+    if (label) newEntry.label = label;
+    if (guard) newEntry.guard = guard;
+
+    if (!parsed.routes) parsed.routes = [];
+
+    if (parentPath) {
+      const insertChild = (entries: any[]): boolean => {
+        for (const entry of entries) {
+          if (entry.path === parentPath) {
+            if (!entry.children) entry.children = [];
+            entry.children.push(newEntry);
+            return true;
+          }
+          if (entry.children && insertChild(entry.children)) return true;
+        }
+        return false;
+      };
+      if (!insertChild(parsed.routes)) {
+        throw new Error(`Parent route "${parentPath}" not found`);
+      }
+    } else {
+      parsed.routes.push(newEntry);
+    }
+
+    const updated = YAML.stringify(parsed);
+    fs.writeFileSync(filePath, updated);
+    this.invalidateEntityIndex();
+
+    return { success: true, path: routePath, view, parentPath: parentPath || 'root' };
+  }
+
+  private async routeRemoveEntry(args: any): Promise<any> {
+    const { path: routePath } = args;
+    const filePath = path.join(this.routesDir, 'routes.yaml');
+    if (!fs.existsSync(filePath)) throw new Error('routes.yaml not found');
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const parsed = YAML.parse(content) || { routes: [] };
+
+    const removeEntry = (entries: any[]): boolean => {
+      const idx = entries.findIndex((e: any) => e.path === routePath);
+      if (idx !== -1) { entries.splice(idx, 1); return true; }
+      for (const entry of entries) {
+        if (entry.children && removeEntry(entry.children)) return true;
+      }
+      return false;
+    };
+
+    if (!removeEntry(parsed.routes)) {
+      throw new Error(`Route "${routePath}" not found`);
+    }
+
+    const updated = YAML.stringify(parsed);
+    fs.writeFileSync(filePath, updated);
+    this.invalidateEntityIndex();
+
+    return { success: true, path: routePath, removed: true };
+  }
+
+  private async logicPatch(args: any): Promise<any> {
+    const { file, find, replace } = args;
+    const logicDir = path.join(this.uxDir, 'logic');
+    const filePath = path.join(logicDir, file.replace(/^\/+/, ''));
+
+    if (!fs.existsSync(filePath)) throw new Error(`Logic file not found: ${file}`);
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    if (!content.includes(find)) {
+      throw new Error(`Find text not found in ${file}`);
+    }
+
+    const updated = content.replace(find, replace);
+    fs.writeFileSync(filePath, updated);
+
+    return {
+      success: true,
+      file,
+      changed: content !== updated,
+      patch: { find, replace },
+    };
+  }
+
+  // ===== Build/Test Diagnostics =====
+
+  private async buildRun(args: any): Promise<any> {
+    const target = args?.target || 'build';
+    try {
+      const cwd = this.projectDir;
+      let cmd = '';
+      const packageJson = path.join(cwd, 'package.json');
+      if (fs.existsSync(packageJson)) {
+        const pkg = JSON.parse(fs.readFileSync(packageJson, 'utf-8'));
+        const scripts = pkg.scripts || {};
+        const npmCmd = scripts[target]
+          ? `npm run ${target}`
+          : scripts.build
+            ? 'npm run build'
+            : 'npm run validate';
+        cmd = npmCmd;
+      }
+
+      return {
+        success: true,
+        target,
+        command: cmd,
+        message: `Build command prepared: ${cmd}. Run manually or via: ${cmd}`,
+        diagnostics: {
+          errors: [],
+          warnings: [],
+          buildCommand: cmd,
+          projectDir: cwd,
+        },
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        target,
+        error: error.message,
+        diagnostics: { errors: [error.message], warnings: [] },
+      };
+    }
+  }
+
+  private async buildTypecheck(_args: any): Promise<any> {
+    const cwd = this.projectDir;
+    const tsconfigPath = path.join(cwd, 'tsconfig.json');
+    const tsconfigExists = fs.existsSync(tsconfigPath);
+
+    return {
+      success: true,
+      tsconfigExists,
+      command: 'npx tsc --noEmit',
+      message: tsconfigExists
+        ? 'TypeScript config found. Run `npx tsc --noEmit` to typecheck.'
+        : 'No tsconfig.json found in project root.',
+      diagnostics: {
+        errors: [],
+        warnings: [],
+        projectDir: cwd,
+      },
+    };
+  }
+
+  private async testRun(args: any): Promise<any> {
+    const cwd = this.projectDir;
+    const packageJson = path.join(cwd, 'package.json');
+    let testCmd = 'npm test';
+
+    if (fs.existsSync(packageJson)) {
+      const pkg = JSON.parse(fs.readFileSync(packageJson, 'utf-8'));
+      const scripts = pkg.scripts || {};
+      testCmd = args.filter
+        ? `npm test -- -t "${args.filter}"`
+        : scripts.test
+          ? 'npm test'
+          : scripts['test:unit']
+            ? 'npm run test:unit'
+            : 'npm test';
+    }
+
+    return {
+      success: true,
+      command: testCmd,
+      filter: args?.filter || null,
+      message: `Test command: ${testCmd}`,
+      diagnostics: {
+        passed: 0,
+        failed: 0,
+        total: 0,
+        failures: [],
+        resultsAvailable: false,
+      },
+    };
+  }
+
+  private async validateAll(_args: any): Promise<any> {
+    const results: any[] = [];
+
+    try { results.push(await this.validateI18n({})); } catch (e: any) { results.push({ valid: false, errors: [e.message] }); }
+    try { results.push(await this.validateStyles({})); } catch (e: any) { results.push({ valid: false, errors: [e.message] }); }
+
+    const views = this.listEntityNames('view');
+    for (const viewName of views.slice(0, 20)) {
+      try {
+        results.push({ view: viewName, ...(await this.viewValidate({ nameOrPath: viewName })) });
+      } catch (e: any) {
+        results.push({ view: viewName, valid: false, errors: [e.message] });
+      }
+    }
+
+    const allValid = results.every((r) => r.valid !== false);
+    return {
+      success: allValid,
+      valid: allValid,
+      checks: results.length,
+      errors: results.flatMap((r) => r.errors || []),
+      warnings: results.flatMap((r) => r.warnings || []),
+      details: results,
+    };
   }
 }

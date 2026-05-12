@@ -1,0 +1,14 @@
+site:
+  title: "[[ Name ]]"
+  description: ""
+common:
+  submit: Submit
+  cancel: Cancel
+  loading: Loading...
+  back: Back
+errors:
+  required: This field is required.
+  invalid: Invalid value.
+  server: Something went wrong. Please try again.
+nav:
+  home: Home

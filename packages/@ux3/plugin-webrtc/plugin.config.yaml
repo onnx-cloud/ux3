@@ -1,0 +1,19 @@
+name: "@ux3/plugin-webrtc"
+displayName: Webrtc
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: webrtc.info
+      description: Get information about webrtc plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://webrtc/docs
+      mimeType: text/markdown
+      description: webrtc plugin documentation
+  systemPrompt: You are an assistant helping developers use the webrtc plugin for
+    UX3 Framework.

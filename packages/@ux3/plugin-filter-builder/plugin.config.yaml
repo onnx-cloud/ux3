@@ -1,0 +1,19 @@
+name: "@ux3/plugin-filter-builder"
+displayName: Filter Builder
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: filter_builder.info
+      description: Get information about filter-builder plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://filter-builder/docs
+      mimeType: text/markdown
+      description: filter-builder plugin documentation
+  systemPrompt: You are an assistant helping developers use the filter-builder
+    plugin for UX3 Framework.

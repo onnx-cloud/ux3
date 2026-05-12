@@ -1,0 +1,4 @@
+routes:
+  - path: /
+    view: hello
+    title: Home

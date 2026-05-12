@@ -1,0 +1,9 @@
+[[ name ]]:
+  fields:
+    email:
+      type: email
+      required: true
+    password:
+      type: string
+      required: true
+      minLength: 8

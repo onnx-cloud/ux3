@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ux3.dev/schemas/plugin-config.schema.json",
+  "title": "UX3 Plugin Configuration Schema",
+  "description": "Schema for plugin.config.yaml — declares plugin metadata and MCP server capabilities",
+  "type": "object",
+  "required": ["name"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Plugin package name (must match package.json name)",
+      "pattern": "^(@[a-z0-9-]+/)?[a-z0-9-]+$",
+      "minLength": 1
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable plugin name",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "author": {
+      "type": "string",
+      "description": "Plugin author or maintainer",
+      "minLength": 1
+    },
+    "categories": {
+      "type": "array",
+      "description": "Plugin categories for discovery (ui, service, platform, data, auth, analysis, tooling, etc.)",
+      "items": {
+        "type": "string",
+        "enum": [
+          "ui",
+          "service",
+          "platform",
+          "data",
+          "auth",
+          "analysis",
+          "tooling",
+          "integration",
+          "utility",
+          "other"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "ux3PeerVersion": {
+      "type": "string",
+      "description": "UX3 framework peer version constraint (e.g., ^0.2.0)",
+      "minLength": 1
+    },
+    "mcp": {
+      "type": "object",
+      "description": "MCP (Model Context Protocol) server configuration (dev-server only)",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "MCP server name (defaults to plugin name if omitted)",
+          "minLength": 1
+        },
+        "tools": {
+          "type": "array",
+          "description": "MCP tools exposed by this plugin",
+          "items": {
+            "$ref": "#/definitions/toolSpec"
+          },
+          "minItems": 0
+        },
+        "resources": {
+          "type": "array",
+          "description": "MCP resources exposed by this plugin",
+          "items": {
+            "$ref": "#/definitions/resourceSpec"
+          },
+          "minItems": 0
+        },
+        "systemPrompt": {
+          "type": "string",
+          "description": "System prompt for LLM agents using this plugin's MCP server",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "definitions": {
+    "toolSpec": {
+      "type": "object",
+      "description": "MCP Tool specification",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Tool name (must match exported constant in code, e.g., ChatTools.LIST_COMPONENTS → 'chat.components.list')",
+          "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*$",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable tool description",
+          "minLength": 1
+        },
+        "inputSchema": {
+          "type": "object",
+          "description": "JSON Schema for tool input arguments",
+          "properties": {
+            "type": {
+              "enum": ["object", "string", "number", "boolean", "array", "null"]
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": true
+        }
+      }
+    },
+    "resourceSpec": {
+      "type": "object",
+      "description": "MCP Resource specification",
+      "required": ["uri"],
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "Resource URI (must match exported constant in code, e.g., ChatResources.SCHEMAS → 'plugin://chat/schemas')",
+          "pattern": "^plugin://[a-z][a-z0-9-]*/[a-z0-9/_-]+$",
+          "minLength": 1
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type of resource content (e.g., application/json, text/markdown)",
+          "pattern": "^[a-z]+/[a-z0-9+.-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable resource name",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "description": "Resource description",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

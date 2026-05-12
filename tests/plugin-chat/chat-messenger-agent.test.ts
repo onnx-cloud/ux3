@@ -30,6 +30,8 @@ describe('ux-chat-messenger MCP agent flow', () => {
       state: 'idle',
       mode: 'queue',
       send,
+      stream: undefined,
+      cancel: vi.fn(),
       setMode: vi.fn(),
     };
 
@@ -61,7 +63,10 @@ describe('ux-chat-messenger MCP agent flow', () => {
     await Promise.resolve();
 
     expect(createSession).toHaveBeenCalledTimes(1);
-    expect(send).toHaveBeenCalledWith({ role: 'user', content: 'Hi there' });
+    expect(send).toHaveBeenCalledWith(
+      { role: 'user', content: 'Hi there' },
+      expect.any(Object)
+    );
     expect(el.getAttribute('session-id')).toBe('sess-1');
 
     const messagesEl = el.shadowRoot?.querySelector('ux-chat-messages') as HTMLElement;
@@ -94,5 +99,128 @@ describe('ux-chat-messenger MCP agent flow', () => {
     const messages = JSON.parse(messagesEl.getAttribute('messages') || '[]');
     expect(messages[messages.length - 1].role).toBe('system');
     expect(String(messages[messages.length - 1].content)).toMatch(/unavailable/i);
+  });
+
+  it('handles streaming via session.stream()', async () => {
+    if (!customElements.get('ux-chat-messenger')) {
+      customElements.define('ux-chat-messenger', UxChatMessenger);
+    }
+
+    async function* stream() {
+      yield { role: 'tool_call', content: { name: 'view.list', args: {} }, timestamp: Date.now() };
+      yield { role: 'tool_result', content: 'result', timestamp: Date.now() };
+      yield { role: 'assistant', content: 'Streamed response', timestamp: Date.now() };
+    }
+
+    const session = {
+      id: 'sess-stream',
+      state: 'idle',
+      mode: 'chat',
+      send: vi.fn(),
+      stream: stream,
+      cancel: vi.fn(),
+      setMode: vi.fn(),
+    };
+
+    window.__ux3McpService = {
+      listAgents: () => ['default'],
+      getSession: () => undefined,
+      createSession: () => session,
+    };
+
+    const el = document.createElement('ux-chat-messenger') as UxChatMessenger;
+    document.body.appendChild(el);
+
+    const composer = el.shadowRoot?.querySelector('ux-chat-composer');
+    composer!.dispatchEvent(new CustomEvent('ux:send', {
+      bubbles: true,
+      composed: true,
+      detail: { text: 'stream test' },
+    }));
+
+    await new Promise((r) => setTimeout(r, 20));
+
+    const messagesEl = el.shadowRoot?.querySelector('ux-chat-messages') as HTMLElement;
+    const messages = JSON.parse(messagesEl.getAttribute('messages') || '[]');
+    const roles = messages.map((m: any) => m.role);
+    expect(roles).toContain('tool_call');
+    expect(roles).toContain('tool_result');
+    expect(roles).toContain('assistant');
+  });
+
+  it('renders stop button and handles cancel', async () => {
+    if (!customElements.get('ux-chat-messenger')) {
+      customElements.define('ux-chat-messenger', UxChatMessenger);
+    }
+
+    const cancel = vi.fn();
+    const session = {
+      id: 'sess-cancel',
+      state: 'idle',
+      mode: 'chat',
+      send: vi.fn(async () => ({ role: 'assistant', content: 'ok', timestamp: Date.now() })),
+      stream: undefined,
+      cancel,
+      setMode: vi.fn(),
+    };
+
+    window.__ux3McpService = {
+      listAgents: () => ['default'],
+      getSession: () => undefined,
+      createSession: () => session,
+    };
+
+    const el = document.createElement('ux-chat-messenger') as UxChatMessenger;
+    document.body.appendChild(el);
+
+    const stopBtn = el.shadowRoot?.querySelector('.stop-btn') as HTMLButtonElement;
+    expect(stopBtn).toBeTruthy();
+    expect(stopBtn.disabled).toBe(true);
+
+    const composer = el.shadowRoot?.querySelector('ux-chat-composer');
+    composer!.dispatchEvent(new CustomEvent('ux:send', {
+      bubbles: true,
+      composed: true,
+      detail: { text: 'long-running task' },
+    }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(session.send).toHaveBeenCalled();
+  });
+
+  it('shows status indicator with state changes', async () => {
+    if (!customElements.get('ux-chat-messenger')) {
+      customElements.define('ux-chat-messenger', UxChatMessenger);
+    }
+
+    const session = {
+      id: 'sess-status',
+      state: 'idle',
+      mode: 'chat',
+      send: vi.fn(async () => {
+        session.state = 'thinking';
+        await new Promise((r) => setTimeout(r, 10));
+        session.state = 'idle';
+        return { role: 'assistant', content: 'done', timestamp: Date.now() };
+      }),
+      stream: undefined,
+      cancel: vi.fn(),
+      setMode: vi.fn(),
+    };
+
+    window.__ux3McpService = {
+      listAgents: () => ['default'],
+      getSession: () => undefined,
+      createSession: () => session,
+    };
+
+    const el = document.createElement('ux-chat-messenger') as UxChatMessenger;
+    document.body.appendChild(el);
+
+    const statusEl = el.shadowRoot?.querySelector('.status-indicator') as HTMLElement;
+    expect(statusEl).toBeTruthy();
+    expect(statusEl.dataset.state).toBe('idle');
   });
 });

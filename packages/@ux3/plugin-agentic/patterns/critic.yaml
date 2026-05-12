@@ -1,0 +1,71 @@
+id: critic
+description: "Generate → Critique → Revise → Finalize loop for output quality improvement."
+initial: generate
+states:
+  generate:
+    prompt: |
+      Generate an initial output based on the task.
+
+      {{#if observations}}
+      Prior observations:
+      {{#each observations}}
+      - {{this}}
+      {{/each}}
+      {{/if}}
+
+      ## Instructions
+      Produce a complete first draft. Don't worry about perfection yet.
+    invoke:
+      src: sample
+    on:
+      done: critique
+      error: "#error"
+  critique:
+    prompt: |
+      Critically evaluate the last output.
+
+      {{#if observations}}
+      Current output:
+      {{observations.[-1]}}
+      {{/if}}
+
+      ## Instructions
+      1. Identify issues: accuracy, completeness, clarity, tone, structure
+      2. Rate the output on a scale of 1-10
+      3. If rating >= 8, respond with **ACCEPT**
+      4. Otherwise, list specific improvements needed and respond with **REVISE**
+    invoke:
+      src: sample
+    on:
+      ACCEPT: finalize
+      REVISE: revise
+      error: "#error"
+  revise:
+    prompt: |
+      Revise the output based on critique feedback.
+
+      {{#if observations}}
+      Current output: {{observations.[-2]}}
+      Critique: {{observations.[-1]}}
+      {{/if}}
+
+      ## Instructions
+      Incorporate the critique feedback. Produce a new, improved version.
+    invoke:
+      src: sample
+    on:
+      done: critique
+      error: "#error"
+  finalize:
+    prompt: |
+      Finalize the output. Perform a final quality check and present the result.
+
+      {{#if observations}}
+      {{observations.[-2]}}
+      {{/if}}
+    invoke:
+      src: sample
+    on:
+      done: done
+  done:
+    type: final

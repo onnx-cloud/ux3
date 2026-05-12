@@ -1,0 +1,108 @@
+# Plugin Configuration for @ux3/plugin-chat
+# 
+# This file declares plugin metadata and MCP server capabilities.
+# Single source of truth for tool/resource definitions.
+#
+# Reference: docs/plugins.md
+
+name: "@ux3/plugin-chat"
+displayName: "Chat UI"
+author: "UX3 Team"
+categories:
+  - ui
+  - communication
+ux3PeerVersion: "^0.2.0"
+
+# MCP Server Configuration (dev-server only, zero runtime overhead)
+# Uses native MCP Tool and Resource types from @modelcontextprotocol/sdk
+mcp:
+  # MCP server name (plugin name used if omitted)
+  name: "chat"
+  
+  # Tools exposed by this plugin for LLM agents
+  # Tool names MUST match exported constants in src/tools.ts (ChatTools.*)
+  tools:
+    # Tool 1: List available chat components
+    - name: "chat.components.list"
+      description: "List all available chat components and their schemas (ChatBubble, ChatInput, ChatWindow, ChatMessages)"
+      inputSchema:
+        type: object
+        properties:
+          category:
+            type: string
+            description: "Filter by component category (optional): ui, service, data"
+        additionalProperties: false
+
+    # Tool 2: Inspect a specific chat component
+    - name: "chat.components.inspect"
+      description: "Inspect a chat component's props, events, and FSM states"
+      inputSchema:
+        type: object
+        properties:
+          componentName:
+            type: string
+            description: "Component name to inspect (e.g., 'ChatBubble', 'ChatWindow')"
+          includeSchema:
+            type: boolean
+            description: "Include JSON Schema for component props (default: true)"
+            default: true
+        required: [componentName]
+        additionalProperties: false
+
+    # Tool 3: List available view templates
+    - name: "chat.views.list"
+      description: "List all available chat view configurations and templates"
+      inputSchema:
+        type: object
+        additionalProperties: false
+
+    # Tool 4: Inspect a chat view FSM
+    - name: "chat.views.inspect"
+      description: "Inspect a chat view configuration, FSM states, transitions, and handlers"
+      inputSchema:
+        type: object
+        properties:
+          viewName:
+            type: string
+            description: "View name to inspect (e.g., 'ChatWindow', 'DirectMessage')"
+        required: [viewName]
+        additionalProperties: false
+
+  # Resources exposed by this plugin for content serving
+  # Resource URIs MUST match exported constants in src/tools.ts (ChatResources.*)
+  resources:
+    # Resource 1: Component schemas
+    - uri: "plugin://chat/schemas"
+      mimeType: "application/json"
+      name: "Chat Component Schemas"
+      description: "JSON Schema definitions for all chat components and their props"
+
+    # Resource 2: Plugin documentation
+    - uri: "plugin://chat/docs"
+      mimeType: "text/markdown"
+      name: "Chat Plugin Documentation"
+      description: "Chat plugin README and usage guide"
+
+    # Resource 3: Example configurations
+    - uri: "plugin://chat/examples"
+      mimeType: "application/json"
+      name: "Chat Examples"
+      description: "Example chat view configurations, FSM states, and component combinations"
+
+  # System prompt for LLM agents using this server
+  systemPrompt: |
+    You are an assistant helping developers build chat UIs with UX3 Framework.
+    
+    You have access to:
+    - **Tools**: List and inspect chat components, view templates, and FSM configurations
+    - **Resources**: Component schemas, documentation, and example configurations
+    
+    Common patterns you can help with:
+    - Direct message interfaces
+    - Group chat channels
+    - Customer support chat boxes
+    - Notification systems with chat capabilities
+    - Real-time messaging UI
+    
+    When suggesting chat components, refer to the schema resources for accurate prop types
+    and FSM transition rules. Use the examples to show common patterns.

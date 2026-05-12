@@ -11,7 +11,8 @@ function readConfig(app: any): { bundled?: boolean; cdn?: string } {
 
 async function resolveChart(): Promise<any> {
   if (typeof window !== 'undefined' && (window as any).Chart) return (window as any).Chart;
-  const mod = await import(/* @vite-ignore */ 'chart.js');
+  const moduleName = 'chart.js';
+  const mod = await import(/* @vite-ignore */ moduleName);
   return mod.Chart ?? mod.default ?? mod;
 }
 

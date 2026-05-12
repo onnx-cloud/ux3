@@ -1,0 +1,19 @@
+name: "@ux3/plugin-diagrams"
+displayName: Diagrams
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: diagrams.info
+      description: Get information about diagrams plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://diagrams/docs
+      mimeType: text/markdown
+      description: diagrams plugin documentation
+  systemPrompt: You are an assistant helping developers use the diagrams plugin
+    for UX3 Framework.

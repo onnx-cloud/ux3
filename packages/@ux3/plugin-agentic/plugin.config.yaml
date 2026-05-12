@@ -1,0 +1,19 @@
+name: "@ux3/plugin-agentic"
+displayName: Agentic
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: agentic.info
+      description: Get information about agentic plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://agentic/docs
+      mimeType: text/markdown
+      description: agentic plugin documentation
+  systemPrompt: You are an assistant helping developers use the agentic plugin for
+    UX3 Framework.

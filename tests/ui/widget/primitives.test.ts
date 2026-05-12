@@ -181,6 +181,175 @@ describe('Built-in primitives', () => {
     }
   });
 
+  it('applies drawer position variants and renders closable controls', () => {
+    const drawer = document.createElement('ux-drawer');
+    document.body.appendChild(drawer);
+
+    expect(drawer.classList.contains('drawer-right')).toBe(true);
+
+    drawer.setAttribute('position', 'left');
+    expect(drawer.classList.contains('drawer-left')).toBe(true);
+    expect(drawer.classList.contains('drawer-right')).toBe(false);
+
+    drawer.setAttribute('position', 'top');
+    expect(drawer.classList.contains('drawer-top')).toBe(true);
+
+    drawer.setAttribute('position', 'bottom');
+    expect(drawer.classList.contains('drawer-bottom')).toBe(true);
+
+    drawer.setAttribute('closable', '');
+    expect(drawer.querySelector('button.close-button')).toBeTruthy();
+
+    const closeButton = drawer.querySelector('button.close-button') as HTMLButtonElement;
+    let closed = false;
+    drawer.addEventListener('ux:event', (event: Event) => {
+      if ((event as CustomEvent).detail?.action === 'CLOSE') closed = true;
+    });
+
+    drawer.setAttribute('open', '');
+    closeButton.click();
+
+    expect(drawer.hasAttribute('open')).toBe(false);
+    expect(closed).toBe(true);
+  });
+
+  it('closes ux-drawer with a swipe gesture', () => {
+    const PointerEventCtor = (window as any).PointerEvent || MouseEvent;
+    const createPointerEvent = (type: string, init: Record<string, any>) => {
+      const event = new PointerEventCtor(type, init);
+      for (const key of Object.keys(init)) {
+        if (!(key in event)) {
+          (event as any)[key] = init[key];
+          continue;
+        }
+        try {
+          Object.defineProperty(event, key, {
+            value: init[key],
+            configurable: true,
+            writable: true,
+          });
+        } catch {
+          // ignore non-configurable properties
+        }
+      }
+      return event;
+    };
+
+    const drawer = document.createElement('ux-drawer');
+    drawer.setAttribute('open', '');
+    document.body.appendChild(drawer);
+
+    Object.defineProperty(window, 'innerWidth', { value: 420, configurable: true });
+
+    let closed = false;
+    drawer.addEventListener('ux:event', (event: Event) => {
+      if ((event as CustomEvent).detail?.action === 'CLOSE') closed = true;
+    });
+
+    drawer.dispatchEvent(createPointerEvent('pointerdown', {
+      bubbles: true,
+      pointerId: 1,
+      clientX: 400,
+      clientY: 150,
+      pointerType: 'touch',
+      isPrimary: true,
+    }));
+
+    window.dispatchEvent(createPointerEvent('pointerup', {
+      bubbles: true,
+      pointerId: 1,
+      clientX: 320,
+      clientY: 150,
+      pointerType: 'touch',
+      isPrimary: true,
+    }));
+
+    expect(drawer.hasAttribute('open')).toBe(false);
+    expect(closed).toBe(true);
+  });
+
+  it('opens ux-drawer with an edge swipe gesture', () => {
+    const PointerEventCtor = (window as any).PointerEvent || MouseEvent;
+    const createPointerEvent = (type: string, init: Record<string, any>) => {
+      const event = new PointerEventCtor(type, init);
+      for (const key of Object.keys(init)) {
+        if (!(key in event)) {
+          (event as any)[key] = init[key];
+          continue;
+        }
+        try {
+          Object.defineProperty(event, key, {
+            value: init[key],
+            configurable: true,
+            writable: true,
+          });
+        } catch {
+          // ignore non-configurable properties
+        }
+      }
+      return event;
+    };
+
+    const drawer = document.createElement('ux-drawer');
+    document.body.appendChild(drawer);
+
+    Object.defineProperty(window, 'innerWidth', { value: 420, configurable: true });
+
+    let opened = false;
+    drawer.addEventListener('ux:event', (event: Event) => {
+      if ((event as CustomEvent).detail?.action === 'OPEN') opened = true;
+    });
+
+    window.dispatchEvent(createPointerEvent('pointerdown', {
+      bubbles: true,
+      pointerId: 2,
+      clientX: 412,
+      clientY: 150,
+      pointerType: 'touch',
+      isPrimary: true,
+    }));
+
+    window.dispatchEvent(createPointerEvent('pointerup', {
+      bubbles: true,
+      pointerId: 2,
+      clientX: 324,
+      clientY: 150,
+      pointerType: 'touch',
+      isPrimary: true,
+    }));
+
+    expect(drawer.hasAttribute('open')).toBe(true);
+    expect(opened).toBe(true);
+  });
+
+  it('toggles ux-tooltip on click and closes on outside click', async () => {
+    const tooltip = document.createElement('ux-tooltip');
+    tooltip.innerHTML = '<button ux-tooltip-trigger>Trigger</button><span>Tip</span>';
+    document.body.appendChild(tooltip);
+    await Promise.resolve();
+
+    const trigger = tooltip.querySelector('button') as HTMLElement;
+    trigger.click();
+
+    expect(tooltip.hasAttribute('open')).toBe(true);
+    document.body.click();
+    expect(tooltip.hasAttribute('open')).toBe(false);
+  });
+
+  it('closes ux-command-palette when clicking backdrop', async () => {
+    const palette = document.createElement('ux-command-palette');
+    document.body.appendChild(palette);
+    await Promise.resolve();
+
+    palette.setAttribute('open', '');
+    await Promise.resolve();
+
+    const backdrop = palette.shadowRoot?.querySelector('.backdrop') as HTMLElement;
+    backdrop.click();
+
+    expect(palette.hasAttribute('open')).toBe(false);
+  });
+
   it('syncs ux-input value and emits ux:change on user input', () => {
     const input = document.createElement('ux-input');
     input.setAttribute('name', 'email');

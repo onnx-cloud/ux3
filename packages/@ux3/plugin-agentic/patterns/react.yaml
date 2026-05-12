@@ -1,0 +1,76 @@
+id: react
+description: "Reasoning + Acting loop: think about what to do, act via tools, observe results, repeat."
+initial: think
+states:
+  think:
+    prompt: |
+      You are in the **Think** phase of the ReAct reasoning loop.
+
+      ## Context
+      {{#if observations}}
+      Recent observations:
+      {{#each observations}}
+      - {{this}}
+      {{/each}}
+      {{else}}
+      You are starting a new task.
+      {{/if}}
+
+      ## Instructions
+      1. Analyze the current state and available tools
+      2. Decide what action to take next
+      3. If you have enough information to answer, respond directly
+      4. If you need more information, plan your next tool call
+
+      ## Output Format
+      Explain your reasoning briefly, then:
+      - If calling a tool: specify which tool and why
+      - If responding: provide the final answer
+
+      {{#if decisions}}
+      Prior decisions:
+      {{#each decisions}}
+      - {{this}}
+      {{/each}}
+      {{/if}}
+    invoke:
+      src: sample
+    on:
+      RESPOND: done
+      ACT: act
+      CONTINUE: think
+  act:
+    prompt: |
+      Execute the planned action using available tools.
+
+      ## Decision
+      {{#if decisions}}
+      {{decisions.[-1]}}
+      {{/if}}
+
+      ## Available Tools
+      Use the most appropriate tool for the task.
+    invoke:
+      src: executeTool
+      maxRetries: 1
+    on:
+      done: observe
+      error: "#error"
+  observe:
+    prompt: |
+      ## Observation
+      {{#if observations}}
+      Latest result: {{observations.[-1]}}
+      {{/if}}
+
+      ## Decision
+      Evaluate the result:
+      - If the task is complete, respond with **DONE**
+      - If more work is needed, respond with **CONTINUE**
+    invoke:
+      src: sample
+    on:
+      DONE: done
+      CONTINUE: think
+  done:
+    type: final

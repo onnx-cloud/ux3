@@ -1,0 +1,19 @@
+name: "@ux3/plugin-telemetry"
+displayName: Telemetry
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: telemetry.info
+      description: Get information about telemetry plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://telemetry/docs
+      mimeType: text/markdown
+      description: telemetry plugin documentation
+  systemPrompt: You are an assistant helping developers use the telemetry plugin
+    for UX3 Framework.

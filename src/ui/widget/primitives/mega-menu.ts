@@ -2,11 +2,16 @@ import { UxBase } from './base.js';
 
 const STYLE = `
   :host { display: block; }
-  .mm-top { display: flex; gap: 0; list-style: none; margin: 0; padding: 0; }
+  .mm-top { display: flex; flex-wrap: wrap; gap: 0; list-style: none; margin: 0; padding: 0; }
   .mm-item { position: relative; }
   .mm-link {
     display: block; padding: 0.5rem 0.75rem; text-decoration: none;
     color: inherit; white-space: nowrap; transition: background 0.15s;
+  }
+  .mm-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.75rem; height: 1.75rem; margin-left: 0.25rem; border: none;
+    background: transparent; color: inherit; cursor: pointer;
   }
   .mm-link:hover { background: var(--color-bg-muted, #f1f5f9); }
   .mm-link.active { font-weight: 600; }
@@ -17,7 +22,8 @@ const STYLE = `
     background: var(--color-bg, #fff);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 0.25rem 0;
   }
-  .mm-item:hover > .mm-drop { display: block; }
+  .mm-item:hover > .mm-drop,
+  .mm-item.expanded > .mm-drop { display: block; }
   .mm-sub { list-style: none; margin: 0; padding: 0; }
   .mm-sub .mm-link { font-size: 0.875rem; padding: 0.375rem 1rem; }
 `;
@@ -84,6 +90,20 @@ export class UxMegaMenu extends UxBase {
     }
 
     if (hasKids) {
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'mm-toggle';
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Toggle submenu');
+      toggle.textContent = '▾';
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const expanded = li.classList.toggle('expanded');
+        toggle.setAttribute('aria-expanded', String(expanded));
+      });
+      li.appendChild(toggle);
+
       const drop = document.createElement('div');
       drop.className = 'mm-drop';
       const subUl = document.createElement('ul');

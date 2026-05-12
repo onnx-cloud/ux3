@@ -320,6 +320,38 @@ function registerDevModeHandlers(host: MCPHost): void {
     };
   });
 
+  host.registerToolHandler('agentic:createPlan', async (args) => {
+    const title = (args.title as string) || 'Untitled Plan';
+    const goal = (args.goal as string) || title;
+    const steps = (args.steps as string[]) || [];
+    const nodes = steps.map((s) => ({ title: s, status: 'pending' as const }));
+    return {
+      plan: { title, goal, nodes: nodes.map((n) => n.title), nodeCount: nodes.length },
+      message: `Plan "${title}" created with ${nodes.length} steps.`,
+    };
+  });
+
+  host.registerToolHandler('agentic:executePlan', async (args) => {
+    const planId = args.planId as string;
+    return {
+      planId,
+      status: 'running',
+      message: `Plan ${planId} execution started.`,
+      steps: [],
+    };
+  });
+
+  host.registerToolHandler('agentic:stepPlan', async (args) => {
+    const planId = args.planId as string;
+    const nodeId = args.nodeId as string;
+    return {
+      planId,
+      nodeId,
+      status: 'completed',
+      message: `Step ${nodeId} completed.`,
+    };
+  });
+
   const app = getApp();
   if (app) {
     host.connectDevSession(app);

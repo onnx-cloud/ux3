@@ -16,12 +16,15 @@ export interface RouteConfig {
   view: string;
   label?: string;
   children?: RouteConfig[];
+  guard?: string;
 }
 
 export interface RouteMatch {
   path: string;
   view: string;
   params: Record<string, string>;
+  guard?: string;
+  breadcrumb?: Array<{ path: string; view: string; label: string }>;
 }
 
 export interface NavRoute {
@@ -30,6 +33,8 @@ export interface NavRoute {
   label?: string;
   params?: string[];
   children?: NavRoute[];
+  guard?: string;
+  breadcrumb?: Array<{ path: string; view: string; label: string }>;
 }
 
 export interface NavConfig {
@@ -40,7 +45,10 @@ export interface NavConfig {
     params: Record<string, string>;
   };
   canNavigate(targetView: string): boolean;
+  canActivate(path: string): boolean;
+  evaluateGuard(guardExpr: string): boolean;
   getLabel(route: NavRoute, i18n?: Record<string, any>): string;
+  getBreadcrumbs(path: string): Array<{ path: string; view: string; label: string }>;
 }
 
 /**
@@ -63,24 +71,26 @@ export class Router {
     this.navConfig = this.buildNavConfig(i18n);
   }
 
-  /**
-   * Build NavConfig from routes and machines
-   */
   private buildNavConfig(i18n: Record<string, any>): NavConfig {
-    const buildRoute = (route: RouteConfig): NavRoute => {
+    const buildRoute = (route: RouteConfig, parentPath: string = ''): NavRoute => {
       const paramMatch = route.path.match(/:(\w+)/g);
       const params = paramMatch ? paramMatch.map(p => p.slice(1)) : undefined;
       const label = route.label || `nav.${route.view}`;
+      const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
+
       return {
-        path: route.path,
+        path: fullPath,
         view: route.view,
         label,
         params,
-        children: route.children?.length ? route.children.map(buildRoute) : undefined,
+        guard: route.guard,
+        children: route.children?.length ? route.children.map((c) => buildRoute(c, fullPath)) : undefined,
       };
     };
 
-    const navRoutes = this.routes.map(buildRoute);
+    const navRoutes = this.routes.map((r) => buildRoute(r));
+
+    const instance = this;
 
     return {
       routes: navRoutes,
@@ -90,54 +100,64 @@ export class Router {
         params: {},
       },
       canNavigate: (targetView: string) => {
-        return this.machines.has(targetView);
+        return instance.machines.has(targetView);
+      },
+      canActivate: (path: string) => {
+        const match = instance.matchRoute(path);
+        if (!match || !match.guard) return true;
+        return instance.evaluateGuard(match.guard);
+      },
+      evaluateGuard: (guardExpr: string): boolean => {
+        return instance.evaluateGuard(guardExpr);
       },
       getLabel: (route: NavRoute, i18nData?: Record<string, any>) => {
         if (!route.label) return humanize(route.view);
-        // Simple key — literal text
         if (!route.label.includes('.')) return route.label;
 
-        // Resolve from provided i18n data, or current locale's bundle, or fallback
-        const bundle = i18nData ?? this.getCurrentI18nBundle();
+        const bundle = i18nData ?? instance.getCurrentI18nBundle();
         const value = bundle ? resolveI18nKey(bundle, route.label) : undefined;
         if (typeof value === 'string') return value;
         return humanize(route.view);
       },
+      getBreadcrumbs: (path: string): Array<{ path: string; view: string; label: string }> => {
+        return instance.buildBreadcrumbs(path);
+      },
     };
   }
 
-  /**
-   * Match a pathname against configured routes (searches recursively through children)
-   */
   matchRoute(pathname: string): RouteMatch | null {
-    return this.matchInTree(this.routes, pathname);
+    return this.matchInTree(this.routes, pathname, '');
   }
 
-  private matchInTree(routes: RouteConfig[], pathname: string): RouteMatch | null {
+  private matchInTree(
+    routes: RouteConfig[],
+    pathname: string,
+    parentPath: string,
+  ): RouteMatch | null {
     for (const route of routes) {
+      const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
       const match = this.pathMatches(route.path, pathname);
       if (match) {
-        return { path: route.path, view: route.view, params: match };
+        return {
+          path: fullPath,
+          view: route.view,
+          params: match,
+          guard: route.guard,
+          breadcrumb: this.buildBreadcrumbs(fullPath),
+        };
       }
-    }
-    for (const route of routes) {
       if (route.children?.length) {
-        const childMatch = this.matchInTree(route.children, pathname);
+        const childMatch = this.matchInTree(route.children, pathname, fullPath);
         if (childMatch) return childMatch;
       }
     }
     return null;
   }
 
-  /**
-   * Test if a route path matches a pathname, extracting params.
-   * Supports exact matches, :param segments, * wildcard, and ** recursive.
-   */
   private pathMatches(
     routePath: string,
     pathname: string
   ): Record<string, string> | null {
-    // ** recursive wildcard: /docs/** matches /docs/a/b/c
     if (routePath.endsWith('/**')) {
       const prefix = routePath.slice(0, -3).replace(/\/$/, '');
       if (pathname === prefix || pathname.startsWith(prefix + '/')) {
@@ -147,13 +167,11 @@ export class Router {
       return null;
     }
 
-    // * single-segment wildcard: /content/* matches /content/welcome
     const wildcardIdx = routePath.indexOf('*');
     if (wildcardIdx !== -1) {
       const prefix = routePath.slice(0, wildcardIdx).replace(/\/$/, '');
       if (!pathname.startsWith(prefix + '/') && pathname !== prefix) return null;
       const rest = pathname.slice(prefix.length).replace(/^\//, '');
-      // Only match a single segment (no slashes in rest)
       if (rest.includes('/')) return null;
       const params: Record<string, string> = {};
       const prefixSegs = prefix.split('/').filter(Boolean);
@@ -189,9 +207,95 @@ export class Router {
     return params;
   }
 
-  /**
-   * Get the i18n bundle for the current locale, falling back to the stored reference.
-   */
+  evaluateGuard(guardExpr: string): boolean {
+    if (!guardExpr) return true;
+
+    try {
+      if (guardExpr.startsWith('fsm:')) {
+        const fsmRef = guardExpr.slice(4);
+        const [namespace, state] = fsmRef.split(':');
+        if (namespace && state) {
+          const machine = this.machines.get(namespace);
+          if (machine) {
+            return machine.matches(state);
+          }
+        }
+        return false;
+      }
+
+      if (guardExpr.startsWith('function:')) {
+        const fnName = guardExpr.slice(9);
+        if (typeof window !== 'undefined') {
+          const fn = (window as any)[fnName];
+          if (typeof fn === 'function') return fn();
+        }
+        return false;
+      }
+
+      if (guardExpr.startsWith('context:')) {
+        const key = guardExpr.slice(8);
+        if (typeof window !== 'undefined') {
+          const app = (window as any).__ux3App;
+          const val = app?.state?.[key];
+          return Boolean(val);
+        }
+        return false;
+      }
+
+      if (guardExpr === 'true') return true;
+      if (guardExpr === 'false') return false;
+
+      const app = (window as any).__ux3App;
+      if (app?.config?.development?.skipGuards === true) return true;
+
+      return true;
+    } catch {
+      return true;
+    }
+  }
+
+  buildBreadcrumbs(pathname: string): Array<{ path: string; view: string; label: string }> {
+    const crumbs: Array<{ path: string; view: string; label: string }> = [];
+
+    const collectAncestors = (
+      routes: RouteConfig[],
+      parentPath: string,
+      parentCrumbs: Array<{ path: string; view: string; label: string }>,
+    ): boolean => {
+      for (const route of routes) {
+        const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
+        const match = this.pathMatches(route.path, pathname);
+        if (match) {
+          const label = this.navConfig.getLabel({
+            path: fullPath,
+            view: route.view,
+            label: route.label,
+          });
+          const crumbPath = Object.keys(match).reduce(
+            (acc, key) => acc.replace(`:${key}`, match[key]),
+            fullPath,
+          );
+          crumbs.push(...parentCrumbs, { path: crumbPath, view: route.view, label });
+          return true;
+        }
+
+        if (route.children?.length) {
+          const label = this.navConfig.getLabel({
+            path: fullPath,
+            view: route.view,
+            label: route.label,
+          });
+          const newCrumbs = [...parentCrumbs, { path: fullPath, view: route.view, label }];
+          if (collectAncestors(route.children, fullPath, newCrumbs)) return true;
+        }
+      }
+      return false;
+    };
+
+    collectAncestors(this.routes, '', []);
+    return crumbs;
+  }
+
   private getCurrentI18nBundle(): Record<string, any> | undefined {
     try {
       const app = (window as any).__ux3App;
@@ -204,39 +308,28 @@ export class Router {
     return this.i18n;
   }
 
-  /**
-   * Get current NavConfig (for passing to templates)
-   */
   getNavConfig(): NavConfig {
     return this.navConfig;
   }
 
-  /**
-   * Dynamically add a route and refresh nav config.
-   * If parentPath is given, the route is nested as a child of that parent.
-   */
-  addRoute(path: string, view: string, label?: string, parentPath?: string): void {
+  addRoute(path: string, view: string, label?: string, parentPath?: string, guard?: string): void {
     if (parentPath) {
       const parent = findRouteByPath(this.routes, parentPath);
       if (parent) {
         if (!parent.children) parent.children = [];
         if (!parent.children.some((c) => c.path === path)) {
-          parent.children.push({ path, view, label });
+          parent.children.push({ path, view, label, guard });
         }
-        // Remove stale flat top-level duplicate (may have been added at build time)
         removeRouteByPath(this.routes, path);
         this.navConfig = this.buildNavConfig(this.i18n);
         return;
       }
     }
     if (this.routes.some((r) => r.path === path)) return;
-    this.routes.push({ path, view, label });
+    this.routes.push({ path, view, label, guard });
     this.navConfig = this.buildNavConfig(this.i18n);
   }
 
-  /**
-   * Update current path/widget/params in NavConfig
-   */
   updateCurrent(pathname: string): void {
     const match = this.matchRoute(pathname);
     if (match) {
@@ -248,12 +341,12 @@ export class Router {
     }
   }
 
-  /**
-   * Navigate to a path (updates current state)
-   */
   navigate(pathname: string): RouteMatch | null {
     const match = this.matchRoute(pathname);
     if (match) {
+      if (match.guard && !this.evaluateGuard(match.guard)) {
+        return null;
+      }
       this.updateCurrent(pathname);
       return match;
     }

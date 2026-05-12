@@ -67,19 +67,19 @@ function matchPattern(
 function findRouteForPath(
   pathname: string,
   routes: NavRoute[]
-): { view: string; params: Record<string, string> } | null {
+): { view: string; params: Record<string, string>; guard?: string } | null {
   return searchTree(routes, pathname);
 }
 
 function searchTree(
   routes: NavRoute[] | undefined,
   pathname: string
-): { view: string; params: Record<string, string> } | null {
+): { view: string; params: Record<string, string>; guard?: string } | null {
   if (!routes) return null;
   for (const route of routes) {
     const params = matchPattern(route.path, pathname);
     if (params !== null) {
-      return { view: route.view, params };
+      return { view: route.view, params, guard: route.guard };
     }
   }
   for (const route of routes) {
@@ -309,6 +309,13 @@ export function navigateTo(pathname: string, appContext: AppContext, useHash: bo
 
   const { view: targetView, params } = match;
 
+  if (match.guard && appContext.nav.evaluateGuard) {
+    if (!appContext.nav.evaluateGuard(match.guard)) {
+      defaultLogger.warn(`[Navigation] Route guard rejected for path: ${pathname} (guard: ${match.guard})`);
+      return;
+    }
+  }
+
   if (!appContext.nav.canNavigate(targetView)) {
     defaultLogger.warn(`[Navigation] Cannot navigate to view: ${targetView}`);
     return;
@@ -362,6 +369,15 @@ function handleNavigationEvent(appContext: AppContext): void {
     emitDevTools('navigation', 'route.miss', { path: rawPathname, lookupPath: pathnameForLookup });
     mountNotFound();
     return;
+  }
+
+  if (match.guard && appContext.nav.evaluateGuard) {
+    if (!appContext.nav.evaluateGuard(match.guard)) {
+      defaultLogger.warn(`[Navigation] Route guard rejected for path: ${rawPathname} (guard: ${match.guard})`);
+      emitDevTools('navigation', 'route.guard', { path: rawPathname, guard: match.guard });
+      mountNotFound();
+      return;
+    }
   }
 
   mountView(match.view, match.params);
