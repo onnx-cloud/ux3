@@ -42,7 +42,8 @@ export const ContentPlugin: Plugin = {
       for (const item of manifest.items) {
         const routePath = item.frontmatter.path || `/${item.slug}`;
         const title = item.frontmatter.title || item.frontmatter.label || item.slug;
-        app.registerRoute(routePath, 'content', title);
+        const parent = routePath.startsWith('/content/') ? '/content/*' : undefined;
+        app.registerRoute(routePath, 'content', title, parent);
       }
     }
   },

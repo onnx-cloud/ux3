@@ -15,6 +15,24 @@ import { DevServer } from '../../dev/dev-server.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '../../../');
 
+function loadEnvFile(dir: string): void {
+  const envPath = path.join(dir, '.env');
+  if (!fs.existsSync(envPath)) return;
+  const content = fs.readFileSync(envPath, 'utf-8');
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
 interface DevCommandOptions {
   port: string;
   host: string;
@@ -54,6 +72,7 @@ export const devCommand = new Command()
   .action(async (project: string | undefined, options: DevCommandOptions) => {
     try {
       const projectDir = project ? path.resolve(project) : process.cwd();
+      loadEnvFile(projectDir);
       const generatedDir = path.join(projectDir, 'generated');
       // Clean cached generated files so template/FSM changes always take effect
       try { fs.rmSync(generatedDir, { recursive: true, force: true }); } catch {}

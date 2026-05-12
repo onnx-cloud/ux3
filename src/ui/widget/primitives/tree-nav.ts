@@ -46,7 +46,7 @@ export class UxTreeNav extends UxBase {
         if (li.querySelector('ul')) {
           const next = li.getAttribute('aria-expanded') !== 'true';
           if (next) li.setAttribute('aria-expanded', 'true');
-          else li.removeAttribute('aria-expanded');
+          else li.setAttribute('aria-expanded', 'false');
         }
         this.dispatchEvent(new CustomEvent('ux:event', {
           bubbles: true, composed: true,

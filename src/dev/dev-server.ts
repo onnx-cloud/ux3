@@ -168,63 +168,68 @@ async function getSiteConfig(projectDir: string, manifest: ServerManifest | null
  */
 function buildNavConfig(
   pathname: string,
-  routes: Array<{ path: string; view: string }>,
+  routes: Array<{ path: string; view: string; children?: any[] }>,
   i18n: Record<string, any> = {}
 ): Record<string, any> {
-  // Find current route (support wildcard patterns)
+  // Find current route (recursive through children, supports wildcards)
   let currentPath = pathname;
   let currentView = 'home';
-  
-  for (const route of routes) {
-    if (route.path === pathname) {
-      currentPath = route.path;
-      currentView = route.view;
-      break;
-    }
-    if (route.path.includes('*') && pathname.startsWith(route.path.replace(/\/\*$/, ''))) {
-      currentPath = pathname;
-      currentView = route.view;
-      break;
-    }
-  }
 
-  // Build nav routes with labels
-  const navRoutes = routes.map(route => {
-    let label: string | undefined;
-    // Derive label from common i18n keys
-    if (route.view === 'home') label = 'header.home';
-    else if (route.view === 'market') label = 'header.market';
-    else if (route.view === 'account') label = 'header.account';
+  const findInTree = (list: Array<{ path: string; view: string; children?: any[] }>): boolean => {
+    for (const route of list) {
+      if (route.path === pathname) {
+        currentPath = route.path;
+        currentView = route.view;
+        return true;
+      }
+      if (route.path.includes('*') && pathname.startsWith(route.path.replace(/\/\*$/, ''))) {
+        currentPath = pathname;
+        currentView = route.view;
+        return true;
+      }
+      if (route.path.includes(':')) {
+        const segs = route.path.split('/').filter(Boolean);
+        const reqSegs = pathname.split('/').filter(Boolean);
+        if (segs.length === reqSegs.length) {
+          const match = segs.every((s, i) => s.startsWith(':') || s === reqSegs[i]);
+          if (match) { currentPath = pathname; currentView = route.view; return true; }
+        }
+      }
+    }
+    for (const route of list) {
+      if (route.children?.length && findInTree(route.children)) return true;
+    }
+    return false;
+  };
+  findInTree(routes);
 
-    return {
+  // Build nav routes preserving children
+  const buildRoutes = (list: Array<{ path: string; view: string; label?: string; children?: any[] }>): any[] =>
+    list.map(route => ({
       path: route.path,
       view: route.view,
-      label,
-    };
-  });
+      label: route.label || `nav.${route.view}`,
+      children: route.children?.length ? buildRoutes(route.children) : undefined,
+    }));
 
-  // Helper function to resolve i18n labels
+  const navRoutes = buildRoutes(routes);
+
   const getLabel = (route: any): string => {
     if (!route.label) return route.view;
-    
     const parts = route.label.split('.');
     let value: any = i18n;
     for (const part of parts) {
       value = value?.[part];
     }
-
     if (typeof value === 'string') return value;
+    if (!route.label.includes('.')) return route.label;
     return route.view;
   };
 
   return {
     routes: navRoutes,
-    current: {
-      path: currentPath,
-      view: currentView,
-      params: {},
-    },
-    canNavigate: (targetView?: string) => true, // In dev server, all views are navigable
+    current: { path: currentPath, view: currentView, params: {} },
+    canNavigate: (_targetView?: string) => true,
     getLabel,
   };
 }
@@ -678,8 +683,8 @@ export class DevServer {
 
         // Try to resolve as a configured route -> view
         try {
-          const routes: Array<{ path: string; view: string }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
-          const match = routes.find(r => this.pathMatches(r.path, pathname));
+          const routes: Array<{ path: string; view: string; children?: any[] }> = (this.manifest?.config?.routes && Array.isArray(this.manifest.config.routes)) ? this.manifest.config.routes : [];
+          const match = this.findRouteInTree(routes, pathname);
           if (match) {
             const viewName = match.view;
             const viewYamlPath = path.join(viewRootDir, `${viewName}.yaml`);
@@ -928,6 +933,23 @@ export class DevServer {
     return routeSegments.every((segment, index) => {
       return segment.startsWith(':') || segment === requestSegments[index];
     });
+  }
+
+  /** Recursively search a route tree (with children) for a matching route. */
+  private findRouteInTree(
+    routes: Array<{ path: string; view: string; children?: any[] }>,
+    pathname: string
+  ): { path: string; view: string } | null {
+    for (const r of routes) {
+      if (this.pathMatches(r.path, pathname)) return r;
+    }
+    for (const r of routes) {
+      if (r.children?.length) {
+        const found = this.findRouteInTree(r.children, pathname);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 
   /** Find repo root by looking for package.json */

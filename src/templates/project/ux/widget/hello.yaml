@@ -1,9 +1,12 @@
 layout: default
 initial: idle
 states:
-  idle: |
-    <div>
-      <h1>Welcome to [[ name ]]</h1>
-      <button ux-event="CLICK">Click me</button>
-    </div>
-  clicked: 'widget/hello/clicked.html'
+  idle:
+    template: widget/hello/idle.html
+    on:
+      CLICK: clicked
+      '*': {}
+  clicked:
+    template: widget/hello/clicked.html
+    on:
+      '*': {}

@@ -12,8 +12,9 @@ states:
     template: component/[[ name ]]/idle.html
     on:
       OPEN: open
-
+      '*': {}
   open:
     template: component/[[ name ]]/open.html
     on:
       CLOSE: idle
+      '*': {}

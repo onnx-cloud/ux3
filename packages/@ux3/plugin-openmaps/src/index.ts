@@ -100,6 +100,27 @@ export const OpenMapsPlugin: Plugin = {
       jsCdn,
       cssCdn: LEAFLET_CSS_CDN,
     };
+
+    if (typeof customElements !== 'undefined' && !customElements.get('ux-map')) {
+      customElements.define('ux-map', class extends HTMLElement {
+        connectedCallback() {
+          this.style.display = 'block';
+          this.style.minHeight = '300px';
+          const el = this;
+          const poll = () => {
+            const L = getLeaflet();
+            const svc = (window as any).__ux3App?.services?.map;
+            if (!L || !svc?.create) { setTimeout(poll, 200); return; }
+            const lat = this.getAttribute('lat');
+            const lng = this.getAttribute('lng');
+            const zoom = this.getAttribute('zoom');
+            const center: [number, number] = lat && lng ? [parseFloat(lat), parseFloat(lng)] : [51.505, -0.09];
+            svc.create(el, { center, zoom: zoom ? parseInt(zoom) : 13 });
+          };
+          setTimeout(poll, 100);
+        }
+      });
+    }
   },
 };
 

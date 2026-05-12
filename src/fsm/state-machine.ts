@@ -344,17 +344,21 @@ export class StateMachine<T extends Record<string, any>> {
    */
   private handleEvent(event: StateEvent): void {
     const stateConfig = this.config.states[this.state];
-    if (!stateConfig || !stateConfig.on) {
-      return;
+    if (!stateConfig) {
+      throw new Error(`[FSM ${this.config.id}] Unknown state '${this.state}'`);
     }
 
-    const transition = stateConfig.on[event.type];
+    // Look up transition: exact match first, then '*' catch-all wildcard
+    let transition = stateConfig.on?.[event.type];
+    if (!transition && stateConfig.on?.['*']) {
+      transition = stateConfig.on['*'];
+    }
+
     if (!transition) {
-      if (this.config.strict) {
-        const available = Object.keys(stateConfig.on).join(', ');
-        throw new Error(`[FSM ${this.config.id}] No transition for '${event.type}' in state '${this.state}'. Available: ${available || '(none)'}`);
-      }
-      return;
+      const available = stateConfig.on ? Object.keys(stateConfig.on).join(', ') : '(none)';
+      throw new Error(
+        `[FSM ${this.config.id}] No transition for '${event.type}' in state '${this.state}'. Available: ${available}`
+      );
     }
 
     const transitionConfig = typeof transition === 'string' ? { target: transition } : { ...transition };

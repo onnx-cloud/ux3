@@ -30,7 +30,6 @@ export const regionPrimitives: PrimitiveDefinition[] = [
   { tag: 'ux-chat-messenger', role: 'log', kind: 'region' },
   { tag: 'ux-chat-thread-list', role: 'list', kind: 'region' },
   { tag: 'ux-chat-bubble', role: 'article', kind: 'region' },
-  { tag: 'ux-chat-composer', role: 'form', kind: 'form' },
   { tag: 'ux-chat-roster', role: 'list', kind: 'region' },
   { tag: 'ux-hover-panel', role: 'dialog', kind: 'tooltip', stateAttr: 'open' },
   { tag: 'ux-icon-button', role: 'button', kind: 'toggle', stateAttr: 'pressed' },

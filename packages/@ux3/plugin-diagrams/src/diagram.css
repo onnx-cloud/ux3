@@ -1,0 +1,164 @@
+/* src/diagram.css - Styles for diagram rendering */
+
+.diagram-container {
+  display: inline-block;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--mermaid-border, #ccc);
+  border-radius: var(--mermaid-border-radius, 4px);
+  background-color: var(--mermaid-tertiary, #fff);
+  overflow: auto;
+  max-width: 100%;
+}
+
+.diagram-container svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.diagram-container.has-title {
+  position: relative;
+}
+
+.diagram-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mermaid-text, #333);
+  margin-bottom: 0.5rem;
+}
+
+.diagram-error {
+  color: var(--color-error, #d32f2f);
+  padding: 1rem;
+  background-color: var(--color-error-bg, #ffebee);
+  border-radius: var(--mermaid-border-radius, 4px);
+  font-family: monospace;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-error, #d32f2f);
+}
+
+/* Light theme (default) */
+:root {
+  --mermaid-primary: #f0f0f0;
+  --mermaid-secondary: #333;
+  --mermaid-tertiary: #fff;
+  --mermaid-text: #333;
+  --mermaid-text-on-primary: #000;
+  --mermaid-border: #ccc;
+  --mermaid-border-width: 2px;
+  --mermaid-border-radius: 4px;
+  --mermaid-font-size: 14px;
+  --mermaid-font-family: system-ui, -apple-system, sans-serif;
+  --mermaid-spacing: 40px;
+}
+
+/* Dark theme */
+[data-theme='dark'],
+:root:has(html[data-theme='dark']) {
+  --mermaid-primary: #2a2a2a;
+  --mermaid-secondary: #ccc;
+  --mermaid-tertiary: #1a1a1a;
+  --mermaid-text: #ccc;
+  --mermaid-text-on-primary: #fff;
+  --mermaid-border: #444;
+  --mermaid-border-width: 2px;
+  --mermaid-border-radius: 4px;
+  --mermaid-font-size: 14px;
+  --mermaid-font-family: system-ui, -apple-system, sans-serif;
+  --mermaid-spacing: 40px;
+}
+
+/* Minimal theme */
+[data-theme='minimal'],
+:root:has(html[data-theme='minimal']) {
+  --mermaid-primary: #fff;
+  --mermaid-secondary: #000;
+  --mermaid-tertiary: #fff;
+  --mermaid-text: #000;
+  --mermaid-text-on-primary: #000;
+  --mermaid-border: #000;
+  --mermaid-border-width: 1px;
+  --mermaid-border-radius: 0;
+  --mermaid-font-size: 13px;
+  --mermaid-font-family: monospace;
+  --mermaid-spacing: 32px;
+}
+
+/* Diagram-specific styles */
+.mermaid-diagram-svg {
+  background-color: var(--mermaid-tertiary);
+}
+
+.node-shape {
+  fill: var(--mermaid-primary);
+  stroke: var(--mermaid-border);
+  stroke-width: var(--mermaid-border-width);
+}
+
+.node-label {
+  fill: var(--mermaid-text);
+  font-family: var(--mermaid-font-family);
+  font-size: var(--mermaid-font-size);
+  pointer-events: none;
+  user-select: none;
+}
+
+.edge-line {
+  stroke: var(--mermaid-secondary);
+  stroke-width: 2px;
+  fill: none;
+}
+
+.edge-line.edge-solid {
+  stroke-dasharray: none;
+}
+
+.edge-line.edge-dashed {
+  stroke-dasharray: 5, 5;
+}
+
+.edge-line.edge-dotted {
+  stroke-dasharray: 2, 2;
+}
+
+.edge-label {
+  fill: var(--mermaid-text);
+  font-family: var(--mermaid-font-family);
+  font-size: calc(var(--mermaid-font-size) - 2px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Hover effects (optional) */
+.nodes > .node:hover .node-shape {
+  opacity: 0.8;
+  filter: brightness(0.95);
+}
+
+.edges > .edge:hover .edge-line {
+  stroke-width: 3px;
+  opacity: 0.8;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .diagram-container,
+  .node-shape,
+  .edge-line {
+    transition: none;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .diagram-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .diagram-container svg {
+    min-width: 100%;
+  }
+}

@@ -64,7 +64,6 @@ const BUILT_IN_TAGS = [
   'ux-chat-messenger',
   'ux-chat-thread-list',
   'ux-chat-bubble',
-  'ux-chat-composer',
   'ux-chat-roster',
   'ux-popover',
   'ux-hover-panel',
@@ -91,7 +90,6 @@ describe('Built-in primitives', () => {
     expect(customElements.get('ux-app-shell')).toBeTruthy();
     expect(customElements.get('ux-input')).toBeTruthy();
     expect(customElements.get('ux-slider')).toBeTruthy();
-    expect(customElements.get('ux-chat-composer')).toBeTruthy();
   });
 
   it('registers all built-in ux-* components', () => {

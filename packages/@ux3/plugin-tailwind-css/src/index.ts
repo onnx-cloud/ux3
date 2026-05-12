@@ -443,12 +443,12 @@ export const TAILWIND_STYLES: Record<string, string> = {
   'ux-chart-line-legend': 'flex flex-wrap gap-3 py-2',
 
   // ── Chat ──────────────────────────────────────────────────────────────────
-  'ux-chat-messenger':  'flex flex-col gap-3 rounded-xl border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 shadow-sm min-h-80',
+  'ux-chat-messenger':  'flex flex-col rounded-xl border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] shadow-sm h-96 max-h-[calc(100vh-14rem)]',
   'ux-chat-thread-list': 'rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg-surface,#f9fafb)] p-3 text-sm',
   'ux-chat-roster':     'rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg-surface,#f9fafb)] p-3 text-sm',
-  'ux-chat-messages':   'rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm flex-1 min-h-32 overflow-y-auto flex flex-col gap-3',
-  'ux-chat-bubble':     'inline-block rounded-2xl bg-[var(--color-primary,#3b82f6)] text-white px-4 py-2 text-sm max-w-[80%]',
-  'ux-chat-composer':   'flex items-center gap-2 border-t border-[var(--color-border,#e2e8f0)] pt-3',
+  'ux-chat-messages':   'flex-1 min-h-0 overflow-y-auto px-3 py-2',
+  'ux-chat-bubble':     'inline-block rounded-2xl bg-[var(--color-primary,#3b82f6)] text-white px-3 py-1.5 text-xs max-w-[80%]',
+  'ux-chat-composer':   'flex-shrink-0 border-t border-[var(--color-border,#e2e8f0)] px-3 py-2',
 
   // ── Rich content ──────────────────────────────────────────────────────────
   'ux-wysiwyg':         'prose min-h-32 px-3 py-2 border border-[var(--color-border,#cbd5e1)] rounded-md bg-[var(--color-bg,#fff)] focus:outline-none',
@@ -475,7 +475,6 @@ export const TAILWIND_STYLES: Record<string, string> = {
   'ux-dropzone':        'rounded-lg border-2 border-dashed border-[var(--color-border,#cbd5e1)] bg-[var(--color-bg-surface,#f9fafb)] p-6 flex items-center justify-center hover:border-[var(--color-primary,#60a5fa)] transition-colors',
   'ux-tree-nav':        'flex flex-col gap-1 text-sm',
   'ux-notifications':   'flex flex-col gap-2 rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm min-h-28',
-  'ux-qr-code':         'flex items-center justify-center rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 min-w-40 min-h-40',
   'ux-data-grid':       'block rounded-xl border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm min-h-48',
   'ux-table-virtual':   'block rounded-lg border border-[var(--color-border,#e2e8f0)] bg-[var(--color-bg,#fff)] p-4 text-sm min-h-40 overflow-y-auto',
 

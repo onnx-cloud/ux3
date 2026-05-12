@@ -2,6 +2,15 @@ import { LifecycleComponent } from '../../lifecycle-component.js';
 import { emitReadyOnce } from './helpers.js';
 import { FSMRegistry, extractNamespace, extractState } from '../../../fsm/registry.js';
 import type { StateMachine } from '../../../fsm/state-machine.js';
+import { registerLightStyle } from '../../style-registry.js';
+
+registerLightStyle('ux-base-defaults', `
+  ux-app-shell, ux-app-shell *,
+  ux-view, ux-view *,
+  [ux-style]:not([ux-style~="selectable"]) {
+    user-select: none;
+  }
+`);
 
 function resolveDotPath(obj: Record<string, any>, path: string): any {
   return path.split('.').reduce((acc, key) =>
@@ -20,6 +29,7 @@ export class UxBase extends LifecycleComponent {
     this.ensureRole();
     this.inferUxStyle();
     this.bindTwoWay();
+    this.bindSelectable();
     queueMicrotask(() => {
       this.bindFSM();
       this.resolveDataFrom();
@@ -53,10 +63,29 @@ export class UxBase extends LifecycleComponent {
     this.setAttribute('ux-style', this.localName);
   }
 
+  private bindSelectable() {
+    const style = this.getAttribute('ux-style') || '';
+    const selectable = style.includes('selectable');
+    if (selectable) {
+      this.style.userSelect = '';
+      return;
+    }
+    this.addEventListener('contextmenu', this.onContextMenu);
+  }
+
+  private readonly onContextMenu = (e: MouseEvent) => {
+    const wrapper = (e.target as HTMLElement).closest('ux-context-menu');
+    if (!wrapper) e.preventDefault();
+  };
+
   protected onDisconnected(): void {
     if (this.fsmUnsubscribe) {
       this.fsmUnsubscribe();
       this.fsmUnsubscribe = null;
+    }
+    if (this._appDataPollId !== null) {
+      cancelAnimationFrame(this._appDataPollId);
+      this._appDataPollId = null;
     }
   }
 
@@ -108,21 +137,23 @@ export class UxBase extends LifecycleComponent {
     this.resolveDataBindings(context);
   }
 
+  private _appDataPollId: number | null = null;
+
   private resolveDataFrom(context?: Record<string, any>): void {
     let dataFrom = this.getAttribute('data-from');
     if (!dataFrom && context) {
       const name = this.getAttribute('name');
       if (name && name in context) dataFrom = name;
     }
+
+    // $.-prefixed paths resolve against global __ux3App (no FSM context needed)
+    if (dataFrom && dataFrom.startsWith('$.')) {
+      this.resolveAppPath(dataFrom);
+      return;
+    }
+
     if (dataFrom && context) {
-      let root: any = context;
-      let path = dataFrom;
-      // $ prefix resolves against the global app context
-      if (path.startsWith('$.')) {
-        root = (window as any).__ux3App || {};
-        path = path.slice(2);
-      }
-      const value = resolveDotPath(root, path);
+      const value = resolveDotPath(context, dataFrom);
       if (value !== undefined && value !== this._boundDataRef) {
         this._boundDataRef = value;
         this.applyData(value);
@@ -138,6 +169,35 @@ export class UxBase extends LifecycleComponent {
         return;
       }
     }
+  }
+
+  private resolveAppPath(dataFrom: string): void {
+    const path = dataFrom.slice(2);
+    const app = (window as any).__ux3App;
+    if (app) {
+      const value = resolveDotPath(app, path);
+      if (value !== undefined && value !== this._boundDataRef) {
+        this._boundDataRef = value;
+        this.applyData(value);
+      }
+      return;
+    }
+    // App not ready yet — poll until available
+    if (this._appDataPollId !== null) return;
+    const poll = () => {
+      const app = (window as any).__ux3App;
+      if (!app) {
+        this._appDataPollId = requestAnimationFrame(poll);
+        return;
+      }
+      this._appDataPollId = null;
+      const value = resolveDotPath(app, path);
+      if (value !== undefined && value !== this._boundDataRef) {
+        this._boundDataRef = value;
+        this.applyData(value);
+      }
+    };
+    this._appDataPollId = requestAnimationFrame(poll);
   }
 
   private async resolveDataFromSource(source: string, method: string): Promise<void> {

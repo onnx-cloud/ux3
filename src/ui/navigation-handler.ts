@@ -68,11 +68,23 @@ function findRouteForPath(
   pathname: string,
   routes: NavRoute[]
 ): { view: string; params: Record<string, string> } | null {
+  return searchTree(routes, pathname);
+}
+
+function searchTree(
+  routes: NavRoute[] | undefined,
+  pathname: string
+): { view: string; params: Record<string, string> } | null {
+  if (!routes) return null;
   for (const route of routes) {
     const params = matchPattern(route.path, pathname);
     if (params !== null) {
       return { view: route.view, params };
     }
+  }
+  for (const route of routes) {
+    const childMatch = searchTree(route.children, pathname);
+    if (childMatch) return childMatch;
   }
   return null;
 }

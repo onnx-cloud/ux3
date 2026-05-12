@@ -319,7 +319,7 @@ describe('StateMachine - Service Lifecycle (v1.1)', () => {
               src: 'delayedLoad',
               maxRetries: 0
             },
-            on: { SUCCESS: 'loaded' }
+            on: { SUCCESS: 'loaded', '*': {} }
           },
           loaded: {},
           skipped: {}

@@ -563,11 +563,11 @@ export class AppContextBuilder {
       (this.templates as any)[name] = template;
     };
 
-    context.registerRoute = (path, viewName, label?) => {
+    context.registerRoute = (path, viewName, label?, parent?) => {
       if (!this.router) {
         throw new Error('router not initialized; call withRouter before registering routes');
       }
-      this.router.addRoute(path, viewName, label);
+      this.router.addRoute(path, viewName, label, parent);
       // refresh nav config
       context.nav = this.router.getNavConfig();
     };

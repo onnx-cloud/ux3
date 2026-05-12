@@ -4,6 +4,7 @@ states:
     template: widget/[[ name ]]/idle.html
     on:
       SUBMIT: submitting
+      '*': {}
   submitting:
     template: widget/[[ name ]]/submitting.html
     invoke:
@@ -11,4 +12,8 @@ states:
     on:
       SUCCESS: done
       ERROR: idle
-  done: widget/[[ name ]]/done.html
+      '*': {}
+  done:
+    template: widget/[[ name ]]/done.html
+    on:
+      '*': {}

@@ -9,6 +9,7 @@ import { StructuredLogger } from '../logger/logger.js';
 import { LifecycleComponent } from './lifecycle-component.js';
 import { resolveDotPath, applyResultMap } from '../utils/resolve.js';
 import { UX_EVENT, UX_CHANGE } from '../utils/helpers.js';
+import { collectFieldValues } from './widget/primitives/helpers.js';
 
 // expose global for runtime
 declare global {
@@ -577,7 +578,10 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         if (element.tagName === 'FORM' && event.type === 'submit') {
           event.preventDefault();
         }
-        const payload = this.extractPayload(element as HTMLElement, event);
+        const detail = (event as CustomEvent).detail;
+        const payload = detail && typeof detail === 'object' && !Array.isArray(detail)
+          ? { ...this.extractPayload(element as HTMLElement, event), ...detail }
+          : this.extractPayload(element as HTMLElement, event);
         this.fsm.send({ type: parsed.action, payload, fromDOM: true, sourceElement: element as HTMLElement });
       };
       this.templateEventDisposers.push(this.listen(element, parsed.event, listener));
@@ -616,9 +620,9 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
    *                "change" on <ux-input name="query"> → { event: "change", action: "CHANGE_QUERY" }
    */
   private parseUxEvent(element: HTMLElement, uxEvent: string): { event: string; action: string } | null {
-    const colonIdx = uxEvent.indexOf(':');
-    const eventName = colonIdx >= 0 ? uxEvent.slice(0, colonIdx).trim() : uxEvent.trim();
-    const explicitAction = colonIdx >= 0 ? uxEvent.slice(colonIdx + 1).trim() : '';
+    const lastColon = uxEvent.lastIndexOf(':');
+    const eventName = lastColon >= 0 ? uxEvent.slice(0, lastColon).trim() : uxEvent.trim();
+    const explicitAction = lastColon >= 0 ? uxEvent.slice(lastColon + 1).trim() : '';
 
     if (!eventName) return null;
 
@@ -728,6 +732,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       return {
         ...attrPayload,
         ...Object.fromEntries(new FormData(element)),
+        ...collectFieldValues(element),
       };
     }
 
