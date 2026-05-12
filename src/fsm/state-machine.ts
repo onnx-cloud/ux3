@@ -50,13 +50,20 @@ export class StateMachine<T extends Record<string, any>> {
 
   private get sc(): T & AsyncStateContext { return this.context as T & AsyncStateContext; }
 
-  constructor(config: MachineConfig<T>) {
+  constructor(config: MachineConfig<T>, autoStart: boolean = true) {
     this.config = this.applyEntrySugar(config);
     this.state = this.config.initial;
     this.context = typeof this.config.context === 'function'
       ? this.config.context()
       : { ...(this.config.context || {} as T) };
 
+    if (autoStart) {
+      this.executeStateActions('entry', this.state);
+      this.enterCompoundChildren(this.state);
+    }
+  }
+
+  start(): void {
     this.executeStateActions('entry', this.state);
     this.enterCompoundChildren(this.state);
   }
@@ -678,7 +685,8 @@ export class StateMachine<T extends Record<string, any>> {
             this.sc.error = null;
             const data = applyResultMap(result.data, invokeConfig.map);
             this.setState(data as Partial<T>);
-            this.send({ type: 'SUCCESS', payload: data });
+            const eventType = (data && typeof data === 'object' && (data as any).__event) ? (data as any).__event : 'SUCCESS';
+            this.send({ type: eventType, payload: data });
           } else {
             throw result.error || new Error('Service invoke failed');
           }
@@ -741,7 +749,8 @@ export class StateMachine<T extends Record<string, any>> {
         this.sc.error = null;
 
         const mapped = applyResultMap(result, invokeConfig.map);
-        this.send({ type: 'SUCCESS', payload: mapped });
+        const eventType = (result && typeof result === 'object' && (result as any).__event) ? (result as any).__event : 'SUCCESS';
+        this.send({ type: eventType, payload: mapped });
         return;
       } catch (error) {
         lastError = error as Error;

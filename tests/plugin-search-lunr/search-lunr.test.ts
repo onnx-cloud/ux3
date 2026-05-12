@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SearchLunrPlugin } from '../../packages/@ux3/plugin-search-lunr/src/index';
+import { SearchLunrPlugin } from '../../packages/@ux3/ux-search-lunr/src/index';
 
 describe('SearchLunrPlugin', () => {
   let mockApp: any;
@@ -15,7 +15,7 @@ describe('SearchLunrPlugin', () => {
   });
 
   it('has expected metadata', () => {
-    expect(SearchLunrPlugin.name).toBe('@ux3/plugin-search-lunr');
+    expect(SearchLunrPlugin.name).toBe('@ux3/ux-search-lunr');
     expect(SearchLunrPlugin.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
@@ -54,7 +54,7 @@ describe('SearchLunrPlugin', () => {
     const [, factory] = mockApp.registerService.mock.calls[0];
     const service = factory();
     expect(() => service.build([{ id: '1', title: 'test' }], ['title'])).toThrow(
-      '@ux3/plugin-search-lunr'
+      '@ux3/ux-search-lunr'
     );
   });
 

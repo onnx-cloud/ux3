@@ -16,7 +16,7 @@
     "ui",
     "framework",
     "fsm",
-    "tate-machine",
+    "state-machine",
     "accessibility",
     "wcag",
     "security",

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { UxChatMessenger } from '@ux3/plugin-chat/chat-messenger';
+import { UxChatMessenger } from '@ux3/ux-chat/chat-messenger';
 
 declare global {
   interface Window {

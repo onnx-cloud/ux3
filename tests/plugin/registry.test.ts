@@ -53,7 +53,7 @@ describe('PluginRegistry', () => {
   describe('listByCategory', () => {
     beforeEach(() => {
       reg.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         categories: ['ui', 'service'],
       } as any);
@@ -76,7 +76,7 @@ describe('PluginRegistry', () => {
     it('filters plugins by category', () => {
       const uiPlugins = reg.listByCategory('ui');
       expect(uiPlugins).toHaveLength(2);
-      expect(uiPlugins.map(p => p.name)).toContain('@ux3/plugin-chat');
+      expect(uiPlugins.map(p => p.name)).toContain('@ux3/ux-chat');
       expect(uiPlugins.map(p => p.name)).toContain('@ux3/plugin-form');
     });
 
@@ -94,7 +94,7 @@ describe('PluginRegistry', () => {
     it('returns plugins in multiple categories', () => {
       const servicePlugins = reg.listByCategory('service');
       expect(servicePlugins).toHaveLength(2);
-      expect(servicePlugins.map(p => p.name)).toContain('@ux3/plugin-chat');
+      expect(servicePlugins.map(p => p.name)).toContain('@ux3/ux-chat');
       expect(servicePlugins.map(p => p.name)).toContain('@ux3/plugin-auth');
     });
   });
@@ -102,7 +102,7 @@ describe('PluginRegistry', () => {
   describe('exportMetadata', () => {
     it('exports complete metadata for all plugins', () => {
       reg.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         description: 'Chat UI',
         displayName: 'Chat',
@@ -120,9 +120,9 @@ describe('PluginRegistry', () => {
       const metadata = reg.exportMetadata();
       expect(metadata).toHaveLength(2);
 
-      const chatMeta = metadata.find(m => m.name === '@ux3/plugin-chat');
+      const chatMeta = metadata.find(m => m.name === '@ux3/ux-chat');
       expect(chatMeta).toMatchObject({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         displayName: 'Chat',
         author: 'UX3 Team',
@@ -225,7 +225,7 @@ describe('PluginRegistry', () => {
   describe('integration: discovery workflow', () => {
     it('supports full plugin discovery', () => {
       reg.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         displayName: 'Chat UI',
         author: 'UX3 Team',

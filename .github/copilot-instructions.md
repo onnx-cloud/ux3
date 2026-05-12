@@ -19,7 +19,7 @@ UX3 is a compile‑first SPA framework: views, styles, validation, and i18n are 
 
 ## Workflows (npm only)
 - `npm run dev` – TS watch + example server
-- `npm run dev:iam` – IAM example
+- `npm run dev:kitchen.sink` – canonical examples
 - `npm run build` – compile + type‑check + size‑check
 - `npm run test` / `npm run test:watch` – Vitest
 - `npm run test:e2e` / `npm run test:e2e:debug` – Playwright

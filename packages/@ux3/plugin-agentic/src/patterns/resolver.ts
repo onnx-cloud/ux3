@@ -145,8 +145,8 @@ export function resolvePatterns(
         if (pStateDef.on) {
           for (const [event, target] of Object.entries(pStateDef.on)) {
             if (target === '#error') {
-              on[event] = '#error';
-              on['ERROR'] = '#error';
+              on[event] = '.error';
+              on['ERROR'] = '.error';
             } else if (event === 'done') {
               on['SUCCESS'] = `.${target}`;
               on['done'] = `.${target}`;
@@ -167,11 +167,7 @@ export function resolvePatterns(
           const idx = nextStates.indexOf(pStateName);
           if (idx < nextStates.length - 1) {
             const nextState = nextStates[idx + 1];
-            if (pattern.states[nextState].type !== 'final') {
-              on['SUCCESS'] = `.${nextState}`;
-            } else {
-              on['SUCCESS'] = pStateName;
-            }
+            on['SUCCESS'] = `.${nextState}`;
           }
         }
 
@@ -180,6 +176,13 @@ export function resolvePatterns(
           on,
           invoke: pStateDef.invoke as any,
         } as StateConfig<PlanNodeContext>;
+      }
+
+      const hasErrorTarget = Object.values(compoundStates).some(
+        (s) => s.on && (Object.values(s.on as any).includes('.error'))
+      );
+      if (hasErrorTarget) {
+        compoundStates['error'] = { type: 'final' } as StateConfig<PlanNodeContext>;
       }
 
       const parentOn: Record<string, any> = {};

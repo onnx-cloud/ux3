@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { OpenMapsPlugin } from '../../packages/@ux3/plugin-openmaps/src/index';
+import { OpenMapsPlugin } from '../../packages/@ux3/ux-openmaps/src/index';
 
 describe('OpenMapsPlugin', () => {
   let mockApp: any;
@@ -15,7 +15,7 @@ describe('OpenMapsPlugin', () => {
   });
 
   it('has expected metadata', () => {
-    expect(OpenMapsPlugin.name).toBe('@ux3/plugin-openmaps');
+    expect(OpenMapsPlugin.name).toBe('@ux3/ux-openmaps');
     expect(OpenMapsPlugin.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 

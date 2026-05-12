@@ -126,6 +126,7 @@ class PlanExecutionEngine implements PlanExecutionContext {
   private persistence: PlanPersistence;
   private mcpService: any = null;
   private machines: Map<string, StateMachine<PlanNodeContext>> = new Map();
+  private pendingConfigs: Map<string, MachineConfig<PlanNodeContext>> = new Map();
 
   constructor(persistence?: PlanPersistence, mcpService?: any) {
     this.persistence = persistence || new MemoryPlanPersistence();
@@ -182,7 +183,8 @@ class PlanExecutionEngine implements PlanExecutionContext {
 
     const allNodes = this.flattenNodes(plan.root.children || []);
     const machineConfig = buildMachineConfig(plan, allNodes);
-    const machine = new StateMachine<PlanNodeContext>(machineConfig);
+    const machine = new StateMachine<PlanNodeContext>(machineConfig, false);
+    this.setupMachineInvokeHandlers(machine, plan);
 
     machine.subscribe((state, ctx) => {
       const node = this.findNode(plan.root, state);
@@ -201,8 +203,6 @@ class PlanExecutionEngine implements PlanExecutionContext {
     });
 
     this.machines.set(plan.id, machine);
-    this.setupMachineInvokeHandlers(machine, plan);
-
     return plan;
   }
 
@@ -228,33 +228,7 @@ class PlanExecutionEngine implements PlanExecutionContext {
     this.planHistory.push(plan);
     while (this.planHistory.length > this.maxHistory) this.planHistory.shift();
     this.persistence.save(plan);
-
-    const machine = new StateMachine<PlanNodeContext>(resolved);
-
-    machine.subscribe((state, ctx) => {
-      let nodeId = state;
-      let node = this.findNode(plan.root, nodeId);
-      if (!node) {
-        node = {
-          id: nodeId,
-          title: state,
-          status: 'in_progress',
-          observations: [],
-          ctx: { ...ctx, nodeId: state },
-          createdAt: Date.now(),
-        };
-        if (!plan.root.children) plan.root.children = [];
-        plan.root.children.push(node);
-      }
-      node.status = state === '#done' || (resolved.states[state]?.type === 'final') ? 'completed' : 'in_progress';
-      node.ctx = { ...ctx, nodeId: state };
-      this.nodeContexts.set(state, { ...ctx, nodeId: state });
-      this.notifyObservers(plan, node);
-    });
-
-    this.machines.set(plan.id, machine);
-    this.setupMachineInvokeHandlers(machine, plan);
-
+    this.pendingConfigs.set(plan.id, resolved);
     return plan;
   }
 
@@ -285,10 +259,16 @@ class PlanExecutionEngine implements PlanExecutionContext {
             ctx.observations = [...(ctx.observations || []), text];
             ctx.result = text;
             ctx.decisions = [...(ctx.decisions || []), text.slice(0, 200)];
+
+            const eventMatch = text.match(/\[EVENT:(\w+)\]/i);
+            if (eventMatch) {
+              return { __event: eventMatch[1], text };
+            }
             return { text };
           }
         } catch {
           ctx.error = new Error('LLM sample call failed');
+          return { __event: 'ERROR' };
         }
       }
       return {};
@@ -308,7 +288,7 @@ class PlanExecutionEngine implements PlanExecutionContext {
           }
         } catch (e) {
           ctx.error = e instanceof Error ? e : new Error(String(e));
-          throw e;
+          return { __event: 'ERROR' };
         }
       }
       return {};
@@ -319,29 +299,115 @@ class PlanExecutionEngine implements PlanExecutionContext {
     const plan = this.getPlan(planId);
     if (!plan) throw new Error(`Plan not found: ${planId}`);
 
-    const machine = this.machines.get(planId);
-    if (!machine) throw new Error(`No FSM for plan: ${planId}`);
-
     plan.status = 'running';
     this.activePlan = plan;
     const ac = new AbortController();
     this.abortControllers.set(planId, ac);
 
-    const yielded = new Set<string>();
+    const pendingConfig = this.pendingConfigs.get(planId);
+
+    if (pendingConfig) {
+      this.pendingConfigs.delete(planId);
+      yield* this.executeFsmPlan(plan, pendingConfig, ac.signal);
+    } else {
+      yield* this.executeSimplePlan(plan, ac.signal);
+    }
+  }
+
+  private async *executeFsmPlan(
+    plan: Plan,
+    config: MachineConfig<PlanNodeContext>,
+    signal: AbortSignal,
+  ): AsyncIterable<PlanStepResult> {
+    const queue: PlanStepResult[] = [];
+    let done = false;
+    let gate: (() => void) | null = null;
+
+    const machine = new StateMachine<PlanNodeContext>(config, false);
+    this.setupMachineInvokeHandlers(machine, plan);
+
+    machine.subscribe((state, ctx) => {
+      let node = this.findNode(plan.root, state);
+      if (!node) {
+        node = {
+          id: state,
+          title: state,
+          status: 'in_progress',
+          observations: [],
+          ctx: { ...ctx, nodeId: state },
+          createdAt: Date.now(),
+        };
+        if (!plan.root.children) plan.root.children = [];
+        plan.root.children.push(node);
+      }
+
+      const stateCfg = config.states[state];
+      const isFinal = stateCfg?.type === 'final';
+      const isError = state === 'error' || ctx.error;
+
+      node.status = isFinal ? 'completed' : isError ? 'failed' : 'in_progress';
+      if (isFinal || isError) node.completedAt = Date.now();
+      node.ctx = { ...ctx, nodeId: state };
+      this.nodeContexts.set(state, { ...ctx, nodeId: state });
+      this.notifyObservers(plan, node);
+
+      queue.push({
+        nodeId: state,
+        status: isError ? 'failed' : isFinal ? 'completed' : 'started',
+        output: ctx.result ? String(ctx.result) : undefined,
+        error: ctx.error ? (ctx.error instanceof Error ? ctx.error.message : String(ctx.error)) : undefined,
+      });
+
+      if (isFinal || isError) done = true;
+
+      if (gate) { const g = gate; gate = null; g(); }
+    });
+
+    this.machines.set(plan.id, machine);
+    machine.start();
+
+    try {
+      while (queue.length > 0) {
+        yield queue.shift()!;
+      }
+
+      while (!done && !signal.aborted) {
+        await new Promise<void>((r) => { gate = r; });
+        while (queue.length > 0) {
+          yield queue.shift()!;
+        }
+      }
+
+      plan.status = signal.aborted ? 'cancelled' : 'completed';
+      plan.completedAt = Date.now();
+      this.persistence.save(plan);
+    } finally {
+      this.abortControllers.delete(plan.id);
+      if (this.activePlan === plan) this.activePlan = null;
+    }
+  }
+
+  private async *executeSimplePlan(
+    plan: Plan,
+    signal: AbortSignal,
+  ): AsyncIterable<PlanStepResult> {
+    const machine = this.machines.get(plan.id);
+    if (!machine) throw new Error(`No FSM for plan: ${plan.id}`);
+
+    machine.start();
 
     try {
       const allNodes = this.flattenNodes(plan.root.children || []);
       for (const node of allNodes) {
-        if (ac.signal.aborted) break;
+        if (signal.aborted) break;
 
         const currentState = machine.getState();
         if (currentState !== node.id) continue;
 
         node.status = 'in_progress';
-        this.updateNodeContext(planId, node.id, { statePath: ['executing'], loading: true });
+        this.updateNodeContext(plan.id, node.id, { statePath: ['executing'], loading: true });
         this.notifyObservers(plan, node);
         yield { nodeId: node.id, status: 'started' };
-        yielded.add(node.id);
 
         try {
           machine.send({ type: 'SUCCESS' });
@@ -350,7 +416,7 @@ class PlanExecutionEngine implements PlanExecutionContext {
           node.status = 'completed';
           node.completedAt = Date.now();
           const ctx = this.nodeContexts.get(node.id);
-          this.updateNodeContext(planId, node.id, { statePath: ['done'], loading: false });
+          this.updateNodeContext(plan.id, node.id, { statePath: ['done'], loading: false });
           this.notifyObservers(plan, node);
           yield {
             nodeId: node.id,
@@ -360,17 +426,17 @@ class PlanExecutionEngine implements PlanExecutionContext {
         } catch (err: any) {
           node.status = 'failed';
           node.completedAt = Date.now();
-          this.updateNodeContext(planId, node.id, { statePath: ['error'], error: err, loading: false });
+          this.updateNodeContext(plan.id, node.id, { statePath: ['error'], error: err, loading: false });
           this.notifyObservers(plan, node);
           yield { nodeId: node.id, status: 'failed', error: err.message };
         }
       }
 
-      plan.status = ac.signal.aborted ? 'cancelled' : 'completed';
+      plan.status = signal.aborted ? 'cancelled' : 'completed';
       plan.completedAt = Date.now();
       this.persistence.save(plan);
     } finally {
-      this.abortControllers.delete(planId);
+      this.abortControllers.delete(plan.id);
       if (this.activePlan === plan) this.activePlan = null;
     }
   }

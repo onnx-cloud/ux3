@@ -62,7 +62,7 @@ describe('Plugin MCP Registration', () => {
 
     it('registers plugins with MCP servers', () => {
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         mcp: {
           tools: [
@@ -81,7 +81,7 @@ describe('Plugin MCP Registration', () => {
 
     it('skips plugins without MCP servers', () => {
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
       } as any);
       registry.register({
@@ -105,7 +105,7 @@ describe('Plugin MCP Registration', () => {
 
     it('registers multiple plugins with MCP servers', () => {
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         mcp: {
           tools: [
@@ -157,7 +157,7 @@ describe('Plugin MCP Registration', () => {
 
     it('handles plugins with only tools', () => {
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         mcp: {
           tools: [
@@ -232,7 +232,7 @@ describe('Plugin MCP Registration', () => {
     it('preserves tool names from plugin config', () => {
       const toolName = 'chat.components.list';
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         mcp: {
           tools: [
@@ -259,7 +259,7 @@ describe('Plugin MCP Registration', () => {
 
     it('registers framework and plugins when MCP_ENABLED=true', () => {
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         mcp: {
           tools: [
@@ -280,7 +280,7 @@ describe('Plugin MCP Registration', () => {
     it('does nothing when MCP_ENABLED=false', () => {
       process.env.MCP_ENABLED = 'false';
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         mcp: {
           tools: [
@@ -323,7 +323,7 @@ describe('Plugin MCP Registration', () => {
     it('supports complete plugin + framework MCP discovery', () => {
       // Register multiple plugins with different MCP configs
       registry.register({
-        name: '@ux3/plugin-chat',
+        name: '@ux3/ux-chat',
         version: '1.0.0',
         displayName: 'Chat',
         categories: ['ui'],

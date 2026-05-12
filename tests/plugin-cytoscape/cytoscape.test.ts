@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CytoscapePlugin } from '../../packages/@ux3/plugin-cytoscape/src/index';
+import { CytoscapePlugin } from '../../packages/@ux3/ux-cytoscape/src/index';
 
 describe('CytoscapePlugin', () => {
   let mockApp: any;
@@ -15,7 +15,7 @@ describe('CytoscapePlugin', () => {
   });
 
   it('has expected metadata', () => {
-    expect(CytoscapePlugin.name).toBe('@ux3/plugin-cytoscape');
+    expect(CytoscapePlugin.name).toBe('@ux3/ux-cytoscape');
     expect(CytoscapePlugin.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 

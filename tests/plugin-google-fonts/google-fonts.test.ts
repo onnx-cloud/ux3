@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GoogleFontsPlugin } from '../../packages/@ux3/plugin-google-fonts/src/index';
+import { GoogleFontsPlugin } from '../../packages/@ux3/ux-google-fonts/src/index';
 
 describe('GoogleFontsPlugin', () => {
   let mockApp: any;
@@ -14,7 +14,7 @@ describe('GoogleFontsPlugin', () => {
   });
 
   it('has expected metadata', () => {
-    expect(GoogleFontsPlugin.name).toBe('@ux3/plugin-google-fonts');
+    expect(GoogleFontsPlugin.name).toBe('@ux3/ux-google-fonts');
     expect(GoogleFontsPlugin.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 

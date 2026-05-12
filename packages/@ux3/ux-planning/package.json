@@ -1,0 +1,1 @@
+{"name":"@ux3/ux-planning","version":"0.2.0","description":"Unified planning & scheduling widgets (calendar, kanban, flow editor, gantt)","main":"dist/index.js","types":"dist/index.d.ts","sideEffects":true}

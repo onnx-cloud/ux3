@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { IconesPlugin } from '../../packages/@ux3/plugin-icones/src/index';
+import { IconesPlugin } from '../../packages/@ux3/ux-icones/src/index';
 
 describe('IconesPlugin', () => {
   let mockApp: any;
@@ -14,7 +14,7 @@ describe('IconesPlugin', () => {
   });
 
   it('has expected metadata', () => {
-    expect(IconesPlugin.name).toBe('@ux3/plugin-icones');
+    expect(IconesPlugin.name).toBe('@ux3/ux-icones');
     expect(IconesPlugin.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 

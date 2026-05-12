@@ -2,6 +2,9 @@ import type { AppContext } from "../ui/app";
 import type { Hook } from "../core/lifecycle";
 import type { Tool, Resource } from "@modelcontextprotocol/sdk/types.js";
 
+// re-export AppContext for plugin consumers
+export type { AppContext };
+
 // reuse lifecycle enums via import if needed
 type PluginHooks = {
   app?: Partial<Record<string, Hook[]>>;

@@ -1,0 +1,19 @@
+name: "@ux3/ux-dashboard"
+displayName: Dashboard
+author: UX3 Team
+categories:
+  - utility
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: dashboard.info
+      description: Get information about dashboard plugin
+      inputSchema:
+        type: object
+        additionalProperties: false
+  resources:
+    - uri: plugin://dashboard/docs
+      mimeType: text/markdown
+      description: dashboard plugin documentation
+  systemPrompt: You are an assistant helping developers use the dashboard plugin
+    for UX3 Framework.
