@@ -18,17 +18,19 @@ function attrVal(el: Element, name: string, fallback: string = ''): string {
 }
 
 export class UxImage extends UxBase {
+  private _mediaRenderScheduled = false;
+
   static get observedAttributes(): string[] {
     return ['src', 'alt', 'width', 'height'];
   }
 
   protected onConnected(): void {
     super.onConnected();
-this.render();
+    this.render();
   }
 
   protected onAttributeChanged(): void {
-    if (this.isConnected) this.render();
+    if (this.isConnected) this.scheduleRender();
   }
 
   protected applyData(data: any): void {
@@ -39,7 +41,16 @@ this.render();
       if ('width' in data) this.setAttribute('width', String(data.width));
       if ('height' in data) this.setAttribute('height', String(data.height));
     }
-    if (this.isConnected) this.render();
+    this.scheduleRender();
+  }
+
+  private scheduleRender(): void {
+    if (this._mediaRenderScheduled) return;
+    this._mediaRenderScheduled = true;
+    queueMicrotask(() => {
+      this._mediaRenderScheduled = false;
+      this.render();
+    });
   }
 
   private render(): void {
@@ -55,17 +66,19 @@ this.render();
 }
 
 export class UxVideo extends UxBase {
+  private _mediaRenderScheduled = false;
+
   static get observedAttributes(): string[] {
     return ['src', 'controls', 'muted', 'loop', 'autoplay', 'width', 'height'];
   }
 
   protected onConnected(): void {
     super.onConnected();
-this.render();
+    this.render();
   }
 
   protected onAttributeChanged(): void {
-    if (this.isConnected) this.render();
+    if (this.isConnected) this.scheduleRender();
   }
 
   protected applyData(data: any): void {
@@ -77,7 +90,16 @@ this.render();
       if ('loop' in data) data.loop ? this.setAttribute('loop', '') : this.removeAttribute('loop');
       if ('autoplay' in data) data.autoplay ? this.setAttribute('autoplay', '') : this.removeAttribute('autoplay');
     }
-    if (this.isConnected) this.render();
+    this.scheduleRender();
+  }
+
+  private scheduleRender(): void {
+    if (this._mediaRenderScheduled) return;
+    this._mediaRenderScheduled = true;
+    queueMicrotask(() => {
+      this._mediaRenderScheduled = false;
+      this.render();
+    });
   }
 
   private render(): void {
@@ -94,17 +116,19 @@ this.render();
 }
 
 export class UxAudio extends UxBase {
+  private _mediaRenderScheduled = false;
+
   static get observedAttributes(): string[] {
     return ['src', 'controls', 'loop', 'autoplay'];
   }
 
   protected onConnected(): void {
     super.onConnected();
-this.render();
+    this.render();
   }
 
   protected onAttributeChanged(): void {
-    if (this.isConnected) this.render();
+    if (this.isConnected) this.scheduleRender();
   }
 
   protected applyData(data: any): void {
@@ -116,7 +140,16 @@ this.render();
       if ('autoplay' in data) data.autoplay ? this.setAttribute('autoplay', '') : this.removeAttribute('autoplay');
       if ('download' in data) data.download ? this.setAttribute('download', '') : this.removeAttribute('download');
     }
-    if (this.isConnected) this.render();
+    this.scheduleRender();
+  }
+
+  private scheduleRender(): void {
+    if (this._mediaRenderScheduled) return;
+    this._mediaRenderScheduled = true;
+    queueMicrotask(() => {
+      this._mediaRenderScheduled = false;
+      this.render();
+    });
   }
 
   private render(): void {

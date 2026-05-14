@@ -5,8 +5,8 @@
  * scans registered Custom Elements (customElements registry) at runtime,
  * categorizes by kind, and provides introspection for MCP clients.
  */
-import type { PrimitiveDefinition, PrimitiveKind } from '../ui/widget/primitives/types.js';
-import { DEF_BY_TAG } from '../ui/widget/primitives/registry.js';
+import type { PrimitiveKind } from '../ui/widget/primitives/types.js';
+import { getRegisteredWidgets, type WidgetMetadata } from '../ui/widget/widget-registry.js';
 import { UX_EVENT, UX_CHANGE } from '../utils/helpers.js';
 
 export interface WidgetDescriptor {
@@ -33,7 +33,7 @@ export class WidgetRegistry {
 
   /**
    * Discover all registered custom elements matching the ux-* prefix.
-   * Pulls metadata from the hardcoded DEF_BY_TAG map and augments
+   * Pulls metadata from the shared WidgetRegistry and augments
    * with runtime introspection of observed attributes and known event patterns.
    */
   discover(): void {
@@ -41,13 +41,13 @@ export class WidgetRegistry {
 
     this.descriptors.clear();
 
-    for (const def of DEF_BY_TAG.values()) {
+    for (const def of getRegisteredWidgets()) {
       const desc = this.buildDescriptor(def);
       this.descriptors.set(def.tag, desc);
     }
   }
 
-  private buildDescriptor(def: PrimitiveDefinition): WidgetDescriptor {
+  private buildDescriptor(def: WidgetMetadata): WidgetDescriptor {
     const events = this.inferEvents(def.kind);
     return {
       tag: def.tag,

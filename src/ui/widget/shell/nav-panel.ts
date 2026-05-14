@@ -8,6 +8,9 @@
  */
 export class UxNav extends HTMLElement {
   private _rafId: number | null = null;
+  private _popstateHandler: (() => void) | null = null;
+  private _routeNavigateHandler: (() => void) | null = null;
+  private _overflowCloser: ((ev: Event) => void) | null = null;
 
   connectedCallback() {
     this.setAttribute('role', 'navigation');
@@ -23,6 +26,18 @@ export class UxNav extends HTMLElement {
     if (this._rafId !== null) {
       cancelAnimationFrame(this._rafId);
       this._rafId = null;
+    }
+    if (this._popstateHandler) {
+      window.removeEventListener('popstate', this._popstateHandler);
+      this._popstateHandler = null;
+    }
+    if (this._routeNavigateHandler) {
+      window.removeEventListener('ux:app.route.navigate', this._routeNavigateHandler);
+      this._routeNavigateHandler = null;
+    }
+    if (this._overflowCloser) {
+      document.removeEventListener('click', this._overflowCloser);
+      this._overflowCloser = null;
     }
   }
 
@@ -193,11 +208,15 @@ export class UxNav extends HTMLElement {
       wrapper.appendChild(toggle);
       wrapper.appendChild(menu);
 
-      document.addEventListener('click', (ev: Event) => {
+      if (this._overflowCloser) {
+        document.removeEventListener('click', this._overflowCloser);
+      }
+      this._overflowCloser = (ev: Event) => {
         if (!wrapper.contains(ev.target as Node)) {
           menu.style.display = 'none';
         }
-      });
+      };
+      document.addEventListener('click', this._overflowCloser);
 
       this.appendChild(wrapper);
     }
@@ -240,10 +259,12 @@ export class UxNav extends HTMLElement {
   }
 
   private subscribeToRouteChanges() {
-    window.addEventListener('popstate', () => {
+    this._popstateHandler = () => {
       requestAnimationFrame(() => this.render());
-    });
-    window.addEventListener('ux:app.route.navigate', () => this.render());
+    };
+    this._routeNavigateHandler = () => this.render();
+    window.addEventListener('popstate', this._popstateHandler);
+    window.addEventListener('ux:app.route.navigate', this._routeNavigateHandler);
   }
 }
 

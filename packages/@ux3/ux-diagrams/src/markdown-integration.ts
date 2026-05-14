@@ -1,10 +1,7 @@
 // src/markdown-integration.ts - Hooks into markdown renderer for automatic diagram rendering
 
 import type { Plugin, AppContext } from '../../../../src/plugin/registry'
-import { MermaidParser } from './parser.js'
-import { LayeredLayout, ForceDirectedLayout } from './layout.js'
-import { MermaidRenderer } from './renderer.js'
-import { getTheme } from './theme.js'
+import { renderDiagramSource } from './diagram-utils.js'
 import { UxDiagram } from './diagram-element.js'
 
 /**
@@ -12,47 +9,7 @@ import { UxDiagram } from './diagram-element.js'
  * Called when a code block with language 'mermaid' is encountered.
  */
 export function renderMermaidDiagram(code: string, themeName?: string): DocumentFragment | null {
-  const fragment = document.createDocumentFragment()
-
-  try {
-    // Parse
-    const parser = new MermaidParser()
-    const diagram = parser.parse(code)
-
-    // Choose layout
-    let layout
-    if (diagram.type === 'flowchart') {
-      layout = new LayeredLayout().compute(diagram, diagram.config)
-    } else if (diagram.type === 'stateDiagram') {
-      layout = new LayeredLayout().compute(diagram, diagram.config)
-    } else {
-      layout = new ForceDirectedLayout().compute(diagram, diagram.config)
-    }
-
-    // Get theme (prefer diagram config, then param, then light)
-    const selectedTheme = diagram.config.theme || themeName || 'light'
-    const theme = getTheme(selectedTheme)
-
-    // Render to SVG
-    const renderer = new MermaidRenderer(theme)
-    const svg = renderer.render(diagram, layout)
-
-    // Wrap in container
-    const container = document.createElement('div')
-    container.className = 'diagram-container'
-    container.setAttribute('data-diagram-type', diagram.type)
-    container.appendChild(svg)
-
-    fragment.appendChild(container)
-    return fragment
-  } catch (e) {
-    // Return error div wrapped in fragment
-    const errorDiv = document.createElement('div')
-    errorDiv.className = 'diagram-error'
-    errorDiv.textContent = `Diagram parsing error: ${(e as Error).message}`
-    fragment.appendChild(errorDiv)
-    return fragment
-  }
+  return renderDiagramSource(code, themeName).fragment
 }
 
 /**

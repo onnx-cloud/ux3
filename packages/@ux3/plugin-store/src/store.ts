@@ -2,6 +2,7 @@ import { LocalAdapter } from './adapters/local';
 import { RemoteAdapter } from './adapters/remote';
 import { HybridAdapter } from './adapters/hybrid';
 import { MemoryAdapter } from './adapters/memory';
+import { BundleAdapter } from './adapters/bundle';
 import type {
   StorageAdapter,
   StoreConfig,
@@ -39,6 +40,8 @@ export class Store {
         return new HybridAdapter(config);
       case 'memory':
         return new MemoryAdapter(config);
+      case 'bundle':
+        return new BundleAdapter(config);
       default:
         throw new Error(`Unknown backend: ${config.backend}`);
     }
@@ -409,6 +412,13 @@ export class Store {
    */
   async dump(model?: string): Promise<Record<string, any>> {
     return this.adapter.dump(model);
+  }
+
+  bundle(): Record<string, any> {
+    if (typeof (this.adapter as any).bundle === 'function') {
+      return (this.adapter as any).bundle();
+    }
+    throw new Error('Current store adapter does not support bundling');
   }
 
   private generateId(): string {

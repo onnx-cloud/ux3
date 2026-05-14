@@ -1,4 +1,16 @@
 export function resolveDotPath(obj: Record<string, unknown>, path: string): unknown {
+  if (path === '$') {
+    return obj['$'];
+  }
+
+  if (path.startsWith('$.')) {
+    const root = obj['$'];
+    if (root && typeof root === 'object') {
+      return resolveDotPath(root as Record<string, unknown>, path.slice(2));
+    }
+    return undefined;
+  }
+
   return path.split('.').reduce((acc: any, key) =>
     (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
 }

@@ -3,45 +3,14 @@ description: "Step-by-step reasoning pattern: reason through the problem, then r
 initial: reason
 states:
   reason:
-    prompt: |
-      You are in the **Reason** phase of the Chain-of-Thought process.
-
-      {{#if iterations}}
-      Iteration: {{iterations}}/{{maxIterations}}
-      {{/if}}
-
-      ## Instructions
-      Think step by step through the problem:
-
-      1. **Understand**: Restate the problem in your own words
-      2. **Decompose**: Break it down into sub-problems
-      3. **Solve**: Work through each sub-problem sequentially
-      4. **Verify**: Check your reasoning for errors
-      5. **Decide**: Determine if you need another reasoning pass or can respond
-
-      {{#if observations}}
-      Prior observations:
-      {{#each observations}}
-      - {{this}}
-      {{/each}}
-      {{/if}}
-
-      Output your reasoning as clearly separated steps.
+    template: 'prompts/chain-of-thought/reason.md'
     invoke:
       src: sample
     on:
       RESPOND: respond
       CONTINUE: reason
   respond:
-    prompt: |
-      Synthesize your reasoning into a clear, concise final response.
-
-      ## Reasoning summary
-      {{#if observations}}
-      {{#each observations}}
-      {{this}}
-      {{/each}}
-      {{/if}}
+    template: 'prompts/chain-of-thought/respond.md'
     invoke:
       src: sample
     on:

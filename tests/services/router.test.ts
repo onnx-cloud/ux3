@@ -38,4 +38,47 @@ describe('Router', () => {
     expect(router['navConfig'].canNavigate('market')).toBe(true);
     expect(router['navConfig'].canNavigate('missing')).toBe(false);
   });
+
+  it('should build a hierarchical nav tree from route names and i18n metadata', () => {
+    const routes: RouteConfig[] = [
+      { path: '/platform', view: 'platform', name: 'platform' },
+      { path: '/platform/mcp', view: 'mcp', name: 'platform.mcp' },
+      { path: '/about', view: 'about', name: 'about' },
+    ];
+    const machines = new Map();
+    const i18n = {
+      platform: {
+        label: 'Platform',
+        mcp: {
+          label: 'MCP',
+          icon: 'plug',
+          description: 'Agent integration tools',
+        },
+      },
+      about: {
+        label: 'About',
+      },
+    };
+    const contentManifest = {
+      items: [
+        {
+          file: 'platform/mcp.md',
+          slug: '/platform/mcp',
+          frontmatter: { title: 'MCP Hub' },
+          html: '<p>MCP</p>',
+        },
+      ],
+    };
+
+    const router = new Router(routes, machines, i18n as any, contentManifest as any);
+    const nav = router.getNavConfig();
+
+    expect(nav.tree.platform.label).toBe('Platform');
+    expect(nav.tree.platform.url).toBe('/platform');
+    expect(nav.tree.platform.children?.mcp.label).toBe('MCP');
+    expect(nav.tree.platform.children?.mcp.title).toBe('MCP Hub');
+    expect(nav.tree.platform.children?.mcp.icon).toBe('plug');
+    expect(nav.tree.about.label).toBe('About');
+    expect(nav.tree.about.url).toBe('/about');
+  });
 });

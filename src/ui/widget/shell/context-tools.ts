@@ -179,6 +179,183 @@ export class UxThemeToggle extends UxBase {
   };
 }
 
+export class UxThemeSwitch extends UxBase {
+  private selectEl: HTMLSelectElement | null = null;
+  private readonly STORAGE_KEY = 'ux3.theme.variant';
+
+  protected onConnected(): void {
+    super.onConnected();
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this.render();
+    this.applyTheme(this.getTheme());
+    window.addEventListener('storage', this.onStorageChange);
+  }
+
+  protected onDisconnected(): void {
+    super.onDisconnected();
+    this.selectEl?.removeEventListener('change', this.onChange);
+    window.removeEventListener('storage', this.onStorageChange);
+  }
+
+  private getThemeOptions(): Array<{ value: string; label: string; url?: string }> {
+    const options: Array<{ value: string; label: string; url?: string }> = [];
+    const childOptions = Array.from(this.querySelectorAll('option')) as HTMLOptionElement[];
+    for (const option of childOptions) {
+      const value = option.value?.trim() || option.textContent?.trim() || '';
+      if (!value) continue;
+      const url = option.getAttribute('data-theme-url')?.trim() || undefined;
+      options.push({ value, label: option.textContent?.trim() || value, url });
+    }
+    if (options.length) return options;
+
+    const raw = (this.getAttribute('themes') || '').split(',').map(v => v.trim()).filter(Boolean);
+    for (const item of raw) {
+      const parts = item.split('|').map(v => v.trim());
+      const value = parts[0] || '';
+      if (!value) continue;
+      const label = parts[1] || value;
+      const url = parts[2] || undefined;
+      options.push({ value, label, url });
+    }
+    return options;
+  }
+
+  private getTheme(): string {
+    const stored = this.isPersisted() ? this.getStoredTheme() : null;
+    if (stored) return stored;
+
+    const attrTheme = this.getAttribute('theme');
+    const options = this.getThemeOptions().map((o) => o.value);
+    if (attrTheme && options.includes(attrTheme)) return attrTheme;
+
+    const rootTheme = document.documentElement.dataset.themeStyle;
+    if (rootTheme && options.includes(rootTheme)) return rootTheme;
+
+    return options[0] || '';
+  }
+
+  private getStoredTheme(): string | null {
+    try {
+      const value = window.localStorage.getItem(this.STORAGE_KEY);
+      return value || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private readonly onStorageChange = (e: StorageEvent): void => {
+    if (e.key === this.STORAGE_KEY && e.newValue) {
+      this.applyTheme(e.newValue);
+    }
+  };
+
+  private render(): void {
+    const theme = this.getTheme();
+    const options = this.getThemeOptions();
+    if (!this.shadowRoot) return;
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: inline-flex; align-items: center; gap: 0.5rem; }
+        label { font: inherit; color: inherit; }
+        select {
+          font: inherit; color: var(--color-text, #111827);
+          background: var(--color-bg, #fff);
+          border: 1px solid var(--color-border, #d1d5db);
+          border-radius: 0.375rem;
+          padding: 0.375rem 0.75rem;
+          min-width: 8rem;
+          cursor: pointer;
+        }
+      </style>
+      ${this.getAttribute('label') ? `<label part="label">${escapeText(this.getAttribute('label') || '')}</label>` : ''}
+      <select part="select"></select>
+    `;
+
+    const select = this.shadowRoot.querySelector('select') as HTMLSelectElement;
+    this.selectEl = select;
+    if (!select) return;
+
+    for (const option of options) {
+      const opt = document.createElement('option');
+      opt.value = option.value;
+      opt.textContent = option.label;
+      select.appendChild(opt);
+    }
+
+    select.value = theme;
+    select.addEventListener('change', this.onChange);
+  }
+
+  private applyTheme(theme: string): void {
+    const html = document.documentElement;
+    if (theme) {
+      html.dataset.themeStyle = theme;
+      this.setAttribute('theme', theme);
+    } else {
+      html.removeAttribute('data-theme-style');
+      this.removeAttribute('theme');
+    }
+
+    if (this.selectEl) {
+      this.selectEl.value = theme;
+    }
+
+    const url = this.getThemeUrl(theme);
+    this.applyStylesheet(url);
+  }
+
+  private getThemeUrl(theme: string): string | undefined {
+    const option = this.getThemeOptions().find((opt) => opt.value === theme);
+    return option?.url;
+  }
+
+  private applyStylesheet(url?: string): void {
+    const id = 'ux-theme-variant-stylesheet';
+    const existing = document.head.querySelector<HTMLLinkElement>(`link#${id}`);
+    if (!url) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    const normalizedHref = (() => {
+      try { return new URL(url, document.baseURI).href; } catch { return url; }
+    })();
+
+    if (existing) {
+      if (existing.href !== normalizedHref) existing.href = normalizedHref;
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = normalizedHref;
+    link.dataset.uxTheme = 'true';
+    document.head.appendChild(link);
+  }
+
+  private readonly onChange = (): void => {
+    if (!this.selectEl) return;
+
+    const next = this.selectEl.value;
+    this.applyTheme(next);
+
+    if (this.isPersisted()) {
+      try { window.localStorage.setItem(this.STORAGE_KEY, next); } catch {}
+    }
+
+    this.dispatchEvent(new CustomEvent('ux:theme.variant.change', {
+      bubbles: true,
+      detail: { variant: next, url: this.getThemeUrl(next) },
+    }));
+  };
+
+  private isPersisted(): boolean {
+    return this.getAttribute('persist') !== 'false';
+  }
+}
+
 export class UxNetworkStatus extends UxBase {
   private tooltipTimer: ReturnType<typeof setTimeout> | null = null;
 

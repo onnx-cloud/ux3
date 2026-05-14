@@ -1,4 +1,5 @@
 import type { PrimitiveDefinition } from './types.js';
+import { registerWidget } from '../widget-registry.js';
 import { UxLink } from './link.js';
 import { UxTabs } from './tabs.js';
 import { UxAccordion } from './accordion.js';
@@ -42,12 +43,13 @@ import { UxTableVirtual } from './table-virtual.js';
 import { UxTable } from './table.js';
 import { UxValue } from './value.js';
 import { UxSplash } from './splash-screen.js';
+import { UxCheckbox } from './checkbox.js';
 import { UxRadioGroup } from './radio-group.js';
 import { UxMegaMenu } from './mega-menu.js';
 import { UxContextMenu } from './context-menu.js';
 import { regionPrimitives } from './regions.js';
 
-export const ALL_PRIMITIVES: PrimitiveDefinition[] = [
+const _ALL_PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-link', role: 'link', kind: 'link' },
   { tag: 'ux-tabs', role: 'tablist', kind: 'tabs' },
   { tag: 'ux-accordion', role: 'group', kind: 'accordion', stateAttr: 'open' },
@@ -61,12 +63,12 @@ export const ALL_PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-menu', role: 'menu', kind: 'menu' },
   { tag: 'ux-pagination', role: 'navigation', kind: 'pagination' },
   { tag: 'ux-breadcrumb', role: 'navigation', kind: 'breadcrumb' },
-  { tag: 'ux-breadcrumbs', role: 'navigation', kind: 'breadcrumb' },
   { tag: 'ux-command-palette', role: 'dialog', kind: 'command-palette', stateAttr: 'open' },
   { tag: 'ux-wizard', role: 'group', kind: 'wizard' },
   { tag: 'ux-popover', role: 'dialog', kind: 'popover', stateAttr: 'open' },
   { tag: 'ux-tooltip', role: 'tooltip', kind: 'tooltip', stateAttr: 'open' },
   { tag: 'ux-drawer', role: 'dialog', kind: 'drawer', stateAttr: 'open' },
+  { tag: 'ux-capture', role: 'button', kind: 'capture' },
   { tag: 'ux-image-capture', role: 'button', kind: 'capture' },
   { tag: 'ux-video-capture', role: 'button', kind: 'capture' },
   { tag: 'ux-audio-capture', role: 'button', kind: 'capture' },
@@ -78,6 +80,7 @@ export const ALL_PRIMITIVES: PrimitiveDefinition[] = [
   { tag: 'ux-wysiwyg', role: 'textbox', kind: 'wysiwyg' },
   { tag: 'ux-lang-switcher', role: 'listbox', kind: 'lang-switcher' },
   { tag: 'ux-theme-toggle', role: 'switch', kind: 'theme-toggle', stateAttr: 'checked' },
+  { tag: 'ux-theme-switch', role: 'combobox', kind: 'theme-switch' },
   { tag: 'ux-network-status', role: 'status', kind: 'network-status' },
   { tag: 'ux-card', role: 'article', kind: 'card' },
   { tag: 'ux-alert', role: 'alert', kind: 'alert' },
@@ -106,6 +109,10 @@ export const ALL_PRIMITIVES: PrimitiveDefinition[] = [
   ...regionPrimitives,
 ];
 
+for (const def of _ALL_PRIMITIVES) {
+  registerWidget(def);
+}
+
 void [UxLink, UxTabs, UxAccordion, UxSlider, UxToggle, UxInput, UxTextarea,
   UxSelect, UxForm, UxMenu, UxPagination, UxBreadcrumb, UxCommandPalette,
   UxWizard, UxPopover, UxTooltip, UxDrawer, UxCapture, UxProgress,
@@ -114,6 +121,10 @@ void [UxLink, UxTabs, UxAccordion, UxSlider, UxToggle, UxInput, UxTextarea,
   UxCard, UxAlert, UxSpinner, UxEmptyState, UxErrorPanel, UxBadge, UxAvatar,
   UxSkeleton, UxPage, UxComboBox, UxDatePicker, UxFileUpload, UxDropZone,
   UxSearchBar, UxTreeNav, UxNotifications, UxDataGrid,
-  UxTableVirtual, UxValue, UxSplash, UxRadioGroup, UxTable, UxMegaMenu, UxContextMenu];
+  UxTableVirtual, UxValue, UxSplash, UxRadioGroup, UxTable, UxMegaMenu, UxContextMenu, UxCheckbox];
 
-export const DEF_BY_TAG = new Map(ALL_PRIMITIVES.map((def) => [def.tag, def]));
+export const DEF_BY_TAG = new Map(_ALL_PRIMITIVES.map((def) => [def.tag, def]));
+
+export function getAllPrimitiveDefs(): PrimitiveDefinition[] {
+  return _ALL_PRIMITIVES;
+}

@@ -4,6 +4,7 @@
  */
 
 import { StateMachine } from '../fsm/state-machine.js';
+import { FSMRegistry } from '../fsm/registry.js';
 import type { AppContext } from './app.js';
 import { StructuredLogger } from '../logger/logger.js';
 import { LifecycleComponent } from './lifecycle-component.js';
@@ -65,6 +66,7 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
   };
 
   private unsubscribe: (() => void) | null = null;
+  private rootContextUnsubscribe: (() => void) | null = null;
   private onLocaleChange: (() => void) | null = null;
   private templateEventDisposers: Array<() => void> = [];
   private logger = new StructuredLogger('ViewComponent');
@@ -172,6 +174,13 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
         this.onFSMStateChange(state);
       });
 
+      // Subscribe to root context changes so views using $. bindings update
+      if (typeof FSMRegistry.subscribeRoot === 'function') {
+        this.rootContextUnsubscribe = FSMRegistry.subscribeRoot(() => {
+          this.renderState(this.state);
+        });
+      }
+
       // 8. Re-render on locale change so i18n-interpolated templates update
       this.onLocaleChange = () => this.renderState(this.state);
       window.addEventListener('languagechange', this.onLocaleChange);
@@ -196,6 +205,12 @@ export abstract class ViewComponent<Context extends Record<string, unknown> = Re
       if (this.unsubscribe) {
         this.unsubscribe();
         this.unsubscribe = null;
+      }
+
+      // Cleanup: unsubscribe from root context changes
+      if (this.rootContextUnsubscribe) {
+        this.rootContextUnsubscribe();
+        this.rootContextUnsubscribe = null;
       }
 
       // Cleanup: locale change listener

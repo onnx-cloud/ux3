@@ -554,35 +554,104 @@ tools:
 
   # ── Agentic Plan Tools ──
 
-  - name: agentic:createPlan
-    description: "Create a new hierarchical execution plan with a title, goal, and ordered steps."
-    input:
-      type: object
-      properties:
-        title: { type: string, description: "Plan title" }
-        goal: { type: string, description: "What the plan should accomplish" }
-        steps: { type: array, items: { type: string }, description: "Ordered list of step descriptions" }
-      required: [title, goal, steps]
-    handler: agentic:createPlan
-    tags: [core, agentic, mutate]
+  agentic:
+    - name: agentic:createPlan
+      description: "Create a new hierarchical execution plan with a title, goal, and ordered steps."
+      input:
+        type: object
+        properties:
+          title: { type: string, description: "Plan title" }
+          goal: { type: string, description: "What the plan should accomplish" }
+          steps: { type: array, items: { type: string }, description: "Ordered list of step descriptions" }
+        required: [title, goal, steps]
+      handler: agentic:createPlan
+      tags: [core, agentic, mutate]
 
-  - name: agentic:executePlan
-    description: "Begin executing a plan. Steps are processed in order with observations recorded per node."
-    input:
-      type: object
-      properties:
-        planId: { type: string, description: "ID of the plan to execute" }
-      required: [planId]
-    handler: agentic:executePlan
-    tags: [core, agentic, mutate]
+    - name: agentic:executePlan
+      description: "Begin executing a plan. Steps are processed in order with observations recorded per node."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "ID of the plan to execute" }
+        required: [planId]
+      handler: agentic:executePlan
+      tags: [core, agentic, mutate]
 
-  - name: agentic:stepPlan
-    description: "Execute a single step/node within a plan and advance to the next ready node."
-    input:
-      type: object
-      properties:
-        planId: { type: string, description: "Plan ID" }
-        nodeId: { type: string, description: "Node ID to execute" }
-      required: [planId, nodeId]
-    handler: agentic:stepPlan
-    tags: [core, agentic, mutate]
+    - name: agentic:stepPlan
+      description: "Execute a single step/node within a plan and advance to the next ready node."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "Plan ID" }
+          nodeId: { type: string, description: "Node ID to execute" }
+        required: [planId, nodeId]
+      handler: agentic:stepPlan
+      tags: [core, agentic, mutate]
+
+    - name: agentic:plan.create
+      description: "Create a new hierarchical execution plan with a title, goal, and ordered steps."
+      input:
+        type: object
+        properties:
+          title: { type: string, description: "Plan title" }
+          goal: { type: string, description: "What the plan should accomplish" }
+          steps: { type: array, items: { type: string }, description: "Ordered list of step descriptions" }
+        required: [title, goal, steps]
+      handler: agentic:plan.create
+      tags: [core, agentic, mutate]
+
+    - name: agentic:plan.execute
+      description: "Begin executing a plan. Steps are processed in order with observations recorded per node."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "ID of the plan to execute" }
+        required: [planId]
+      handler: agentic:plan.execute
+      tags: [core, agentic, mutate]
+
+    - name: agentic:plan.step
+      description: "Execute a single step/node within a plan and advance to the next ready node."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "Plan ID" }
+          nodeId: { type: string, description: "Node ID to execute" }
+        required: [planId, nodeId]
+      handler: agentic:plan.step
+      tags: [core, agentic, mutate]
+
+    - name: agentic:plan.getState
+      description: "Get the current plan state and node contexts."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "ID of the plan to query" }
+        required: [planId]
+      handler: agentic:plan.getState
+      tags: [core, agentic]
+
+    - name: agentic:plan.cancel
+      description: "Cancel a running plan."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "ID of the plan to cancel" }
+        required: [planId]
+      handler: agentic:plan.cancel
+      tags: [core, agentic, mutate]
+
+    - name: agentic:node.update
+      description: "Update the context of a specific plan node."
+      input:
+        type: object
+        properties:
+          planId: { type: string, description: "ID of the plan containing the node" }
+          nodeId: { type: string, description: "ID of the node to update" }
+          observations: { type: array, items: {}, description: "New observation values" }
+          decisions: { type: array, items: { type: string }, description: "Updated decisions" }
+          result: { }
+          statePath: { type: array, items: { type: string }, description: "Override state path" }
+        required: [planId, nodeId]
+      handler: agentic:node.update
+      tags: [core, agentic, mutate]

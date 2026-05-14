@@ -444,11 +444,11 @@ export class UxChatMessenger extends UxBase {
         background: var(--color-border, #d1d5db);
       }
       .status-indicator[data-state="thinking"]::before {
-        background: #eab308;
+        background: var(--chat-thinking-color, #eab308);
         animation: pulse-status 1s ease-in-out infinite;
       }
       .status-indicator[data-state="tool_calling"]::before {
-        background: #3b82f6;
+        background: var(--chat-tool-color, #3b82f6);
         animation: pulse-status 0.5s ease-in-out infinite;
       }
       .status-indicator[data-state="error"]::before {

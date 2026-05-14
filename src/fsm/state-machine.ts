@@ -230,20 +230,25 @@ export class StateMachine<T extends Record<string, any>> {
    * Evaluate a guard that may be a function or a string reference
    * String guard format: 'namespace:state' checks FSM 'namespace' in state 'state'
    */
-  private evaluateGuard(guard: string | ((context: T) => boolean)): boolean {
-    if (typeof guard === 'function') return guard(this.context);
+  private evaluateGuard(guard: string | ((context: T, event: StateEvent) => boolean), event: StateEvent): boolean {
+    if (typeof guard === 'function') return guard(this.context, event);
     if (typeof guard === 'string') {
       if (guard.includes(':')) {
         const [namespace, requiredState] = guard.split(':');
         const otherFsm = this.crossMachineLookup?.(namespace);
-        if (!otherFsm) return false;
+        if (!otherFsm) {
+          defaultLogger.warn(`[fsm.guard.unresolved] Cross-machine guard "${guard}" could not resolve namespace.`, { state: this.state });
+          return false;
+        }
         return otherFsm.matches(requiredState) || otherFsm.matchesPath(requiredState);
       }
-      if (guard in this.context) {
-        return !!this.context[guard];
+
+      const value = resolveDotPath(this.context, guard);
+      if (typeof value === 'undefined' || value === null) {
+        defaultLogger.warn(`[fsm.guard.unresolved] String guard "${guard}" not found in context or unresolved path.`, { state: this.state });
+        return false;
       }
-      defaultLogger.warn(`[fsm.guard.unresolved] String guard "${guard}" not found in context.`, { state: this.state });
-      return true;
+      return !!value;
     }
     return false;
   }
@@ -304,6 +309,26 @@ export class StateMachine<T extends Record<string, any>> {
    */
   getContext(): Readonly<T> {
     return Object.freeze({ ...this.context });
+  }
+
+  /**
+   * Restore a persisted snapshot into the FSM before startup.
+   */
+  restoreSnapshot(snapshot: Record<string, any>): void {
+    if (!snapshot || typeof snapshot !== 'object') return;
+
+    const candidateState = typeof snapshot.state === 'string' && this.config.states[snapshot.state]
+      ? snapshot.state
+      : this.config.initial;
+
+    this.state = candidateState;
+
+    if (snapshot.context && typeof snapshot.context === 'object') {
+      const baseContext = typeof this.config.context === 'function'
+        ? this.config.context()
+        : (this.config.context || {} as T);
+      this.context = { ...baseContext, ...snapshot.context } as T;
+    }
   }
 
   /**
@@ -399,8 +424,8 @@ export class StateMachine<T extends Record<string, any>> {
     }
 
     if (transitionConfig.guard) {
-      const guardFn = this.resolveGuardFunction(transitionConfig.guard);
-      if (guardFn && !guardFn()) {
+      const guardFn = this.resolveGuardFunction(transitionConfig.guard, event);
+      if (!guardFn || !guardFn()) {
         emitDevTools('fsm', 'guard.rejected', { event: event.type, from: this.state, id: this.config.id });
         return;
       }
@@ -604,25 +629,14 @@ export class StateMachine<T extends Record<string, any>> {
    * Resolve a guard that may be a function, string, or cross-machine check
    */
   private resolveGuardFunction(
-    guard: string | ((context: T) => boolean)
+    guard: string | ((context: T, event: StateEvent) => boolean),
+    event: StateEvent
   ): (() => boolean) | null {
     if (typeof guard === 'function') {
-      return () => guard(this.context);
+      return () => guard(this.context, event);
     }
     if (typeof guard === 'string') {
-      if (guard.includes(':')) {
-        const [namespace, requiredState] = guard.split(':');
-        return () => {
-          const other = this.crossMachineLookup?.(namespace);
-          if (!other) return false;
-          return other.matches(requiredState) || other.matchesPath(requiredState);
-        };
-      }
-      if (guard in this.context) {
-        return () => !!this.context[guard];
-      }
-      defaultLogger.warn(`[fsm.guard.unresolved] String guard "${guard}" not found in context — allowing transition.`, { state: this.state });
-      return null;
+      return () => this.evaluateGuard(guard, event);
     }
     return null;
   }
@@ -898,8 +912,11 @@ export class StateMachine<T extends Record<string, any>> {
 
     const transitionConfig = typeof transition === 'string' ? {} : transition;
     if (transitionConfig.guard) {
-      const guardFn = this.resolveGuardFunction(transitionConfig.guard);
-      if (guardFn && !guardFn()) {
+      const guardFn = this.resolveGuardFunction(
+        transitionConfig.guard,
+        typeof event === 'string' ? { type: eventType } : event
+      );
+      if (!guardFn || !guardFn()) {
         return false;
       }
     }

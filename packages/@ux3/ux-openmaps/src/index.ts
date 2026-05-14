@@ -1,4 +1,5 @@
 import type { Plugin } from '../../../../src/plugin/registry';
+import { LifecycleComponent } from '../../../../src/ui/lifecycle-component.js';
 
 const version = '0.1.0';
 
@@ -102,8 +103,8 @@ export const OpenMapsPlugin: Plugin = {
     };
 
     if (typeof customElements !== 'undefined' && !customElements.get('ux-map')) {
-      customElements.define('ux-map', class extends HTMLElement {
-        connectedCallback() {
+      customElements.define('ux-map', class extends LifecycleComponent {
+        protected onConnected() {
           this.style.display = 'block';
           this.style.minHeight = '300px';
           const el = this;

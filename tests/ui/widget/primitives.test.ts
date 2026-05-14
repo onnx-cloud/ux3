@@ -36,6 +36,7 @@ const BUILT_IN_TAGS = [
   'ux-stack',
   'ux-inline',
   'ux-grid',
+  'ux-mega-menu',
   'ux-hero',
   'ux-article',
   'ux-alert',
@@ -73,6 +74,7 @@ const BUILT_IN_TAGS = [
   'ux-wysiwyg',
   'ux-lang-switcher',
   'ux-theme-toggle',
+  'ux-theme-switch',
   'ux-network-status',
 ];
 
@@ -152,6 +154,53 @@ describe('Built-in primitives', () => {
     expect(sw.hasAttribute('checked')).toBe(true);
     expect(sw.getAttribute('aria-checked')).toBe('true');
     expect(detail?.checked).toBe(true);
+  });
+
+  it('toggles ux-checkbox with click and dispatches ux:change', () => {
+    const cb = document.createElement('ux-checkbox');
+    cb.setAttribute('name', 'agree');
+    document.body.appendChild(cb);
+
+    let detail: Record<string, any> | null = null;
+    cb.addEventListener('ux:input.change', (event: Event) => {
+      detail = (event as CustomEvent).detail;
+    });
+
+    cb.click();
+
+    expect(cb.hasAttribute('checked')).toBe(true);
+    expect(cb.getAttribute('aria-checked')).toBe('true');
+    expect(detail?.checked).toBe(true);
+
+    cb.click();
+
+    expect(cb.hasAttribute('checked')).toBe(false);
+    expect(cb.getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('renders ux-date-picker calendar on input click and selects a date', () => {
+    const dp = document.createElement('ux-date-picker');
+    document.body.appendChild(dp);
+
+    const input = dp.querySelector('.dp-input') as HTMLInputElement;
+    expect(input).toBeTruthy();
+
+    let detail: Record<string, any> | null = null;
+    dp.addEventListener('ux:date.select', (event: Event) => {
+      detail = (event as CustomEvent).detail;
+    });
+
+    input.click();
+    expect(dp.querySelector('.dp-calendar.open')).toBeTruthy();
+
+    const day = dp.querySelector('.dp-day:not(.other-month):not(.disabled)') as HTMLElement;
+    if (day) {
+      day.click();
+      expect(detail).toBeTruthy();
+      expect(detail!.value).toBeTruthy();
+      expect(dp.getAttribute('value')).toBeTruthy();
+    }
+    expect(dp.querySelector('.dp-calendar.open')).toBeFalsy();
   });
 
   it('toggles all toggle-class primitives and emits open/close lifecycle events', () => {
@@ -454,6 +503,26 @@ describe('Built-in primitives', () => {
 
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(theme).toBe('dark');
+  });
+
+  it('ux-theme-switch updates theme-style and stylesheet link', () => {
+    registerBuiltInPrimitives();
+    const switcher = document.createElement('ux-theme-switch');
+    switcher.innerHTML = `
+      <option value="classic" data-theme-url="/classic.css">Classic</option>
+      <option value="compact" data-theme-url="/compact.css">Compact</option>
+    `;
+    document.body.appendChild(switcher);
+
+    const select = switcher.shadowRoot?.querySelector('select') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    expect(select.value).toBe('classic');
+
+    select.value = 'compact';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(document.documentElement.dataset.themeStyle).toBe('compact');
+    expect(document.head.querySelector('link#ux-theme-variant-stylesheet')?.getAttribute('href') || '').toContain('/compact.css');
   });
 
   it('ux-network-status reacts to offline/online events', () => {

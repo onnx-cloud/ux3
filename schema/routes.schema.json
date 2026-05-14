@@ -13,6 +13,11 @@
           "path": { "type": "string" },
           "view": { "type": "string" },
           "name": { "type": "string" },
+          "label": { "type": "string" },
+          "children": {
+            "type": "array",
+            "items": { "$ref": "#/properties/routes/items" }
+          },
           "methods": { "type": "array", "items": { "type": "string" } }
         },
         "additionalProperties": false

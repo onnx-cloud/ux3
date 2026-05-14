@@ -18,7 +18,7 @@ export class UxSearchBar extends UxBase {
 
   protected onConnected(): void {
     super.onConnected();
-const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
+    const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
 
     const icon = document.createElement('span');
     icon.className = 'icon';
@@ -36,18 +36,31 @@ const debounce = parseInt(this.getAttribute('debounce') || '300', 10);
     this.appendChild(this.input);
     this.appendChild(clear);
 
-    this.input.addEventListener('input', () => {
-      clear.classList.toggle('visible', this.input.value.length > 0);
-      if (this.timer) clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.emit(), debounce);
-    });
-
-    clear.addEventListener('click', () => {
-      this.input.value = '';
-      clear.classList.remove('visible');
-      this.emit();
-    });
+    this.input.addEventListener('input', this._onInput);
+    clear.addEventListener('click', this._onClear);
   }
+
+  protected onDisconnected(): void {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    super.onDisconnected();
+  }
+
+  private readonly _onInput = (): void => {
+    const clear = this.querySelector('button.clear');
+    if (clear) clear.classList.toggle('visible', this.input.value.length > 0);
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.emit(), parseInt(this.getAttribute('debounce') || '300', 10));
+  };
+
+  private readonly _onClear = (): void => {
+    this.input.value = '';
+    const clear = this.querySelector('button.clear');
+    if (clear) clear.classList.remove('visible');
+    this.emit();
+  };
 
   private emit(): void {
     this.dispatchEvent(new CustomEvent('ux:search.action', {

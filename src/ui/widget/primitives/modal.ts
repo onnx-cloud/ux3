@@ -101,7 +101,7 @@ export class UxModal extends LifecycleComponent {
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         background: var(--color-bg, #fff);
         color: var(--color-text, #0f172a);
-        overflow: hidden;
+        overflow: hidden; display: flex; flex-direction: column;
       }
       dialog::backdrop { background: rgba(0,0,0,0.45); }
       .close {
@@ -112,11 +112,17 @@ export class UxModal extends LifecycleComponent {
         display: flex; align-items: center; justify-content: center;
       }
       .close:hover { background: var(--color-bg-muted, #f3f4f6); color: var(--color-text, #0f172a); }
-      .header { padding: 1.25rem 1.5rem 0.75rem; border-bottom: 1px solid var(--color-border, #e2e8f0); }
+      .header { padding: 1.25rem 1.5rem 0.75rem; border-bottom: 1px solid var(--color-border, #e2e8f0); flex-shrink: 0; }
       .body { padding: 1.25rem 1.5rem; flex: 1; overflow-y: auto; }
-      .footer { padding: 0.75rem 1.5rem 1.25rem; border-top: 1px solid var(--color-border, #e2e8f0); display: flex; gap: 0.75rem; justify-content: flex-end; }
+      .footer { padding: 0.75rem 1.5rem 1.25rem; border-top: 1px solid var(--color-border, #e2e8f0); display: flex; gap: 0.75rem; justify-content: flex-end; flex-shrink: 0; }
       ::slotted(h3), ::slotted(h2) { margin: 0; font-size: 1.125rem; font-weight: 600; }
       .header ::slotted(*) { margin: 0; }
+      .footer ::slotted(button) {
+        padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--color-border, #d1d5db);
+        background: var(--color-bg, #fff); color: var(--color-text, #0f172a);
+        cursor: pointer; font: inherit; font-size: 0.875rem; font-weight: 500;
+      }
+      .footer ::slotted(button:hover) { background: var(--color-bg-muted, #f3f4f6); }
     `;
   }
 }

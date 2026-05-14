@@ -97,3 +97,4 @@ export type Token =
   | { type: 'comment'; value: string }
   | { type: 'config'; value: string }
   | { type: 'whitespace'; value: string }
+  | { type: 'newline'; value: string }

@@ -39,14 +39,11 @@ export class UxChatMessages extends UxBase {
     super.onConnected();
     this.parseMessages();
     this.render();
-    this.shadowRoot?.addEventListener('contextmenu', this.onContextMenu);
-    this.shadowRoot?.addEventListener('click', this.onBubbleClick);
-    document.addEventListener('click', this.onDocClick);
-    this.addEventListener('ux:menu.action', this.onContextAction);
+    this.shadowRoot?.addEventListener('contextmenu', this.onMsgContextMenu);
   }
 
   protected onDisconnected(): void {
-    this.shadowRoot?.removeEventListener('contextmenu', this.onContextMenu);
+    this.shadowRoot?.removeEventListener('contextmenu', this.onMsgContextMenu);
     this.shadowRoot?.removeEventListener('click', this.onBubbleClick);
     document.removeEventListener('click', this.onDocClick);
     this.removeEventListener('ux:menu.action', this.onContextAction);
@@ -419,7 +416,7 @@ export class UxChatMessages extends UxBase {
     }));
   }
 
-  private readonly onContextMenu = (e: MouseEvent) => {
+  private readonly onMsgContextMenu = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     this.closeInlineMenu();
@@ -453,9 +450,9 @@ export class UxChatMessages extends UxBase {
     const style = document.createElement('style');
     style.textContent = `
       :host {
-        display: flex; flex-direction: column; gap: 0;
-        overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth;
-        flex: 1; min-height: 0;
+        display: block;
+        --chat-tool-call-bg: #fef9c3; --chat-tool-call-text: #854d0e; --chat-tool-call-accent: #eab308;
+        --chat-tool-result-bg: #f0fdf4; --chat-tool-result-text: #166534; --chat-tool-result-accent: #22c55e;
       }
       :host::-webkit-scrollbar { width: 3px; }
       :host::-webkit-scrollbar-thumb { background: var(--color-border, #d1d5db); border-radius: 1.5px; }
@@ -486,8 +483,8 @@ export class UxChatMessages extends UxBase {
       .ux-chat-message-bubble[data-role="assistant"]  { background: var(--color-bg, #fff); color: var(--color-text, #0f172a); border: 1px solid var(--color-border, #e2e8f0); border-bottom-left-radius: 0.125rem; }
       .ux-chat-message-bubble[data-role="system"]     { background: var(--color-bg-muted, #f8fafc); color: var(--color-text-muted, #6b7280); font-style: italic; font-size: 0.7rem; }
       .ux-chat-message-bubble[data-role="tool"]       { background: var(--color-bg-muted, #f8fafc); color: var(--color-text, #0f172a); font-family: monospace; font-size: 0.7rem; border-left: 2px solid var(--color-border, #d1d5db); }
-      .ux-chat-message-bubble[data-role="tool_call"]  { background: #fef9c3; color: #854d0e; border-left: 2px solid #eab308; font-size: 0.7rem; }
-      .ux-chat-message-bubble[data-role="tool_result"] { background: #f0fdf4; color: #166534; border-left: 2px solid #22c55e; font-size: 0.7rem; }
+      .ux-chat-message-bubble[data-role="tool_call"]  { background: var(--chat-tool-call-bg, #fef9c3); color: var(--chat-tool-call-text, #854d0e); border-left: 2px solid var(--chat-tool-call-accent, #eab308); font-size: 0.7rem; }
+      .ux-chat-message-bubble[data-role="tool_result"] { background: var(--chat-tool-result-bg, #f0fdf4); color: var(--chat-tool-result-text, #166534); border-left: 2px solid var(--chat-tool-result-accent, #22c55e); font-size: 0.7rem; }
       .ux-chat-message-bubble.selected { background: var(--color-bg-muted, #e2e8f0); }
 
       .ux-chat-message-text {
@@ -500,8 +497,8 @@ export class UxChatMessages extends UxBase {
         font-family: monospace; font-size: 0.6875rem;
         flex-wrap: wrap;
       }
-      .ux-chat-tool-pill.tool-call { background: #fef08a; color: #713f12; }
-      .ux-chat-tool-pill.tool-result { background: #bbf7d0; color: #14532d; }
+      .ux-chat-tool-pill.tool-call { background: var(--chat-tool-call-bg, #fef08a); color: var(--chat-tool-call-text, #713f12); }
+      .ux-chat-tool-pill.tool-result { background: var(--chat-tool-result-bg, #bbf7d0); color: var(--chat-tool-result-text, #14532d); }
       .tool-pill-icon { display: flex; flex-shrink: 0; margin-top: 1px; }
       .tool-pill-label { font-weight: 500; }
       .tool-pill-expand {

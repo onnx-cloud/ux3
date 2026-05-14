@@ -15,9 +15,14 @@
 import { LifecycleComponent } from '../../lifecycle-component.js';
 
 export class UxFieldArray extends LifecycleComponent {
+  static formAssociated = true;
   private items: HTMLElement[] = [];
   private template: HTMLTemplateElement | null = null;
   private readonly itemRemoveListeners = new WeakMap<HTMLElement, () => void>();
+
+  static get observedAttributes(): string[] {
+    return ['name', 'disabled'];
+  }
 
   protected onConnected(): void {
     this.template = this.querySelector('template[slot="item"]');
@@ -28,8 +33,23 @@ export class UxFieldArray extends LifecycleComponent {
     this.render();
   }
 
+  protected onDisconnected(): void {
+    for (const item of this.items) {
+      const fn = this.itemRemoveListeners.get(item);
+      if (fn) fn();
+    }
+  }
+
   get name(): string {
     return this.getAttribute('name') || '';
+  }
+
+  get disabled(): boolean {
+    return this.hasAttribute('disabled');
+  }
+
+  get value(): string {
+    return JSON.stringify(this.getValues());
   }
 
   get context(): string {

@@ -4,6 +4,7 @@
  */
 
 import type { StateMachine } from '../fsm/state-machine.js';
+import type { ContentManifest } from './content.js';
 
 function humanize(name: string): string {
   return name
@@ -14,6 +15,7 @@ function humanize(name: string): string {
 export interface RouteConfig {
   path: string;
   view: string;
+  name?: string;
   label?: string;
   children?: RouteConfig[];
   guard?: string;
@@ -30,12 +32,25 @@ export interface RouteMatch {
 export interface NavRoute {
   path: string;
   view: string;
+  name?: string;
   label?: string;
   params?: string[];
   children?: NavRoute[];
   guard?: string;
   breadcrumb?: Array<{ path: string; view: string; label: string }>;
 }
+
+export interface NavItem {
+  label: string;
+  title?: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  url: string;
+  children?: Record<string, NavItem>;
+}
+
+export type NavTree = Record<string, NavItem>;
 
 export interface NavConfig {
   routes: NavRoute[];
@@ -59,41 +74,48 @@ export class Router {
   private machines: Map<string, StateMachine<any>>;
   private navConfig: NavConfig;
   private i18n: Record<string, any>;
+  private contentManifest?: ContentManifest;
 
   constructor(
     routes: RouteConfig[],
     machines: Map<string, StateMachine<any>>,
-    i18n: Record<string, any> = {}
+    i18n: Record<string, any> = {},
+    contentManifest?: ContentManifest,
   ) {
     this.routes = routes;
     this.machines = machines;
     this.i18n = i18n;
+    this.contentManifest = contentManifest;
     this.navConfig = this.buildNavConfig(i18n);
   }
 
   private buildNavConfig(i18n: Record<string, any>): NavConfig {
-    const buildRoute = (route: RouteConfig, parentPath: string = ''): NavRoute => {
+    const buildRoute = (route: RouteConfig, parentPath: string = '', parentName?: string): NavRoute => {
       const paramMatch = route.path.match(/:(\w+)/g);
       const params = paramMatch ? paramMatch.map(p => p.slice(1)) : undefined;
-      const label = route.label || `nav.${route.view}`;
+      const routeName = route.name || (parentName ? `${parentName}.${route.view}` : route.view);
+      const label = route.label ? route.label : `${routeName}.label`;
       const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
 
       return {
         path: fullPath,
         view: route.view,
+        name: routeName,
         label,
         params,
         guard: route.guard,
-        children: route.children?.length ? route.children.map((c) => buildRoute(c, fullPath)) : undefined,
+        children: route.children?.length ? route.children.map((c) => buildRoute(c, fullPath, routeName)) : undefined,
       };
     };
 
     const navRoutes = this.routes.map((r) => buildRoute(r));
 
     const instance = this;
+    const navTree = this.getNavTree(this.getCurrentI18nBundle() || i18n, this.contentManifest, navRoutes);
 
     return {
       routes: navRoutes,
+      tree: navTree,
       current: {
         path: '/',
         view: 'home',
@@ -136,7 +158,7 @@ export class Router {
   ): RouteMatch | null {
     for (const route of routes) {
       const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
-      const match = this.pathMatches(route.path, pathname);
+      const match = this.pathMatches(fullPath, pathname);
       if (match) {
         return {
           path: fullPath,
@@ -264,7 +286,7 @@ export class Router {
     ): boolean => {
       for (const route of routes) {
         const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
-        const match = this.pathMatches(route.path, pathname);
+        const match = this.pathMatches(fullPath, pathname);
         if (match) {
           const label = this.navConfig.getLabel({
             path: fullPath,
@@ -310,6 +332,80 @@ export class Router {
 
   getNavConfig(): NavConfig {
     return this.navConfig;
+  }
+
+  getNavTree(i18nBundle: Record<string, any>, contentManifest: ContentManifest | undefined, routes: NavRoute[]): NavTree {
+    const tree: NavTree = {};
+
+    const resolveContentMetadata = (routePath: string) => {
+      if (!contentManifest?.items?.length) return undefined;
+      const normalize = (value: string | undefined): string => (value || '').replace(/^\//, '');
+      const normalizedRoute = normalize(routePath);
+
+      return contentManifest.items.find((item) => {
+        return normalize(item.slug) === normalizedRoute || normalize(item.file) === normalizedRoute;
+      })?.frontmatter;
+    };
+
+    const buildNavItem = (route: NavRoute): NavItem => {
+      const frontmatter = resolveContentMetadata(route.path) || {};
+      const labelKey = route.name ? `${route.name}.label` : route.label || `nav.${route.view}`;
+      const titleKey = route.name ? `${route.name}.title` : undefined;
+      const descriptionKey = route.name ? `${route.name}.description` : undefined;
+      const iconKey = route.name ? `${route.name}.icon` : undefined;
+      const imageKey = route.name ? `${route.name}.image` : undefined;
+
+      const label = resolveI18nKey(i18nBundle, labelKey) || (route.label && !route.label.includes('.') ? route.label : undefined) || humanize(route.view);
+      const title = frontmatter.title || (titleKey ? resolveI18nKey(i18nBundle, titleKey) : undefined);
+      const description = frontmatter.description || (descriptionKey ? resolveI18nKey(i18nBundle, descriptionKey) : undefined);
+      const icon = iconKey ? resolveI18nKey(i18nBundle, iconKey) : undefined;
+      const image = imageKey ? resolveI18nKey(i18nBundle, imageKey) : undefined;
+
+      const item: NavItem = {
+        label,
+        url: route.path,
+      };
+
+      if (title) item.title = title;
+      if (description) item.description = description;
+      if (icon) item.icon = icon;
+      if (image) item.image = image;
+      return item;
+    };
+
+    const insertRoute = (route: NavRoute): void => {
+      const nameParts = (route.name || route.view).split('.');
+      let currentLevel = tree;
+      for (let i = 0; i < nameParts.length; i += 1) {
+        const key = nameParts[i];
+        if (!currentLevel[key]) {
+          currentLevel[key] = { label: humanize(key), url: '', children: {} };
+        }
+        const navItem = currentLevel[key];
+        if (i === nameParts.length - 1) {
+          const item = buildNavItem(route);
+          currentLevel[key] = {
+            ...navItem,
+            ...item,
+            children: Object.keys(navItem.children || {}).length ? navItem.children : undefined,
+          };
+        }
+        if (!currentLevel[key].children) {
+          currentLevel[key].children = {};
+        }
+        currentLevel = currentLevel[key].children!;
+      }
+    };
+
+    const traverse = (routes: NavRoute[]) => {
+      for (const route of routes) {
+        insertRoute(route);
+        if (route.children?.length) traverse(route.children);
+      }
+    };
+
+    traverse(routes);
+    return tree;
   }
 
   addRoute(path: string, view: string, label?: string, parentPath?: string, guard?: string): void {

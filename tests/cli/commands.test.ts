@@ -178,7 +178,7 @@ describe('UX3 CLI commands', () => {
       path.join(project, 'ux', 'view', 'hello.yaml'),
       ['initial: idle', 'states:', '  idle: hello/idle.html'].join('\n')
     );
-    await fs.writeFile(path.join(project, 'ux', 'view', 'hello', 'idle.html'), '<div>{{ i18n.site.title }}</div>');
+    await fs.writeFile(path.join(project, 'ux', 'view', 'hello', 'idle.html'), '<div>{{ i18n.site.title }}</div>\n<p>{{ i18n.site.description }}</p>');
     await fs.writeFile(
       path.join(project, 'ux', 'route', 'routes.yaml'),
       ['routes:', '  - path: /', '    view: hello'].join('\n')

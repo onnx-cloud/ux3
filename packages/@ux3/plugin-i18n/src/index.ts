@@ -104,7 +104,7 @@ async function loadRuntimePrompt(cfg: I18nPluginConfig): Promise<string> {
     const nodePath = 'node:' + 'path';
     const path = await import(nodePath);
     const fs = await import(nodeFs);
-    const promptsPath = new URL('../prompts.json', import.meta.url).pathname;
+    const promptsPath = new URL('prompts.json', import.meta.url).pathname;
     if (fs.existsSync(promptsPath)) {
       const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8')) as { runtime?: { system?: string } };
       if (prompts.runtime?.system) {

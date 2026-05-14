@@ -2,6 +2,7 @@ import { UxBase } from './base.js';
 
 export class UxWysiwyg extends UxBase {
   private _onSelectionChange: (() => void) | null = null;
+  private _toolbarButtons: NodeListOf<HTMLButtonElement> | null = null;
 
   protected onConnected(): void {
     super.onConnected();
@@ -71,16 +72,22 @@ export class UxWysiwyg extends UxBase {
           <option value="h3">H3</option>
           <option value="h4">H4</option>
           <option value="p">P</option>
+          <option value="pre">Code</option>
         </select>
         <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
-        <button type="button" data-cmd="justifyLeft" title="Align left">⫷</button>
-        <button type="button" data-cmd="justifyCenter" title="Align center">≣</button>
-        <button type="button" data-cmd="justifyRight" title="Align right">⫸</button>
+        <button type="button" data-cmd="justifyLeft" title="Align left">\u2AF7</button>
+        <button type="button" data-cmd="justifyCenter" title="Align center">\u2263</button>
+        <button type="button" data-cmd="justifyRight" title="Align right">\u2AF8</button>
         <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
-        <button type="button" data-cmd="insertOrderedList" title="Ordered list">OL</button>
-        <button type="button" data-cmd="insertUnorderedList" title="Unordered list">UL</button>
+        <button type="button" data-cmd="insertOrderedList" title="Ordered list">1.</button>
+        <button type="button" data-cmd="insertUnorderedList" title="Unordered list">\u2022</button>
+        <button type="button" data-cmd="indent" title="Indent">\u21B3</button>
+        <button type="button" data-cmd="outdent" title="Outdent">\u21B0</button>
         <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
-        <button type="button" data-cmd="insertImage" title="Insert image">🖼</button>
+        <button type="button" data-cmd="insertTable" title="Insert table">\u229E</button>
+        <button type="button" data-cmd="insertHorizontalRule" title="Horizontal rule">&mdash;</button>
+        <span style="width:1px;background:#cbd5e1;margin:0 0.25rem"></span>
+        <button type="button" data-cmd="insertImage" title="Insert image">\uD83D\uDDBC</button>
       </div>
       <div class="editor" contenteditable="true" part="editor" role="textbox" aria-multiline="true"></div>
     `;
@@ -108,13 +115,18 @@ export class UxWysiwyg extends UxBase {
     });
 
     const toolbar = this.shadowRoot.querySelector('.toolbar')!;
-    toolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
+    this._toolbarButtons = toolbar.querySelectorAll('button[data-cmd]') as NodeListOf<HTMLButtonElement>;
+    this._toolbarButtons.forEach((btn) => {
       btn.addEventListener('mousedown', (e) => {
         e.preventDefault();
         editor.focus();
         const cmd = (btn as HTMLElement).dataset.cmd || '';
         if (cmd === 'insertImage') {
           this.insertImage(editor, emitChange);
+          return;
+        }
+        if (cmd === 'insertTable') {
+          this.insertTable(editor, emitChange);
           return;
         }
         document.execCommand(cmd);
@@ -150,14 +162,29 @@ export class UxWysiwyg extends UxBase {
   }
 
   private updateToolbarState(): void {
-    const toolbar = this.shadowRoot?.querySelector('.toolbar');
-    if (!toolbar) return;
-    toolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
+    if (!this._toolbarButtons) return;
+    this._toolbarButtons.forEach((btn) => {
       const cmd = (btn as HTMLElement).dataset.cmd || '';
       if (['bold','italic','underline','strikeThrough','insertOrderedList','insertUnorderedList','justifyLeft','justifyCenter','justifyRight'].includes(cmd)) {
         btn.classList.toggle('active', document.queryCommandState(cmd));
       }
     });
+  }
+
+  private insertTable(editor: HTMLDivElement, emitChange: () => void): void {
+    const rows = 3;
+    const cols = 3;
+    let html = '<table style="border-collapse:collapse;width:100%"><tbody>';
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        html += '<td style="border:1px solid #d1d5db;padding:0.5rem;min-width:3rem">&nbsp;</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.execCommand('insertHTML', false, html);
+    emitChange();
   }
 
   private insertImage(editor: HTMLDivElement, emitChange: () => void): void {

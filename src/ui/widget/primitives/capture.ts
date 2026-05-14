@@ -18,14 +18,24 @@ export class UxCapture extends UxBase {
   private async startCapture() {
     if (this.started) return;
     this.started = true;
-    const tag = this.localName;
+    const captureType = this.getAttribute('type') || 'image';
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      this.started = false;
+      this.innerHTML = `<div style="text-align:center;padding:1rem;">
+        <div style="color:var(--color-text-muted,#6b7280);font-size:0.875rem;margin-bottom:0.5rem;">Camera not available in this browser</div>
+        <button class="ux-capture-retry" style="padding:0.375rem 0.75rem;border:1px solid var(--color-border,#d1d5db);border-radius:0.25rem;background:var(--color-bg,#fff);cursor:pointer;font:inherit;font-size:0.75rem;">Retry</button>
+      </div>`;
+      this.querySelector('.ux-capture-retry')?.addEventListener('click', () => { this.started = false; this.startCapture(); });
+      return;
+    }
     try {
       let constraints: MediaStreamConstraints = {};
-      if (tag === 'ux-image-capture') {
+      if (captureType === 'image') {
         constraints = { video: { facingMode: { ideal: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } } };
-      } else if (tag === 'ux-video-capture') {
+      } else if (captureType === 'video') {
         constraints = { video: { facingMode: { ideal: 'user' } }, audio: true };
-      } else if (tag === 'ux-audio-capture') {
+      } else if (captureType === 'audio') {
         constraints = { audio: true };
       }
 
@@ -34,12 +44,12 @@ export class UxCapture extends UxBase {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch {
         const relaxed: MediaStreamConstraints =
-          tag === 'ux-audio-capture' ? { audio: true } : { video: true };
+          captureType === 'audio' ? { audio: true } : { video: true };
         stream = await navigator.mediaDevices.getUserMedia(relaxed);
       }
       this.mediaStream = stream;
 
-      if (tag === 'ux-image-capture') {
+      if (captureType === 'image') {
         this.innerHTML = '';
         this.videoEl = document.createElement('video');
         this.videoEl.srcObject = stream;
@@ -60,7 +70,7 @@ export class UxCapture extends UxBase {
         this.appendChild(this.canvasEl);
 
         this.removeEventListener('click', this.startCapture);
-      } else if (tag === 'ux-video-capture') {
+      } else if (captureType === 'video') {
         this.videoEl = document.createElement('video');
         this.videoEl.srcObject = stream;
         this.videoEl.autoplay = true;
@@ -75,7 +85,7 @@ export class UxCapture extends UxBase {
         stopBtn.style.cssText = 'display:block;width:100%;max-width:320px;margin-top:0.375rem;padding:0.5rem;border:1px solid var(--color-border,#d1d5db);border-radius:0.375rem;background:var(--color-bg,#fff);cursor:pointer;font:inherit;font-size:0.875rem;';
         stopBtn.addEventListener('click', (e) => { e.stopPropagation(); this.stopCapture(); });
         this.appendChild(stopBtn);
-      } else if (tag === 'ux-audio-capture') {
+      } else if (captureType === 'audio') {
         this.innerHTML = '<span style="font-size:0.875rem;">\u25CF Recording...</span>';
         const stopBtn = document.createElement('button');
         stopBtn.textContent = '\u25A0 Stop';
@@ -86,7 +96,7 @@ export class UxCapture extends UxBase {
 
       this.dispatchEvent(new CustomEvent('ux:media.capture.start', {
         bubbles: true, composed: true,
-        detail: { stream, kind: tag.replace('ux-', '').replace('-capture', '') },
+        detail: { stream, kind: captureType },
       }));
     } catch (e) {
       this.started = false;
@@ -139,6 +149,7 @@ export class UxCapture extends UxBase {
   }
 
   protected onDisconnected(): void {
+    this.removeEventListener('click', this.startCapture);
     this.stopMedia();
     super.onDisconnected();
   }

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agentic Prompt Frontmatter",
+  "description": "Schema for frontmatter metadata in agentic prompt markdown files.",
+  "type": "object",
+  "required": ["name", "title", "description"],
+  "properties": {
+    "name": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "context": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

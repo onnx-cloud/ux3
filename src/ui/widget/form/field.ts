@@ -1,25 +1,3 @@
-/**
- * UX3 Form Field Component
- *
- * Encapsulates label + input + error + focus management
- * Integrates with ElementInternals for proper form association
- * Auto-infers label from i18n based on name and context
- *
- * Usage (simplified - slot inferred):
- * <ux-field name="email" type="email" required error="{{ctx.errors.email}}">
- *   <input />
- * </ux-field>
- *
- * Usage (explicit slot):
- * <ux-field name="email" type="email" required error="{{ctx.errors.email}}">
- *   <input slot="control" />
- * </ux-field>
- *
- * Usage (explicit label override):
- * <ux-field name="email" label="Custom Label" type="email" required>
- *   <input />
- * </ux-field>
- */
 import { LifecycleComponent } from '../../lifecycle-component.js';
 
 export class UxField extends LifecycleComponent {
@@ -29,6 +7,7 @@ export class UxField extends LifecycleComponent {
   private controlSlot: HTMLSlotElement | null = null;
   private errorEl: HTMLDivElement | null = null;
   private labelEl: HTMLLabelElement | null = null;
+  private hintEl: HTMLDivElement | null = null;
   private control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null = null;
   private controlDisposers: Array<() => void> = [];
   private stopValidationObserver: (() => void) | null = null;
@@ -50,13 +29,10 @@ export class UxField extends LifecycleComponent {
   protected onConnected(): void {
     this.render();
     this.setupSlotListener();
-    // Try direct children first (for implicit slot binding)
     this.detectControlFromChildren();
     this.setupValidation();
     this.setupAccessibility();
   }
-
-  // ==================== Attributes ====================
 
   get name(): string {
     return this.getAttribute('name') || '';
@@ -66,10 +42,6 @@ export class UxField extends LifecycleComponent {
     return this.getAttribute('context') || this.inferContext();
   }
 
-  /**
-   * Get label: explicit attribute > auto-inferred from i18n > empty string
-   * If label="" (empty string), it's still explicit and prevents auto-infer
-   */
   get label(): string {
     if (this.hasAttribute('label')) {
       return this.getAttribute('label') || '';
@@ -101,42 +73,6 @@ export class UxField extends LifecycleComponent {
     return this.getAttribute('hint') || '';
   }
 
-  /**
-   * Infer form context from parent view or data-context attribute
-   * Priority: data-context attr > ux-style > default to 'common'
-   */
-  private inferContext(): string {
-    // Check data-context on this element or parents
-    const contextAttr = this.closest('[data-context]');
-    if (contextAttr) {
-      const ctx = contextAttr.getAttribute('data-context');
-      if (ctx) return ctx;
-    }
-
-    // Try to infer from ux-style on parent form/div
-    const styledParent = this.closest('[ux-style]');
-    if (styledParent) {
-      const style = styledParent.getAttribute('ux-style');
-      if (style) {
-        // Extract context from style like "form-register" -> "register"
-        const match = style.match(/^form-(.+)$/) || style.match(/^(.+)-form$/);
-        if (match?.[1]) return match[1];
-      }
-    }
-
-    return 'common';
-  }
-
-  /**
-   * Infer label from i18n using context + field name
-   * Expected key: {{i18n.{context}.fields.{name}.label}}
-   */
-  private inferLabel(): string {
-    if (!this.name) return '';
-    const ctx = this.context;
-    return `{{i18n.${ctx}.fields.${this.name}.label}}`;
-  }
-
   set error(value: string) {
     if (value) {
       this.setAttribute('error', value);
@@ -162,13 +98,36 @@ export class UxField extends LifecycleComponent {
     }
   }
 
-  // ==================== Rendering ====================
+  private inferContext(): string {
+    const contextAttr = this.closest('[data-context]');
+    if (contextAttr) {
+      const ctx = contextAttr.getAttribute('data-context');
+      if (ctx) return ctx;
+    }
+
+    const styledParent = this.closest('[ux-style]');
+    if (styledParent) {
+      const style = styledParent.getAttribute('ux-style');
+      if (style) {
+        const match = style.match(/^form-(.+)$/) || style.match(/^(.+)-form$/);
+        if (match?.[1]) return match[1];
+      }
+    }
+
+    return 'common';
+  }
+
+  private inferLabel(): string {
+    if (!this.name) return '';
+    const ctx = this.context;
+    return `{{i18n.${ctx}.fields.${this.name}.label}}`;
+  }
 
   private render() {
     if (!this.shadowRoot) return;
 
-    // TODO: lookup ux-form-field ViewComponent
     this.shadowRoot.innerHTML = `
+      <style>${this.getStyles()}</style>
       <div class="field-container">
         <label class="label" for="control"></label>
         <div class="control-wrapper">
@@ -182,9 +141,9 @@ export class UxField extends LifecycleComponent {
 
     this.labelEl = this.shadowRoot.querySelector('.label');
     this.errorEl = this.shadowRoot.querySelector('.error');
+    this.hintEl = this.shadowRoot.querySelector('.hint');
     this.controlSlot = this.shadowRoot.querySelector('slot[name="control"]');
 
-    // Also listen to default slot for unnamed controls
     const defaultSlot = this.shadowRoot.querySelector('slot:not([name])') as HTMLSlotElement;
     if (defaultSlot) {
       this.listen(defaultSlot, 'slotchange', () => {
@@ -206,27 +165,18 @@ export class UxField extends LifecycleComponent {
   }
 
   private updateHint() {
-    if (!this.shadowRoot) return;
-    const hintEl = this.shadowRoot.querySelector('.hint') as HTMLDivElement | null;
-    if (hintEl) {
-      if (this.hint) {
-        hintEl.textContent = this.hint;
-        hintEl.style.display = 'block';
-      } else {
-        hintEl.style.display = 'none';
-      }
+    if (!this.hintEl) return;
+    if (this.hint) {
+      this.hintEl.textContent = this.hint;
+      this.hintEl.style.display = 'block';
+    } else {
+      this.hintEl.style.display = 'none';
     }
   }
 
-  // ==================== Slot Management ====================
-
-  /**
-   * Auto-detect control from direct children (for implicit slot binding)
-   * Looks for input, textarea, or select elements
-   */
   private detectControlFromChildren() {
     if (!this.control) {
-      const control = this.querySelector('input, textarea, select');
+      const control = this.querySelector('input, textarea, select, ux-input, ux-textarea, ux-select, ux-combobox, ux-date-picker, ux-search-bar, ux-radio-group');
       if (control) {
         this.control = control as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
         this.syncControlAttributes();
@@ -247,7 +197,6 @@ export class UxField extends LifecycleComponent {
       }
     });
 
-    // Try to get control immediately
     const assigned = this.controlSlot.assignedElements();
     if (assigned.length > 0) {
       this.control = assigned[0] as any;
@@ -263,37 +212,31 @@ export class UxField extends LifecycleComponent {
     }
     this.controlDisposers = [];
 
-    // Set name attribute on control
     if (this.name) {
       this.control.setAttribute('name', this.name);
     }
 
-    // Set type if input
     if (this.control instanceof HTMLInputElement && this.type) {
       this.control.setAttribute('type', this.type);
     }
 
-    // Set required
     if (this.required) {
       this.control.setAttribute('required', '');
     } else {
       this.control.removeAttribute('required');
     }
 
-    // Set disabled
     if (this.disabled) {
       this.control.setAttribute('disabled', '');
     } else {
       this.control.removeAttribute('disabled');
     }
 
-    // Bind input event to form association
     this.controlDisposers.push(this.listen(this.control, 'input', (e: Event) => {
       const target = e.target as HTMLInputElement;
       this.internals.setFormValue(target.value);
     }));
 
-    // Emit field change event
     this.controlDisposers.push(this.listen(this.control, 'change', (e: Event) => {
       const target = e.target as HTMLInputElement;
       this.dispatchEvent(
@@ -305,18 +248,21 @@ export class UxField extends LifecycleComponent {
       );
     }));
 
-    // Mark as touched on blur
+    this.controlDisposers.push(this.listen(this.control, 'ux:input.change', (e: Event) => {
+      const detail = (e as CustomEvent)?.detail || {};
+      if (detail.value !== undefined) {
+        this.internals.setFormValue(detail.value);
+      }
+    }));
+
     this.controlDisposers.push(this.listen(this.control, 'blur', () => {
       this.setAttribute('touched', '');
     }));
   }
 
-  // ==================== Validation ====================
-
   private setupValidation() {
     if (!this.control) return;
 
-    // Listen for validation-related attribute changes
     if (this.stopValidationObserver) {
       this.stopValidationObserver();
       this.stopValidationObserver = null;
@@ -332,8 +278,6 @@ export class UxField extends LifecycleComponent {
 
     this.stopValidationObserver = this.observe(observer, this, { attributes: true, attributeFilter: ['error'] });
   }
-
-  // ==================== Accessibility ====================
 
   private setupAccessibility() {
     if (!this.control) return;
@@ -392,8 +336,6 @@ export class UxField extends LifecycleComponent {
     }
   }
 
-  // ==================== Error Management ====================
-
   private updateError() {
     if (!this.errorEl) return;
 
@@ -406,8 +348,6 @@ export class UxField extends LifecycleComponent {
       this.errorEl.textContent = '';
     }
   }
-
-  // ==================== Attribute Observation ====================
 
   protected onAttributeChanged(name: string, oldVal: string | null, newVal: string | null): void {
     if (name === 'error' || name === 'touched') {
@@ -426,34 +366,32 @@ export class UxField extends LifecycleComponent {
     return ['error', 'touched', 'disabled', 'label', 'context', 'hint', 'required'];
   }
 
-  // ==================== Styles ====================
-
   private getStyles(): string {
     return `
       :host {
         display: block;
-        margin-bottom: 1rem;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        font-size: inherit;
-        line-height: 1.5;
+        margin-bottom: var(--field-spacing, 1rem);
+        font-family: inherit;
+        font-size: var(--field-font-size, inherit);
+        line-height: var(--field-line-height, 1.5);
       }
 
       .field-container {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: var(--field-gap, 0.25rem);
       }
 
       .label {
         display: block;
-        font-weight: 500;
-        color: #1f2937;
-        margin-bottom: 0.25rem;
+        font-weight: var(--field-label-weight, 500);
+        color: var(--field-label-color, #1f2937);
+        margin-bottom: var(--field-label-margin, 0.25rem);
       }
 
       :host([required]) .label::after {
         content: " *";
-        color: #dc2626;
+        color: var(--field-required-color, #dc2626);
       }
 
       .control-wrapper {
@@ -464,55 +402,58 @@ export class UxField extends LifecycleComponent {
       .control-wrapper ::slotted(textarea),
       .control-wrapper ::slotted(select) {
         width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
+        padding: var(--control-padding, 0.5rem 0.75rem);
+        border: 1px solid var(--control-border, #d1d5db);
+        border-radius: var(--control-radius, 0.375rem);
         font: inherit;
-        transition: all 200ms ease;
+        transition: border-color 200ms ease, box-shadow 200ms ease;
       }
 
       .control-wrapper ::slotted(input:focus),
       .control-wrapper ::slotted(textarea:focus),
       .control-wrapper ::slotted(select:focus) {
         outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: var(--control-focus-border, #3b82f6);
+        box-shadow: 0 0 0 3px var(--control-focus-ring, rgba(59, 130, 246, 0.1));
       }
 
       .control-wrapper ::slotted(input[aria-invalid="true"]),
       .control-wrapper ::slotted(textarea[aria-invalid="true"]),
       .control-wrapper ::slotted(select[aria-invalid="true"]) {
-        border-color: #dc2626;
+        border-color: var(--control-invalid-border, #dc2626);
       }
 
       .control-wrapper ::slotted(input[aria-invalid="true"]:focus),
       .control-wrapper ::slotted(textarea[aria-invalid="true"]:focus),
       .control-wrapper ::slotted(select[aria-invalid="true"]:focus) {
-        border-color: #dc2626;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        border-color: var(--control-invalid-border, #dc2626);
+        box-shadow: 0 0 0 3px var(--control-invalid-ring, rgba(220, 38, 38, 0.1));
       }
 
-      .control-wrapper ::slotted(input:disabled),
-      .control-wrapper ::slotted(textarea:disabled),
-      .control-wrapper ::slotted(select:disabled) {
-        background-color: #f3f4f6;
-        color: #6b7280;
-        cursor: not-allowed;
+      .control-wrapper ::slotted(ux-input),
+      .control-wrapper ::slotted(ux-textarea),
+      .control-wrapper ::slotted(ux-select),
+      .control-wrapper ::slotted(ux-dropdown),
+      .control-wrapper ::slotted(ux-combobox),
+      .control-wrapper ::slotted(ux-date-picker),
+      .control-wrapper ::slotted(ux-search-bar),
+      .control-wrapper ::slotted(ux-radio-group) {
+        display: block; width: 100%;
       }
 
       .hint {
         display: none;
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
+        font-size: var(--field-hint-size, 0.875rem);
+        color: var(--field-hint-color, #6b7280);
+        margin-top: var(--field-hint-margin, 0.25rem);
       }
 
       .error {
         display: none;
-        font-size: 0.875rem;
-        color: #dc2626;
-        margin-top: 0.25rem;
-        font-weight: 500;
+        font-size: var(--field-error-size, 0.875rem);
+        color: var(--field-error-color, #dc2626);
+        margin-top: var(--field-error-margin, 0.25rem);
+        font-weight: var(--field-error-weight, 500);
       }
 
       :host([error][touched]) .error {

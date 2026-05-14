@@ -8,6 +8,12 @@
 // Tool names — single source of truth
 export const Agentic = {
   INFO: 'agentic.info',
+  PLAN_CREATE: 'agentic:plan.create',
+  PLAN_EXECUTE: 'agentic:plan.execute',
+  PLAN_STEP: 'agentic:plan.step',
+  PLAN_GET_STATE: 'agentic:plan.getState',
+  PLAN_CANCEL: 'agentic:plan.cancel',
+  NODE_UPDATE: 'agentic:node.update',
 } as const;
 
 // Resource URIs — single source of truth

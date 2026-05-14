@@ -27,3 +27,7 @@ export { UxNav } from './shell/nav-panel.js';
 // Auth gate components
 export { UxGateAuth } from './shell/gate-auth.js';
 export { UxGateAnon, UxGateRole, UxGateScope, UxGateFeature } from './shell/gate-wrappers.js';
+
+// Shared widget registry
+export { registerWidget, resolveWidgetMetadata, getRegisteredWidgets, clearWidgetRegistry } from './widget-registry.js';
+export type { WidgetMetadata } from './widget-registry.js';

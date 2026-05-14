@@ -19,10 +19,30 @@
 import { StateMachine } from './state-machine.js';
 import type { StateEvent } from './types.js';
 import { ServiceCache } from '../core/service-cache.js';
+import { reactive, effect } from '../state/reactive.js';
 
 export interface FSMRegistryConfig {
   namespace: string;
   fsm: StateMachine<any>;
+}
+
+export interface ContextStorageAdapter {
+  connect?: () => Promise<void>;
+  get(model: string, id: any): Promise<any>;
+  set(model: string, id: any, data: any): Promise<void>;
+  delete?(model: string, id: any): Promise<void>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function traverseReactive(value: unknown): void {
+  if (!isRecord(value)) return;
+  for (const key of Object.keys(value)) {
+    const nested = value[key];
+    traverseReactive(nested);
+  }
 }
 
 /**
@@ -31,30 +51,147 @@ export interface FSMRegistryConfig {
  */
 export class FSMRegistry {
   private static instances = new Map<string, StateMachine<any>>();
-  private static globalContext: Record<string, any> = {};
+  private static globalContext: Record<string, any> = reactive({});
+  private static contextStore?: ContextStorageAdapter;
+  private static persistTTL?: number;
+  private static persistVersion = 0;
+  private static machinePersistenceUnsubscribes = new Map<string, () => void>();
   private static globalServices: Record<string, any> = {};
   private static globalSubscribers: Array<(event: StateEvent) => void> = [];
   private static caches = new Map<string, ServiceCache<any>>();
 
   /**
-   * Set global context shared across all FSMs
+   * Set root app context shared across all FSMs
    */
-  static setGlobalContext(ctx: Record<string, any>): void {
-    this.globalContext = { ...this.globalContext, ...ctx };
-    // Update existing machines if they support global injection
+  static setRootContext(ctx: Record<string, any>, persist: boolean = true): void {
+    if (!isRecord(ctx)) return;
+    Object.assign(this.globalContext, ctx);
+    if (persist && this.contextStore) {
+      this.persistRootContext().catch((error) => {
+        console.warn('[FSMRegistry] failed to persist root context', error);
+      });
+    }
     for (const fsm of this.instances.values()) {
       const candidate = fsm as unknown as Record<string, unknown>;
       if (typeof candidate.updateGlobalContext === 'function') {
-        (candidate.updateGlobalContext as (ctx: Record<string, any>) => void)(this.globalContext);
+        (candidate.updateGlobalContext as (context: Record<string, any>) => void)(this.getRootContext());
       }
     }
   }
 
   /**
-   * Get global context
+   * Get the live root app context object
+   */
+  static getRootContext(): Record<string, any> {
+    return this.globalContext;
+  }
+
+  /**
+   * Alias for backwards compatibility.
+   */
+  static setGlobalContext(ctx: Record<string, any>): void {
+    this.setRootContext(ctx);
+  }
+
+  /**
+   * Alias for backwards compatibility.
    */
   static getGlobalContext(): Record<string, any> {
-    return this.globalContext;
+    return this.getRootContext();
+  }
+
+  static async initContextStorage(adapter?: ContextStorageAdapter, ttlSeconds?: number): Promise<void> {
+    if (!adapter) {
+      this.contextStore = undefined;
+      this.persistTTL = undefined;
+      return;
+    }
+    this.contextStore = adapter;
+    this.persistTTL = typeof ttlSeconds === 'number' && ttlSeconds > 0 ? ttlSeconds : undefined;
+
+    if (typeof adapter.connect === 'function') {
+      try {
+        await adapter.connect();
+      } catch (error) {
+        console.warn('[FSMRegistry] context storage connect failed', error);
+      }
+    }
+
+    try {
+      const snapshot = await adapter.get('ux3.ctx', 'root');
+      if (isRecord(snapshot) && !this.isSnapshotStale(snapshot)) {
+        if (isRecord(snapshot.context)) {
+          this.setRootContext(snapshot.context, false);
+        }
+      }
+    } catch (error) {
+      console.warn('[FSMRegistry] failed to hydrate root context', error);
+    }
+  }
+
+  static subscribeRoot(listener: (context: Record<string, any>) => void): () => void {
+    const wrapped = () => {
+      listener(this.getRootContext());
+      traverseReactive(this.globalContext);
+    };
+    return effect(wrapped);
+  }
+
+  private static async persistRootContext(): Promise<void> {
+    if (!this.contextStore) return;
+    const snapshot = {
+      id: 'root',
+      state: 'root',
+      context: this.getRootContext(),
+      version: ++this.persistVersion,
+      updatedAt: Date.now(),
+    };
+    await this.contextStore.set('ux3.ctx', 'root', snapshot);
+  }
+
+  private static isSnapshotStale(snapshot: Record<string, any>): boolean {
+    if (!this.persistTTL || typeof snapshot.updatedAt !== 'number') return false;
+    return Date.now() > snapshot.updatedAt + this.persistTTL * 1000;
+  }
+
+  static async registerMachine(namespace: string, fsm: StateMachine<any>): Promise<void> {
+    this.register(namespace, fsm);
+    if (this.contextStore) {
+      await this.hydrateMachineSnapshot(namespace, fsm);
+      const unsubscribe = fsm.subscribe((state, context) => {
+        void this.persistMachineSnapshot(namespace, state, context);
+      });
+      this.machinePersistenceUnsubscribes.set(namespace, unsubscribe);
+    }
+  }
+
+  private static async hydrateMachineSnapshot(namespace: string, fsm: StateMachine<any>): Promise<void> {
+    if (!this.contextStore) return;
+    try {
+      const snapshot = await this.contextStore.get('ux3.ctx', namespace);
+      if (!isRecord(snapshot) || this.isSnapshotStale(snapshot)) return;
+      if (typeof (fsm as any).restoreSnapshot === 'function') {
+        (fsm as any).restoreSnapshot(snapshot);
+      }
+    } catch (error) {
+      console.warn(`[FSMRegistry] failed to hydrate machine snapshot for ${namespace}`, error);
+    }
+  }
+
+  private static async persistMachineSnapshot(namespace: string, state: string, context: Record<string, any>): Promise<void> {
+    if (!this.contextStore) return;
+    const snapshot = {
+      id: namespace,
+      state,
+      context: { ...context },
+      version: ++this.persistVersion,
+      updatedAt: Date.now(),
+    };
+    try {
+      await this.contextStore.set('ux3.ctx', namespace, snapshot);
+    } catch (error) {
+      console.warn(`[FSMRegistry] failed to persist machine snapshot for ${namespace}`, error);
+    }
   }
 
   /**
@@ -208,9 +345,16 @@ export class FSMRegistry {
    */
   static clear(): void {
     this.instances.clear();
-    this.globalContext = {};
+    this.globalContext = reactive({});
+    this.contextStore = undefined;
+    this.persistTTL = undefined;
+    this.persistVersion = 0;
     this.globalServices = {};
     this.globalSubscribers = [];
+    for (const unsubscribe of this.machinePersistenceUnsubscribes.values()) {
+      unsubscribe();
+    }
+    this.machinePersistenceUnsubscribes.clear();
     this.clearAllServiceCaches();
   }
 }

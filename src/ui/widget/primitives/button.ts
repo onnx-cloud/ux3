@@ -22,9 +22,11 @@ const STYLE_CSS = `
     cursor: pointer; transition: var(--transition-normal, all 200ms ease);
     white-space: nowrap; user-select: none;
   }
+  ux-button[size="xs"] button { padding: var(--spacing-xxs, 0.25rem) var(--spacing-xs, 0.5rem); font-size: 0.75rem; }
   ux-button[size="sm"] button { padding: var(--spacing-xs, 0.375rem) var(--spacing-sm, 0.75rem); font-size: 0.875rem; }
   ux-button[size="md"] button, ux-button:not([size]) button { padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem); font-size: 1rem; }
   ux-button[size="lg"] button { padding: var(--spacing-sm, 0.75rem) var(--spacing-lg, 1.5rem); font-size: 1.125rem; }
+  ux-button[size="xl"] button { padding: var(--spacing-md, 0.75rem) var(--spacing-xl, 2rem); font-size: 1.25rem; }
   ux-button[variant="primary"] button, ux-button:not([variant]) button {
     background-color: var(--color-primary, #6b7280); color: white; border-color: var(--color-primary, #6b7280);
   }
@@ -39,6 +41,12 @@ const STYLE_CSS = `
   }
   ux-button[variant="warning"] button {
     background-color: var(--color-warning, #f59e0b); color: white; border-color: var(--color-warning, #f59e0b);
+  }
+  ux-button[variant="none"] button {
+    background-color: transparent; color: var(--color-text, #0f172a); border-color: transparent;
+  }
+  ux-button[variant="none"] button:hover {
+    background-color: var(--color-bg-muted, #f3f4f6);
   }
   ux-button button:focus-visible { outline: var(--focus-outline, 2px solid #6b7280); outline-offset: var(--focus-outline-offset, 2px); }
   ux-button[disabled] button, ux-button[loading] button { opacity: var(--opacity-disabled, 0.6); cursor: var(--cursor-disabled, not-allowed); }
@@ -60,11 +68,11 @@ export class UxButton extends LifecycleComponent {
     this.updateLoadingState();
   }
 
-  get variant(): 'primary' | 'secondary' | 'danger' | 'success' | 'warning' {
+  get variant(): 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'none' {
     return (this.getAttribute('variant') as any) || 'primary';
   }
 
-  get size(): 'sm' | 'md' | 'lg' {
+  get size(): 'xs' | 'sm' | 'md' | 'lg' | 'xl' {
     return (this.getAttribute('size') as any) || 'md';
   }
 

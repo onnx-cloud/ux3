@@ -26,6 +26,7 @@ import { LifecycleComponent } from '../../lifecycle-component.js';
 import { escapeHtml } from '../../../security/sanitizer.js';
 
 export class UxPanel extends LifecycleComponent {
+  private static _stylesCache: string | null = null;
   private isExpanded = true;
 
   constructor() {
@@ -73,7 +74,7 @@ export class UxPanel extends LifecycleComponent {
     if (!this.shadowRoot) return;
 
     const style = document.createElement('style');
-    style.textContent = this.getStyles();
+    style.textContent = UxPanel._stylesCache || (UxPanel._stylesCache = this.getStyles());
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(style);
 

@@ -1,0 +1,14 @@
+{
+  "name": "@ux3/plugin-onnx",
+  "version": "0.1.0",
+  "description": "ONNX knowledge and FlatBuffer search plugin for UX3.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@ux3/ux3": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

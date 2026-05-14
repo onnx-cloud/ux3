@@ -28,6 +28,19 @@ flowchart LR
 ```
 ````
 
+### Dogfooding UX3 Patterns
+
+```mermaid
+stateDiagram-v2
+  [*] --> idle
+  idle --> loading : submit
+  loading --> ready : success
+  loading --> error : failure
+  error --> idle : retry
+```
+
+This is the canonical UX3 view FSM lifecycle pattern, rendered with the same diagram pipeline we use for app docs.
+
 ### Per-Diagram Configuration
 
 ```mermaid
@@ -64,6 +77,18 @@ flowchart LR
   A --> B --> C
 </ux-diagram>
 ```
+
+### UX3 App Diagram Element
+
+```html
+<ux-diagram-ux3 type="fsm" data-theme="dark"></ux-diagram-ux3>
+```
+
+Supported built-in types:
+- `fsm` — canonical UX3 state lifecycle
+- `route` — router/view route flow
+- `plan` — planner pipeline
+- `ux` / `app` — UX3 architecture overview
 
 ## Configuration
 

@@ -196,5 +196,11 @@ export const builtInHelpers = {
   concat: (...args: unknown[]) => {
     return args.map(a => String(a ?? '')).join('');
   },
+
+  // json: serialize value to JSON string
+  // Usage: {{ json ctx.demoPlan }}
+  json: (val: unknown) => {
+    try { return JSON.stringify(val); } catch { return 'null'; }
+  },
 /* eslint-enable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 };

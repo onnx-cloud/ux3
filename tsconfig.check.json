@@ -17,11 +17,17 @@
       "@ux3/plugin-dev-tools/*": [
         "./packages/@ux3/plugin-dev-tools/src/*"
       ],
-      "@ux3/plugin-translate/*": [
-        "./packages/@ux3/plugin-translate/src/*"
+      "@ux3/plugin-i18n/*": [
+        "./packages/@ux3/plugin-i18n/src/*"
       ]
     }
   },
   "include": ["src/**/*.ts", "packages/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/templates", "tmp"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/templates",
+    "packages/**/templates/**/*",
+    "tmp"
+  ]
 }

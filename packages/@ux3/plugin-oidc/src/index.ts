@@ -1,5 +1,6 @@
 import type { Plugin } from '../../../../src/plugin/registry';
 import type { AppContext } from '../../../../src/ui/app';
+import { LifecycleComponent } from '../../../../src/ui/lifecycle-component.js';
 
 export type OidcProvider = 'google' | 'okta' | 'auth0' | 'cognito' | 'custom';
 
@@ -325,10 +326,10 @@ function ensureOidcControlsElement(app: AppContext): void {
   const labelUnauthenticated = resolveLabel(app, 'common.auth.unauthenticated', 'Not signed in');
   const getActiveApp = (): AppContext => ((window as any).__ux3App as AppContext) || app;
 
-  class UxOidcControls extends HTMLElement {
+  class UxOidcControls extends LifecycleComponent {
     private refresh = () => this.render();
 
-    connectedCallback(): void {
+    protected onConnected(): void {
       if (!this.shadowRoot) {
         this.attachShadow({ mode: 'open' });
       }
@@ -337,7 +338,7 @@ function ensureOidcControlsElement(app: AppContext): void {
       window.addEventListener('storage', this.refresh);
     }
 
-    disconnectedCallback(): void {
+    protected onDisconnected(): void {
       window.removeEventListener('focus', this.refresh);
       window.removeEventListener('storage', this.refresh);
     }

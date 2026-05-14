@@ -1,13 +1,34 @@
 import { UxBase } from './base.js';
 
 export class UxBreadcrumb extends UxBase {
+  private _popstateRaf: number | null = null;
+
   protected onConnected(): void {
     super.onConnected();
     this.setAttribute('aria-label', 'Breadcrumb');
     this.renderBreadcrumb();
-    window.addEventListener('popstate', () => requestAnimationFrame(() => this.renderBreadcrumb()));
-    window.addEventListener('ux:app.route.navigate', () => this.renderBreadcrumb());
+    window.addEventListener('popstate', this._onPopstate);
+    window.addEventListener('ux:app.route.navigate', this._onRouteNavigate);
   }
+
+  protected onDisconnected(): void {
+    window.removeEventListener('popstate', this._onPopstate);
+    window.removeEventListener('ux:app.route.navigate', this._onRouteNavigate);
+    if (this._popstateRaf !== null) {
+      cancelAnimationFrame(this._popstateRaf);
+      this._popstateRaf = null;
+    }
+    super.onDisconnected();
+  }
+
+  private readonly _onPopstate = (): void => {
+    this._popstateRaf = requestAnimationFrame(() => {
+      this._popstateRaf = null;
+      this.renderBreadcrumb();
+    });
+  };
+
+  private readonly _onRouteNavigate = (): void => { this.renderBreadcrumb(); };
 
   private renderBreadcrumb(): void {
     const sep = '<span class="ux-crumb-sep">/</span>';

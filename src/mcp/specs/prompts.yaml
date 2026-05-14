@@ -102,8 +102,16 @@ prompts:
 
         ### Registration (3 steps)
         1. Add `import { UxMyWidget } from './my-widget.js';` to `registry.ts`
-        2. Add definition: `{ tag: 'ux-my-widget', role: 'region', kind: 'my-widget' }` to `ALL_PRIMITIVES`
+        2. Add definition: `{ tag: 'ux-my-widget', role: 'region', kind: 'my-widget' }` to the internal `_ALL_PRIMITIVES` array in `registry.ts`
         3. Add `'my-widget'` to the `PrimitiveKind` union in `types.ts`
+        4. The shared `registerWidget()` API will automatically register metadata for lookup
+
+        ### Plugin widget registration
+        Plugin widgets can also register through the shared widget registry:
+        ```ts
+        import { registerWidget } from '@ux3/ux-primitives';
+        registerWidget({ tag: 'ux-my-plugin-widget', role: 'region', kind: 'region' });
+        ```
 
         ### Resolving (2 steps)
         1. Add import + switch case to `resolve.ts`

@@ -9,7 +9,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: ['**/kitchen-sink.spec.ts', '**/navigation.spec.ts'],
+  testMatch: ['**/kitchen-sink.spec.ts', '**/config-driven.spec.ts', '**/navigation.spec.ts', '**/form-system.spec.ts'],
   // keep all generated artifacts under test-results
   outputDir: 'test-results/playwright/artifacts',
   fullyParallel: false,
@@ -72,7 +72,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev:kitchen.sink',
     url: 'http://127.0.0.1:1337',
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120000,
   },
 });

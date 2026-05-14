@@ -4,9 +4,14 @@
   "type": "object",
   "required": ["initial", "states"],
   "properties": {
+    "id": { "type": "string" },
     "name": { "type": "string" },
     "layout": { "type": "string" },
     "initial": { "type": "string" },
+    "context": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "states": {
       "type": "object",
       "patternProperties": {

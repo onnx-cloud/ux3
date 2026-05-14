@@ -12,4 +12,9 @@ export type { BrowserContext, BrowserContextOptions, Reliability } from './brows
 export { captureBrowserContext, observeBrowserContext } from './browser-context.js';
 export { createBootstrap } from './bootstrap.js';
 export { AppContextBuilder, createAppContext, hydrate, type GeneratedConfig, type HydrationOptions } from './context-builder.js';
-export { registerStyles, applyStyles, initStyleRegistry, clearStyles, getRegisteredStyles } from './style-registry.js';
+export { registerStyles, applyStyles, initStyleRegistry, clearStyles, getRegisteredStyles, resolveStyle, registerStyleObjects } from './style-registry.js';
+
+export { registerBuiltInPrimitives } from './widget/primitives/index.js';
+export { registerWidget, resolveWidgetMetadata, getRegisteredWidgets } from './widget/widget-registry.js';
+export type { WidgetMetadata } from './widget/widget-registry.js';
+export { UxField } from './widget/form/field.js';

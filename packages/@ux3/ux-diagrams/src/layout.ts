@@ -86,13 +86,34 @@ export class LayeredLayout {
     const nodeHeight = fontSize + 16
     const nodeWidth = 120
 
+    const horizontal = config.direction === 'LR' || config.direction === 'RL'
+    const reverseX = config.direction === 'RL'
+    const reverseY = config.direction === 'BT'
+    const maxLevel = order.length - 1
+
     for (let level = 0; level < order.length; level++) {
       const nodes = order[level]
-      const y = level * (nodeHeight + padding)
+      const primary = level * (nodeHeight + padding)
 
       for (let i = 0; i < nodes.length; i++) {
-        const x = i * (nodeWidth + padding)
+        const secondary = i * (nodeWidth + padding)
+        const x = horizontal ? primary : secondary
+        const y = horizontal ? secondary : primary
         positions.set(nodes[i], { x, y, width: nodeWidth, height: nodeHeight })
+      }
+    }
+
+    if (reverseX) {
+      const maxX = maxLevel * (nodeHeight + padding)
+      for (const [key, pos] of positions) {
+        positions.set(key, { ...pos, x: maxX - pos.x })
+      }
+    }
+
+    if (reverseY) {
+      const maxY = maxLevel * (nodeHeight + padding)
+      for (const [key, pos] of positions) {
+        positions.set(key, { ...pos, y: maxY - pos.y })
       }
     }
 
@@ -134,7 +155,33 @@ export class ForceDirectedLayout {
       this.updatePositions(positions, forces, 0.1)
     }
 
-    return { nodes: positions, edges: [] }
+    const edgePaths = this.routeEdges(positions, diagram.edges)
+    return { nodes: positions, edges: edgePaths }
+  }
+
+  private routeEdges(
+    positions: Map<string, LayoutPosition>,
+    edges: any[],
+  ): Array<{ source: string; target: string; path: Point[] }> {
+    const result: Array<{ source: string; target: string; path: Point[] }> = []
+
+    for (const edge of edges) {
+      const sourcePos = positions.get(edge.source)
+      const targetPos = positions.get(edge.target)
+
+      if (!sourcePos || !targetPos) continue
+
+      result.push({
+        source: edge.source,
+        target: edge.target,
+        path: [
+          { x: sourcePos.x + sourcePos.width / 2, y: sourcePos.y + sourcePos.height / 2 },
+          { x: targetPos.x + targetPos.width / 2, y: targetPos.y + targetPos.height / 2 },
+        ],
+      })
+    }
+
+    return result
   }
 
   private buildAdjacencyList(edges: any[]): Map<string, string[]> {

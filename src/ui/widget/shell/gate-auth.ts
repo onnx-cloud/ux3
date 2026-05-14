@@ -60,6 +60,7 @@ export class UxGateAuth extends HTMLElement {
   private fallbackSlot: HTMLSlotElement | null = null;
   private pendingSlot: HTMLSlotElement | null = null;
   private contentSlot: HTMLSlotElement | null = null;
+  private authUnsubscribe: (() => void) | null = null;
 
   static get observedAttributes(): string[] {
     return ['aud', 'roles', 'scopes', 'iss', 'sub', 'match'];
@@ -69,7 +70,6 @@ export class UxGateAuth extends HTMLElement {
     this.setAttribute('role', 'none');
     this.innerHTML = '';
 
-    // Hidden slots for template selection
     this.innerHTML = `
       <slot name="fallback" style="display:none"></slot>
       <slot name="pending" style="display:none"></slot>
@@ -82,10 +82,16 @@ export class UxGateAuth extends HTMLElement {
 
     this.evaluateGate();
 
-    // Subscribe to auth changes
     const auth: any = typeof window !== 'undefined' ? (window as any).__ux3Auth : null;
     if (auth && typeof auth.subscribe === 'function') {
-      auth.subscribe(() => this.evaluateGate());
+      this.authUnsubscribe = auth.subscribe(() => this.evaluateGate());
+    }
+  }
+
+  disconnectedCallback() {
+    if (this.authUnsubscribe) {
+      this.authUnsubscribe();
+      this.authUnsubscribe = null;
     }
   }
 

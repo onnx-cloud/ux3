@@ -3,12 +3,17 @@ import type { AppContext } from '../../../../src/ui/app';
 import type { MachineConfig, StateConfig } from '../../../../src/fsm/types.js';
 import { StateMachine } from '../../../../src/fsm/state-machine.js';
 import { HandlebarsLite } from '../../../../src/hbs/index.js';
-import { UxPlanTree } from './ux-plan-tree.js';
+import matter from 'gray-matter';
+import { UxPlanTree } from './ux-agentic-plan.js';
+import { UxAgenticKanban } from './ux-agentic-kanban.js';
+import { UxAgenticFlow } from './ux-agentic-flow.js';
 import { resolvePatterns, registerPattern } from './patterns/resolver.js';
 import { allPatterns } from './patterns/definitions.js';
 
 export { resolvePatterns } from './patterns/resolver.js';
 export { allPatterns } from './patterns/definitions.js';
+export { UxAgenticKanban } from './ux-agentic-kanban.js';
+export { UxAgenticFlow } from './ux-agentic-flow.js';
 
 export interface PlanNodeContext {
   nodeId: string;
@@ -83,6 +88,132 @@ export interface PlanStepResult {
   error?: string;
   nextNodes?: string[];
 }
+
+const agenticTemplateCache = new Map<string, { text: string; frontmatter: Record<string, unknown> }>();
+
+function mergeAgenticContext(
+  stateContext: Record<string, unknown> | undefined,
+  frontmatter: Record<string, unknown> | undefined,
+  runtimeContext: Record<string, unknown>,
+): Record<string, unknown> {
+  const fileContext = frontmatter?.context && typeof frontmatter.context === 'object'
+    ? (frontmatter.context as Record<string, unknown>)
+    : undefined;
+
+  return {
+    ...stateContext,
+    ...(fileContext || {}),
+    ...runtimeContext,
+  };
+}
+
+function isMarkdownTemplate(path: string): boolean {
+  return path.endsWith('.md');
+}
+
+async function loadAgenticTemplate(path: string): Promise<{ text: string; frontmatter: Record<string, unknown> }> {
+  const cached = agenticTemplateCache.get(path);
+  if (cached) return cached;
+
+  let raw: string | null = null;
+
+  if (typeof window !== 'undefined' && typeof fetch === 'function') {
+    try {
+      const url = new URL(path, import.meta.url).href;
+      const response = await fetch(url);
+      if (response.ok) {
+        raw = await response.text();
+      }
+    } catch {
+      raw = null;
+    }
+  }
+
+  if (raw === null && typeof process !== 'undefined' && process.versions?.node) {
+    try {
+      const { promises: fs } = await import('fs');
+      const { fileURLToPath } = await import('url');
+      const filePath = fileURLToPath(new URL(path, import.meta.url));
+      raw = await fs.readFile(filePath, 'utf-8');
+    } catch {
+      raw = null;
+    }
+  }
+
+  if (raw === null) {
+    throw new Error(`Unable to load agentic template: ${path}`);
+  }
+
+  const parsed = matter(raw);
+  const frontmatter = parsed.data as Record<string, unknown> || {};
+  const requiredFrontmatter = ['name', 'title', 'description'];
+  for (const key of requiredFrontmatter) {
+    if (typeof frontmatter[key] !== 'string' || String(frontmatter[key]).trim() === '') {
+      throw new Error(`Agentic prompt file '${path}' is missing required frontmatter property: ${key}`);
+    }
+  }
+
+  const result = {
+    text: parsed.content.trim(),
+    frontmatter,
+  };
+  agenticTemplateCache.set(path, result);
+  return result;
+}
+
+type AgenticStateConfig = StateConfig<PlanNodeContext> & {
+  prompt?: string;
+  template?: string;
+  context?: Record<string, unknown>;
+};
+
+type AgenticRenderContext = Record<string, unknown>;
+
+type AgenticTemplateRef = string;
+
+type AgenticRenderOptions = {
+  stateCfg: AgenticStateConfig;
+  ctx: PlanNodeContext;
+};
+
+async function renderAgenticTemplate(
+  templateRef: AgenticTemplateRef,
+  options: AgenticRenderOptions,
+): Promise<string> {
+  const { stateCfg, ctx } = options;
+
+  if (stateCfg.prompt && !stateCfg.template) {
+    throw new Error('[plugin-agentic] The `prompt` alias is deprecated and no longer supported. Use `template: "<path>.md"` to reference a prompt markdown file.');
+  }
+
+  const resolvedTemplate = stateCfg.template ?? templateRef;
+
+  if (!resolvedTemplate || typeof resolvedTemplate !== 'string') {
+    throw new Error('[plugin-agentic] Missing template reference for agentic state. Use `template: "<path>.md"`.');
+  }
+
+  if (!isMarkdownTemplate(resolvedTemplate)) {
+    throw new Error('[plugin-agentic] Agentic templates must reference local Markdown files (*.md). Use `template: "<path>.md"` and avoid inline prompt text.');
+  }
+
+  let promptText = resolvedTemplate;
+  let frontmatter: Record<string, unknown> | undefined;
+
+  const resolved = await loadAgenticTemplate(resolvedTemplate);
+  promptText = resolved.text;
+  frontmatter = resolved.frontmatter;
+
+  const renderContext: AgenticRenderContext = mergeAgenticContext(stateCfg.context, frontmatter, {
+    ...ctx,
+    observations: ctx.observations || [],
+    decisions: ctx.decisions || [],
+    iteration: ctx.iteration ?? 0,
+    nodeId: ctx.nodeId || '',
+  });
+
+  return new HandlebarsLite().render(promptText, renderContext);
+}
+
 
 type PlanObserver = (plan: Plan, node: PlanNode) => void;
 
@@ -210,12 +341,12 @@ class PlanExecutionEngine implements PlanExecutionContext {
     const resolved = resolvePatterns(config);
 
     const plan: Plan = {
-      id: resolved.id || this.genId('plan'),
-      title: resolved.title,
-      goal: resolved.goal,
+      id: (resolved as any).id || this.genId('plan'),
+      title: (resolved as any).title,
+      goal: (resolved as any).goal,
       root: {
         id: this.genId('node'),
-        title: resolved.goal,
+        title: (resolved as any).goal,
         status: 'pending',
         children: [],
         observations: [],
@@ -236,17 +367,11 @@ class PlanExecutionEngine implements PlanExecutionContext {
     const hbs = new HandlebarsLite();
 
     machine.registerInvokeHandler('sample', async (input: any, ctx: PlanNodeContext) => {
-      const stateCfg = machine.getStateConfig(machine.getState()) as any;
-      const prompt = stateCfg?.prompt;
-      if (prompt) {
+      const stateCfg = machine.getStateConfig(machine.getState()) as AgenticStateConfig;
+      const templateRef = stateCfg?.template || stateCfg?.prompt;
+      if (templateRef) {
         try {
-          const rendered = hbs.render(prompt, {
-            ...ctx,
-            observations: ctx.observations || [],
-            decisions: ctx.decisions || [],
-            iteration: ctx.iteration || 0,
-            nodeId: ctx.nodeId || '',
-          });
+          const rendered = await renderAgenticTemplate(templateRef, { stateCfg, ctx });
           if (this.mcpService && typeof this.mcpService.sendSampleRaw === 'function') {
             const result = await this.mcpService.sendSampleRaw({
               messages: [{ role: 'user', content: rendered }],
@@ -699,7 +824,7 @@ export const AgenticPlugin: Plugin = {
     }
 
     if (mcp && typeof mcp.registerToolHandler === 'function') {
-      mcp.registerToolHandler('agentic:createPlan', async (args: Record<string, unknown>) => {
+      const createPlanHandler = async (args: Record<string, unknown>) => {
         if (args.config) {
           const plan = engine.createPlanFromConfig(args.config as PlanConfig);
           return { id: plan.id, title: plan.title, goal: plan.goal, status: plan.status };
@@ -709,35 +834,50 @@ export const AgenticPlugin: Plugin = {
         const steps = (args.steps as string[]) || [];
         const plan = planService.createPlan(title, goal, steps);
         return { id: plan.id, title: plan.title, goal: plan.goal, status: plan.status };
-      });
+      };
 
-      mcp.registerToolHandler('agentic:executePlan', async (args: Record<string, unknown>) => {
+      mcp.registerToolHandler('agentic:createPlan', createPlanHandler);
+      mcp.registerToolHandler('agentic:plan.create', createPlanHandler);
+
+      const executePlanHandler = async (args: Record<string, unknown>) => {
         const planId = (args.planId as string) || '';
         const results: PlanStepResult[] = [];
         for await (const step of planService.executePlan(planId)) {
           results.push(step);
         }
         return { planId, status: 'completed', results };
-      });
+      };
 
-      mcp.registerToolHandler('agentic:stepPlan', async (args: Record<string, unknown>) => {
+      mcp.registerToolHandler('agentic:executePlan', executePlanHandler);
+      mcp.registerToolHandler('agentic:plan.execute', executePlanHandler);
+
+      const stepPlanHandler = async (args: Record<string, unknown>) => {
         const planId = (args.planId as string) || '';
         const nodeId = (args.nodeId as string) || '';
         return planService.stepPlan(planId, nodeId);
-      });
+      };
 
-      mcp.registerToolHandler('agentic:getPlanState', async (args: Record<string, unknown>) => {
+      mcp.registerToolHandler('agentic:stepPlan', stepPlanHandler);
+      mcp.registerToolHandler('agentic:plan.step', stepPlanHandler);
+
+      const getPlanStateHandler = async (args: Record<string, unknown>) => {
         const planId = (args.planId as string) || '';
         return planService.getPlanState(planId);
-      });
+      };
 
-      mcp.registerToolHandler('agentic:cancelPlan', async (args: Record<string, unknown>) => {
+      mcp.registerToolHandler('agentic:getPlanState', getPlanStateHandler);
+      mcp.registerToolHandler('agentic:plan.getState', getPlanStateHandler);
+
+      const cancelPlanHandler = async (args: Record<string, unknown>) => {
         const planId = (args.planId as string) || '';
         planService.cancelPlan(planId);
         return { planId, cancelled: true };
-      });
+      };
 
-      mcp.registerToolHandler('agentic:updateNode', async (args: Record<string, unknown>) => {
+      mcp.registerToolHandler('agentic:cancelPlan', cancelPlanHandler);
+      mcp.registerToolHandler('agentic:plan.cancel', cancelPlanHandler);
+
+      const updateNodeHandler = async (args: Record<string, unknown>) => {
         const planId = (args.planId as string) || '';
         const nodeId = (args.nodeId as string) || '';
         const updates: any = {};
@@ -746,11 +886,20 @@ export const AgenticPlugin: Plugin = {
         if (args.result !== undefined) updates.result = args.result;
         if (args.statePath) updates.statePath = args.statePath;
         return planService.updateNode(planId, nodeId, updates);
-      });
+      };
+
+      mcp.registerToolHandler('agentic:updateNode', updateNodeHandler);
+      mcp.registerToolHandler('agentic:node.update', updateNodeHandler);
     }
 
-    if (!customElements.get('ux-plan-tree')) {
-      customElements.define('ux-plan-tree', UxPlanTree);
+    if (!customElements.get('ux-agentic-plan-tree')) {
+      customElements.define('ux-agentic-plan-tree', UxPlanTree);
+    }
+    if (!customElements.get('ux-agentic-kanban')) {
+      customElements.define('ux-agentic-kanban', UxAgenticKanban);
+    }
+    if (!customElements.get('ux-agentic-flow')) {
+      customElements.define('ux-agentic-flow', UxAgenticFlow);
     }
   },
 };

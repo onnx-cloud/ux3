@@ -70,6 +70,52 @@
       },
       "additionalProperties": true
     },
+    "context": {
+      "type": "object",
+      "description": "Project-level FSM context values",
+      "properties": {
+        "@id": { "type": "string", "format": "uri" }
+      },
+      "required": ["@id"],
+      "additionalProperties": true
+    },
+    "persist": {
+      "type": "object",
+      "description": "Persistence configuration for app and FSM context state.",
+      "properties": {
+        "context": {
+          "type": "object",
+          "properties": {
+            "adapter": { "type": "string" },
+            "ttl": { "type": "number", "minimum": 0 },
+            "config": { "type": "object", "additionalProperties": true }
+          },
+          "required": ["adapter"],
+          "additionalProperties": false
+        },
+        "plan": {
+          "type": "object",
+          "properties": {
+            "adapter": { "type": "string" },
+            "ttl": { "type": "number", "minimum": 0 },
+            "config": { "type": "object", "additionalProperties": true }
+          },
+          "required": ["adapter"],
+          "additionalProperties": false
+        },
+        "state": {
+          "type": "object",
+          "properties": {
+            "adapter": { "type": "string" },
+            "ttl": { "type": "number", "minimum": 0 },
+            "config": { "type": "object", "additionalProperties": true }
+          },
+          "required": ["adapter"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "development": {
       "type": "object",
       "properties": {

@@ -3,7 +3,7 @@ export type PrimitiveKind =
   | 'checkbox' | 'switch' | 'form' | 'image' | 'video' | 'audio'
   | 'wysiwyg' | 'tabs' | 'accordion' | 'popover' | 'tooltip' | 'drawer'
   | 'wizard' | 'capture' | 'progress' | 'menu' | 'select'
-  | 'network-status' | 'theme-toggle' | 'lang-switcher'
+  | 'network-status' | 'theme-toggle' | 'theme-switch' | 'lang-switcher'
   | 'card' | 'alert' | 'spinner' | 'empty-state' | 'error-panel'
   | 'pagination' | 'breadcrumb' | 'command-palette'
   | 'badge' | 'avatar' | 'skeleton' | 'page'

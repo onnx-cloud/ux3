@@ -422,7 +422,7 @@ export class UxChatComposer extends UxBase {
         content: 'Drop files here';
         position: absolute; inset: 0;
         display: flex; align-items: center; justify-content: center;
-        background: var(--color-primary, #7c3aed); color: #fff;
+        background: var(--color-primary, #7c3aed); color: var(--color-bg, #fff);
         border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
         z-index: 100; opacity: 0.9; pointer-events: none;
       }
@@ -494,7 +494,7 @@ export class UxChatComposer extends UxBase {
       }
       .attach-btn { color: var(--color-text-muted, #9ca3af); }
       .attach-btn:hover { color: var(--color-text, #0f172a); background: var(--color-bg-muted, #f3f4f6); }
-      .send-btn { background: var(--color-primary, #7c3aed); color: #fff; }
+      .send-btn { background: var(--color-primary, #7c3aed); color: var(--color-bg, #fff); }
       .send-btn:hover { background: var(--color-primary-hover, #6d28d9); }
       .send-btn:disabled, .attach-btn:disabled { opacity: 0.3; cursor: not-allowed; }
       .send-btn svg, .attach-btn svg { width: 0.875rem; height: 0.875rem; }

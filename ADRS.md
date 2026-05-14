@@ -448,6 +448,29 @@ states:
 | **Plugin** | Web Component registered by plugin's `install()` | Plugin package via `ux3.yaml` declaration | `@ux3/plugin-calendar`, `@ux3/plugin-cytoscape`, `@ux3/plugin-chart-js` | Complex widgets, external library bridges |
 | **Composite** | YAML-only FSM + HTML template | FSM compiler | `dashboard-shell`, `sign-in-form` | Composition-only widgets, 0 TypeScript |
 
+### First principles for a clean widget/plugin system
+
+- Core primitives are framework-owned building blocks, not plugin extensions. They ship with the framework and provide stable `ux-*` tags for templates.
+- Plugins are opt-in extensions that register additional widgets or behaviors during app install. They should not alter the core primitive registry.
+- Composites are declarative FSM+template views. They should compose primitives and plugin widgets without requiring additional registration metadata.
+- Runtime registration should be idempotent and explicit: each widget or primitive should register exactly once, and duplicate definitions should be harmlessly ignored.
+- Public API should expose a minimal surface for authors and plugin authors, while keeping internal metadata hidden unless needed.
+- Good DX comes from stable import paths, clear separation of concerns, and predictable lifecycle rules.
+
+### Desired clean design
+
+- `@ux3/ux-primitives` is the single canonical package for core primitives and shared widget base classes.
+- `@ux3/ui` can re-export a curated surface, but plugin authors should depend on `@ux3/ux-primitives` for primitive implementation types and base classes.
+- Core primitive registration should be exposed through one explicit entrypoint such as `registerCorePrimitives()` or `installCorePrimitives(app)`.
+- `ALL_PRIMITIVES`, `DEF_BY_TAG`, and `resolveClass()` should remain internal implementation details where possible, not public contract points.
+- Plugin widget registration should follow the same pattern as other plugins: `install()` defines the custom element and registers metadata if needed.
+- Plugin widgets may import shared base classes from `@ux3/ux-primitives`, but they should not be included in the built-in primitive list.
+- Templates should only reference stable `ux-*` tag names; authors should not need to know whether a tag is built-in, plugin-provided, or composite.
+- A compatibility shim may exist during migration, but the long-term goal is a clean split between:
+  1. core primitives package
+  2. plugin packages providing optional widgets
+  3. declarative FSM composites built in views
+
 **Plugin registration idiom:**
 ```typescript
 // packages/@ux3/plugin-<name>/src/index.ts

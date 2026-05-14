@@ -69,6 +69,7 @@ export function createI18nPanel(ctx: AppContext): HTMLElement {
   root.appendChild(table);
 
   const render = () => {
+    if (typeof document === 'undefined') return;
     const q = searchInput.value.toLowerCase();
     const onlyMissing = missingChk.checked;
     tbody.innerHTML = '';

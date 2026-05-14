@@ -205,6 +205,10 @@ export class UxKanban extends UxBase {
     } catch {}
   }
 
+  setData(data: KanbanData): void {
+    this.applyData(data);
+  }
+
   private escapeHtml(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }

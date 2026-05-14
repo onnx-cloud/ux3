@@ -3,71 +3,28 @@ description: "Observe → Orient → Decide → Act loop for sensing and reactin
 initial: observe
 states:
   observe:
-    prompt: |
-      You are in the **Observe** phase of the OODA loop.
-
-      ## Task
-      Gather information about the current state. What do you see?
-
-      {{#if observations}}
-      Existing observations:
-      {{#each observations}}
-      - {{this}}
-      {{/each}}
-      {{/if}}
-
-      ## Instructions
-      Collect relevant data and context. Report what you observe.
+    template: 'prompts/ooda/observe.md'
     invoke:
       src: sample
     on:
       done: orient
       error: "#error"
   orient:
-    prompt: |
-      You are in the **Orient** phase.
-
-      ## Observations
-      {{#each observations}}
-      - {{this}}
-      {{/each}}
-
-      ## Instructions
-      Analyze the observations. Identify patterns, anomalies, and relevant context.
-      Synthesize meaning from the data.
+    template: 'prompts/ooda/orient.md'
     invoke:
       src: sample
     on:
       done: decide
       error: "#error"
   decide:
-    prompt: |
-      You are in the **Decide** phase.
-
-      ## Analysis
-      {{#if decisions}}
-      {{decisions.[-1]}}
-      {{/if}}
-
-      ## Instructions
-      Choose a course of action based on the orientation analysis.
-      Be specific about what to do and why.
+    template: 'prompts/ooda/decide.md'
     invoke:
       src: sample
     on:
       done: act
       error: "#error"
   act:
-    prompt: |
-      Execute the chosen action.
-
-      ## Decision
-      {{#if decisions}}
-      {{decisions.[-1]}}
-      {{/if}}
-
-      ## Instructions
-      Carry out the action using available tools.
+    template: 'prompts/ooda/act.md'
     invoke:
       src: executeTool
       maxRetries: 1

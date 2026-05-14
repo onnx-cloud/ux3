@@ -32,3 +32,16 @@ A state can be:
 - success -> `ready`
 - failure -> `error`
 - `error` supports retry/dismiss
+
+### Diagramming the Pattern
+
+```mermaid
+stateDiagram-v2
+  [*] --> idle
+  idle --> loading : submit
+  loading --> ready : success
+  loading --> error : failure
+  error --> idle : retry
+```
+
+This canonical pattern is a key UX3 dogfood example for our own FSM docs.

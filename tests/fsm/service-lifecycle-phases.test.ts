@@ -40,7 +40,7 @@ describe('Service Lifecycle Phases', () => {
   describe('REGISTER phase', () => {
     it('should emit REGISTER phase when service is initialized', async () => {
       const builder = new AppContextBuilder(baseConfig);
-      builder.withMachines();
+      await builder.withMachines();
 
       const app = builder.build();
       const registerCalls: { name: string; type: string }[] = [];
@@ -64,7 +64,7 @@ describe('Service Lifecycle Phases', () => {
 
     it('should provide service metadata in REGISTER phase', async () => {
       const builder = new AppContextBuilder(baseConfig);
-      builder.withMachines();
+      await builder.withMachines();
       const app = builder.build();
 
       let foundApiService = false;
@@ -86,7 +86,8 @@ describe('Service Lifecycle Phases', () => {
   describe('CONNECT phase', () => {
     it('should emit CONNECT phase for all services during build', async () => {
       const builder = new AppContextBuilder(baseConfig);
-      builder.withMachines().withServices();
+      await builder.withMachines();
+      builder.withServices();
 
       const connectCalls: string[] = [];
 
@@ -106,7 +107,8 @@ describe('Service Lifecycle Phases', () => {
 
     it('should have service instance available in CONNECT phase', async () => {
       const builder = new AppContextBuilder(baseConfig);
-      builder.withMachines().withServices();
+      await builder.withMachines();
+      builder.withServices();
 
       const app = builder.build();
       
@@ -124,7 +126,7 @@ describe('Service Lifecycle Phases', () => {
       const registerHook = () => events.push('REGISTER');
       const connectHook = () => events.push('CONNECT');
 
-      builder.withMachines();
+      await builder.withMachines();
       const app = builder.build();
 
       app.hooks?.on(ServiceLifecyclePhase.REGISTER, ({ service }: any) => {
@@ -149,7 +151,7 @@ describe('Service Lifecycle Phases', () => {
     it('plugins can hook into SERVICE lifecycle phases', async () => {
       const config = { ...baseConfig };
       const builder = new AppContextBuilder(config);
-      builder.withMachines();
+      await builder.withMachines();
 
       const app = builder.build();
       const phaseLog: string[] = [];

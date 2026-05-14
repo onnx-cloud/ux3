@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: ['**/kitchen-sink.spec.ts'],
+  testMatch: ['**/kitchen-sink.spec.ts', '**/config-driven.spec.ts'],
   outputDir: 'test-results/playwright/kitchen-sink/artifacts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

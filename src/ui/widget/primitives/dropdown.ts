@@ -28,6 +28,7 @@ import { UX_EVENT, UX_CHANGE } from '../../../utils/helpers.js';
 
 export class UxDropdown extends LifecycleComponent {
   static formAssociated = true;
+  private static _stylesCache: string | null = null;
 
   private internals: ElementInternals;
   private isOpen = false;
@@ -153,7 +154,7 @@ export class UxDropdown extends LifecycleComponent {
     if (!this.shadowRoot) return;
 
     this.shadowRoot.innerHTML = `
-      <style>${this.getStyles()}</style>
+      <style>${UxDropdown._stylesCache || (UxDropdown._stylesCache = this.getStyles())}</style>
       <div class="dropdown-wrapper">
         <button class="dropdown-toggle" type="button" aria-haspopup="listbox">
           <span class="dropdown-display">${this.placeholder}</span>

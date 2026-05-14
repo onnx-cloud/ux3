@@ -39,7 +39,10 @@ export class UxLink extends UxBase {
 
   private readonly onAnchorClick = (e: Event) => {
     const href = this.getAttribute('href');
-    if (!href || href === '#') return;
+    if (!href || href === '#') {
+      e.preventDefault();
+      return;
+    }
 
     const target = this.getAttribute('target');
 
@@ -50,15 +53,12 @@ export class UxLink extends UxBase {
     }
 
     if (href.startsWith('http://') || href.startsWith('https://')) {
-      if (target === '_blank') return;
       return;
     }
 
     e.preventDefault();
-    this.dispatchEvent(new CustomEvent('ux:route.navigate', {
-      bubbles: true, composed: true,
-      detail: { path: href },
-    }));
+    window.history.pushState({}, '', href);
+    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   private createModalFrame(href: string): void {

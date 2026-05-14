@@ -18,7 +18,7 @@ import { UxWizard } from './wizard.js';
 import { UxCapture } from './capture.js';
 import { UxProgress } from './progress.js';
 import { UxSelect } from './select.js';
-import { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from '../shell/context-tools.js';
+import { UxLangSwitcher, UxThemeToggle, UxThemeSwitch, UxNetworkStatus } from '../shell/context-tools.js';
 import { UxCard } from './card.js';
 import { UxAlert } from './alert.js';
 import { UxSpinner } from './spinner.js';
@@ -42,6 +42,7 @@ import { UxDataGrid } from './data-grid.js';
 import { UxTableVirtual } from './table-virtual.js';
 import { UxTable } from './table.js';
 import { UxSplash } from './splash-screen.js';
+import { UxCheckbox } from './checkbox.js';
 import { UxRadioGroup } from './radio-group.js';
 import { UxLink } from './link.js';
 import { UxMegaMenu } from './mega-menu.js';
@@ -50,7 +51,7 @@ import { UxContextMenu } from './context-menu.js';
 export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
     case 'toggle': return UxToggle;
-    case 'checkbox':
+    case 'checkbox': return UxCheckbox;
     case 'switch': return UxToggle;
     case 'tabs': return UxTabs;
     case 'menu': return UxMenu;
@@ -73,6 +74,7 @@ export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
     case 'select': return UxSelect;
     case 'network-status': return UxNetworkStatus;
     case 'theme-toggle': return UxThemeToggle;
+    case 'theme-switch': return UxThemeSwitch;
     case 'lang-switcher': return UxLangSwitcher;
     case 'card': return UxCard;
     case 'alert': return UxAlert;

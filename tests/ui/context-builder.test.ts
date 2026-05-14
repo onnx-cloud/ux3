@@ -115,24 +115,24 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
   });
 
   describe('withMachines()', () => {
-    it('should initialize FSMs from config', () => {
+    it('should initialize FSMs from config', async () => {
       const builder = new AppContextBuilder(config);
-      builder.withMachines();
+      await builder.withMachines();
 
       const app = builder.build();
       expect(app.machines['login']).toBeDefined();
       expect(app.machines['login'].getState()).toBe('idle');
     });
 
-    it('should return builder for chaining', () => {
+    it('should return builder for chaining', async () => {
       const builder = new AppContextBuilder(config);
-      const result = builder.withMachines();
+      const result = await builder.withMachines();
       expect(result).toBe(builder);
     });
 
-    it('should subscribe to machine state changes', () => {
+    it('should subscribe to machine state changes', async () => {
       const builder = new AppContextBuilder(config);
-      builder.withMachines();
+      await builder.withMachines();
 
       const app = builder.build();
       const fsm = app.machines['login'];
@@ -146,10 +146,10 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       expect(states).toContain('loading');
     });
 
-    it('BUG-3: should register FSMs in FSMRegistry so navigation can look them up', () => {
+    it('BUG-3: should register FSMs in FSMRegistry so navigation can look them up', async () => {
       FSMRegistry.clear();
       const builder = new AppContextBuilder(config);
-      builder.withMachines();
+      await builder.withMachines();
 
       // After withMachines(), every machine must be in the global FSMRegistry
       expect(FSMRegistry.get('login')).toBeDefined();
@@ -386,15 +386,15 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
   });
 
   describe('build()', () => {
-    it('should return complete AppContext', () => {
-      const app = new AppContextBuilder(config)
-        .withMachines()
-        .withServices()
-        .withWidgets()
-        .withI18n()
-        .withTemplates()
-        .withStyles()
-        .build();
+    it('should return complete AppContext', async () => {
+      const builder = new AppContextBuilder(config);
+      await builder.withMachines();
+      builder.withServices();
+      builder.withWidgets();
+      builder.withI18n();
+      builder.withTemplates();
+      builder.withStyles();
+      const app = builder.build();
 
       expect(app).toBeDefined();
       expect(app.machines).toBeDefined();
@@ -406,21 +406,21 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
       expect(app.ui).toBeDefined();
     });
 
-    it('should auto-initialize widgets if not called', () => {
-      const app = new AppContextBuilder(config)
-        .withMachines()
-        .withServices()
-        .withI18n()
-        .build();
+    it('should auto-initialize widgets if not called', async () => {
+      const builder = new AppContextBuilder(config);
+      await builder.withMachines();
+      builder.withServices();
+      builder.withI18n();
+      const app = builder.build();
 
       expect(app.widgets).toBeDefined();
     });
 
-    it('should export app globally', () => {
+    it('should export app globally', async () => {
       // Note: requires globalThis in test environment
-      const app = new AppContextBuilder(config)
-        .withMachines()
-        .build();
+      const builder = new AppContextBuilder(config);
+      await builder.withMachines();
+      const app = builder.build();
 
       // In a real browser, this would be on window
       // In tests, we just verify the method completes
@@ -429,7 +429,7 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should register error handler', () => {
+    it('should register error handler', async () => {
       const errors: Error[] = [];
       const builder = new AppContextBuilder(config);
 
@@ -437,10 +437,9 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
         errors.push(error);
       });
 
-      const app = builder
-        .withMachines()
-        .withServices()
-        .build();
+      await builder.withMachines();
+      builder.withServices();
+      const app = builder.build();
 
       expect(app).toBeDefined();
       // Errors only captured if something fails during build
@@ -465,23 +464,23 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
   });
 
   describe('Fluent API', () => {
-    it('should support method chaining', () => {
-      const app = new AppContextBuilder(config)
-        .withMachines()
-        .withServices()
-        .withWidgets()
-        .withI18n()
-        .withTemplates()
-        .withStyles()
-        .build();
+    it('should support method chaining', async () => {
+      const builder = new AppContextBuilder(config);
+      await builder.withMachines();
+      builder.withServices();
+      builder.withWidgets();
+      builder.withI18n();
+      builder.withTemplates();
+      builder.withStyles();
+      const app = builder.build();
 
       expect(app).toBeDefined();
     });
 
-    it('should allow partial building', () => {
-      const app = new AppContextBuilder(config)
-        .withMachines()
-        .build();
+    it('should allow partial building', async () => {
+      const builder = new AppContextBuilder(config);
+      await builder.withMachines();
+      const app = builder.build();
 
       expect(app.machines).toBeDefined();
       expect(app.services).toBeDefined(); // Empty
@@ -489,10 +488,10 @@ describe('AppContextBuilder - Comprehensive Tests', () => {
   });
 
   describe('Integration', () => {
-    it('should create functioning FSM from context', () => {
-      const app = new AppContextBuilder(config)
-        .withMachines()
-        .build();
+    it('should create functioning FSM from context', async () => {
+      const builder = new AppContextBuilder(config);
+      await builder.withMachines();
+      const app = builder.build();
 
       const fsm = app.machines['login'];
       expect(fsm.getState()).toBe('idle');

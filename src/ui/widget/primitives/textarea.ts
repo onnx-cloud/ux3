@@ -17,7 +17,10 @@ const STYLE_CSS = `    ux-textarea { display: inline-block; width: 100%; }
     ux-textarea textarea:focus-visible {
       outline: var(--ux-textarea-focus-ring, 2px solid var(--ux-color-accent, #2563eb));
       outline-offset: var(--ux-textarea-focus-offset, 1px);
-    }`;
+    }
+    ux-textarea[data-variant="compact"] textarea { padding: 0.375rem 0.5rem; font-size: 0.875rem; }
+    ux-textarea[data-variant="filled"] textarea { background: #f3f4f6; border-color: transparent; }
+    ux-textarea[data-variant="filled"] textarea:focus-visible { background: #ffffff; border-color: #d1d5db; }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxTextarea extends UxBase {
   private textareaEl: HTMLTextAreaElement | null = null;

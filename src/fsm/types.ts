@@ -2,7 +2,7 @@
  * FSM Type Definitions
  */
 
-export type GuardCondition<T extends Record<string, any>> = (context: T) => boolean;
+export type GuardCondition<T extends Record<string, any>> = (context: T, event: StateEvent) => boolean;
 
 export interface StateEvent {
   type: string;
@@ -13,7 +13,7 @@ export interface StateEvent {
 
 export interface TransitionConfig<T extends Record<string, any>> {
   target?: string;
-  guard?: GuardCondition<T>;
+  guard?: GuardCondition<T> | string;
   actions?: Array<ActionFn<T>>;
   payload?: boolean;
   set?: Record<string, unknown>;

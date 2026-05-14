@@ -40,11 +40,16 @@ export interface ModelSchema {
 }
 
 export interface StoreConfig {
-  backend: 'local' | 'remote' | 'hybrid' | 'memory';
+  backend: 'local' | 'remote' | 'hybrid' | 'memory' | 'bundle';
   persistence?: {
     driver: 'localStorage' | 'indexeddb';
     dbName?: string;
     keyPrefix?: string;
+  };
+  bundle?: {
+    key?: string;
+    version?: string;
+    metadata?: Record<string, unknown>;
   };
   baseUrl?: string;
   auth?: {
@@ -130,8 +135,7 @@ export interface StorageAdapter {
   
   // Utilities
   clear(model?: string): Promise<void>;
-  dump(model?: string): Promise<Record<string, any>>;
-}
+  dump(model?: string): Promise<Record<string, any>>;  bundle?(): Record<string, any>;}
 
 export interface StoreSubscriber {
   (change: Change): void;

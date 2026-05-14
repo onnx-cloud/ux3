@@ -1,14 +1,16 @@
 /**
  * FSM Type Definitions
  */
-export type GuardCondition<T extends Record<string, any>> = (context: T) => boolean;
+export type GuardCondition<T extends Record<string, any>> = (context: T, event: StateEvent) => boolean;
 export interface StateEvent {
     type: string;
     payload?: Record<string, any>;
+    fromDOM?: boolean;
+    sourceElement?: HTMLElement;
 }
 export interface TransitionConfig<T extends Record<string, any>> {
     target?: string;
-    guard?: GuardCondition<T>;
+    guard?: GuardCondition<T> | string;
     actions?: Array<ActionFn<T>>;
 }
 export type ServiceFn = (params?: any) => Promise<any>;

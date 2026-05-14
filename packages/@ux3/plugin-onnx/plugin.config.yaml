@@ -1,0 +1,61 @@
+name: "@ux3/plugin-onnx"
+displayName: "ONNX Search"
+author: ONNX Cloud Team
+categories:
+  - analysis
+  - ai
+  - tooling
+ux3PeerVersion: ^0.2.0
+
+mcp:
+  tools:
+    - name: "onnx.search.query"
+      description: "Search the ONNX knowledge corpus using the prebuilt FlatBuffer index."
+      inputSchema:
+        type: object
+        properties:
+          query: { type: string }
+          topK:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 5
+        required: [query]
+
+    - name: "onnx.prompt.select"
+      description: "Select the best ONNX prompt template for a given user intent and query."
+      inputSchema:
+        type: object
+        properties:
+          query: { type: string }
+          intent: { type: string }
+        required: [query]
+
+    - name: "onnx.index.describe"
+      description: "Describe the structure and metadata of the ONNX FlatBuffer search index."
+      inputSchema:
+        type: object
+        additionalProperties: false
+
+  resources:
+    - name: "onnx.index"
+      uri: "plugin://onnx/index"
+      mimeType: "application/octet-stream"
+      description: "Prebuilt FlatBuffer search index for ONNX content and prompt templates."
+
+    - name: "onnx.content"
+      uri: "plugin://onnx/content"
+      mimeType: "application/json"
+      description: "ONNX knowledge corpus and content metadata."
+
+    - name: "onnx.prompts"
+      uri: "plugin://onnx/prompts"
+      mimeType: "application/json"
+      description: "Reusable ONNX prompt templates for search and response composition."
+
+    - name: "onnx.guide"
+      uri: "plugin://onnx/guide"
+      mimeType: "text/markdown"
+      description: "ONNX plugin usage guide and RAG integration notes."
+
+  systemPrompt: "You are an ONNX knowledge assistant. Use the built index and prompt templates to answer questions accurately. Prefer retrieved content over hallucination and select the best prompt for user intent."

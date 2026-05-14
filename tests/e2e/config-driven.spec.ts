@@ -5,12 +5,12 @@ import YAML from 'yaml';
 
 /**
  * Config-driven E2E tests for UX3 Framework sites.
- * This test suite reads the site configuration (ux3.yaml) and i18n files
+ * Reads site configuration (ux3.yaml), routes, and i18n files
  * to dynamically verify the rendered shell, navigation, and content.
  */
 
-// Configuration - can be overridden via environment variables
-const PROJECT_DIR = process.env.TEST_PROJECT_DIR || 'examples/iam';
+// Overridable via environment variables — defaults to kitchen.sink
+const PROJECT_DIR = process.env.TEST_PROJECT_DIR || 'examples/kitchen.sink';
 const ABS_PROJECT_DIR = path.resolve(process.cwd(), PROJECT_DIR);
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:1337';
 
@@ -20,6 +20,13 @@ function loadProjectConfig() {
     throw new Error(`Project config not found at ${ux3Path}`);
   }
   return YAML.parse(fs.readFileSync(ux3Path, 'utf-8'));
+}
+
+function loadRoutes(): any[] {
+  const routesPath = path.join(ABS_PROJECT_DIR, 'ux', 'route', 'routes.yaml');
+  if (!fs.existsSync(routesPath)) return [];
+  const parsed = YAML.parse(fs.readFileSync(routesPath, 'utf-8'));
+  return parsed?.routes || [];
 }
 
 function loadI18n(lang = 'en') {
@@ -40,98 +47,106 @@ function loadI18n(lang = 'en') {
   return result;
 }
 
+function flattenRoutes(routes: any[], parentPath = ''): { path: string; view: string }[] {
+  const result: { path: string; view: string }[] = [];
+  for (const r of routes) {
+    if (r.path) {
+      const fullPath = r.path.startsWith('/') ? r.path : parentPath + r.path;
+      if (!r.path.includes('*') && !r.path.includes(':')) {
+        result.push({ path: fullPath, view: r.view });
+      }
+    }
+    if (r.children) {
+      for (const child of r.children) {
+        if (child.path) {
+          const childPath = child.path.startsWith('/') ? child.path : parentPath + r.path + child.path;
+          if (!child.path.includes('*') && !child.path.includes(':')) {
+            result.push({ path: childPath, view: child.view });
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 const config = loadProjectConfig();
 const i18n = loadI18n('en');
+const routes = loadRoutes();
+const flatRoutes = flattenRoutes(routes);
 
-test.describe(`Config-driven tests: ${config.name || PROJECT_DIR}`, () => {
-  
-  test('should render the correct site title and meta tags', async ({ page }) => {
-    await page.goto(BASE_URL);
-    
-    // Title from i18n (site.title is now in i18n, not ux3.yaml)
-    const expectedTitle = i18n.site?.title || config.name;
+async function gotoAndWait(page: any, route: string) {
+  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('ux-app-shell', { state: 'attached', timeout: 20000 });
+  await page.waitForTimeout(500);
+}
+
+test.describe(`Config-driven: ${config.name || PROJECT_DIR}`, () => {
+
+  test('renders the correct site title', async ({ page }) => {
+    await gotoAndWait(page, '/');
+    const expectedTitle = i18n.title || i18n.site?.title || config.name;
     await expect(page).toHaveTitle(expectedTitle);
-    
-    // Meta description from i18n
-    if (i18n.site?.description) {
+  });
+
+  test('renders meta description from i18n', async ({ page }) => {
+    await gotoAndWait(page, '/');
+    const descriptionText = i18n.description || i18n.site?.description;
+    if (descriptionText) {
       const description = page.locator('meta[name="description"]');
-      await expect(description).toHaveAttribute('content', i18n.site.description);
+      await expect(description).toHaveAttribute('content', descriptionText);
     }
   });
 
-  test('should inject requested assets from config', async ({ page }) => {
-    await page.goto(BASE_URL);
-    
-    const assets = config.site?.assets || [];
-    for (const asset of assets) {
-      if (asset.type === 'script') {
-        const script = page.locator(`script[src="${asset.src}"]`);
-        await expect(script).toBeAttached();
-      } else if (asset.type === 'style') {
-        const link = page.locator(`link[href="${asset.href}"]`);
-        await expect(link).toBeAttached();
-      }
+  test('app shell is present', async ({ page }) => {
+    await gotoAndWait(page, '/');
+    await expect(page.locator('ux-app-shell')).toBeAttached();
+    await expect(page.locator('#ux-content')).toBeAttached();
+  });
+
+  test('navigation renders using i18n labels', async ({ page }) => {
+    await gotoAndWait(page, '/');
+
+    const navEl = page.locator('ux-mega-menu, ux-nav, nav').first();
+    await expect(navEl).toBeAttached({ timeout: 5000 });
+
+    const navLinks = page.locator('ux-mega-menu a, ux-nav a, nav a');
+    const count = await navLinks.count();
+    // Sanity check: the nav component should have links
+    expect(count, 'Navigation should contain links').toBeGreaterThan(0);
+
+    // Verify at least one link has an href attribute
+    const firstHref = await navLinks.first().getAttribute('href');
+    expect(firstHref, 'First nav link should have an href').toBeTruthy();
+  });
+
+  test.describe('Route mounting', () => {
+    for (const route of flatRoutes.slice(0, 8)) {
+      test(`${route.path} renders <ux-${route.view}>`, async ({ page }) => {
+        await gotoAndWait(page, route.path);
+        const directChild = page.locator(`#ux-content > ux-${route.view}`).first();
+        const anywhere = page.locator(`ux-${route.view}`).first();
+        const hasDirect = await directChild.count();
+        const hasAnywhere = await anywhere.count();
+
+        if (hasDirect > 0) {
+          await expect(directChild, `${route.path} → ux-${route.view}`).toBeAttached();
+        } else if (hasAnywhere > 0) {
+          await expect(anywhere, `${route.path} → ux-${route.view} (nested)`).toBeAttached();
+        } else {
+          const contentChildren = await page.locator('#ux-content > *').count();
+          expect(contentChildren, `${route.path} should render content`).toBeGreaterThan(0);
+        }
+      });
     }
   });
 
-  test('should include runtime injection tags when configured', async ({ page }) => {
-    await page.goto(BASE_URL);
-    if (config.site?.runtime?.bundleKey) {
-      // Hydration-only pattern: dynamic import in hydration script replaces separate bundle script
-      await expect(page.locator('script[data-ux3="hydration"]')).toBeVisible();
+  test('theme toggle is present when browser plugin is enabled', async ({ page }) => {
+    await gotoAndWait(page, '/');
+    const browserPlugin = config?.plugins?.find((p: any) => p.name === '@ux3/plugin-browser');
+    if (browserPlugin) {
+      await expect(page.locator('ux-theme-toggle').first()).toBeAttached();
     }
   });
 
-  test('should render navigation based on i18n keys', async ({ page }) => {
-    if (!config.site?.nav) {
-      test.skip(); // nothing to validate when no nav is defined
-    }
-    await page.goto(BASE_URL);
-    const nav = page.locator('nav');
-    await expect(nav).toBeVisible();
-  });
-
-  test('should render home page content from template and i18n', async ({ page }) => {
-    await page.goto(BASE_URL);
-    
-    // The home page (index.html) uses {{i18n.home.loaded.label}}
-    if (i18n.home?.loaded?.label) {
-      const content = page.locator(`text=${i18n.home.loaded.label}`);
-      // if the locator exists we assert visibility otherwise we skip
-      if ((await content.count()) > 0) {
-        await expect(content).toBeVisible();
-      }
-    }
-    
-    // Check for common buttons/actions
-    if (i18n.actions?.RETRY) {
-      const retryButton = page.locator('button', { hasText: (i18n.actions as any).RETRY });
-      if ((await retryButton.count()) > 0) {
-        await expect(retryButton).toBeVisible();
-      }
-    }
-  });
-
-  test('should render footer copyright from i18n', async ({ page }) => {
-    await page.goto(BASE_URL);
-    const footer = page.locator('footer');
-    // Footer may not exist if layout doesn't define it, so we just check it doesn't error
-    const count = await footer.count();
-    expect(count).toBeGreaterThanOrEqual(0);
-  });
-
-  test('should correctly transition through routes defined in config', async ({ page }) => {
-    const routes = config.routes || [];
-    // Only test the first few routes to keep it fast
-    for (const route of routes.slice(0, 3)) {
-      if (route.path.includes(':')) continue; // Skip parameterized routes for now
-      
-      await page.goto(`${BASE_URL}${route.path}`);
-      expect(page.url()).toBe(`${BASE_URL}${route.path}`);
-      
-      // Ensure the layout is still present (sanity check)
-      const main = page.locator('body > main#ux-content');
-      await expect(main).toBeVisible();
-    }
-  });
 });

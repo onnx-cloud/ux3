@@ -12,8 +12,17 @@ registerLightStyle(STYLE_ID, STYLE_CSS);
 export class UxEmptyState extends UxBase {
   protected onConnected(): void {
     super.onConnected();
-const text = this.textContent?.trim() || 'No data';
-    this.innerHTML = `<span style="font-size:2.5rem;opacity:0.4;margin-bottom:0.75rem">\u{1F4AD}</span>
+    const content = this.innerHTML.trim();
+    if (content.length === 0) {
+      const text = this.textContent?.trim() || 'No data';
+      this.innerHTML = `<span style="font-size:2.5rem;opacity:0.4;margin-bottom:0.75rem">\u{1F4AD}</span>
 <div class="title">${text}</div>`;
+      return;
+    }
+
+    const icon = document.createElement('span');
+    icon.textContent = '\u{1F4AD}';
+    icon.style.cssText = 'font-size:2.5rem;opacity:0.4;margin-bottom:0.75rem';
+    this.prepend(icon);
   }
 }

@@ -175,14 +175,15 @@ function buildNavConfig(
   let currentPath = pathname;
   let currentView = 'home';
 
-  const findInTree = (list: Array<{ path: string; view: string; children?: any[] }>): boolean => {
+  const findInTree = (list: Array<{ path: string; view: string; children?: any[] }>, parentPath: string = ''): boolean => {
     for (const route of list) {
-      if (route.path === pathname) {
-        currentPath = route.path;
+      const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
+      if (fullPath === pathname) {
+        currentPath = fullPath;
         currentView = route.view;
         return true;
       }
-      if (route.path.includes('*') && pathname.startsWith(route.path.replace(/\/\*$/, ''))) {
+      if (route.path.includes('*') && pathname.startsWith(fullPath.replace(/\/\*$/, ''))) {
         currentPath = pathname;
         currentView = route.view;
         return true;
@@ -197,7 +198,8 @@ function buildNavConfig(
       }
     }
     for (const route of list) {
-      if (route.children?.length && findInTree(route.children)) return true;
+      const fullPath = parentPath ? `${parentPath}${route.path}` : route.path;
+      if (route.children?.length && findInTree(route.children, fullPath)) return true;
     }
     return false;
   };
@@ -938,14 +940,17 @@ export class DevServer {
   /** Recursively search a route tree (with children) for a matching route. */
   private findRouteInTree(
     routes: Array<{ path: string; view: string; children?: any[] }>,
-    pathname: string
+    pathname: string,
+    parentPath: string = '',
   ): { path: string; view: string } | null {
     for (const r of routes) {
-      if (this.pathMatches(r.path, pathname)) return r;
+      const fullPath = parentPath ? `${parentPath}${r.path}` : r.path;
+      if (this.pathMatches(fullPath, pathname)) return { path: fullPath, view: r.view };
     }
     for (const r of routes) {
       if (r.children?.length) {
-        const found = this.findRouteInTree(r.children, pathname);
+        const fullPath = parentPath ? `${parentPath}${r.path}` : r.path;
+        const found = this.findRouteInTree(r.children, pathname, fullPath);
         if (found) return found;
       }
     }

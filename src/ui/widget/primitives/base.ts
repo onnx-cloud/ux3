@@ -83,6 +83,10 @@ export class UxBase extends LifecycleComponent {
       this.fsmUnsubscribe();
       this.fsmUnsubscribe = null;
     }
+    if (this.rootContextUnsubscribe) {
+      this.rootContextUnsubscribe();
+      this.rootContextUnsubscribe = null;
+    }
     if (this._appDataPollId !== null) {
       cancelAnimationFrame(this._appDataPollId);
       this._appDataPollId = null;
@@ -138,6 +142,7 @@ export class UxBase extends LifecycleComponent {
   }
 
   private _appDataPollId: number | null = null;
+  private rootContextUnsubscribe: (() => void) | null = null;
 
   private resolveDataFrom(context?: Record<string, any>): void {
     let dataFrom = this.getAttribute('data-from');
@@ -146,9 +151,14 @@ export class UxBase extends LifecycleComponent {
       if (name && name in context) dataFrom = name;
     }
 
-    // $.-prefixed paths resolve against global __ux3App (no FSM context needed)
+    // $.-prefixed paths resolve against global root app context
     if (dataFrom && dataFrom.startsWith('$.')) {
       this.resolveAppPath(dataFrom);
+      if (!this.rootContextUnsubscribe) {
+        this.rootContextUnsubscribe = FSMRegistry.subscribeRoot(() => {
+          this.resolveAppPath(dataFrom);
+        });
+      }
       return;
     }
 
@@ -175,7 +185,8 @@ export class UxBase extends LifecycleComponent {
     const path = dataFrom.slice(2);
     const app = (window as any).__ux3App;
     if (app) {
-      const value = resolveDotPath(app, path);
+      const rootContext = app.rootContext || (app as any).context || app;
+      const value = resolveDotPath({ $: rootContext }, dataFrom);
       if (value !== undefined && value !== this._boundDataRef) {
         this._boundDataRef = value;
         this.applyData(value);
@@ -191,7 +202,8 @@ export class UxBase extends LifecycleComponent {
         return;
       }
       this._appDataPollId = null;
-      const value = resolveDotPath(app, path);
+      const rootContext = app.rootContext || (app as any).context || app;
+      const value = resolveDotPath({ $: rootContext }, dataFrom);
       if (value !== undefined && value !== this._boundDataRef) {
         this._boundDataRef = value;
         this.applyData(value);

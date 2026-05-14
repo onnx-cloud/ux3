@@ -10,7 +10,6 @@ export const regionPrimitives: PrimitiveDefinition[] = [
   { tag: 'ux-sidebar', role: 'navigation', kind: 'region' },
   { tag: 'ux-content', role: 'region', kind: 'region' },
   { tag: 'ux-tab', role: 'tabpanel', kind: 'region' },
-  { tag: 'ux-tab', role: 'tab', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-menu-item', role: 'menuitem', kind: 'toggle', stateAttr: 'selected' },
   { tag: 'ux-card-icon', role: 'img', kind: 'region' },
   { tag: 'ux-surface', role: 'region', kind: 'region' },

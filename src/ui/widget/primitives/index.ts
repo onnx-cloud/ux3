@@ -1,4 +1,4 @@
-import { ALL_PRIMITIVES } from './registry.js';
+import { getAllPrimitiveDefs } from './registry.js';
 import { resolveClass } from './resolve.js';
 
 export { UxBase } from './base.js';
@@ -21,7 +21,7 @@ export { UxWizard } from './wizard.js';
 export { UxCapture } from './capture.js';
 export { UxProgress } from './progress.js';
 export { UxSelect } from './select.js';
-export { UxLangSwitcher, UxThemeToggle, UxNetworkStatus } from '../shell/context-tools.js';
+export { UxLangSwitcher, UxThemeToggle, UxThemeSwitch, UxNetworkStatus } from '../shell/context-tools.js';
 export { UxCard } from './card.js';
 export { UxAlert } from './alert.js';
 export { UxSpinner } from './spinner.js';
@@ -47,12 +47,16 @@ export { UxTable } from './table.js';
 export { UxLink } from './link.js';
 export { UxMegaMenu } from './mega-menu.js';
 export { UxContextMenu } from './context-menu.js';
+export { UxCheckbox } from './checkbox.js';
+export { UxRadioGroup } from './radio-group.js';
 export { resolveClass } from './resolve.js';
 import './lightbox.js';
 export type { PrimitiveKind, PrimitiveDefinition } from './types.js';
 
+export { registerWidget, resolveWidgetMetadata, getRegisteredWidgets } from '../widget-registry.js';
+
 export function registerBuiltInPrimitives(): void {
-  for (const definition of ALL_PRIMITIVES) {
+  for (const definition of getAllPrimitiveDefs()) {
     if (typeof customElements !== 'undefined' && !customElements.get(definition.tag)) {
       const BaseClass = resolveClass(definition.kind);
       const ElementClass = class extends BaseClass {};

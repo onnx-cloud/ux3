@@ -17,6 +17,7 @@ Use `ux3 generate view <name>` to scaffold a new view quickly.
   - An object with `template`, optional `invoke`, and optional `on` transitions.
 - `on` transitions are event-driven (`EVENT: targetState`).
 - Guards and conditions evaluate against `ctx` and `event`.
+- String guards may resolve nested context paths (for example `user.isAuthenticated`) or cross-FSM state checks (`otherFsm:ready`).
 
 ## Side effects and integrations
 

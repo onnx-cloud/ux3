@@ -131,7 +131,7 @@ describe('StateMachine', () => {
     expect(fsm.getContext()).toEqual({ foo: 2, bar: 'hello' });
   });
 
-  it('ignores non-function guard and actions without throwing', () => {
+  it('ignores non-function actions without throwing', () => {
     const config: StateConfig<any> = {
       id: 'invalid-transition-logic',
       initial: 'idle',
@@ -141,7 +141,6 @@ describe('StateMachine', () => {
           on: {
             GO: {
               target: 'done',
-              guard: 'isAllowed' as any,
               actions: ['track'] as any,
             },
           },
@@ -153,6 +152,101 @@ describe('StateMachine', () => {
     const fsm = new StateMachine(config);
     expect(() => fsm.send('GO')).not.toThrow();
     expect(fsm.getState()).toBe('done');
+  });
+
+  it('rejects unresolved string guards', () => {
+    const config: StateConfig<any> = {
+      id: 'unresolved-guard',
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            GO: {
+              target: 'done',
+              guard: 'missingGuard',
+            },
+          },
+        },
+        done: {},
+      },
+    };
+
+    const fsm = new StateMachine(config);
+    expect(() => fsm.send('GO')).not.toThrow();
+    expect(fsm.getState()).toBe('idle');
+  });
+
+  it('passes the event into guard functions', () => {
+    const config: StateConfig<any> = {
+      id: 'event-guard',
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            GO: {
+              target: 'done',
+              guard: (_, event) => event.payload?.allowed === true,
+            },
+          },
+        },
+        done: {},
+      },
+    };
+
+    const fsm = new StateMachine(config);
+    fsm.send({ type: 'GO', payload: { allowed: false } });
+    expect(fsm.getState()).toBe('idle');
+    fsm.send({ type: 'GO', payload: { allowed: true } });
+    expect(fsm.getState()).toBe('done');
+  });
+
+  it('supports nested context path guard strings', () => {
+    const config: StateConfig<any> = {
+      id: 'nested-guard',
+      initial: 'idle',
+      context: {
+        user: {
+          isAuthenticated: true,
+        },
+      },
+      states: {
+        idle: {
+          on: {
+            GO: {
+              target: 'done',
+              guard: 'user.isAuthenticated',
+            },
+          },
+        },
+        done: {},
+      },
+    };
+
+    const fsm = new StateMachine(config);
+    fsm.send('GO');
+    expect(fsm.getState()).toBe('done');
+  });
+
+  it('evaluates can() with event-aware guards correctly', () => {
+    const config: StateConfig<any> = {
+      id: 'can-event-guard',
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            GO: {
+              target: 'done',
+              guard: (_, event) => event.payload?.allowed === true,
+            },
+          },
+        },
+        done: {},
+      },
+    };
+
+    const fsm = new StateMachine(config);
+    expect(fsm.can({ type: 'GO', payload: { allowed: false } })).toBe(false);
+    expect(fsm.can({ type: 'GO', payload: { allowed: true } })).toBe(true);
   });
 
   it('should handle complex state config (nested/parallel not supported yet by current impl but checking basic structure)', () => {

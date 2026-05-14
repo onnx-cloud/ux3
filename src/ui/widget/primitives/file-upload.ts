@@ -5,6 +5,11 @@ export class UxFileUpload extends UxBase {
   private progressEl!: HTMLProgressElement;
   private zoneEl!: HTMLDivElement;
   private fileInput!: HTMLInputElement;
+  private selectedFiles: File[] = [];
+
+  static get observedAttributes(): string[] {
+    return ['name', 'required', 'disabled', 'multiple', 'accept'];
+  }
 
   protected onConnected(): void {
     super.onConnected();
@@ -23,6 +28,8 @@ export class UxFileUpload extends UxBase {
         progress { width: 100%; height: 6px; margin-top: 0.75rem; display: block; border-radius: 3px; }
         progress::-webkit-progress-bar { background: #f3f4f6; border-radius: 3px; }
         progress::-webkit-progress-value { background: var(--ux-upload-progress, #3b82f6); border-radius: 3px; }
+        :host([disabled]) .zone { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        :host([required]) .label::after { content: " *"; color: #dc2626; }
       </style>
       <div class="zone">
         <div class="label">Drop files or click to upload</div>
@@ -37,7 +44,9 @@ export class UxFileUpload extends UxBase {
     this.progressEl = this.shadowRoot!.querySelector('progress')!;
     this.fileInput = this.shadowRoot!.querySelector('input')!;
 
-    this.zoneEl.addEventListener('click', () => this.fileInput.click());
+    this.zoneEl.addEventListener('click', () => {
+      if (!this.hasAttribute('disabled')) this.fileInput.click();
+    });
     this.zoneEl.addEventListener('dragover', (e) => { e.preventDefault(); this.zoneEl.classList.add('dragging'); });
     this.zoneEl.addEventListener('dragleave', () => this.zoneEl.classList.remove('dragging'));
     this.zoneEl.addEventListener('drop', (e) => {
@@ -46,11 +55,31 @@ export class UxFileUpload extends UxBase {
       this.handleFiles((e as DragEvent).dataTransfer?.files || null);
     });
     this.fileInput.addEventListener('change', () => this.handleFiles(this.fileInput.files));
+
+    this.syncFileInputAttrs();
+  }
+
+  protected onAttributeChanged(name: string): void {
+    if (['name', 'required', 'disabled', 'multiple', 'accept'].includes(name)) {
+      this.syncFileInputAttrs();
+    }
+  }
+
+  private syncFileInputAttrs(): void {
+    if (!this.fileInput) return;
+    const name = this.getAttribute('name');
+    if (name) this.fileInput.name = name;
+    if (this.hasAttribute('multiple')) this.fileInput.multiple = true;
+    const accept = this.getAttribute('accept');
+    if (accept) this.fileInput.accept = accept;
+    if (this.hasAttribute('required')) this.fileInput.required = true;
+    if (this.hasAttribute('disabled')) this.fileInput.disabled = true;
   }
 
   private handleFiles(files: FileList | null): void {
     if (!files?.length) return;
-    const names = Array.from(files).map(f => f.name);
+    this.selectedFiles = Array.from(files);
+    const names = this.selectedFiles.map(f => f.name);
 
     this.filesEl.innerHTML = names.map((n) =>
       `<div class="file"><span class="name">${this.escape(n)}</span><button class="remove" data-name="${this.escape(n)}">&times;</button></div>`
@@ -59,21 +88,33 @@ export class UxFileUpload extends UxBase {
     this.filesEl.querySelectorAll('.remove').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        const name = (btn as HTMLElement).dataset.name || '';
+        this.selectedFiles = this.selectedFiles.filter(f => f.name !== name);
         (btn.closest('.file') as HTMLElement)?.remove();
         const remaining = this.filesEl.querySelectorAll('.file');
         if (remaining.length === 0) this.progressEl.hidden = true;
+        this.emitChange();
       });
     });
 
-    // If an upload URL is configured, POST the files with progress
     const uploadUrl = this.getAttribute('upload-url');
     if (uploadUrl) {
       this.uploadFiles(files, uploadUrl);
     }
 
+    this.emitChange();
+
     this.dispatchEvent(new CustomEvent('ux:file.upload.start', {
       bubbles: true, composed: true,
       detail: { action: 'UPLOAD', files, names },
+    }));
+  }
+
+  private emitChange(): void {
+    const name = this.getAttribute('name') || '';
+    this.dispatchEvent(new CustomEvent('ux:input.change', {
+      bubbles: true, composed: true,
+      detail: { name, files: this.selectedFiles, value: this.selectedFiles.map(f => f.name).join(', ') },
     }));
   }
 

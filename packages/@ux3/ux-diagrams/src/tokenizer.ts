@@ -8,10 +8,14 @@ export function tokenize(text: string): Token[] {
 
   for (const line of lines) {
     const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('%%')) continue
+    if (!trimmed) {
+      tokens.push({ type: 'newline', value: '\n' })
+      continue
+    }
 
     const lineTokens = scanLine(trimmed)
     tokens.push(...lineTokens)
+    tokens.push({ type: 'newline', value: '\n' })
   }
 
   return tokens.filter((t) => t.type !== 'whitespace')
@@ -28,6 +32,13 @@ function scanLine(line: string): Token[] {
     if (rest.startsWith('%%')) {
       tokens.push({ type: 'comment', value: rest })
       break
+    }
+
+    // Special state marker
+    if (rest.startsWith('[*]')) {
+      tokens.push({ type: 'identifier', value: '[*]' })
+      col += 3
+      continue
     }
 
     // Config block
@@ -75,8 +86,8 @@ function scanLine(line: string): Token[] {
     }
 
     // Arrows
-    if (rest.match(/^(--[x]?>|o--[o]?->|-\.-[x]?>|-->|--)/)) {
-      const match = rest.match(/^(--[x]?>|o--[o]?->|-\.-[x]?>|-->|--)+/)
+    if (rest.match(/^(--[x]?>|o--[o]?->|\-\.-[x]?>|-->|->|<--?)/)) {
+      const match = rest.match(/^(--[x]?>|o--[o]?->|\-\.-[x]?>|-->|->|<--?)+/)
       if (match) {
         tokens.push({
           type: 'arrow',

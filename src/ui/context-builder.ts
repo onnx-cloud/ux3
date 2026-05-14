@@ -7,6 +7,7 @@ import { StateMachine } from '../fsm/state-machine.js';
 import { FSMRegistry } from '../fsm/registry.js';
 import type { StateConfig } from '../fsm/types.js';
 import { ServiceFactory } from '../services/service-factory.js';
+import { Store as PersistenceStore, type StoreConfig } from '@ux3/plugin-store';
 import { LogLevel, defaultLogger } from '../security/observability.js';
 import { Router } from '../services/router.js';
 import type { Service, ServiceConfig } from '../services/types.js';
@@ -82,6 +83,24 @@ export interface GeneratedConfig {
   styles: Record<string, string>;
   templates: Record<string, Record<string, string>>;
   plugins?: Array<string | any>;
+  context?: Record<string, unknown>;
+  persist?: {
+    context?: {
+      adapter: string;
+      ttl?: number;
+      config?: Record<string, unknown>;
+    };
+    plan?: {
+      adapter: string;
+      ttl?: number;
+      config?: Record<string, unknown>;
+    };
+    state?: {
+      adapter: string;
+      ttl?: number;
+      config?: Record<string, unknown>;
+    };
+  };
   // additional fields that may be added at build time
   version?: string;
   site?: Record<string, any>;
@@ -112,6 +131,8 @@ export class AppContextBuilder {
   private router: Router | null = null;
   private errorHandlers: Array<(error: Error) => void> = [];
   private buildErrors: Error[] = [];
+  private rootContext: Record<string, unknown> = {};
+  private persistenceStore: PersistenceStore | null = null;
   private hooks: HookRegistry = new HookRegistry();
   private stopBrowserObserver: (() => void) | null = null;
   constructor(config: GeneratedConfig) {
@@ -134,16 +155,55 @@ export class AppContextBuilder {
     }
   }
 
+  async initializePersistence(): Promise<void> {
+    this.rootContext = typeof this.config.context === 'object' && this.config.context !== null
+      ? { ...this.config.context }
+      : {};
+
+    if (typeof this.rootContext['@id'] === 'string') {
+      const last = String(this.rootContext['@id']).slice(-1);
+      if (!['/', ':', '.', '#'].includes(last)) {
+        throw new Error('[AppContextBuilder] root context @id must end with /, :, ., or #');
+      }
+    }
+
+    FSMRegistry.setRootContext(this.rootContext, false);
+
+    const persistConfig = this.config.persist?.context;
+    if (!persistConfig || !persistConfig.adapter) {
+      return;
+    }
+
+    const storeConfig: StoreConfig = {
+      backend: persistConfig.adapter as any,
+      ...(persistConfig.config || {}),
+    };
+
+    try {
+      this.persistenceStore = new PersistenceStore(storeConfig);
+      const adapter = {
+        connect: async () => { if (typeof this.persistenceStore?.connect === 'function') await this.persistenceStore.connect(); },
+        get: async (model: string, id: any) => this.persistenceStore?.findOne(model, id),
+        set: async (model: string, id: any, data: any) => this.persistenceStore?.upsert(model, id, data),
+        delete: async (model: string, id: any) => this.persistenceStore?.delete?.(model, id),
+      };
+
+      await FSMRegistry.initContextStorage(adapter, persistConfig.ttl);
+    } catch (error) {
+      console.warn('[AppContextBuilder] failed to initialize persistence store', error);
+    }
+  }
+
   /**
    * Build FSM registry - instantiate all state machines
    */
-  withMachines(): this {
+  async withMachines(): Promise<this> {
     try {
       for (const [name, machineConfig] of Object.entries(this.config.machines)) {
-        const machine = new StateMachine(machineConfig as any);
+        const machine = new StateMachine(machineConfig as any, false);
         this.machines.set(name, machine);
         const machineId = (machineConfig as any).id || name;
-        FSMRegistry.register(machineId, machine);
+        await FSMRegistry.registerMachine(machineId, machine);
 
         // debug log creation
         import('../security/observability.js').then(({ defaultLogger }) => {
@@ -164,6 +224,10 @@ export class AppContextBuilder {
             context,
           });
         });
+      }
+
+      for (const [, machine] of this.machines) {
+        machine.start();
       }
     } catch (error) {
       this.handleError(new Error(`Failed to build machines: ${error}`));
@@ -289,7 +353,7 @@ export class AppContextBuilder {
       // FSM-based navigation checks).  older tests passed an empty config and
       // we don't want to throw in that case.
       const i18n = this.i18nData['en'] || {};
-      this.router = new Router(this.config.routes, this.machines, i18n);
+      this.router = new Router(this.config.routes, this.machines, i18n, this.config.content);
     } catch (error) {
       this.handleError(new Error(`Failed to build router: ${error}`));
     }
@@ -479,17 +543,30 @@ export class AppContextBuilder {
     const renderFn = (template: string, props?: Record<string, any>): string => {
       // Render template through Handlebars with provided context
       if (!template) return '';
-      
+
+      const rootContext = FSMRegistry.getRootContext();
+      const localContext = props && typeof props === 'object' && props.ctx && typeof props.ctx === 'object'
+        ? props.ctx as Record<string, unknown>
+        : {};
+      const mergedDollar = {
+        ...rootContext,
+        ...localContext,
+      };
+      if (typeof rootContext['@id'] !== 'undefined') {
+        mergedDollar['@id'] = rootContext['@id'];
+      }
+
       const hbs = new HandlebarsLite();
       const lang = localeService.locale?.language ||
         (typeof document !== 'undefined' && document.documentElement.lang) || 'en';
       const context = {
         ...props,
+        $: mergedDollar,
         i18n: this.i18nData[lang] || this.i18nData['en'] || {},
         nav: navConfig,
         ...(this.config.site || {}),
       };
-      
+
       return hbs.render(template, context);
     };
 
@@ -507,6 +584,7 @@ export class AppContextBuilder {
       config: this.config,
       hooks: this.hooks,
       locale: localeService,
+      rootContext: FSMRegistry.getRootContext(),
     };
 
     // Keep browser context available from both app.browser and app.ui.browser.
@@ -578,7 +656,7 @@ export class AppContextBuilder {
     };
 
     context.registerPlugin = async (plugin) => {
-      if (!plugin || typeof plugin.install !== 'function') {
+      if (!plugin) {
         throw new Error('Invalid plugin');
       }
       // Register plugin hooks if present
@@ -588,6 +666,10 @@ export class AppContextBuilder {
             context.hooks.on(phase, handler);
           }
         }
+      }
+      if (typeof plugin.install !== 'function') {
+        // Allow MCP-only plugin objects that only expose mcp/callTool/readResource.
+        return;
       }
       // call install; return promise so callers can await if needed
       try {
@@ -754,8 +836,10 @@ export async function createAppContext(
     }
   }
 
-  const context = new AppContextBuilder(config)
-    .withMachines()
+  const builder = new AppContextBuilder(config);
+  await builder.initializePersistence();
+  await builder.withMachines();
+  const context = builder
     .withServices()
     .withWidgets()
     .withI18n()
@@ -794,9 +878,34 @@ export async function createAppContext(
     });
   };
 
-  // Install plugins from config — only built-in plugins are handled here.
-  // CDN-based plugin services (maps, graphs, charts, auth) are registered
-  // via the generated installPlugins() hook called by hydrate().
+  async function loadPluginPackage(pluginName: string): Promise<Plugin | null> {
+    try {
+      switch (pluginName) {
+        case '@ux3/plugin-websearch': {
+          const mod = await import('@ux3/plugin-websearch');
+          return (mod.default || mod.WebsearchPlugin) as Plugin;
+        }
+        case '@ux3/plugin-perception': {
+          const mod = await import('@ux3/plugin-perception');
+          return (mod.default || mod.PerceptionPlugin) as Plugin;
+        }
+        default:
+          return null;
+      }
+    } catch (error) {
+      if (defaultLogger) {
+        defaultLogger.warn('[AppContext] plugin package import failed', {
+          pluginName,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return null;
+    }
+  }
+
+  // Install plugins from config — built-in plugins and known workspace plugin
+  // packages are handled here. CDN-based plugin services (maps, graphs, charts,
+  // auth) are registered via the generated installPlugins() hook called by hydrate().
   const entries: any[] = Array.isArray(config.plugins) ? [...config.plugins] : [];
 
   // Auto-install dev-tools when development mode is enabled
@@ -816,6 +925,15 @@ export async function createAppContext(
         if (context.registerPlugin) {
           await context.registerPlugin(builtInDevToolsPlugin);
           recordInstalledPlugin(builtInDevToolsPlugin);
+        }
+        continue;
+      }
+
+      if (pkgName === '@ux3/plugin-websearch' || pkgName === '@ux3/plugin-perception') {
+        const plugin = await loadPluginPackage(pkgName);
+        if (plugin && context.registerPlugin) {
+          await context.registerPlugin(plugin);
+          recordInstalledPlugin(plugin);
         }
         continue;
       }

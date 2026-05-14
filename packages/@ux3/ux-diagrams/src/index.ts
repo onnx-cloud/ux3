@@ -8,7 +8,7 @@ export { LayeredLayout, ForceDirectedLayout } from './layout.js'
 export { MermaidRenderer } from './renderer.js'
 export { THEMES, getTheme, registerTheme } from './theme.js'
 export { renderMermaidDiagram, DiagramsPlugin } from './markdown-integration.js'
-export { UxDiagram } from './diagram-element.js'
+export { UxDiagram, UxDiagramUx3 } from './diagram-element.js'
 export type * from './types.js'
 
 export default DiagramsPlugin

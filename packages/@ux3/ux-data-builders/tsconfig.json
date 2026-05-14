@@ -1,1 +1,1 @@
-{"extends":"../../../../tsconfig.build.json","compilerOptions":{"outDir":"./dist","rootDir":"./src"},"include":["src"],"exclude":["node_modules"]}
+{"extends":"../../../onfig.build.json","compilerOptions":{"outDir":"./dist","rootDir":"./src"},"include":["src"],"exclude":["node_modules"]}

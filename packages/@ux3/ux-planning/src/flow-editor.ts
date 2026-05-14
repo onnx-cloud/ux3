@@ -81,6 +81,10 @@ export class UxFlowEditor extends UxBase {
     this.render();
   }
 
+  setData(data: FlowData): void {
+    this.applyData(data);
+  }
+
   private render(): void {
     while (this.svg.lastChild && this.svg.lastChild.nodeName !== 'defs') {
       this.svg.removeChild(this.svg.lastChild);

@@ -1,4 +1,4 @@
-import type { MachineConfig, StateConfig } from '../../../../src/fsm/types.js';
+import type { MachineConfig, StateConfig } from '../../../../../src/fsm/types.js';
 import type { PlanNodeContext, PlanConfig } from '../index.js';
 
 export interface PatternDef {
@@ -10,7 +10,9 @@ export interface PatternDef {
 
 export interface PatternStateDef {
   type?: 'atomic' | 'compound' | 'parallel' | 'final';
-  prompt?: string;
+  template?: string;
+  prompt?: string; // deprecated alias for inline prompt text
+  context?: Record<string, unknown>;
   invoke?: {
     src: string;
     maxRetries?: number;
@@ -125,7 +127,7 @@ export function resolvePatterns(
   const resolvedStates: Record<string, StateConfig<PlanNodeContext>> = {};
 
   for (const [stateName, stateDef] of Object.entries(config.states)) {
-    const extState = stateDef as StateConfig<PlanNodeContext> & { pattern?: string; invoke?: any; on?: Record<string, string>; prompt?: string };
+    const extState = stateDef as StateConfig<PlanNodeContext> & { pattern?: string; invoke?: any; on?: Record<string, string>; prompt?: string; template?: string; context?: Record<string, unknown> };
 
     if (extState.pattern) {
       const pattern = resolvePattern(extState.pattern);
@@ -175,6 +177,9 @@ export function resolvePatterns(
           type: pStateDef.type || 'atomic',
           on,
           invoke: pStateDef.invoke as any,
+          template: pStateDef.template,
+          prompt: pStateDef.prompt,
+          context: pStateDef.context,
         } as StateConfig<PlanNodeContext>;
       }
 

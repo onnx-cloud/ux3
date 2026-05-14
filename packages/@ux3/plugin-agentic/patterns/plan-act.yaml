@@ -3,42 +3,14 @@ description: "Plan before execution: decompose the task, execute each step, synt
 initial: plan
 states:
   plan:
-    prompt: |
-      You are in the **Plan** phase.
-
-      ## Task
-      Decompose the task into clear, actionable steps.
-
-      ## Instructions
-      1. Analyze what needs to be done
-      2. Create an ordered list of steps
-      3. For each step, identify what tools or resources are needed
-      4. Estimate dependencies between steps
-
-      {{#if decisions}}
-      Prior decisions:
-      {{#each decisions}}
-      - {{this}}
-      {{/each}}
-      {{/if}}
-
-      Output the plan as a numbered list.
+    template: 'prompts/plan-act/plan.md'
     invoke:
       src: sample
     on:
       done: act
       error: "#error"
   act:
-    prompt: |
-      Execute the current step of the plan.
-
-      {{#if decisions}}
-      Plan: {{decisions.[-1]}}
-      {{/if}}
-
-      Current step: step {{iterations}}
-
-      Use available tools to execute this step.
+    template: 'prompts/plan-act/act.md'
     invoke:
       src: executeTool
       maxRetries: 1
@@ -46,27 +18,14 @@ states:
       done: observe
       error: "#error"
   observe:
-    prompt: |
-      ## Step Result
-      {{#if observations}}
-      {{observations.[-1]}}
-      {{/if}}
-
-      ## Decision
-      - If all steps are complete, respond with **DONE**
-      - If more steps remain, respond with **NEXT**
+    template: 'prompts/plan-act/observe.md'
     invoke:
       src: sample
     on:
       DONE: synthesize
       NEXT: act
   synthesize:
-    prompt: |
-      Synthesize all results into a final output.
-
-      {{#each observations}}
-      {{this}}
-      {{/each}}
+    template: 'prompts/plan-act/synthesize.md'
     invoke:
       src: sample
     on:
