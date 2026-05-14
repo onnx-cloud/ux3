@@ -929,7 +929,11 @@ export async function createAppContext(
         continue;
       }
 
-      if (pkgName === '@ux3/plugin-websearch' || pkgName === '@ux3/plugin-perception') {
+      if (
+        pkgName === '@ux3/plugin-websearch' ||
+        pkgName === '@ux3/plugin-perception' ||
+        pkgName === '@ux3/plugin-onnx'
+      ) {
         const plugin = await loadPluginPackage(pkgName);
         if (plugin && context.registerPlugin) {
           await context.registerPlugin(plugin);

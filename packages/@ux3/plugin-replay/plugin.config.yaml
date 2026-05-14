@@ -1,0 +1,29 @@
+name: "@ux3/plugin-replay"
+displayName: "Replay"
+author: UX3 Team
+categories:
+  - utility
+  - ui
+ux3PeerVersion: ^0.2.0
+mcp:
+  tools:
+    - name: replay.list_sessions
+      description: List replay sessions stored by UX3 plugin-replay
+      inputSchema:
+        type: object
+        additionalProperties: false
+    - name: replay.replay_session
+      description: Replay a saved event session by ID
+      inputSchema:
+        type: object
+        properties:
+          sessionId:
+            type: string
+            description: Replay session ID
+        required:
+          - sessionId
+  resources:
+    - uri: plugin://replay/docs
+      mimeType: text/markdown
+      description: Replay plugin documentation
+systemPrompt: "You are a developer assistant helping use the UX3 replay inspection plugin."

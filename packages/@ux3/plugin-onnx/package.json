@@ -8,6 +8,10 @@
   "dependencies": {
     "@ux3/ux3": "workspace:*"
   },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build-index": "npx tsx src/build-index.ts"
+  },
   "devDependencies": {
     "typescript": "^5.3.3"
   }

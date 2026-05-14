@@ -12,6 +12,7 @@ import {
   loadTemplate,
 } from '../../src/cli/template-engine.ts';
 import { generateCommand } from '../../src/cli/commands/generate.ts';
+import { HINTS_FILENAME } from '@ux3/constants';
 
 const TMP = path.join(process.cwd(), 'tests', 'tmp', 'template-engine');
 
@@ -132,7 +133,7 @@ describe('resolveTemplateDir', () => {
 
 describe('loadTemplate', () => {
   it('loads a built-in template file', async () => {
-    const content = await loadTemplate('view', 'HINTS.md');
+    const content = await loadTemplate('view', HINTS_FILENAME);
     expect(content).toContain('ux3 generate view');
   });
 });
@@ -173,10 +174,10 @@ describe('emitScaffold', () => {
     expect(src).toContain('const analytics: Plugin');
   });
 
-  it('does not emit HINTS.md into output', async () => {
+  it(`does not emit ${HINTS_FILENAME} into output`, async () => {
     const ctx = buildContext('test');
     await emitScaffold('view', ctx, outDir);
-    expect(await fs.pathExists(path.join(outDir, 'HINTS.md'))).toBe(false);
+    expect(await fs.pathExists(path.join(outDir, HINTS_FILENAME))).toBe(false);
   });
 
   it('dry-run writes no files', async () => {

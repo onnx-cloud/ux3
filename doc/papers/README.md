@@ -1,14 +1,12 @@
 # UX3 Research Papers
 
-This collection proposes practical research directions that align with the UX3 framework's compile-driven, stateful, and secure frontend architecture.
-
-The focus is on first principles: explicit semantics, clear control structure, and the distinction between true reasoning and interpolation in model-assisted UX. The goal is to keep the discussion grounded in design and implementation choices rather than hype.
+This collection presents a set of formal research papers aligned with the UX3 framework. Each paper is grounded in real platform capabilities, prioritized around compile-time semantics, explicit state, deterministic extension points, and secure UI composition.
 
 Each paper is rated for:
-- **Novelty** — how much the idea differs from current practice.
-- **Impact** — the likely practical value for UI frameworks and developer workflows.
-- **Innovation** — the strength of the technical or architectural contribution.
-- **Research grade** — a qualitative assessment for academic or R&D suitability.
+- **Novelty** — relative originality in the frontend and agentic UI research space.
+- **Impact** — potential effect on developer workflows, system reliability, and application quality.
+- **Innovation** — strength of the architectural or integration contribution.
+- **Research grade** — suitability for academic or R&D publication.
 
 ## Papers
 
@@ -24,7 +22,7 @@ Each paper is rated for:
    - Innovation: 9/10
    - Research grade: A
 
-3. **Model-Augmented Widget Synthesis: Bridging Declarative UX and Runtime Adaptation**
+3. **Model-Assisted Widget Synthesis: Bridging Declarative UX and Runtime Adaptation**
    - Novelty: 8/10
    - Impact: 8/10
    - Innovation: 8/10
@@ -44,8 +42,8 @@ Each paper is rated for:
 
 ## Directory structure
 
-- `doc/papers/compile-first-frontend/TOC.md`
-- `doc/papers/fsm-driven-reactive-ui/TOC.md`
-- `doc/papers/ai-augmented-widget-synthesis/TOC.md`
-- `doc/papers/secure-reactive-uis/TOC.md`
-- `doc/papers/open-ecosystems-live-ux/TOC.md`
+- `doc/papers/compile-first-frontend/`
+- `doc/papers/fsm-driven-reactive-ui/`
+- `doc/papers/ai-augmented-ux/`
+- `doc/papers/secure-reactive-uis/`
+- `doc/papers/open-ecosystems-live-ux/`

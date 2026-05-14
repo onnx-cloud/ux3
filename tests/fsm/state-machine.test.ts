@@ -227,6 +227,53 @@ describe('StateMachine', () => {
     expect(fsm.getState()).toBe('done');
   });
 
+  it('supports cross-machine guard strings', () => {
+    const other: StateConfig<any> = {
+      id: 'other',
+      initial: 'pending',
+      states: {
+        pending: {
+          on: {
+            READY: 'ready',
+          },
+        },
+        ready: {},
+      },
+    };
+
+    const otherFsm = new StateMachine(other, false);
+    const config: StateConfig<any> = {
+      id: 'dependent',
+      initial: 'idle',
+      states: {
+        idle: {
+          on: {
+            GO: {
+              target: 'done',
+              guard: 'other:ready',
+            },
+          },
+        },
+        done: {},
+      },
+    };
+
+    const fsm = new StateMachine(config, false);
+    fsm.setFSMLookup((namespace) => (namespace === 'other' ? otherFsm : null));
+
+    // If other machine is not ready, transition should reject.
+    expect(fsm.can('GO')).toBe(false);
+    fsm.send('GO');
+    expect(fsm.getState()).toBe('idle');
+
+    // if we move other FSM into the required state, guard should pass.
+    otherFsm.send('READY');
+    expect(otherFsm.getState()).toBe('ready');
+    expect(fsm.can('GO')).toBe(true);
+    fsm.send('GO');
+    expect(fsm.getState()).toBe('done');
+  });
+
   it('evaluates can() with event-aware guards correctly', () => {
     const config: StateConfig<any> = {
       id: 'can-event-guard',

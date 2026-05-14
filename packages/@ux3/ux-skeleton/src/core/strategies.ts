@@ -2,6 +2,8 @@ import type { CasingStrategy, ContextProvider, FileFilter, PathTransformer, Scaf
 import * as fsSync from 'fs';
 import * as path from 'path';
 
+import { HINTS_FILENAME } from '@ux3/constants';
+
 // ===== Casing Strategy =====
 
 /**
@@ -61,7 +63,7 @@ export function readUx3Version(): string {
  * Default file filter: skip HINTS.md files (documentation, not user code).
  */
 export const defaultFileFilter: FileFilter = (filePath: string) => {
-  return !filePath.includes('HINTS.md');
+  return !filePath.includes(HINTS_FILENAME);
 };
 
 // ===== Path Transformer =====

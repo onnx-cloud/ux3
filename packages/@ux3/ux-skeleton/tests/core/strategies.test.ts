@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { defaultCasingStrategy, defaultFileFilter } from '../../src/core/strategies';
+import { HINTS_FILENAME } from '@ux3/constants';
 
 describe('strategies', () => {
   describe('defaultCasingStrategy', () => {
@@ -32,9 +33,9 @@ describe('strategies', () => {
       expect(defaultFileFilter('package.json')).toBe(true);
     });
 
-    it('excludes HINTS.md', () => {
-      expect(defaultFileFilter('HINTS.md')).toBe(false);
-      expect(defaultFileFilter('path/to/HINTS.md')).toBe(false);
+    it(`excludes ${HINTS_FILENAME}`, () => {
+      expect(defaultFileFilter(HINTS_FILENAME)).toBe(false);
+      expect(defaultFileFilter(`path/to/${HINTS_FILENAME}`)).toBe(false);
     });
   });
 });

@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { HINTS_FILENAME } from '@ux3/constants';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -162,7 +163,7 @@ async function listFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const result: string[] = [];
   for (const entry of entries) {
-    if (entry.name === 'HINTS.md') continue; // never emit template hint docs into user projects
+    if (entry.name === HINTS_FILENAME) continue; // never emit template hint docs into user projects
     if (entry.isDirectory()) {
       const sub = await listFiles(path.join(dir, entry.name));
       for (const f of sub) result.push(path.join(entry.name, f));

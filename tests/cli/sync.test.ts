@@ -4,6 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createHintsCommand } from '../../src/cli/commands/hints.ts';
+import { HINTS_FILENAME } from '@ux3/constants';
 import { createSyncCommand, syncView, syncI18n, syncStyle } from '../../src/cli/commands/sync.ts';
 
 // ---------------------------------------------------------------------------
@@ -50,19 +51,19 @@ describe('ux3 sync hints', () => {
     const code = await runHints(['--project', project]);
     expect(code).toBe(0);
 
-    expect(await fs.pathExists(path.join(project, 'ux', 'view', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'route', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'i18n', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'validate', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'style', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'service', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'src', 'services', 'HINTS.md'))).toBe(false);
+    expect(await fs.pathExists(path.join(project, 'ux', 'view', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'route', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'i18n', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'validate', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'style', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'service', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'src', 'services', HINTS_FILENAME))).toBe(false);
   });
 
   it('dry-run does not write files', async () => {
     const code = await runHints(['--project', project, '--dry-run']);
     expect(code).toBe(0);
-    expect(await fs.pathExists(path.join(project, 'ux', 'view', 'HINTS.md'))).toBe(false);
+    expect(await fs.pathExists(path.join(project, 'ux', 'view', HINTS_FILENAME))).toBe(false);
   });
 
   it('does not overwrite without --force', async () => {

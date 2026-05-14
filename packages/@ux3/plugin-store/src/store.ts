@@ -3,6 +3,7 @@ import { RemoteAdapter } from './adapters/remote';
 import { HybridAdapter } from './adapters/hybrid';
 import { MemoryAdapter } from './adapters/memory';
 import { BundleAdapter } from './adapters/bundle';
+import { FileAdapter } from './adapters/file';
 import type {
   StorageAdapter,
   StoreConfig,
@@ -42,6 +43,8 @@ export class Store {
         return new MemoryAdapter(config);
       case 'bundle':
         return new BundleAdapter(config);
+      case 'file':
+        return new FileAdapter(config);
       default:
         throw new Error(`Unknown backend: ${config.backend}`);
     }

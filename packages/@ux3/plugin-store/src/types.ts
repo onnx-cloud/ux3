@@ -40,9 +40,10 @@ export interface ModelSchema {
 }
 
 export interface StoreConfig {
-  backend: 'local' | 'remote' | 'hybrid' | 'memory' | 'bundle';
+  backend: 'local' | 'remote' | 'hybrid' | 'memory' | 'bundle' | 'file';
   persistence?: {
-    driver: 'localStorage' | 'indexeddb';
+    driver?: 'localStorage' | 'indexeddb';
+    dir?: string;
     dbName?: string;
     keyPrefix?: string;
   };

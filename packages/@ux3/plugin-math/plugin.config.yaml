@@ -1,0 +1,8 @@
+name: "@ux3/plugin-math"
+displayName: Math
+author: UX3 Team
+categories:
+  - utility
+  - analysis
+  - content
+ux3PeerVersion: ^0.2.0

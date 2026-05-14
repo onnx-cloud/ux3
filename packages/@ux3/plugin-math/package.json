@@ -1,0 +1,15 @@
+{
+  "name": "@ux3/plugin-math",
+  "version": "0.1.0",
+  "description": "Semantic math plugin for UX3 providing TeX-lite parsing and canonical math IR.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@ux3/ux3": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

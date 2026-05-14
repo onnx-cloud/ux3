@@ -18,6 +18,7 @@
 
 - Use `guard` for access checks and gating logic.
 - Keep guards deterministic and based on app context (`ctx`).
+- Route guards are a routing DSL and are distinct from FSM transition guards.
 - Put auth/permission semantics in services or plugins; use route guards for orchestration.
 
 ## Layout and metadata

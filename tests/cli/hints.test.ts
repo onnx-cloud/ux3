@@ -4,6 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createHintsCommand } from '../../src/cli/commands/hints.ts';
+import { HINTS_FILENAME } from '@ux3/constants';
 
 async function runHints(args: string[]): Promise<number> {
   const originalExit = process.exit;
@@ -44,36 +45,36 @@ describe('ux3 sync hints (createHintsCommand)', () => {
     const code = await runHints(['--project', project]);
     expect(code).toBe(0);
 
-    expect(await fs.pathExists(path.join(project, 'ux', 'view', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'route', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'i18n', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'validate', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'style', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'ux', 'service', 'HINTS.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(project, 'src', 'services', 'HINTS.md'))).toBe(false);
+    expect(await fs.pathExists(path.join(project, 'ux', 'view', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'route', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'i18n', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'validate', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'style', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'ux', 'service', HINTS_FILENAME))).toBe(true);
+    expect(await fs.pathExists(path.join(project, 'src', 'services', HINTS_FILENAME))).toBe(false);
   });
 
   it('dry-run does not write files', async () => {
     const code = await runHints(['--project', project, '--dry-run']);
     expect(code).toBe(0);
-    expect(await fs.pathExists(path.join(project, 'ux', 'view', 'HINTS.md'))).toBe(false);
+    expect(await fs.pathExists(path.join(project, 'ux', 'view', HINTS_FILENAME))).toBe(false);
   });
 
   it('does not overwrite without --force', async () => {
     await fs.ensureDir(path.join(project, 'ux', 'view'));
-    await fs.writeFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'sentinel', 'utf8');
+    await fs.writeFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'sentinel', 'utf8');
 
     const code = await runHints(['--project', project]);
     expect(code).toBe(0);
-    expect(await fs.readFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'utf8')).toBe('sentinel');
+    expect(await fs.readFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'utf8')).toBe('sentinel');
   });
 
   it('overwrites existing hint files with --force', async () => {
     await fs.ensureDir(path.join(project, 'ux', 'view'));
-    await fs.writeFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'sentinel', 'utf8');
+    await fs.writeFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'sentinel', 'utf8');
 
     const code = await runHints(['--project', project, '--force']);
     expect(code).toBe(0);
-    expect(await fs.readFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'utf8')).not.toBe('sentinel');
+    expect(await fs.readFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'utf8')).not.toBe('sentinel');
   });
 });

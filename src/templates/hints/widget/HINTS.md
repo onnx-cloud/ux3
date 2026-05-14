@@ -18,6 +18,7 @@ Use `ux3 generate view <name>` to scaffold a new view quickly.
 - `on` transitions are event-driven (`EVENT: targetState`).
 - Guards and conditions evaluate against `ctx` and `event`.
 - String guards may resolve nested context paths (for example `user.isAuthenticated`) or cross-FSM state checks (`otherFsm:ready`).
+- Use named guard helpers imported from logic modules wherever possible.
 
 ## Side effects and integrations
 

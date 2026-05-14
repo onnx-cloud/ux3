@@ -17,6 +17,8 @@ export interface PrimitiveDefinition {
   role?: string;
   kind: PrimitiveKind;
   stateAttr?: string;
+  family: string;
+  formAssociated?: boolean;
 }
 
 export const TOGGLE_KIND = new Set<PrimitiveKind>(['toggle', 'checkbox', 'switch']);

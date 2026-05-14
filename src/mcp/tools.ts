@@ -3,6 +3,7 @@ import path from 'path';
 import { buildEntityIndex, type EntityIndexRecord, type EntityKind, type GeneratedEntities } from '../build/entity-index.js';
 import { Validator } from '../build/validator.js';
 import YAML from 'yaml';
+import { HINTS_FILENAME } from '@ux3/constants';
 
 interface EntityDefinition {
   kind: EntityKind;
@@ -1374,7 +1375,7 @@ ${Object.entries(strings)
 
     for (const sec of sections) {
       const resolvedSection = sectionAliases[sec] || sec;
-      const hintsPath = path.join(templateDir, resolvedSection, 'HINTS.md');
+      const hintsPath = path.join(templateDir, resolvedSection, HINTS_FILENAME);
       const legacySpecPath = path.join(templateDir, resolvedSection, 'SPEC.md');
       const hintFilePath = fs.existsSync(hintsPath)
         ? hintsPath
@@ -1403,7 +1404,7 @@ ${Object.entries(strings)
     };
     const resolvedSection = sectionAliases[section] || section;
 
-    const hintsPath = path.join(templateDir, resolvedSection, 'HINTS.md');
+    const hintsPath = path.join(templateDir, resolvedSection, HINTS_FILENAME);
     const hintFound = fs.existsSync(hintsPath);
     if (!hintFound) {
       throw new Error(`Hints not found for section: ${section}`);

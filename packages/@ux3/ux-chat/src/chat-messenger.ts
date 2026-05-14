@@ -110,6 +110,12 @@ export class UxChatMessenger extends UxBase {
   }
 
   protected applyData(data: any): void {
+    if (Array.isArray(data)) {
+      this.messages = data.map((msg: any) => this.normalizeMessage(msg));
+      this.updateMessagesView();
+      return;
+    }
+
     if (data && typeof data === 'object' && Array.isArray(data.messages)) {
       this.messages = data.messages.map((msg: any) => this.normalizeMessage(msg));
       this.updateMessagesView();

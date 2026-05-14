@@ -115,6 +115,16 @@ export const onnxResourceHandlers = {
   },
 
   [OnnxResources.GUIDE]: async () => {
-    return `# ONNX Search Plugin\n\nThis plugin provides a FlatBuffer-backed search index for ONNX content and prompt templates. Use the following tools and resources via MCP:\n\n- \\`onnx.search.query\\` to retrieve ranked knowledge results.\n- \\`onnx.prompt.select\\` to choose a prompt template for a query.\n- \\`plugin://onnx/index\\` to inspect the binary index payload.\n- \\`plugin://onnx/content\\` and \\`plugin://onnx/prompts\\` for the underlying corpus.\n\nBuild-time generation keeps the runtime index compact and deterministic.\n`;
+    return `# ONNX Search Plugin
+
+This plugin provides a FlatBuffer-backed search index for ONNX content and prompt templates. Use the following tools and resources via MCP:
+
+- \`onnx.search.query\` to retrieve ranked knowledge results.
+- \`onnx.prompt.select\` to choose a prompt template for a query.
+- \`plugin://onnx/index\` to inspect the binary index payload.
+- \`plugin://onnx/content\` and \`plugin://onnx/prompts\` for the underlying corpus.
+
+Build-time generation keeps the runtime index compact and deterministic.
+`;
   },
 } as const satisfies Record<string, () => Promise<string>>;
