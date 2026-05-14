@@ -1,0 +1,15 @@
+{
+  "name": "@ux3/plugin-self",
+  "version": "0.1.0",
+  "description": "Self-hosted onboarding and developer runtime plugin for UX3.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@ux3/ux3": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

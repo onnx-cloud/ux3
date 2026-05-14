@@ -1,4 +1,4 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { escapeAttr, emitReadyOnce } from './helpers.js';
 import { registerLightStyle } from '../../style-registry.js';
 
@@ -71,7 +71,7 @@ const TYPE_DEFAULTS: Record<string, { inputmode?: string; autocapitalize?: strin
   password:  {                           autocapitalize: 'off', autocomplete: 'current-password' },
 };
 
-export class UxInput extends UxBase {
+export class UxInput extends UxControl {
   private inputEl: HTMLInputElement | null = null;
   private _rendered = false;
 

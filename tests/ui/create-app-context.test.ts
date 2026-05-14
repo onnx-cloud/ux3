@@ -162,7 +162,7 @@ describe('AppContext helper methods', () => {
   it('loads and installs plugin-chart-js', async () => {
     const cfg: any = { ...baseConfig, site: {} };
     const ctx: any = await createAppContext(cfg);
-    const pluginModule = await import('@ux3/ux-chart-js');
+    const pluginModule = await import('@ux3/ux-charts');
     const plugin = pluginModule?.default || pluginModule;
     if (ctx.registerPlugin && plugin) {
       await ctx.registerPlugin(plugin);

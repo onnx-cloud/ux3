@@ -1,0 +1,15 @@
+title: "AI-augmented UX"
+description: "Evidence for PDF generation and prompt/tool integration via plugin-pdf."
+categories:
+  - model-assisted-synthesis
+  - open-ecosystems-live-ux
+pluginEvidence:
+  - plugin-pdf
+commands:
+  - label: plugin-pdf-test
+    command: npm run test -- tests/plugin-pdf.test.ts --reporter=json --outputFile=test-results/vitest/ai-augmented-ux-plugin-pdf.json
+  - label: pdf-generation
+    command: npx tsx packages/@ux3/plugin-pdf/src/generate.ts --papersDir papers --outputDir papers --reportPath reports/papers-pdf-report.json
+artifacts:
+  - test-results/vitest/ai-augmented-ux-plugin-pdf.json
+  - reports/papers-pdf-report.json

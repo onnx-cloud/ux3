@@ -1,0 +1,10 @@
+title: "Live Agentic Host"
+description: "Evidence for live host session traces and end-to-end host behavior."
+categories:
+  - live-agentic-host
+commands:
+  - label: live-agentic-host-e2e
+    command: npm run test:e2e -- --grep "Live Agentic Host"
+artifacts:
+  - test-results/playwright/results.json
+  - test-results/playwright/results.xml

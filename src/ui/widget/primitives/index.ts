@@ -1,8 +1,11 @@
 import { getAllPrimitiveDefs } from './registry.js';
 import { resolveClass } from './resolve.js';
+import '../../token-injection.js';
 
 export { UxBase } from './base.js';
 export { UxRegion } from './region.js';
+export { UxControl } from './ux-control.js';
+export { UxOverlay } from './ux-overlay.js';
 export { UxToggle } from './toggle.js';
 export { UxAccordion } from './accordion.js';
 export { UxValue } from './value.js';
@@ -53,7 +56,7 @@ export { resolveClass } from './resolve.js';
 import './lightbox.js';
 export type { PrimitiveKind, PrimitiveDefinition } from './types.js';
 
-export { registerWidget, resolveWidgetMetadata, getRegisteredWidgets } from '../widget-registry.js';
+export { registerWidget, resolveWidgetMetadata, getRegisteredWidgets, getWidgetsByFamily } from '../widget-registry.js';
 
 export function registerBuiltInPrimitives(): void {
   for (const definition of getAllPrimitiveDefs()) {

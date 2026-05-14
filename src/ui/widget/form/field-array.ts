@@ -197,7 +197,3 @@ export class UxFieldArray extends LifecycleComponent {
     this.appendChild(style);
   }
 }
-
-if (!customElements.get('ux-field-array')) {
-  customElements.define('ux-field-array', UxFieldArray);
-}

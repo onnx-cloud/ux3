@@ -203,8 +203,8 @@ describe('Built-in primitives', () => {
     expect(dp.querySelector('.dp-calendar.open')).toBeFalsy();
   });
 
-  it('toggles all toggle-class primitives and emits open/close lifecycle events', () => {
-    const toggleTags = ['ux-drawer', 'ux-popover', 'ux-tooltip', 'ux-accordion'];
+  it('toggles all overlay-class primitives and emits open/close lifecycle events', () => {
+    const toggleTags = ['ux-drawer', 'ux-popover', 'ux-tooltip'];
 
     for (const tag of toggleTags) {
       const el = document.createElement(tag);
@@ -212,10 +212,8 @@ describe('Built-in primitives', () => {
 
       let opened = 0;
       let closed = 0;
-      el.addEventListener('ux:widget.event', ((e: CustomEvent) => {
-        if (e.detail?.action === 'OPEN') opened += 1;
-        if (e.detail?.action === 'CLOSE') closed += 1;
-      }) as EventListener);
+      el.addEventListener('ux:overlay.open', () => { opened += 1; });
+      el.addEventListener('ux:overlay.close', () => { closed += 1; });
 
       el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       expect(el.hasAttribute('open'), `${tag}: open after click`).toBe(true);
@@ -251,9 +249,7 @@ describe('Built-in primitives', () => {
 
     const closeButton = drawer.querySelector('button.close-button') as HTMLButtonElement;
     let closed = false;
-    drawer.addEventListener('ux:drawer.event', (event: Event) => {
-      if ((event as CustomEvent).detail?.action === 'CLOSE') closed = true;
-    });
+    drawer.addEventListener('ux:overlay.close', () => { closed = true; });
 
     drawer.setAttribute('open', '');
     closeButton.click();
@@ -291,9 +287,7 @@ describe('Built-in primitives', () => {
     Object.defineProperty(window, 'innerWidth', { value: 420, configurable: true });
 
     let closed = false;
-    drawer.addEventListener('ux:drawer.event', (event: Event) => {
-      if ((event as CustomEvent).detail?.action === 'CLOSE') closed = true;
-    });
+    drawer.addEventListener('ux:overlay.close', () => { closed = true; });
 
     drawer.dispatchEvent(createPointerEvent('pointerdown', {
       bubbles: true,
@@ -345,9 +339,7 @@ describe('Built-in primitives', () => {
     Object.defineProperty(window, 'innerWidth', { value: 420, configurable: true });
 
     let opened = false;
-    drawer.addEventListener('ux:drawer.event', (event: Event) => {
-      if ((event as CustomEvent).detail?.action === 'OPEN') opened = true;
-    });
+    drawer.addEventListener('ux:overlay.open', () => { opened = true; });
 
     window.dispatchEvent(createPointerEvent('pointerdown', {
       bubbles: true,

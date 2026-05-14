@@ -41,7 +41,7 @@ describe('BaseServiceAdapter', () => {
     expect(adapter.config.retryDelay).toBe(1000);
   });
 
-  it('executes the abstract method', async () => {
+  it('executes This method', async () => {
     const adapter = new TestAdapter('test-svc');
     const result = await adapter.execute('hello');
     expect(result).toBe('echo: hello');

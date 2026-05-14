@@ -54,6 +54,7 @@ export type NavTree = Record<string, NavItem>;
 
 export interface NavConfig {
   routes: NavRoute[];
+  tree?: NavTree;
   current: {
     path: string;
     view: string;

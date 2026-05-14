@@ -1,0 +1,11 @@
+title: "Secure Reactive UIs"
+description: "Evidence for HTML and JSON sanitizer validation and security tooling."
+categories:
+  - secure-reactive-uis
+pluginEvidence:
+  - security
+commands:
+  - label: sanitizer-test
+    command: npm run test -- tests/security/sanitizer.test.ts --reporter=json --outputFile=test-results/vitest/secure-reactive-uis-sanitizer.json
+artifacts:
+  - test-results/vitest/secure-reactive-uis-sanitizer.json

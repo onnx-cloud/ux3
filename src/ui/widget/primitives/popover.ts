@@ -1,18 +1,15 @@
-import { UxToggle } from './toggle.js';
+import { UxOverlay } from './ux-overlay.js';
 
-export class UxPopover extends UxToggle {
+export class UxPopover extends UxOverlay {
   private boundClickOutside: ((e: Event) => void) | null = null;
 
   protected onConnected(): void {
     super.onConnected();
-    const stateAttr = this.getStateAttr();
     this.boundClickOutside = (e: Event) => {
-      if (!this.hasAttribute(stateAttr)) return;
+      if (!this.open) return;
       const target = e.target as HTMLElement;
       if (!this.contains(target)) {
-        this.removeAttribute(stateAttr);
-        this.applyAriaState(false);
-        this.dispatchEvent(new CustomEvent('ux:popover.event', { bubbles: true, detail: { action: 'CLOSE' } }));
+        this.hide();
       }
     };
     document.addEventListener('click', this.boundClickOutside);

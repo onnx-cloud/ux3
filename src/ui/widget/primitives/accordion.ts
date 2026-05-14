@@ -1,6 +1,6 @@
-import { UxToggle } from './toggle.js';
+import { UxBase } from './base.js';
 
-export class UxAccordion extends UxToggle {
+export class UxAccordion extends UxBase {
   protected onConnected(): void {
     super.onConnected();
     this.ensureDetailsStructure();
@@ -39,7 +39,7 @@ export class UxAccordion extends UxToggle {
     this.querySelectorAll('[ux-accordion-item][open], details[open]').forEach((item) => {
       if (item !== target) item.removeAttribute('open');
     });
-    this.dispatchEvent(new CustomEvent('ux:accordion.section.change', {
+    this.dispatchEvent(new CustomEvent('ux:accordion.toggle', {
       bubbles: true,
       detail: { openItem: target },
     }));

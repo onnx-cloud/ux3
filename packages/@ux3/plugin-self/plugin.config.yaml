@@ -1,0 +1,9 @@
+name: "@ux3/plugin-self"
+displayName: Self
+description: "Self-hosted onboarding and runtime developer tooling for UX3."
+author: UX3 Team
+categories:
+  - utility
+  - developer
+  - onboarding
+ux3PeerVersion: ^0.2.0

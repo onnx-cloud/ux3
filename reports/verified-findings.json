@@ -1,0 +1,170 @@
+{
+  "runId": "2026-05-14T07-42-25-400Z-3zfmfg",
+  "commit": "30c75e1",
+  "project": "@ux3/ux",
+  "timestamp": "2026-05-14T07:42:25.422Z",
+  "outcomes": [
+    {
+      "step": "build",
+      "success": false,
+      "error": "skipped"
+    },
+    {
+      "step": "vitest",
+      "success": false,
+      "error": "skipped"
+    },
+    {
+      "step": "playwright",
+      "success": false,
+      "error": "skipped"
+    }
+  ],
+  "artifacts": {
+    "generated_build-manifest.json": "generated/build-manifest.json",
+    "test-results_vitest_results.json": "test-results/vitest/results.json",
+    "test-results_playwright_results.json": "test-results/playwright/results.json",
+    "test-results_playwright_results.xml": "test-results/playwright/results.xml",
+    "reports_papers-pdf-report.json": "reports/papers-pdf-report.json"
+  },
+  "papers": [
+    {
+      "name": "ai-augmented-ux",
+      "title": "AI-augmented UX",
+      "outcome": "partial",
+      "artifacts": {
+        "test-results_vitest_ai-augmented-ux-plugin-pdf_json": null,
+        "reports_papers-pdf-report_json": "../../../reports/papers-pdf-report.json"
+      },
+      "findings": 5
+    },
+    {
+      "name": "compile-first-frontend",
+      "title": "Compile-first Frontend",
+      "outcome": "partial",
+      "artifacts": {
+        "generated_build-manifest_json": "../../../generated/build-manifest.json",
+        "test-results_vitest_compile-first-frontend-ux-charts_json": null
+      },
+      "findings": 5
+    },
+    {
+      "name": "fsm-driven-reactive-ui",
+      "title": "FSM-driven Reactive UI",
+      "outcome": "partial",
+      "artifacts": {
+        "test-results_vitest_fsm-driven-reactive-ui_json": null,
+        "test-results_vitest_fsm-driven-reactive-ui-math_json": null
+      },
+      "findings": 5
+    },
+    {
+      "name": "live-agentic-host",
+      "title": "Live Agentic Host",
+      "outcome": "pass",
+      "artifacts": {
+        "test-results_playwright_results_json": "../../../test-results/playwright/results.json",
+        "test-results_playwright_results_xml": "../../../test-results/playwright/results.xml"
+      },
+      "findings": 4
+    },
+    {
+      "name": "open-ecosystems-live-ux",
+      "title": "Open Ecosystems Live UX",
+      "outcome": "partial",
+      "artifacts": {
+        "test-results_vitest_open-ecosystems-live-ux-npm-packages_json": null,
+        "test-results_vitest_open-ecosystems-live-ux-create-app-context_json": null
+      },
+      "findings": 5
+    },
+    {
+      "name": "secure-reactive-uis",
+      "title": "Secure Reactive UIs",
+      "outcome": "partial",
+      "artifacts": {
+        "test-results_vitest_secure-reactive-uis-sanitizer_json": null
+      },
+      "findings": 3
+    }
+  ],
+  "findings": [
+    {
+      "source": "root-command",
+      "category": "root-validation",
+      "severity": "info",
+      "message": "Skipped root command build.",
+      "path": "npm run build",
+      "evidence": {
+        "command": "npm run build",
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "source": "root-command",
+      "category": "root-validation",
+      "severity": "info",
+      "message": "Skipped root command vitest.",
+      "path": "npm run test -- --reporter=json --outputFile=test-results/vitest/results.json",
+      "evidence": {
+        "command": "npm run test -- --reporter=json --outputFile=test-results/vitest/results.json",
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "source": "root-command",
+      "category": "root-validation",
+      "severity": "info",
+      "message": "Skipped root command playwright.",
+      "path": "npm run test:e2e",
+      "evidence": {
+        "command": "npm run test:e2e",
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "source": "build-manifest",
+      "category": "compile-first-architectures",
+      "severity": "info",
+      "message": "build-manifest artifact is available at generated/build-manifest.json.",
+      "path": "generated/build-manifest.json",
+      "evidence": {
+        "exists": true
+      }
+    },
+    {
+      "source": "vitest-results",
+      "category": "fsm-driven-reactive-ui",
+      "severity": "info",
+      "message": "vitest-results artifact is available at test-results/vitest/results.json.",
+      "path": "test-results/vitest/results.json",
+      "evidence": {
+        "exists": true
+      }
+    },
+    {
+      "source": "playwright-results",
+      "category": "live-agentic-host",
+      "severity": "info",
+      "message": "playwright-results artifact is available at test-results/playwright/results.json.",
+      "path": "test-results/playwright/results.json",
+      "evidence": {
+        "exists": true
+      }
+    },
+    {
+      "source": "pdf-report",
+      "category": "ai-augmented-ux",
+      "severity": "info",
+      "message": "pdf-report artifact is available at reports/papers-pdf-report.json.",
+      "path": "reports/papers-pdf-report.json",
+      "evidence": {
+        "exists": true
+      }
+    }
+  ],
+  "outcome": "pass"
+}

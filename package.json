@@ -80,7 +80,7 @@
   ],
   "scripts": {
     "predev": "./bin/clean-js && echo 'Skipping type-check for dev mode'",
-    "prebuild": "./bin/clean-js",
+    "prebuild": "./bin/clean-js && npx tsx packages/@ux3/plugin-onnx/src/build-index.ts",
     "pregold": "./bin/clean-js",
     "pretest": "./bin/clean-js",
     "pretype-check": "./bin/clean-js",
@@ -134,6 +134,7 @@
     "a11y-audit": "node scripts/a11y-audit.js",
     "example": "node scripts/run-example.mjs",
     "publish": "npm publish --access public",
+    "researcher": "node scripts/researcher.mjs",
     "bundle:iam": "esbuild ./examples/iam/index.ts --bundle --platform=browser --format=esm --external:@ux3/* --external:../src/plugins/* --outfile=examples/iam/dist/app.bundle.js --sourcemap --minify"
   },
   "devDependencies": {

@@ -79,7 +79,7 @@ export function getEnabledPlugins(projectConfig: any): string[] {
 export const PLUGIN_TAGS: Record<string, string[]> = {
   '@ux3/plugin-browser': ['ux-theme-toggle', 'ux-network-status'],
   '@ux3/plugin-i18n': ['ux-lang-switcher'],
-  '@ux3/ux-chart-js': ['ux-chart-line', 'ux-chart-bar', 'ux-chart-donut'],
+  '@ux3/ux-charts': ['ux-chart-line', 'ux-chart-bar', 'ux-chart-donut'],
   '@ux3/ux-cytoscape': ['ux-graph'],
   '@ux3/ux-icons': ['ux-icon'],
   '@ux3/ux-openmaps': ['ux-map'],

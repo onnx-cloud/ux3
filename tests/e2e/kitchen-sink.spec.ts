@@ -101,6 +101,26 @@ test.describe('Kitchen Sink — Config-Driven', () => {
         `Shell plugin components not found: ${missingShell.join(', ')}`
       ).toHaveLength(0);
     });
+
+    test('ONNX plugin service is available in the browser runtime', async ({ page }) => {
+      await gotoAndWait(page, '/');
+      const onnxStatus = await page.evaluate(async () => {
+        const svc = (window as any).__ux3OnnxService;
+        if (!svc) return { available: false };
+        const activeIndex = await svc.getActiveIndex?.();
+        const search = await svc.search?.('onnx');
+        return {
+          available: true,
+          activeIndex,
+          resultCount: search?.count ?? null,
+        };
+      });
+
+      expect(onnxStatus.available).toBe(true);
+      expect(onnxStatus.activeIndex).toBe('default');
+      expect(onnxStatus.resultCount).toBeTypeOf('number');
+      expect(onnxStatus.resultCount).toBeGreaterThanOrEqual(0);
+    });
   }
 
   // ---------------------------------------------------------------------------

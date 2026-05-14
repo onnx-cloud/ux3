@@ -1,42 +1,63 @@
 # @ux3/plugin-math
 
-Semantic math support for UX3.
+Semantic math plugin for UX3 providing TeX-lite parsing and canonical math IR.
 
 ## Features
 
-- TeX-lite inline and block math parsing
-- Canonical semantic math IR with stable node IDs
-- Normalization for commutative and associative operators
-- Round-trip TeX-lite serialization
-- HTML and MathML emitters from the IR
-- Zero-dependency parser using recursive-descent logic
+- TeX-lite semantic math parsing
+- Canonical math IR with stable nodes
+- HTML and MathML rendering
+- Normalization and serialization utilities
+- Markdown code block math integration
 
-## Usage
+## Installation
 
-```ts
-import MathPlugin, { MathPluginUtils } from '@ux3/plugin-math';
-
-// register plugin in UX3 app
-app.register(MathPlugin);
-
-const math = app.utils.math as MathPluginUtils;
-const root = math.parse('a + b');
-const normalized = math.normalize(root);
-const tex = math.serialize(normalized);
-const html = math.renderHtml(normalized);
-const mathml = math.renderMathML(normalized);
+```bash
+npm install @ux3/plugin-math
 ```
 
-## Supported syntax
+## Basic Usage
 
-- numbers: `1`, `3.14`
-- identifiers: `x`, `theta`
-- operators: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `\le`, `\ge`, `\neq`
-- functions: `\sin`, `\cos`, `\log`, `\sqrt`, `\exp`
-- fractions: `\frac{a}{b}`
-- subscripts/superscripts: `x_1`, `x^2`, `x_{1}^{2}`
-- implicit multiplication: `2x`, `x(1+y)`
+```ts
+import MathPlugin from '@ux3/plugin-math';
+
+const app = initializeApp({
+  plugins: [MathPlugin],
+});
+```
+
+## Plugin Usage
+
+- Register the plugin with the UX3 plugin registry.
+- Access `app.utils.math` for parser and renderer helpers.
+- Use direct exports for utility functions in standalone code.
+
+## API
+
+- `app.utils.math.parse(source)` — parse TeX-lite math into a semantic IR.
+- `app.utils.math.normalize(node)` — normalize commutative/associative math structures.
+- `app.utils.math.serialize(node)` — serialize the IR back to TeX-lite.
+- `app.utils.math.renderHtml(node)` — convert IR to safe HTML.
+- `app.utils.math.renderMathML(node)` — convert IR to MathML.
+- `parse`, `normalize`, `serialize`, `renderHtml`, `renderMathML` — direct exports.
+
+## Example
+
+```ts
+import MathPlugin, { parse, normalize, renderHtml } from '@ux3/plugin-math';
+
+const app = initializeApp({
+  plugins: [MathPlugin],
+});
+
+const node = parse('x^2 + \frac{a}{b}');
+const normalized = normalize(node);
+const html = renderHtml(normalized);
+
+console.log(html);
+```
 
 ## Notes
 
-The plugin produces a recoverable semantic IR. Currenly the parser is intentionally limited to a compact TeX-lite syntax and does not support full LaTeX macro expansion.
+- The parser supports a compact TeX-lite subset rather than full LaTeX.
+- Markdown integrations are available when a markdown service is registered.

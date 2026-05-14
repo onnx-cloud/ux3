@@ -1,4 +1,4 @@
-import { UxToggle } from './toggle.js';
+import { UxBase } from './base.js';
 import { registerLightStyle, registerStyles } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-card-style';
@@ -47,8 +47,13 @@ registerStyles({
   'ux-card-icon': '',
 });
 
-export class UxCard extends UxToggle {
-  protected getStateAttr(): string {
-    return 'expanded';
+export class UxCard extends UxBase {
+  protected onConnected(): void {
+    super.onConnected();
+    this.addEventListener('click', () => {
+      const expanded = !this.hasAttribute('expanded');
+      this.toggleAttribute('expanded', expanded);
+      this.setAttribute('aria-expanded', String(expanded));
+    });
   }
 }

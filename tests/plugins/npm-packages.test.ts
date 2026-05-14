@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 describe('npm plugin packages', () => {
-  const packages = ['plugin-i18n', 'plugin-analytics', 'plugin-validation', 'ux-chart-js', 'ux-tailwind', 'plugin-oidc'];
+  const packages = ['plugin-i18n', 'plugin-analytics', 'plugin-validation', 'ux-charts', 'ux-tailwind', 'plugin-oidc'];
 
   packages.forEach((pkg) => {
     it(`can import ${pkg}`, async () => {

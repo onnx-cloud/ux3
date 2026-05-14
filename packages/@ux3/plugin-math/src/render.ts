@@ -84,7 +84,7 @@ function serializeMathNodeRecursive(node: MathNode, parentPrecedence = 0): strin
       return items.join(` ${symbol} `);
     }
     case 'function': {
-      const args = node.args.map((arg) => `\{${serializeMathNodeRecursive(arg)}\}`).join('');
+      const args = node.args.map((arg) => `{${serializeMathNodeRecursive(arg)}}`).join('');
       return `\\${node.name}${args}`;
     }
     case 'fraction':
@@ -158,8 +158,8 @@ function renderMathMLNode(node: MathNode): string {
         return `<mfrac>${renderMathMLNode(node.operands[0])}${renderMathMLNode(node.operands[1])}</mfrac>`;
       }
       return `<mrow>${node.operands
-        .map((operand, index) => `${renderMathMLNode(operand)}<mo>${mathmlEscape(symbol)}</mo>`)
-        .join('')}`.replace(/<mo>.*<\/mo>$/, '') + '</mrow>';
+        .map((operand, index) => `${renderMathMLNode(operand)}${index < node.operands.length - 1 ? `<mo>${mathmlEscape(symbol)}</mo>` : ''}`)
+        .join('')}</mrow>`;
     }
     case 'function': {
       const args = node.args.map(renderMathMLNode).join('<mo>,</mo>');

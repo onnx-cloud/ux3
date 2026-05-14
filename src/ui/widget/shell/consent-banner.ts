@@ -447,7 +447,3 @@ export class UxConsentBanner extends LifecycleComponent {
     `;
   }
 }
-
-if (!customElements.get('ux-consent-banner')) {
-  customElements.define('ux-consent-banner', UxConsentBanner);
-}

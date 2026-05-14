@@ -1,52 +1,60 @@
-# @ux3/plugin-icons
+# @ux3/ux-icons
 
-Icones/Iconify integration for UX3 with Lucide as the default icon collection.
+Iconify/Lucide integration for UX3.
 
 ## Features
 
-- Default collection: `lucide`
-- Native `<ux-icon>` custom element
-- Adds utility API at `app.utils.icones`
-- Adds `icones` service (`app.services.icones`)
-- Converts `[ux-icon]` placeholders into `<ux-icon>` elements
-- Local browser cache enabled by default (`cached: true`)
-- Runtime in-memory bundle enabled by default (`bundled: true`)
+- `<ux-icon>` custom element for SVG icons
+- Local caching and bundled rendering options
+- Default collection and auto-replace support
+- Utility API exposed via `app.utils.icones`
 
-## Install
+## Installation
 
 ```bash
-npm install @ux3/plugin-icons
+npm install @ux3/ux-icons
 ```
 
-## Configure
+## Basic Usage
+
+```ts
+import IconPlugin from '@ux3/ux-icons';
+
+const app = initializeApp({
+  plugins: [IconPlugin],
+});
+```
+
+## Plugin Usage
+
+- Use `<ux-icon name="lucide:camera"></ux-icon>` in templates.
+- Use the `i ux-icon="name"` shorthand if `autoReplace` is enabled.
+- Access `app.utils.icones` and `app.services.icones` for icon rendering helpers.
+
+## Configuration
 
 ```yaml
 plugins:
-  - name: '@ux3/plugin-icons'
+  - name: '@ux3/ux-icons'
     config:
-      collections: ['lucide']
-      bundled: true
+      defaultCollection: 'lucide'
       cached: true
+      bundled: true
+      autoReplace: true
 ```
 
-## Usage
+## API
 
-```ts
-const html = app.utils.icones.icon('alarm-clock');
-// => <ux-icon name="lucide:alarm-clock"></ux-icon>
-```
+- `app.utils.icones.icon(name)` — render an icon placeholder or element.
+- `app.services.icones` — icon service entrypoint.
 
-With explicit collection:
-
-```ts
-const html = app.utils.icones.icon('mdi:account');
-```
-
-Template placeholder mode:
+## Example
 
 ```html
-<ux-icon name="lucide:align-justify"></ux-icon>
-
-<i ux-icon="camera"></i>
-<!-- becomes <ux-icon name="lucide:camera"></ux-icon> -->
+<ux-icon name="lucide:alarm-clock"></ux-icon>
 ```
+
+## Notes
+
+- Icon payloads are cached in local storage when enabled.
+- The plugin auto-replaces inline icon placeholders by default.

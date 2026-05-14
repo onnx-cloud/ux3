@@ -62,7 +62,9 @@ export class UxModal extends LifecycleComponent {
       this.dialog.setAttribute('open', '');
     }
     this.setAttribute('opened', 'true');
-    this.emit('OPEN');
+    this.dispatchEvent(new CustomEvent('ux:overlay.open', {
+      bubbles: true, composed: true, detail: { source: 'ux-modal' },
+    }));
   }
 
   close() {
@@ -73,12 +75,8 @@ export class UxModal extends LifecycleComponent {
       this.dialog.removeAttribute('open');
     }
     this.removeAttribute('opened');
-    this.emit('CLOSE');
-  }
-
-  private emit(action: string) {
-    this.dispatchEvent(new CustomEvent('ux:widget.modal.event', {
-      bubbles: true, composed: true, detail: { action },
+    this.dispatchEvent(new CustomEvent('ux:overlay.close', {
+      bubbles: true, composed: true, detail: { source: 'ux-modal' },
     }));
   }
 
@@ -125,8 +123,4 @@ export class UxModal extends LifecycleComponent {
       .footer ::slotted(button:hover) { background: var(--color-bg-muted, #f3f4f6); }
     `;
   }
-}
-
-if (!customElements.get('ux-modal')) {
-  customElements.define('ux-modal', UxModal);
 }

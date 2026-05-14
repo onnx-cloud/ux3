@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ChartJsPlugin } from '../../packages/@ux3/ux-chart-js/src/index';
+import { ChartJsPlugin } from '../../packages/@ux3/ux-charts/src/index';
 
 const origDefine = customElements.define.bind(customElements);
 
@@ -17,7 +17,7 @@ describe('ChartJsPlugin', () => {
   });
 
   it('has expected metadata', () => {
-    expect(ChartJsPlugin.name).toBe('@ux3/ux-chart-js');
+    expect(ChartJsPlugin.name).toBe('@ux3/ux-charts');
     expect(ChartJsPlugin.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 

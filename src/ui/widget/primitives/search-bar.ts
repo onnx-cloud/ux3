@@ -1,7 +1,7 @@
 /**
  * UX3 Search Bar Component (light DOM)
  */
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-search-bar-style';
@@ -12,7 +12,7 @@ const STYLE_CSS = `    ux-search-bar { display: flex; width: 100%; max-width: 10
     ux-search-bar .clear { display: none; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1rem; }
     ux-search-bar .clear.visible { display: inline; }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
-export class UxSearchBar extends UxBase {
+export class UxSearchBar extends UxControl {
   private input!: HTMLInputElement;
   private timer: ReturnType<typeof setTimeout> | null = null;
 

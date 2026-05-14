@@ -1,4 +1,4 @@
-import { UxToggle } from './toggle.js';
+import { UxOverlay } from './ux-overlay.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-drawer-style';
@@ -96,7 +96,7 @@ const STYLE_CSS = `
 `;
 registerLightStyle(STYLE_ID, STYLE_CSS);
 
-export class UxDrawer extends UxToggle {
+export class UxDrawer extends UxOverlay {
   private closeButton: HTMLButtonElement | null = null;
   private swipePointerId: number | null = null;
   private swipeStartX = 0;
@@ -108,8 +108,8 @@ export class UxDrawer extends UxToggle {
     this.updatePositionClasses();
     this.updateClosableButton();
     this.listen(this, 'keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && this.hasAttribute('open')) {
-        this.closeDrawer();
+      if (event.key === 'Escape' && this.open) {
+        this.hide();
       }
     });
 
@@ -120,7 +120,8 @@ export class UxDrawer extends UxToggle {
     }
   }
 
-  protected onAttributeChanged(name: string): void {
+  protected onAttributeChanged(name: string, oldValue: string | null, newValue: string | null): void {
+    super.onAttributeChanged(name, oldValue, newValue);
     if (name === 'position') {
       this.updatePositionClasses();
     }
@@ -166,7 +167,7 @@ export class UxDrawer extends UxToggle {
     btn.setAttribute('aria-label', 'Close');
     btn.addEventListener('click', (event) => {
       event.stopPropagation();
-      this.closeDrawer();
+      this.hide();
     });
 
     this.closeButton = btn;
@@ -188,22 +189,22 @@ export class UxDrawer extends UxToggle {
 
     const path = event.composedPath ? event.composedPath() : [];
     const insideDrawer = path.includes(this);
-    const open = this.hasAttribute('open');
+    const isOpen = this.open;
     const position = this.position;
     const x = event.clientX;
     const y = event.clientY;
-    const edgeOpen = !open && (
+    const edgeOpen = !isOpen && (
       (position === 'right' && x >= window.innerWidth - this.edgeThreshold) ||
       (position === 'left' && x <= this.edgeThreshold) ||
       (position === 'top' && y <= this.edgeThreshold) ||
       (position === 'bottom' && y >= window.innerHeight - this.edgeThreshold)
     );
 
-    if (!open && !edgeOpen) {
+    if (!isOpen && !edgeOpen) {
       return;
     }
 
-    if (open && !insideDrawer) {
+    if (isOpen && !insideDrawer) {
       return;
     }
 
@@ -221,16 +222,16 @@ export class UxDrawer extends UxToggle {
     const deltaX = event.clientX - this.swipeStartX;
     const deltaY = event.clientY - this.swipeStartY;
     const position = this.position;
-    const open = this.hasAttribute('open');
+    const isOpen = this.open;
 
-    const shouldClose = open && (
+    const shouldClose = isOpen && (
       (position === 'right' && deltaX < -this.swipeThreshold) ||
       (position === 'left' && deltaX > this.swipeThreshold) ||
       (position === 'top' && deltaY > this.swipeThreshold) ||
       (position === 'bottom' && deltaY < -this.swipeThreshold)
     );
 
-    const shouldOpen = this.swipeEdgeGesture && !open && (
+    const shouldOpen = this.swipeEdgeGesture && !isOpen && (
       (position === 'right' && deltaX < -this.swipeThreshold) ||
       (position === 'left' && deltaX > this.swipeThreshold) ||
       (position === 'top' && deltaY > this.swipeThreshold) ||
@@ -238,9 +239,9 @@ export class UxDrawer extends UxToggle {
     );
 
     if (shouldClose) {
-      this.closeDrawer();
+      this.hide();
     } else if (shouldOpen) {
-      this.openDrawer();
+      this.show();
     }
 
     this.resetSwipeState();
@@ -260,25 +261,7 @@ export class UxDrawer extends UxToggle {
     this.swipeEdgeGesture = false;
   }
 
-  private openDrawer(): void {
-    if (this.hasAttribute('open')) {
-      return;
-    }
-    this.setAttribute('open', '');
-    this.applyAriaState(true);
-    this.dispatchEvent(new CustomEvent('ux:drawer.event', { bubbles: true, detail: { action: 'OPEN' } }));
-  }
-
-  private closeDrawer(): void {
-    if (!this.hasAttribute('open')) {
-      return;
-    }
-    this.removeAttribute('open');
-    this.applyAriaState(false);
-    this.dispatchEvent(new CustomEvent('ux:drawer.event', { bubbles: true, detail: { action: 'CLOSE' } }));
-  }
-
   static get observedAttributes(): string[] {
-    return [...UxToggle.observedAttributes, 'closable', 'position'];
+    return ['open', 'closable', 'position'];
   }
 }

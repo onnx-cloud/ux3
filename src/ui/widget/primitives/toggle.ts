@@ -1,4 +1,5 @@
-import { UxBase } from './base.js';
+import type { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-toggle-style';
@@ -21,7 +22,7 @@ const TOGGLE_OPEN_ACTIONS: Record<string, [string, string]> = {
   pressed: ['PRESS', 'RELEASE'],
 };
 
-export class UxToggle extends UxBase {
+export class UxToggle extends UxControl {
   private control: HTMLElement | null = null;
   private _rendered = false;
 
@@ -115,9 +116,9 @@ const stateAttr = this.getStateAttr();
     }));
     const pair = TOGGLE_OPEN_ACTIONS[stateAttr];
     if (pair) {
-      this.dispatchEvent(new CustomEvent('ux:widget.event', {
+      this.dispatchEvent(new CustomEvent('ux:toggle.change', {
         bubbles: true, composed: true,
-        detail: { action: pair[next ? 0 : 1] },
+        detail: { action: pair[next ? 0 : 1], [stateAttr]: next },
       }));
     }
   };

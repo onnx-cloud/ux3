@@ -10,7 +10,12 @@ export type PrimitiveKind =
   | 'combobox' | 'date-picker' | 'file-upload' | 'dropzone'
   | 'search-bar' | 'tree-nav' | 'notifications'
   | 'data-grid' | 'table-virtual' | 'table'
-  | 'splash' | 'radio-group' | 'link' | 'mega-menu' | 'context-menu';
+  | 'splash' | 'radio-group' | 'link' | 'mega-menu' | 'context-menu'
+  | 'button' | 'modal' | 'panel' | 'dropdown' | 'lightbox'
+  | 'field' | 'field-array'
+  | 'toast-container' | 'toast' | 'consent-banner'
+  | 'gate-auth' | 'gate-anon' | 'gate-role' | 'gate-scope' | 'gate-feature'
+  | 'nav';
 
 export interface PrimitiveDefinition {
   tag: string;

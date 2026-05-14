@@ -4,6 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { UxButton } from '../../../src/ui/widget/primitives/button';
+// Ensure primitives are registered
+import '../../../src/ui/widget/primitives/index.js';
 
 describe('UxButton - Button Component', () => {
   let container: HTMLDivElement;
@@ -19,7 +21,9 @@ describe('UxButton - Button Component', () => {
   });
 
   it('registers the button element', () => {
-    expect(customElements.get('ux-button')).toBe(UxButton);
+    const registered = customElements.get('ux-button');
+    expect(registered).toBeTruthy();
+    expect(registered).not.toBe(UxButton); // anonymous subclass via registerBuiltInPrimitives
   });
 
   it('defaults to a button type', () => {
@@ -76,8 +80,6 @@ describe('UxButton - Button Component', () => {
   });
 
   it('dispatches submit event on closest light-DOM form when type=submit', async () => {
-    const { UxButton: Btn } = await import('../../../src/ui/widget/primitives/button.js');
-
     const form = document.createElement('form');
     const button = document.createElement('ux-button') as any;
     button.setAttribute('type', 'submit');
@@ -101,8 +103,6 @@ describe('UxButton - Button Component', () => {
   });
 
   it('does not dispatch submit when type is not submit', async () => {
-    const { UxButton: Btn } = await import('../../../src/ui/widget/primitives/button.js');
-
     const form = document.createElement('form');
     const button = document.createElement('ux-button') as any;
     button.setAttribute('type', 'button');

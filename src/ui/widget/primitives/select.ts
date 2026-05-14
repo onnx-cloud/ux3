@@ -1,4 +1,4 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-select-style';
@@ -29,7 +29,7 @@ export interface SelectOption {
   selected?: boolean;
 }
 
-export class UxSelect extends UxBase {
+export class UxSelect extends UxControl {
   private selectEl: HTMLSelectElement | null = null;
   private observer: MutationObserver | null = null;
   private _rendered = false;

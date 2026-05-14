@@ -3,15 +3,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UxToastContainer } from '../../../src/ui/widget/shell/toast';
+import { UxToastContainer, UxToast } from '../../../src/ui/widget/shell/toast';
+// Ensure primitives are registered (toast, toast-container)
+import '../../../src/ui/widget/primitives/index.js';
 
 describe('UxToastContainer - Toast Notifications', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
-    if (!customElements.get('ux-toast-container')) {
-      customElements.define('ux-toast-container', UxToastContainer);
-    }
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -22,7 +21,8 @@ describe('UxToastContainer - Toast Notifications', () => {
   });
 
   it('registers the toast container element', () => {
-    expect(customElements.get('ux-toast-container')).toBe(UxToastContainer);
+    const registered = customElements.get('ux-toast-container');
+    expect(registered).toBeTruthy();
   });
 
   it('shows a toast and returns an id', () => {
@@ -30,7 +30,7 @@ describe('UxToastContainer - Toast Notifications', () => {
     container.appendChild(toastContainer);
 
     const openSpy = vi.fn();
-    toastContainer.addEventListener('ux:toast.event', ((e: CustomEvent) => {
+    toastContainer.addEventListener('ux:toast.open', ((e: CustomEvent) => {
       if (e.detail?.action === 'OPEN') openSpy();
     }) as EventListener);
 
@@ -45,9 +45,7 @@ describe('UxToastContainer - Toast Notifications', () => {
     container.appendChild(toastContainer);
 
     const closeSpy = vi.fn();
-    toastContainer.addEventListener('ux:toast.event', ((e: CustomEvent) => {
-      if (e.detail?.action === 'CLOSE') closeSpy();
-    }) as EventListener);
+    toastContainer.addEventListener('ux:toast.close', () => { closeSpy(); });
 
     const id = toastContainer.show({ message: 'Dismiss me', duration: 0 });
     expect(toastContainer.shadowRoot?.querySelector('.toast')).toBeTruthy();

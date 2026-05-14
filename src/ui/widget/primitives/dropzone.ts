@@ -1,7 +1,7 @@
 /**
  * UX3 Drop Zone Component (light DOM)
  */
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-dropzone-style';
@@ -9,7 +9,7 @@ const STYLE_CSS = `    ux-dropzone { display: block; }
     ux-dropzone .zone { border: 2px dashed #d1d5db; border-radius: 0.5rem; padding: 2rem; text-align: center; transition: all 0.2s; }
     ux-dropzone .zone.dragging, ux-dropzone .zone.active { border-color: #3b82f6; background: #eff6ff; }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
-export class UxDropZone extends UxBase {
+export class UxDropZone extends UxControl {
   protected onConnected(): void {
     super.onConnected();
 const text = this.textContent?.trim() || 'Drop files here';

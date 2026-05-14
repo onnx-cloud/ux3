@@ -1,17 +1,16 @@
 /**
- * UxPanel Component Unit Tests
+ * UxPanel Component Unit Tests (light DOM)
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { UxPanel } from '../../../src/ui/widget/primitives/panel';
+// Ensure primitives are registered
+import '../../../src/ui/widget/primitives/index.js';
 
 describe('UxPanel - Panel Component', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
-    if (!customElements.get('ux-panel')) {
-      customElements.define('ux-panel', UxPanel);
-    }
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -22,7 +21,7 @@ describe('UxPanel - Panel Component', () => {
   });
 
   it('registers the panel element', () => {
-    expect(customElements.get('ux-panel')).toBe(UxPanel);
+    expect(customElements.get('ux-panel')).toBeTruthy();
   });
 
   it('renders title text', async () => {
@@ -33,7 +32,7 @@ describe('UxPanel - Panel Component', () => {
     container.appendChild(panel);
     await Promise.resolve();
 
-    expect(panel.shadowRoot?.querySelector('.panel-title')?.textContent).toBe('My Panel');
+    expect(panel.querySelector('.panel-title')?.textContent).toBe('My Panel');
   });
 
   it('toggles expanded state when clicked', async () => {
@@ -44,14 +43,15 @@ describe('UxPanel - Panel Component', () => {
     container.appendChild(panel);
     await Promise.resolve();
 
-    const toggle = panel.shadowRoot?.querySelector('.panel-toggle') as HTMLButtonElement;
+    const toggle = panel.querySelector('.panel-toggle') as HTMLButtonElement;
     toggle.click();
 
     expect(panel.expanded).toBe(true);
-    expect(panel.shadowRoot?.querySelector('.panel-content')?.classList.contains('hidden')).toBe(false);
+    const content = panel.querySelector('.panel-content') as HTMLDivElement;
+    expect(content.style.display).toBe('');
   });
 
-  it('emits ux:panel.expand and ux:panel.collapse events', async () => {
+  it('emits ux:panel.toggle events', async () => {
     const panel = document.createElement('ux-panel') as UxPanel;
     panel.setAttribute('title', 'Events');
     panel.setAttribute('collapsible', '');
@@ -59,16 +59,16 @@ describe('UxPanel - Panel Component', () => {
     container.appendChild(panel);
     await Promise.resolve();
 
-    const expandSpy = vi.fn();
-    const collapseSpy = vi.fn();
-    panel.addEventListener('ux:panel.expand', expandSpy);
-    panel.addEventListener('ux:panel.collapse', collapseSpy);
+    const spy = vi.fn();
+    panel.addEventListener('ux:panel.toggle', spy);
 
-    const toggle = panel.shadowRoot?.querySelector('.panel-toggle') as HTMLButtonElement;
+    const toggle = panel.querySelector('.panel-toggle') as HTMLButtonElement;
     toggle.click();
-    expect(expandSpy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0][0].detail.expanded).toBe(true);
 
     toggle.click();
-    expect(collapseSpy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy.mock.calls[1][0].detail.expanded).toBe(false);
   });
 });

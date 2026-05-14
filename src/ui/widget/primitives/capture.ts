@@ -1,6 +1,6 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 
-export class UxCapture extends UxBase {
+export class UxCapture extends UxControl {
   private mediaStream: MediaStream | null = null;
   private videoEl: HTMLVideoElement | null = null;
   private canvasEl: HTMLCanvasElement | null = null;

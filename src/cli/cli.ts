@@ -19,6 +19,7 @@ import { syncCommand } from './commands/sync.js';
 import { translateCommand } from './commands/translate.js';
 import { routesCommand } from './commands/routes.js';
 import { fsmCommand } from './commands/fsm.js';
+import { selfCommand } from './commands/self.js';
 import { createRequire } from 'module';
 
 const _require = createRequire(import.meta.url);
@@ -28,6 +29,7 @@ program.version(version).description('UX3 - Lightweight SPA framework CLI');
 
 program.addCommand(createCommand);
 program.addCommand(devCommand);
+program.addCommand(selfCommand);
 program.addCommand(buildCommand);
 program.addCommand(lintCommand);
 program.addCommand(checkCommand);

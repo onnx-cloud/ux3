@@ -67,11 +67,12 @@ export class MermaidRenderer {
       if (node.label) {
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
         text.setAttribute('x', String(pos.x + pos.width / 2))
-        text.setAttribute('y', String(pos.y + pos.height / 2 + 5))
+        text.setAttribute('y', String(pos.y + pos.height / 2 + 2))
         text.setAttribute('text-anchor', 'middle')
         text.setAttribute('dominant-baseline', 'middle')
+        text.setAttribute('xml:space', 'preserve')
         text.setAttribute('class', 'node-label')
-        text.setAttribute('style', `font-size: ${this.theme.fontSize}px; font-family: ${this.theme.fontFamily};`)
+        text.setAttribute('style', `font-size: ${Math.max(this.theme.fontSize - 1, 12)}px; font-family: ${this.theme.fontFamily}; white-space: pre;`)
         text.textContent = node.label
         nodeGroup.appendChild(text)
       }

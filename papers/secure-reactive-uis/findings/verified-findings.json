@@ -1,0 +1,69 @@
+{
+  "runId": "2026-05-14T07-42-25-400Z-3zfmfg",
+  "commit": "30c75e1",
+  "project": "@ux3/ux",
+  "timestamp": "2026-05-14T07:42:25.422Z",
+  "paper": "secure-reactive-uis",
+  "title": "Secure Reactive UIs",
+  "categories": [
+    "secure-reactive-uis"
+  ],
+  "pluginEvidence": [
+    "security"
+  ],
+  "commands": [
+    {
+      "label": "sanitizer-test",
+      "command": "npm run test -- tests/security/sanitizer.test.ts --reporter=json --outputFile=test-results/vitest/secure-reactive-uis-sanitizer.json",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ],
+  "artifacts": {
+    "test-results_vitest_secure-reactive-uis-sanitizer_json": null
+  },
+  "outcome": "partial",
+  "findings": [
+    {
+      "source": "paper-spec",
+      "category": "secure-reactive-uis",
+      "severity": "info",
+      "message": "Loaded experiment metadata for paper secure-reactive-uis.",
+      "path": "papers/secure-reactive-uis/experiments.yaml",
+      "evidence": {
+        "title": "Secure Reactive UIs",
+        "categories": [
+          "secure-reactive-uis"
+        ],
+        "pluginEvidence": [
+          "security"
+        ]
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "secure-reactive-uis",
+      "severity": "warning",
+      "message": "Artifact test-results/vitest/secure-reactive-uis-sanitizer.json is missing for paper secure-reactive-uis.",
+      "path": "test-results/vitest/secure-reactive-uis-sanitizer.json",
+      "evidence": {
+        "exists": false
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "secure-reactive-uis",
+      "severity": "info",
+      "message": "Skipped paper command sanitizer-test for secure-reactive-uis.",
+      "path": "npm run test -- tests/security/sanitizer.test.ts --reporter=json --outputFile=test-results/vitest/secure-reactive-uis-sanitizer.json",
+      "evidence": {
+        "label": "sanitizer-test",
+        "command": "npm run test -- tests/security/sanitizer.test.ts --reporter=json --outputFile=test-results/vitest/secure-reactive-uis-sanitizer.json",
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ]
+}

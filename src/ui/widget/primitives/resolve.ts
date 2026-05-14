@@ -47,6 +47,18 @@ import { UxRadioGroup } from './radio-group.js';
 import { UxLink } from './link.js';
 import { UxMegaMenu } from './mega-menu.js';
 import { UxContextMenu } from './context-menu.js';
+import { UxButton } from './button.js';
+import { UxModal } from './modal.js';
+import { UxPanel } from './panel.js';
+import { UxDropdown } from './dropdown.js';
+import { UxLightbox } from './lightbox.js';
+import { UxField } from '../form/field.js';
+import { UxFieldArray } from '../form/field-array.js';
+import { UxToastContainer, UxToast } from '../shell/toast.js';
+import { UxConsentBanner } from '../shell/consent-banner.js';
+import { UxGateAuth } from '../shell/gate-auth.js';
+import { UxGateAnon, UxGateRole, UxGateScope, UxGateFeature } from '../shell/gate-wrappers.js';
+import { UxNav } from '../shell/nav-panel.js';
 
 export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
   switch (kind) {
@@ -103,6 +115,22 @@ export function resolveClass(kind: PrimitiveKind): typeof HTMLElement {
     case 'link': return UxLink;
     case 'mega-menu': return UxMegaMenu;
     case 'context-menu': return UxContextMenu;
+    case 'button': return UxButton;
+    case 'modal': return UxModal;
+    case 'panel': return UxPanel;
+    case 'dropdown': return UxDropdown;
+    case 'lightbox': return UxLightbox;
+    case 'field': return UxField;
+    case 'field-array': return UxFieldArray;
+    case 'toast-container': return UxToastContainer;
+    case 'toast': return UxToast;
+    case 'consent-banner': return UxConsentBanner;
+    case 'gate-auth': return UxGateAuth;
+    case 'gate-anon': return UxGateAnon;
+    case 'gate-role': return UxGateRole;
+    case 'gate-scope': return UxGateScope;
+    case 'gate-feature': return UxGateFeature;
+    case 'nav': return UxNav;
     default: return UxRegion;
   }
 }

@@ -1,0 +1,15 @@
+title: "Compile-first Frontend"
+description: "Evidence for compile-first architecture and chart-driven compile validation."
+categories:
+  - compile-first-architectures
+  - open-ecosystems-live-ux
+pluginEvidence:
+  - ux-charts
+commands:
+  - label: compile-first-build
+    command: npm run build
+  - label: ux-charts-validation
+    command: npm run test -- tests/plugin-chart-js/chart-js.test.ts --reporter=json --outputFile=test-results/vitest/compile-first-frontend-ux-charts.json
+artifacts:
+  - generated/build-manifest.json
+  - test-results/vitest/compile-first-frontend-ux-charts.json

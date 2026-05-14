@@ -1,33 +1,63 @@
 # @ux3/plugin-websearch
 
-A UX3 plugin that exposes web search and page extraction tools for MCP/LLM orchestration.
+Web search plugin for UX3 with Brave provider support and generic search tools.
 
 ## Features
 
-- `websearch.query` — search the web via Brave or another configured provider
-- `websearch.page.fetch` — fetch page content from a URL
-- `websearch.summarize` — summarize page text or search results
-- `websearch.queryProviders` — discover supported providers
+- Web search queries with provider abstraction
+- Page content fetching and rendering support
+- Result summarization tools for search content
+- Provider discovery and schema inspection
+- MCP-ready search tool integration
 
-## Configuration
+## Installation
 
-Set environment variables for Brave search:
-
-- `BRAVE_SEARCH_ENDPOINT`
-- `BRAVE_SEARCH_API_KEY`
-
-## Usage
-
-Register the plugin in your UX3 app and invoke the tools via MCP.
-
-Example `config.plugins` entry:
-
-```js
-export const config = {
-  plugins: [
-    '@ux3/plugin-websearch',
-  ],
-};
+```bash
+npm install @ux3/plugin-websearch
 ```
 
-Then call the MCP tools from your agent or runtime.
+## Basic Usage
+
+```ts
+import WebsearchPlugin from '@ux3/plugin-websearch';
+
+const app = initializeApp({
+  plugins: [WebsearchPlugin],
+});
+```
+
+## Plugin Usage
+
+- Register the plugin in your UX3 app.
+- Use MCP tool calls to execute searches and fetch pages.
+- Configure provider API keys and endpoints through environment variables.
+
+## API
+
+- `websearch.query` — run a web search.
+- `websearch.page.fetch` — fetch rendered page content.
+- `websearch.summarize` — summarize search or page results.
+- `websearch.queryProviders` — list supported providers.
+
+## Example
+
+```ts
+const searchResult = await app.services.mcp.executeTool('websearch.query', {
+  query: 'UX3 plugin architecture',
+  count: 5,
+});
+
+console.log(searchResult);
+
+const page = await app.services.mcp.executeTool('websearch.page.fetch', {
+  url: 'https://ux3.org',
+  render: 'text',
+});
+
+console.log(page);
+```
+
+## Notes
+
+- Use the plugin alongside `@ux3/plugin-mcp` for MCP tool invocation.
+- Ensure provider credentials are configured securely.

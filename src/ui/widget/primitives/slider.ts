@@ -1,4 +1,4 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-slider-style';
@@ -17,7 +17,7 @@ const STYLE_CSS = `    ux-slider { display: block; width: 100%; }
       background: var(--_s-thumb, #3b82f6); cursor: pointer; border: none;
     }`;
 registerLightStyle(STYLE_ID, STYLE_CSS);
-export class UxSlider extends UxBase {
+export class UxSlider extends UxControl {
   private range: HTMLInputElement | null = null;
   private _rendered = false;
 

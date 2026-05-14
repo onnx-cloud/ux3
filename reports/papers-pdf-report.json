@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-05-14T08:54:29.401Z",
+  "papersDir": "/developer/ux3/papers",
+  "outputDir": "/developer/ux3/papers",
+  "papers": [
+    {
+      "paperName": "ai-augmented-ux",
+      "outputPath": "/developer/ux3/papers/ai-augmented-ux.pdf",
+      "bytes": 46877,
+      "generatedAt": "2026-05-14T08:54:25.025Z"
+    },
+    {
+      "paperName": "compile-first-frontend",
+      "outputPath": "/developer/ux3/papers/compile-first-frontend.pdf",
+      "bytes": 303761,
+      "generatedAt": "2026-05-14T08:54:26.028Z"
+    },
+    {
+      "paperName": "fsm-driven-reactive-ui",
+      "outputPath": "/developer/ux3/papers/fsm-driven-reactive-ui.pdf",
+      "bytes": 181864,
+      "generatedAt": "2026-05-14T08:54:26.942Z"
+    },
+    {
+      "paperName": "live-agentic-host",
+      "outputPath": "/developer/ux3/papers/live-agentic-host.pdf",
+      "bytes": 122217,
+      "generatedAt": "2026-05-14T08:54:27.749Z"
+    },
+    {
+      "paperName": "open-ecosystems-live-ux",
+      "outputPath": "/developer/ux3/papers/open-ecosystems-live-ux.pdf",
+      "bytes": 51013,
+      "generatedAt": "2026-05-14T08:54:28.543Z"
+    },
+    {
+      "paperName": "secure-reactive-uis",
+      "outputPath": "/developer/ux3/papers/secure-reactive-uis.pdf",
+      "bytes": 135563,
+      "generatedAt": "2026-05-14T08:54:29.369Z"
+    }
+  ]
+}

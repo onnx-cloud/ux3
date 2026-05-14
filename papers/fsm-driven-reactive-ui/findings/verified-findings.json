@@ -1,0 +1,103 @@
+{
+  "runId": "2026-05-14T07-42-25-400Z-3zfmfg",
+  "commit": "30c75e1",
+  "project": "@ux3/ux",
+  "timestamp": "2026-05-14T07:42:25.422Z",
+  "paper": "fsm-driven-reactive-ui",
+  "title": "FSM-driven Reactive UI",
+  "categories": [
+    "fsm-driven-reactive-ui",
+    "open-ecosystems-live-ux"
+  ],
+  "pluginEvidence": [
+    "plugin-math"
+  ],
+  "commands": [
+    {
+      "label": "fsm-paper-test",
+      "command": "npm run test -- tests/papers/fsm-driven-reactive-ui.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui.json",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "label": "plugin-math-validation",
+      "command": "npm run test -- tests/plugin-math.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui-math.json",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ],
+  "artifacts": {
+    "test-results_vitest_fsm-driven-reactive-ui_json": null,
+    "test-results_vitest_fsm-driven-reactive-ui-math_json": null
+  },
+  "outcome": "partial",
+  "findings": [
+    {
+      "source": "paper-spec",
+      "category": "fsm-driven-reactive-ui",
+      "severity": "info",
+      "message": "Loaded experiment metadata for paper fsm-driven-reactive-ui.",
+      "path": "papers/fsm-driven-reactive-ui/experiments.yaml",
+      "evidence": {
+        "title": "FSM-driven Reactive UI",
+        "categories": [
+          "fsm-driven-reactive-ui",
+          "open-ecosystems-live-ux"
+        ],
+        "pluginEvidence": [
+          "plugin-math"
+        ]
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "fsm-driven-reactive-ui",
+      "severity": "warning",
+      "message": "Artifact test-results/vitest/fsm-driven-reactive-ui.json is missing for paper fsm-driven-reactive-ui.",
+      "path": "test-results/vitest/fsm-driven-reactive-ui.json",
+      "evidence": {
+        "exists": false
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "fsm-driven-reactive-ui",
+      "severity": "warning",
+      "message": "Artifact test-results/vitest/fsm-driven-reactive-ui-math.json is missing for paper fsm-driven-reactive-ui.",
+      "path": "test-results/vitest/fsm-driven-reactive-ui-math.json",
+      "evidence": {
+        "exists": false
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "fsm-driven-reactive-ui",
+      "severity": "info",
+      "message": "Skipped paper command fsm-paper-test for fsm-driven-reactive-ui.",
+      "path": "npm run test -- tests/papers/fsm-driven-reactive-ui.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui.json",
+      "evidence": {
+        "label": "fsm-paper-test",
+        "command": "npm run test -- tests/papers/fsm-driven-reactive-ui.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui.json",
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "fsm-driven-reactive-ui",
+      "severity": "info",
+      "message": "Skipped paper command plugin-math-validation for fsm-driven-reactive-ui.",
+      "path": "npm run test -- tests/plugin-math.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui-math.json",
+      "evidence": {
+        "label": "plugin-math-validation",
+        "command": "npm run test -- tests/plugin-math.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui-math.json",
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ]
+}

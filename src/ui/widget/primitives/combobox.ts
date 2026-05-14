@@ -1,4 +1,4 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-combobox-style';
@@ -22,7 +22,7 @@ export interface ComboOption {
   disabled?: boolean;
 }
 
-export class UxComboBox extends UxBase {
+export class UxComboBox extends UxControl {
   private input!: HTMLInputElement;
   private list!: HTMLDivElement;
   private wrapper!: HTMLDivElement;

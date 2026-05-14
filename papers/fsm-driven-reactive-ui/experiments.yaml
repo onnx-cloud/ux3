@@ -1,0 +1,15 @@
+title: "FSM-driven Reactive UI"
+description: "Evidence for declarative state machine experiments and numeric workflow validation."
+categories:
+  - fsm-driven-reactive-ui
+  - open-ecosystems-live-ux
+pluginEvidence:
+  - plugin-math
+commands:
+  - label: fsm-paper-test
+    command: npm run test -- tests/papers/fsm-driven-reactive-ui.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui.json
+  - label: plugin-math-validation
+    command: npm run test -- tests/plugin-math.test.ts --reporter=json --outputFile=test-results/vitest/fsm-driven-reactive-ui-math.json
+artifacts:
+  - test-results/vitest/fsm-driven-reactive-ui.json
+  - test-results/vitest/fsm-driven-reactive-ui-math.json

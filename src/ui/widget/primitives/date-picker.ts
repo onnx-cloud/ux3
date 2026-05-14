@@ -1,4 +1,4 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-date-picker-style';
@@ -66,7 +66,7 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-export class UxDatePicker extends UxBase {
+export class UxDatePicker extends UxControl {
   private input: HTMLInputElement | null = null;
   private calendar: HTMLDivElement | null = null;
   private _built = false;

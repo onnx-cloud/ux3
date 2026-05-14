@@ -31,6 +31,77 @@ mcp:
           intent: { type: string }
         required: [query]
 
+    - name: "onnx.model.list"
+      description: "List ONNX models available in the plugin zoo and their metadata."
+      inputSchema:
+        type: object
+        properties:
+          task: { type: string }
+          maxLatency: { type: integer, minimum: 0 }
+          requireGpu: { type: boolean }
+          provider: { type: string }
+        additionalProperties: false
+
+    - name: "onnx.model.select"
+      description: "Select the best ONNX model for a given task and deployment requirements."
+      inputSchema:
+        type: object
+        properties:
+          task: { type: string }
+          maxLatency: { type: integer, minimum: 0 }
+          requireGpu: { type: boolean }
+          provider: { type: string }
+        required: [task]
+
+    - name: "onnx.model.describe"
+      description: "Describe a specific ONNX model and its mapping profile."
+      inputSchema:
+        type: object
+        properties:
+          id: { type: string }
+        required: [id]
+
+    - name: "onnx.index.list"
+      description: "List loaded ONNX indices and the currently active index."
+      inputSchema:
+        type: object
+        additionalProperties: false
+
+    - name: "onnx.index.use"
+      description: "Switch the active ONNX index for search and model selection."
+      inputSchema:
+        type: object
+        properties:
+          name: { type: string }
+        required: [name]
+
+    - name: "onnx.index.getActive"
+      description: "Get the currently active ONNX index name."
+      inputSchema:
+        type: object
+        additionalProperties: false
+
+    - name: "onnx.index.load"
+      description: "Load an ONNX index from base64, a file path, or browser storage."
+      inputSchema:
+        type: object
+        properties:
+          name: { type: string }
+          base64: { type: string }
+          path: { type: string }
+          storageKey: { type: string }
+        required: [name]
+
+    - name: "onnx.index.save"
+      description: "Save an ONNX index to a file path or browser storage."
+      inputSchema:
+        type: object
+        properties:
+          name: { type: string }
+          path: { type: string }
+          storageKey: { type: string }
+        required: [name]
+
     - name: "onnx.index.describe"
       description: "Describe the structure and metadata of the ONNX FlatBuffer search index."
       inputSchema:
@@ -52,6 +123,26 @@ mcp:
       uri: "plugin://onnx/prompts"
       mimeType: "application/json"
       description: "Reusable ONNX prompt templates for search and response composition."
+
+    - name: "onnx.models"
+      uri: "plugin://onnx/models"
+      mimeType: "application/json"
+      description: "ONNX model metadata from the plugin zoo."
+
+    - name: "onnx.mappings"
+      uri: "plugin://onnx/mappings"
+      mimeType: "application/json"
+      description: "ONNX model mapping profiles."
+
+    - name: "onnx.indices"
+      uri: "plugin://onnx/indices"
+      mimeType: "application/json"
+      description: "Loaded ONNX indices and metadata."
+
+    - name: "onnx.activeIndex"
+      uri: "plugin://onnx/active-index"
+      mimeType: "application/json"
+      description: "The currently active ONNX index."
 
     - name: "onnx.guide"
       uri: "plugin://onnx/guide"

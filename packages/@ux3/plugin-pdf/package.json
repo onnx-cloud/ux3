@@ -1,0 +1,15 @@
+{
+  "name": "@ux3/plugin-pdf",
+  "version": "0.1.0",
+  "description": "PDF generator plugin for UX3 with MCP tool support.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@ux3/ux3": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

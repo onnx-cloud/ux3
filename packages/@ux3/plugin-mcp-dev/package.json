@@ -1,0 +1,12 @@
+{
+  "name": "@ux3/plugin-mcp-dev",
+  "version": "0.1.0",
+  "description": "Developer MCP tooling plugin for UX3, exposing build-time project inspection and developer workflows over MCP.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

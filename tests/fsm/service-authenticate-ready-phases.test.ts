@@ -60,8 +60,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
 
     // Recreate app with hooks registered
     const config2 = createTestConfig();
-    const app2 = new AppContextBuilder(config2)
-      .withMachines()
+    const _b = new AppContextBuilder(config2);
+    await _b.withMachines();
+    const app2 = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -78,8 +79,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const serviceInstances: any[] = [];
 
     // Create app with hooks
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -105,8 +107,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     let appContextProvided = false;
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -128,8 +131,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const phaseSequence: string[] = [];
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -156,8 +160,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     let errorCaught = false;
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -183,8 +188,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const readyServices: string[] = [];
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -207,8 +213,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const serviceInstances: any[] = [];
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -233,8 +240,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     let appContextProvided = false;
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -255,8 +263,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const phaseOrder: string[] = [];
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -278,8 +287,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
   it('should handle READY phase errors gracefully', async () => {
     const config = createTestConfig();
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -305,8 +315,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const phases: Array<{ phase: string; service: string }> = [];
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -339,8 +350,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     let authenticateHookCalled = false;
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -364,8 +376,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const skippedServices = new Set<string>();
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -388,8 +401,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const hookCalls: string[] = [];
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -430,8 +444,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
       templates: {},
     };
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -453,8 +468,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
 
     // We can't directly test createAppContext in the test without DOM,
     // but we can verify the structure is correct
-    const builder = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const builder = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -483,8 +499,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
   it('should handle services with no AUTHENTICATE handlers', async () => {
     const config = createTestConfig();
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -500,8 +517,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
   it('should handle services with no READY handlers', async () => {
     const config = createTestConfig();
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -525,8 +543,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
       templates: {},
     };
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()
@@ -547,8 +566,9 @@ describe('Service Lifecycle AUTHENTICATE + READY Phases (Phase 1.2)', () => {
     const config = createTestConfig();
     const lifecycles: Record<string, string[]> = {};
 
-    const app = new AppContextBuilder(config)
-      .withMachines()
+    const _b = new AppContextBuilder(config);
+    await _b.withMachines();
+    const app = _b
       .withServices()
       .withWidgets()
       .withI18n()

@@ -14,7 +14,7 @@ export class LayeredLayout {
     const order = this.minimizeCrossings(levels, adjList, nodeIds)
 
     // Compute positions
-    const positions = this.computePositions(order, levels, config)
+    const positions = this.computePositions(order, levels, config, diagram.nodes)
 
     // Route edges
     const edgePaths = this.routeEdges(positions, diagram.edges)
@@ -79,12 +79,15 @@ export class LayeredLayout {
     order: Array<string[]>,
     levels: Map<string, number>,
     config: DiagramConfig,
+    nodes: MermaidDiagram['nodes'],
   ): Map<string, LayoutPosition> {
     const positions = new Map<string, LayoutPosition>()
     const padding = config.padding ?? 40
     const fontSize = config.fontSize ?? 14
-    const nodeHeight = fontSize + 16
-    const nodeWidth = 120
+    const minWidth = 120
+    const minHeight = fontSize + 24
+
+    const nodeMap = new Map(nodes.map((node) => [node.id, node]))
 
     const horizontal = config.direction === 'LR' || config.direction === 'RL'
     const reverseX = config.direction === 'RL'
@@ -92,26 +95,34 @@ export class LayeredLayout {
     const maxLevel = order.length - 1
 
     for (let level = 0; level < order.length; level++) {
-      const nodes = order[level]
-      const primary = level * (nodeHeight + padding)
+      const ids = order[level]
+      const primary = level * (minHeight + padding)
 
-      for (let i = 0; i < nodes.length; i++) {
-        const secondary = i * (nodeWidth + padding)
+      for (let i = 0; i < ids.length; i++) {
+        const node = nodeMap.get(ids[i])
+        const label = node?.label ?? ''
+        const estimatedWidth = Math.max(minWidth, Math.ceil(label.length * fontSize * 0.55) + 40)
+        const estimatedHeight = Math.max(minHeight, fontSize + 24)
+        const secondary = ids.slice(0, i).reduce((sum, id) => {
+          const prevNode = nodeMap.get(id)
+          const width = prevNode ? Math.max(minWidth, Math.ceil(prevNode.label.length * fontSize * 0.55) + 40) : minWidth
+          return sum + width + padding
+        }, 0)
         const x = horizontal ? primary : secondary
         const y = horizontal ? secondary : primary
-        positions.set(nodes[i], { x, y, width: nodeWidth, height: nodeHeight })
+        positions.set(ids[i], { x, y, width: estimatedWidth, height: estimatedHeight })
       }
     }
 
     if (reverseX) {
-      const maxX = maxLevel * (nodeHeight + padding)
+      const maxX = Math.max(...Array.from(positions.values()).map((pos) => pos.x))
       for (const [key, pos] of positions) {
         positions.set(key, { ...pos, x: maxX - pos.x })
       }
     }
 
     if (reverseY) {
-      const maxY = maxLevel * (nodeHeight + padding)
+      const maxY = Math.max(...Array.from(positions.values()).map((pos) => pos.y))
       for (const [key, pos] of positions) {
         positions.set(key, { ...pos, y: maxY - pos.y })
       }

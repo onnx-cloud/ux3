@@ -24,7 +24,7 @@
  */
 import { LifecycleComponent } from '../../lifecycle-component.js';
 import { escapeHtml } from '../../../security/sanitizer.js';
-import { UX_EVENT, UX_CHANGE } from '../../../utils/helpers.js';
+import { UX_CHANGE } from '../../../utils/helpers.js';
 
 export class UxDropdown extends LifecycleComponent {
   static formAssociated = true;
@@ -225,10 +225,10 @@ export class UxDropdown extends LifecycleComponent {
         if (filter) filter.focus();
       }, 0);
 
-      this.dispatchEvent(new CustomEvent(UX_EVENT, {
+      this.dispatchEvent(new CustomEvent('ux:overlay.open', {
         bubbles: true,
         composed: true,
-        detail: { action: 'OPEN' }
+        detail: { source: 'ux-dropdown' }
       }));
     } else {
       wrapper?.classList.remove('open');
@@ -236,10 +236,10 @@ export class UxDropdown extends LifecycleComponent {
       options?.setAttribute('aria-expanded', 'false');
       toggle?.focus();
 
-      this.dispatchEvent(new CustomEvent(UX_EVENT, {
+      this.dispatchEvent(new CustomEvent('ux:overlay.close', {
         bubbles: true,
         composed: true,
-        detail: { action: 'CLOSE' }
+        detail: { source: 'ux-dropdown' }
       }));
     }
   }
@@ -495,8 +495,4 @@ interface OptionItem {
   label: string;
   disabled: boolean;
   element: HTMLOptionElement;
-}
-
-if (!customElements.get('ux-dropdown')) {
-  customElements.define('ux-dropdown', UxDropdown);
 }

@@ -1,0 +1,105 @@
+{
+  "runId": "2026-05-14T07-42-25-400Z-3zfmfg",
+  "commit": "30c75e1",
+  "project": "@ux3/ux",
+  "timestamp": "2026-05-14T07:42:25.422Z",
+  "paper": "open-ecosystems-live-ux",
+  "title": "Open Ecosystems Live UX",
+  "categories": [
+    "open-ecosystems-live-ux"
+  ],
+  "pluginEvidence": [
+    "ux-charts",
+    "plugin-math",
+    "plugin-pdf"
+  ],
+  "commands": [
+    {
+      "label": "npm-package-integration",
+      "command": "npm run test -- tests/plugins/npm-packages.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-npm-packages.json",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "label": "ui-plugin-integration",
+      "command": "npm run test -- tests/ui/create-app-context.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-create-app-context.json",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ],
+  "artifacts": {
+    "test-results_vitest_open-ecosystems-live-ux-npm-packages_json": null,
+    "test-results_vitest_open-ecosystems-live-ux-create-app-context_json": null
+  },
+  "outcome": "partial",
+  "findings": [
+    {
+      "source": "paper-spec",
+      "category": "open-ecosystems-live-ux",
+      "severity": "info",
+      "message": "Loaded experiment metadata for paper open-ecosystems-live-ux.",
+      "path": "papers/open-ecosystems-live-ux/experiments.yaml",
+      "evidence": {
+        "title": "Open Ecosystems Live UX",
+        "categories": [
+          "open-ecosystems-live-ux"
+        ],
+        "pluginEvidence": [
+          "ux-charts",
+          "plugin-math",
+          "plugin-pdf"
+        ]
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "open-ecosystems-live-ux",
+      "severity": "warning",
+      "message": "Artifact test-results/vitest/open-ecosystems-live-ux-npm-packages.json is missing for paper open-ecosystems-live-ux.",
+      "path": "test-results/vitest/open-ecosystems-live-ux-npm-packages.json",
+      "evidence": {
+        "exists": false
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "open-ecosystems-live-ux",
+      "severity": "warning",
+      "message": "Artifact test-results/vitest/open-ecosystems-live-ux-create-app-context.json is missing for paper open-ecosystems-live-ux.",
+      "path": "test-results/vitest/open-ecosystems-live-ux-create-app-context.json",
+      "evidence": {
+        "exists": false
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "open-ecosystems-live-ux",
+      "severity": "info",
+      "message": "Skipped paper command npm-package-integration for open-ecosystems-live-ux.",
+      "path": "npm run test -- tests/plugins/npm-packages.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-npm-packages.json",
+      "evidence": {
+        "label": "npm-package-integration",
+        "command": "npm run test -- tests/plugins/npm-packages.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-npm-packages.json",
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "open-ecosystems-live-ux",
+      "severity": "info",
+      "message": "Skipped paper command ui-plugin-integration for open-ecosystems-live-ux.",
+      "path": "npm run test -- tests/ui/create-app-context.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-create-app-context.json",
+      "evidence": {
+        "label": "ui-plugin-integration",
+        "command": "npm run test -- tests/ui/create-app-context.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-create-app-context.json",
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ]
+}

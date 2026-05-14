@@ -1,0 +1,103 @@
+{
+  "runId": "2026-05-14T07-42-25-400Z-3zfmfg",
+  "commit": "30c75e1",
+  "project": "@ux3/ux",
+  "timestamp": "2026-05-14T07:42:25.422Z",
+  "paper": "compile-first-frontend",
+  "title": "Compile-first Frontend",
+  "categories": [
+    "compile-first-architectures",
+    "open-ecosystems-live-ux"
+  ],
+  "pluginEvidence": [
+    "ux-charts"
+  ],
+  "commands": [
+    {
+      "label": "compile-first-build",
+      "command": "npm run build",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "label": "ux-charts-validation",
+      "command": "npm run test -- tests/plugin-chart-js/chart-js.test.ts --reporter=json --outputFile=test-results/vitest/compile-first-frontend-ux-charts.json",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ],
+  "artifacts": {
+    "generated_build-manifest_json": "../../../generated/build-manifest.json",
+    "test-results_vitest_compile-first-frontend-ux-charts_json": null
+  },
+  "outcome": "partial",
+  "findings": [
+    {
+      "source": "paper-spec",
+      "category": "compile-first-architectures",
+      "severity": "info",
+      "message": "Loaded experiment metadata for paper compile-first-frontend.",
+      "path": "papers/compile-first-frontend/experiments.yaml",
+      "evidence": {
+        "title": "Compile-first Frontend",
+        "categories": [
+          "compile-first-architectures",
+          "open-ecosystems-live-ux"
+        ],
+        "pluginEvidence": [
+          "ux-charts"
+        ]
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "compile-first-architectures",
+      "severity": "info",
+      "message": "Artifact generated/build-manifest.json is available for paper compile-first-frontend.",
+      "path": "generated/build-manifest.json",
+      "evidence": {
+        "exists": true
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "compile-first-architectures",
+      "severity": "warning",
+      "message": "Artifact test-results/vitest/compile-first-frontend-ux-charts.json is missing for paper compile-first-frontend.",
+      "path": "test-results/vitest/compile-first-frontend-ux-charts.json",
+      "evidence": {
+        "exists": false
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "compile-first-architectures",
+      "severity": "info",
+      "message": "Skipped paper command compile-first-build for compile-first-frontend.",
+      "path": "npm run build",
+      "evidence": {
+        "label": "compile-first-build",
+        "command": "npm run build",
+        "success": false,
+        "error": "skipped"
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "compile-first-architectures",
+      "severity": "info",
+      "message": "Skipped paper command ux-charts-validation for compile-first-frontend.",
+      "path": "npm run test -- tests/plugin-chart-js/chart-js.test.ts --reporter=json --outputFile=test-results/vitest/compile-first-frontend-ux-charts.json",
+      "evidence": {
+        "label": "ux-charts-validation",
+        "command": "npm run test -- tests/plugin-chart-js/chart-js.test.ts --reporter=json --outputFile=test-results/vitest/compile-first-frontend-ux-charts.json",
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ]
+}

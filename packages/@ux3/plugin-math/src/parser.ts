@@ -92,8 +92,6 @@ function canonicalForm(node: MathNode): string {
       return `group(${canonicalForm(node.expression)})`;
     case 'relation':
       return `rel(${node.relation}:${canonicalForm(node.left)}:${canonicalForm(node.right)})`;
-    default:
-      return String(node.kind);
   }
 }
 
@@ -124,42 +122,42 @@ class Lexer {
   }
 
   peek(): MathToken {
-    const pos = this.pos;
     this.skipWhitespace();
     if (this.pos >= this.input.length) {
       return { type: 'eof', value: '', start: this.pos, end: this.pos };
     }
 
     const start = this.pos;
-    const char = this.input[this.pos];
+    let index = this.pos;
+    const char = this.input[index];
 
     if (char === '\\') {
-      this.pos += 1;
+      index += 1;
       let value = '\\';
-      while (this.pos < this.input.length && /[a-zA-Z]+/.test(this.input[this.pos])) {
-        value += this.input[this.pos++];
+      while (index < this.input.length && /[a-zA-Z]+/.test(this.input[index])) {
+        value += this.input[index++];
       }
-      return { type: 'command', value, start, end: this.pos };
+      return { type: 'command', value, start, end: index };
     }
 
-    if (/[0-9]/.test(char) || (char === '.' && /[0-9]/.test(this.input[this.pos + 1] || ''))) {
+    if (/[0-9]/.test(char) || (char === '.' && /[0-9]/.test(this.input[index + 1] || ''))) {
       let value = '';
-      while (this.pos < this.input.length && /[0-9.]/.test(this.input[this.pos])) {
-        value += this.input[this.pos++];
+      while (index < this.input.length && /[0-9.]/.test(this.input[index])) {
+        value += this.input[index++];
       }
-      return { type: 'number', value, start, end: this.pos };
+      return { type: 'number', value, start, end: index };
     }
 
     if (/[a-zA-Z]/.test(char)) {
       let value = '';
-      while (this.pos < this.input.length && /[a-zA-Z]/.test(this.input[this.pos])) {
-        value += this.input[this.pos++];
+      while (index < this.input.length && /[a-zA-Z]/.test(this.input[index])) {
+        value += this.input[index++];
       }
-      return { type: 'identifier', value, start, end: this.pos };
+      return { type: 'identifier', value, start, end: index };
     }
 
-    this.pos += 1;
-    return { type: 'symbol', value: char, start, end: this.pos };
+    index += 1;
+    return { type: 'symbol', value: char, start, end: index };
   }
 
   next(): MathToken {
@@ -229,7 +227,7 @@ function parseExpression(lexer: Lexer, source: string, minPrec: number): MathNod
     }
 
     const right = parseExpression(lexer, source, nextMin);
-    const range = parseSourceRange(opStart, right.range.end);
+    const range = parseSourceRange(left.range.start, right.range.end);
     left = RELATIONS.has(operator)
       ? makeRelationNode(operator, left, right, range, source)
       : makeOperatorNode(operator, [left, right], range, source);
@@ -483,10 +481,9 @@ function assignSemanticIds(node: MathNode): MathNode {
       node.id = hashString(`relation:${node.relation}:${node.left.id}:${node.right.id}`);
       return node;
     }
-    default:
-      node.id = hashString(`${node.kind}:${node.source}`);
-      return node;
   }
+  const exhaustive: never = node;
+  return exhaustive;
 }
 
 function finalizeMathNode(node: MathNode, source: string): MathNode {
@@ -494,4 +491,4 @@ function finalizeMathNode(node: MathNode, source: string): MathNode {
   return assignSemanticIds(normalized);
 }
 
-export { parseMathExpression, normalizeMathNode, serializeMathNode };
+export { parseMathExpression, normalizeMathNode };

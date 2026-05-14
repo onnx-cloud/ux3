@@ -61,19 +61,11 @@ function loadSchemas() {
   return schemas;
 }
 
-export const devCommand = new Command()
-  .name('dev')
-  .description('Start development server with hot reload')
-  .argument('[project]', 'project directory')
-  .option('--port <port>', 'port to run on', '1337')
-  .option('--host <host>', 'host to bind to', 'localhost')
-  .option('--open', 'open browser on startup', false)
-  .option('--mcp', 'enable MCP (Model Context Protocol) endpoint at /$/mcp', false)
-  .action(async (project: string | undefined, options: DevCommandOptions) => {
+export async function startDevServer(projectDir: string, options: DevCommandOptions) {
     try {
-      const projectDir = project ? path.resolve(project) : process.cwd();
-      loadEnvFile(projectDir);
-      const generatedDir = path.join(projectDir, 'generated');
+      const resolvedProjectDir = path.resolve(projectDir);
+      loadEnvFile(resolvedProjectDir);
+      const generatedDir = path.join(resolvedProjectDir, 'generated');
       // Clean cached generated files so template/FSM changes always take effect
       try { fs.rmSync(generatedDir, { recursive: true, force: true }); } catch {}
       fs.mkdirSync(generatedDir, { recursive: true });
@@ -88,7 +80,7 @@ export const devCommand = new Command()
         
         try {
           const configGenerator = new ConfigGenerator({
-            configDir: projectDir,
+            configDir: resolvedProjectDir,
             outputDir: generatedDir,
             schemas,
             isDevServer: true,
@@ -100,28 +92,28 @@ export const devCommand = new Command()
           const typeGenerator = new TypeGenerator({
             outputDir: generatedDir,
           });
-          const types = await typeGenerator.generate(config, projectDir);
+          const types = await typeGenerator.generate(config, resolvedProjectDir);
           const typesPath = path.join(generatedDir, 'types.ts');
           fs.writeFileSync(typesPath, types, 'utf-8');
           const typesSize = fs.statSync(typesPath).size;
 
           const serviceResolver = new ServiceResolver({
-            projectDir,
+            projectDir: resolvedProjectDir,
             outputDir: generatedDir,
           });
           const invokes = await serviceResolver.resolve();
           await serviceResolver.emit(invokes);
 
           const validator = new Validator({
-            projectDir,
+            projectDir: resolvedProjectDir,
           });
           const validation = await validator.validate();
 
           // Compile widgets from ux/widget YAML → generated/views TS
-          const viewsDir = path.join(projectDir, 'ux', 'widget');
+          const viewsDir = path.join(resolvedProjectDir, 'ux', 'widget');
           const viewsOutputDir = path.join(generatedDir, 'views');
           if (fs.existsSync(viewsDir)) {
-            const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir, projectDir);
+            const viewCompiler = new ViewCompiler(viewsDir, viewsOutputDir, resolvedProjectDir);
             await viewCompiler.compileAllViews();
           }
 
@@ -132,33 +124,33 @@ export const devCommand = new Command()
           const styles: string[] = [];
           let pkgVersion = '0.0.0';
           try {
-            const pkgData = fs.readFileSync(path.join(projectDir, 'package.json'), 'utf-8');
+            const pkgData = fs.readFileSync(path.join(resolvedProjectDir, 'package.json'), 'utf-8');
             const pkg = JSON.parse(pkgData) as { version?: string };
             if (pkg.version) pkgVersion = pkg.version;
           } catch {}
 
           // ensure dist folder exists and generate bundle on-demand
-          const outputDir = path.join(projectDir, 'dist');
+          const outputDir = path.join(resolvedProjectDir, 'dist');
           if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, { recursive: true });
           }
 
           const bundler = new Bundler({
-            projectDir,
+            projectDir: resolvedProjectDir,
             generatedDir,
             outputDir,
             minify: false,
             sourcemaps: true,
           });
           const bundlePath = await bundler.bundle();
-          bundleRel = path.relative(projectDir, bundlePath).replace(/\\/g, '/');
+          bundleRel = path.relative(resolvedProjectDir, bundlePath).replace(/\\/g, '/');
 
           if (bundleRel) {
             // collect css files
             const files = fs.readdirSync(outputDir);
             for (const f of files) {
               if (f.endsWith('.css')) {
-                styles.push(path.join(path.relative(projectDir, outputDir), f).replace(/\\/g, '/'));
+                styles.push(path.join(path.relative(resolvedProjectDir, outputDir), f).replace(/\\/g, '/'));
               }
             }
           }
@@ -174,7 +166,7 @@ export const devCommand = new Command()
             config,
             invokes,
             validation,
-            projectDir,
+            resolvedProjectDir,
             configSize,
             typesSize,
             0,
@@ -216,7 +208,7 @@ export const devCommand = new Command()
       };
 
       // Initialize dev server
-      const devServer = new DevServer(projectDir, port, options.host, {
+      const devServer = new DevServer(resolvedProjectDir, port, options.host, {
         verbose: false,
       });
 
@@ -232,7 +224,7 @@ export const devCommand = new Command()
       await devServer.start();
 
       // Start watcher
-      const watcher = new BuildWatcher(projectDir, {
+      const watcher = new BuildWatcher(resolvedProjectDir, {
         verbose: false,
         onBuildStart: async () => {
           process.stdout.write(`🔄 Rebuilding...`);
@@ -246,6 +238,10 @@ export const devCommand = new Command()
 
       if (options.mcp) {
         console.log(`🔌 MCP endpoint available at http://${options.host}:${port}/$/mcp\n`);
+      }
+
+      if (options.open) {
+        console.log(`🌐 Browser open requested for http://${options.host}:${port}`);
       }
 
       // Handle Ctrl+C and SIGTERM (idempotent, with forced timeout)
@@ -294,4 +290,22 @@ export const devCommand = new Command()
       );
       process.exit(1);
     }
+  }
+
+export const devCommand = new Command()
+  .name('dev')
+  .description('Start development server with hot reload')
+  .argument('[project]', 'project directory')
+  .option('--port <port>', 'port to run on', '1337')
+  .option('--host <host>', 'host to bind to', 'localhost')
+  .option('--open', 'open browser on startup', false)
+  .option('--mcp', 'enable MCP (Model Context Protocol) endpoint at /$/mcp', false)
+  .action(async (project: string | undefined, options: DevCommandOptions) => {
+    const projectDir = project ? path.resolve(project) : process.cwd();
+    await startDevServer(projectDir, {
+      port: options.port,
+      host: options.host,
+      open: options.open,
+      mcp: !!options.mcp,
+    });
   });

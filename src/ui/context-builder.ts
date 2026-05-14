@@ -889,6 +889,10 @@ export async function createAppContext(
           const mod = await import('@ux3/plugin-perception');
           return (mod.default || mod.PerceptionPlugin) as Plugin;
         }
+        case '@ux3/plugin-self': {
+          const mod = await import('@ux3/plugin-self');
+          return (mod.default || mod.SelfPlugin) as Plugin;
+        }
         default:
           return null;
       }
@@ -932,7 +936,8 @@ export async function createAppContext(
       if (
         pkgName === '@ux3/plugin-websearch' ||
         pkgName === '@ux3/plugin-perception' ||
-        pkgName === '@ux3/plugin-onnx'
+        pkgName === '@ux3/plugin-onnx' ||
+        pkgName === '@ux3/plugin-self'
       ) {
         const plugin = await loadPluginPackage(pkgName);
         if (plugin && context.registerPlugin) {

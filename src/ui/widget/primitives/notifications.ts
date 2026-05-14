@@ -42,7 +42,7 @@ export class UxNotifications extends UxBase {
 
     this.stack = (this.shadowRoot as unknown) as HTMLDivElement;
 
-    this.addEventListener('ux:widget.event', ((e: CustomEvent) => {
+    this.addEventListener('ux:notification.receive', ((e: CustomEvent) => {
       if (e.detail?.action === 'RECEIVE') {
         this.push(e.detail.message || '', e.detail.type || 'info', e.detail.duration || 4000, e.detail.title);
       }

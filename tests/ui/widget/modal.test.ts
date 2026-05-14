@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { UxModal } from '../../../src/ui/widget/primitives/modal';
+// Ensure primitives are registered
+import '../../../src/ui/widget/primitives/index.js';
 
 describe('UxModal - Modal Component', () => {
   let container: HTMLDivElement;
@@ -14,7 +16,7 @@ describe('UxModal - Modal Component', () => {
   });
 
   function createModal(): UxModal {
-    const el = new UxModal();
+    const el = document.createElement('ux-modal') as UxModal;
     container.appendChild(el);
     return el;
   }
@@ -32,8 +34,8 @@ describe('UxModal - Modal Component', () => {
     const modal = createModal();
     await Promise.resolve();
     const spy = vi.fn();
-    modal.addEventListener('ux:widget.modal.event', ((e: CustomEvent) => {
-      if (e.detail?.action === 'CLOSE') spy();
+    modal.addEventListener('ux:overlay.close', ((e: CustomEvent) => {
+      spy();
     }) as EventListener);
     modal.openModal();
     modal.closeModal();

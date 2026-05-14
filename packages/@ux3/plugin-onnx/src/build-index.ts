@@ -1,10 +1,13 @@
+import { mkdirSync } from 'node:fs';
 import { readFile, readdir, writeFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { serializeOnnxIndex } from './flatbuffer-parser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = path.join(__dirname, '../content');
 const PROMPTS_DIR = path.join(__dirname, '../prompts');
+const MODEL_TTL = path.join(__dirname, '../zoo/onnx/models.ttl');
 const OUT_TS = new URL('./built-index.ts', import.meta.url);
 const OUT_BIN = new URL('../dist/onnx-index.bin', import.meta.url);
 
@@ -24,16 +27,208 @@ interface PromptTemplate {
   category: string;
 }
 
+interface OnnxBinding {
+  name: string;
+  term: string;
+  shape: string;
+  type: string;
+}
+
+interface OnnxModel {
+  id: string;
+  path: string;
+  version: string;
+  task: string;
+  inputShape: string;
+  outputShape: string;
+  batchSize: number;
+  latency: number;
+  mapId: string;
+  gpu: boolean;
+  providers: string[];
+  tags: string[];
+  priority: number;
+  available: string;
+}
+
+interface OnnxMappingProfile {
+  id: string;
+  model: string;
+  input: OnnxBinding[];
+  output: OnnxBinding[];
+}
+
+function splitTopLevel(text: string, delimiter: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let inString = false;
+  let current = '';
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const prev = text[i - 1];
+
+    if (char === '"' && prev !== '\\') {
+      inString = !inString;
+    }
+
+    if (!inString) {
+      if (char === '[') depth += 1;
+      if (char === ']') depth -= 1;
+      if (char === delimiter && depth === 0) {
+        parts.push(current.trim());
+        current = '';
+        continue;
+      }
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts.filter(Boolean);
+}
+
+function parseTurtleValue(value: string): any {
+  const text = value.trim();
+  if (text.startsWith('[') && text.endsWith(']')) {
+    const inner = text.slice(1, -1).trim();
+    const triples = splitTopLevel(inner, ';').map((entry) => entry.trim()).filter(Boolean);
+    const obj: Record<string, any> = {};
+    for (const triple of triples) {
+      const [predicate, rawObject] = triple.split(/\s+(.+)/s);
+      const parsed = parseTurtleValue(rawObject.trim());
+      const key = predicate.trim();
+      if (obj[key]) {
+        obj[key] = Array.isArray(obj[key]) ? [...obj[key], parsed] : [obj[key], parsed];
+      } else {
+        obj[key] = parsed;
+      }
+    }
+    return obj;
+  }
+
+  const literalMatch = text.match(/^"([\s\S]*?)"(?:\^\^([^\s]+))?$/);
+  if (literalMatch) {
+    const [, raw, type] = literalMatch;
+    if (type?.endsWith('integer')) {
+      return Number(raw);
+    }
+    if (type?.endsWith('boolean')) {
+      return raw === 'true';
+    }
+    return raw;
+  }
+
+  if (text === 'true') return true;
+  if (text === 'false') return false;
+  const numeric = Number(text);
+  if (!Number.isNaN(numeric) && String(numeric) === text) {
+    return numeric;
+  }
+
+  return text;
+}
+
+function parseTurtle(text: string) {
+  const cleaned = text
+    .replace(/#.*/g, '')
+    .replace(/\r?\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const statements = splitTopLevel(cleaned, '.').map((part) => part.trim()).filter(Boolean);
+  const subjects: Record<string, Record<string, any>> = {};
+
+  for (const statement of statements) {
+    const [subjectToken, rest] = statement.split(/\s+(.+)/s);
+    if (!rest) continue;
+    const subject = subjectToken.trim();
+    const predicateClauses = splitTopLevel(rest, ';').map((c) => c.trim()).filter(Boolean);
+    const model: Record<string, any> = subjects[subject] || {};
+
+    for (const clause of predicateClauses) {
+      const [predicate, objectRaw] = clause.split(/\s+(.+)/s);
+      if (!predicate || !objectRaw) continue;
+      const value = parseTurtleValue(objectRaw.trim());
+      const key = predicate.trim();
+      if (model[key]) {
+        model[key] = Array.isArray(model[key]) ? [...model[key], value] : [model[key], value];
+      } else {
+        model[key] = value;
+      }
+    }
+
+    subjects[subject] = model;
+  }
+
+  return subjects;
+}
+
+function normalizeTurtleTerm(value: any): string {
+  if (typeof value !== 'string') return String(value);
+  return value.replace(/^[:<]?([^:>]+):?$/, '$1');
+}
+
+function buildModelMetadata(): Promise<{ models: OnnxModel[]; mappings: OnnxMappingProfile[] }> {
+  return readFile(MODEL_TTL, 'utf-8').then((raw) => {
+    const subjects = parseTurtle(raw);
+    const models: OnnxModel[] = [];
+    const mappings: OnnxMappingProfile[] = [];
+
+    for (const subject of Object.keys(subjects)) {
+      const entry = subjects[subject];
+      if (entry['a'] === 'onnx:Model') {
+        models.push({
+          id: String(entry['onnx:id'] ?? normalizeTurtleTerm(subject)),
+          path: String(entry['onnx:path'] ?? ''),
+          version: String(entry['onnx:version'] ?? ''),
+          task: String(entry['onnx:task'] ?? ''),
+          inputShape: String(entry['onnx:inputShape'] ?? ''),
+          outputShape: String(entry['onnx:outputShape'] ?? ''),
+          batchSize: Number(entry['onnx:batchSize'] ?? 0),
+          latency: Number(entry['onnx:latency'] ?? 0),
+          mapId: String(entry['onnx:mapId'] ?? ''),
+          gpu: Boolean(entry['onnx:gpu'] ?? false),
+          providers: (Array.isArray(entry['onnx:provider']) ? entry['onnx:provider'] : entry['onnx:provider'] ? [entry['onnx:provider']] : []).map(normalizeTurtleTerm),
+          tags: (Array.isArray(entry['onnx:tag']) ? entry['onnx:tag'] : entry['onnx:tag'] ? [entry['onnx:tag']] : []).map(normalizeTurtleTerm),
+          priority: Number(entry['onnx:priority'] ?? 0),
+          available: String(entry['onnx:available'] ?? ''),
+        });
+      }
+
+      if (entry['a'] === 'onnx:MappingProfile') {
+        const inputValues = Array.isArray(entry['onnx:input']) ? entry['onnx:input'] : entry['onnx:input'] ? [entry['onnx:input']] : [];
+        const outputValues = Array.isArray(entry['onnx:output']) ? entry['onnx:output'] : entry['onnx:output'] ? [entry['onnx:output']] : [];
+
+        mappings.push({
+          id: String(entry['onnx:id'] ?? normalizeTurtleTerm(subject)),
+          model: String(entry['onnx:model'] ?? ''),
+          input: inputValues.map((binding: any) => ({
+            name: String(binding['onnx:name'] ?? ''),
+            term: String(binding['onnx:term'] ?? ''),
+            shape: String(binding['onnx:shape'] ?? ''),
+            type: String(binding['onnx:type'] ?? ''),
+          })),
+          output: outputValues.map((binding: any) => ({
+            name: String(binding['onnx:name'] ?? ''),
+            term: String(binding['onnx:term'] ?? ''),
+            shape: String(binding['onnx:shape'] ?? ''),
+            type: String(binding['onnx:type'] ?? ''),
+          })),
+        });
+      }
+    }
+
+    return { models, mappings };
+  });
+}
+
 function encodeUtf8(value: string): Uint8Array {
   return new TextEncoder().encode(value);
-}
-
-function writeUint16(view: DataView, offset: number, value: number): void {
-  view.setUint16(offset, value, true);
-}
-
-function writeUint32(view: DataView, offset: number, value: number): void {
-  view.setUint32(offset, value, true);
 }
 
 function stripMarkdown(text: string): string {
@@ -134,60 +329,21 @@ async function buildPromptTemplates(): Promise<PromptTemplate[]> {
   return prompts;
 }
 
-async function buildFlatBufferPayload(payload: unknown): Promise<Uint8Array> {
-  const text = JSON.stringify(payload);
-  const payloadBytes = encodeUtf8(text);
-
-  const vtableLength = 6;
-  const tableSize = 8;
-  const rootTableStart = 4 + vtableLength;
-  const paddedRootTableStart = Math.ceil(rootTableStart / 4) * 4;
-  const fieldEntryOffset = 4;
-  const fieldValueOffset = 4;
-
-  const tableEnd = paddedRootTableStart + tableSize;
-  const payloadStart = Math.ceil(tableEnd / 4) * 4;
-  const totalSize = payloadStart + 4 + payloadBytes.length;
-
-  const buffer = new Uint8Array(totalSize);
-  const view = new DataView(buffer.buffer);
-
-  writeUint32(view, 0, paddedRootTableStart);
-
-  const vtableStart = 4;
-  writeUint16(view, vtableStart + 0, vtableLength);
-  writeUint16(view, vtableStart + 2, tableSize);
-  writeUint16(view, vtableStart + 4, fieldEntryOffset);
-
-  const rootTableOffset = paddedRootTableStart;
-  const vtableOffset = vtableStart - rootTableOffset;
-  view.setInt16(rootTableOffset + 0, vtableOffset, true);
-  view.setInt16(rootTableOffset + 2, 0, true);
-  writeUint32(view, rootTableOffset + 4, fieldValueOffset);
-
-  writeUint32(view, payloadStart, payloadBytes.length);
-  buffer.set(payloadBytes, payloadStart + 4);
-
-  return buffer;
-}
-
-function base64FromBytes(bytes: Uint8Array): string {
-  return Buffer.from(bytes).toString('base64');
-}
-
 async function main() {
   const content = await buildContentEntries();
   const prompts = await buildPromptTemplates();
+  const { models, mappings } = await buildModelMetadata();
 
-  const payload = { entries: content, prompts };
-  const bytes = await buildFlatBufferPayload(payload);
-  const base64 = base64FromBytes(bytes);
+  const payload = { entries: content, prompts, models, mappings };
+  const bytes = serializeOnnxIndex(payload);
+  const base64 = Buffer.from(bytes).toString('base64');
 
   const tsSource = `// Generated by src/build-index.ts\nexport const ONNX_INDEX_BASE64 = ${JSON.stringify(base64)};\n`;
 
   await writeFile(OUT_TS, tsSource, 'utf-8');
+  mkdirSync(path.dirname(OUT_BIN.pathname), { recursive: true });
   await writeFile(OUT_BIN, bytes, 'binary');
-  console.log(`Generated ONNX index from ${content.length} content entries and ${prompts.length} prompt templates.`);
+  console.log(`Generated ONNX index from ${content.length} content entries, ${prompts.length} prompt templates, and ${models.length} model metadata entries.`);
 }
 
 main().catch((error) => {

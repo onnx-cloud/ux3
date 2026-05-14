@@ -462,7 +462,3 @@ export class UxField extends LifecycleComponent {
     `;
   }
 }
-
-if (!customElements.get('ux-field')) {
-  customElements.define('ux-field', UxField);
-}

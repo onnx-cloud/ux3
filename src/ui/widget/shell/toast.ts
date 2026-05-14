@@ -13,7 +13,6 @@
 
 import { LifecycleComponent } from '../../lifecycle-component.js';
 import { escapeHtml } from '../../../security/sanitizer.js';
-import { UX_EVENT } from '../../../utils/helpers.js';
 
 export interface ToastConfig {
   message: string;
@@ -72,7 +71,8 @@ export class UxToastContainer extends LifecycleComponent {
    */
   show(config: ToastConfig): string {
     const id = `toast-${++this.toastCounter}`;
-    const toast = new UxToast(id, config);
+    const toast = document.createElement('ux-toast') as UxToast;
+    toast.configure(id, config);
     
     const stack = this.shadowRoot?.querySelector('.toast-stack');
     if (stack) {
@@ -81,7 +81,7 @@ export class UxToastContainer extends LifecycleComponent {
 
     this.toasts.set(id, toast);
 
-    this.dispatchEvent(new CustomEvent('ux:toast.event', {
+    this.dispatchEvent(new CustomEvent('ux:toast.open', {
       bubbles: true,
       composed: true,
       detail: { id, config, action: 'OPEN' }
@@ -107,7 +107,7 @@ export class UxToastContainer extends LifecycleComponent {
       toast.remove();
       this.toasts.delete(id);
 
-      this.dispatchEvent(new CustomEvent('ux:toast.event', {
+      this.dispatchEvent(new CustomEvent('ux:toast.close', {
         bubbles: true,
         composed: true,
         detail: { id, action: 'CLOSE' }
@@ -128,13 +128,22 @@ export class UxToastContainer extends LifecycleComponent {
  * Individual toast notification component
  */
 export class UxToast extends LifecycleComponent {
-  private toastId: string;
-  private config: ToastConfig;
+  private toastId = '';
+  private config: ToastConfig = { message: '' };
 
   constructor(id = 'inline-toast', config: ToastConfig = { message: '' }) {
     super();
+    this.configure(id, config);
+  }
+
+  configure(id: string, config: ToastConfig): void {
     this.toastId = id;
     this.config = config;
+    if (this.isConnected) {
+      this.hydrateInlineConfig();
+      this.render();
+      this.setupAccessibility();
+    }
   }
 
   protected onConnected(): void {
@@ -358,9 +367,4 @@ export class UxToast extends LifecycleComponent {
       this.remove();
     }, 200);
   }
-}
-
-if (!customElements.get('ux-toast-container')) {
-  customElements.define('ux-toast-container', UxToastContainer);
-  customElements.define('ux-toast', UxToast);
 }

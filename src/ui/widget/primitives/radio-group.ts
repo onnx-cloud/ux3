@@ -1,4 +1,4 @@
-import { UxBase } from './base.js';
+import { UxControl } from './ux-control.js';
 import { registerLightStyle } from '../../style-registry.js';
 
 const STYLE_ID = 'ux-radio-group-style';
@@ -16,7 +16,7 @@ export interface RadioOption {
   disabled?: boolean;
 }
 
-export class UxRadioGroup extends UxBase {
+export class UxRadioGroup extends UxControl {
   private _rendered = false;
 
   static get observedAttributes(): string[] {

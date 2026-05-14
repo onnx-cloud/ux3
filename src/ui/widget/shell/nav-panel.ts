@@ -267,7 +267,3 @@ export class UxNav extends HTMLElement {
     window.addEventListener('ux:app.route.navigate', this._routeNavigateHandler);
   }
 }
-
-if (typeof customElements !== 'undefined' && !customElements.get('ux-nav')) {
-  customElements.define('ux-nav', UxNav);
-}

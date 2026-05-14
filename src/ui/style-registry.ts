@@ -299,7 +299,7 @@ const _lightStyleInjected = new Set<string>();
  */
 export function registerLightStyle(id: string, css: string): void {
   if (_lightStyleInjected.has(id)) return;
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined' || !document.head) return;
   if (document.getElementById(id)) {
     _lightStyleInjected.add(id);
     return;

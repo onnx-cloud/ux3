@@ -1,0 +1,76 @@
+{
+  "runId": "2026-05-14T07-42-25-400Z-3zfmfg",
+  "commit": "30c75e1",
+  "project": "@ux3/ux",
+  "timestamp": "2026-05-14T07:42:25.422Z",
+  "paper": "live-agentic-host",
+  "title": "Live Agentic Host",
+  "categories": [
+    "live-agentic-host"
+  ],
+  "pluginEvidence": [],
+  "commands": [
+    {
+      "label": "live-agentic-host-e2e",
+      "command": "npm run test:e2e -- --grep \"Live Agentic Host\"",
+      "result": {
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ],
+  "artifacts": {
+    "test-results_playwright_results_json": "../../../test-results/playwright/results.json",
+    "test-results_playwright_results_xml": "../../../test-results/playwright/results.xml"
+  },
+  "outcome": "pass",
+  "findings": [
+    {
+      "source": "paper-spec",
+      "category": "live-agentic-host",
+      "severity": "info",
+      "message": "Loaded experiment metadata for paper live-agentic-host.",
+      "path": "papers/live-agentic-host/experiments.yaml",
+      "evidence": {
+        "title": "Live Agentic Host",
+        "categories": [
+          "live-agentic-host"
+        ],
+        "pluginEvidence": []
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "live-agentic-host",
+      "severity": "info",
+      "message": "Artifact test-results/playwright/results.json is available for paper live-agentic-host.",
+      "path": "test-results/playwright/results.json",
+      "evidence": {
+        "exists": true
+      }
+    },
+    {
+      "source": "paper-artifact",
+      "category": "live-agentic-host",
+      "severity": "info",
+      "message": "Artifact test-results/playwright/results.xml is available for paper live-agentic-host.",
+      "path": "test-results/playwright/results.xml",
+      "evidence": {
+        "exists": true
+      }
+    },
+    {
+      "source": "paper-command",
+      "category": "live-agentic-host",
+      "severity": "info",
+      "message": "Skipped paper command live-agentic-host-e2e for live-agentic-host.",
+      "path": "npm run test:e2e -- --grep \"Live Agentic Host\"",
+      "evidence": {
+        "label": "live-agentic-host-e2e",
+        "command": "npm run test:e2e -- --grep \"Live Agentic Host\"",
+        "success": false,
+        "error": "skipped"
+      }
+    }
+  ]
+}

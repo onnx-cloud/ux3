@@ -24,9 +24,6 @@ export class UxGateAnon extends HTMLElement {
     this.style.display = 'contents';
   }
 }
-if (typeof customElements !== 'undefined' && !customElements.get('ux-gate-anon')) {
-  customElements.define('ux-gate-anon', UxGateAnon);
-}
 
 // ── ux-gate-role ───────────────────────────────────────────────────────────
 export class UxGateRole extends HTMLElement {
@@ -39,9 +36,6 @@ export class UxGateRole extends HTMLElement {
     this.appendChild(gate);
     this.style.display = 'contents';
   }
-}
-if (typeof customElements !== 'undefined' && !customElements.get('ux-gate-role')) {
-  customElements.define('ux-gate-role', UxGateRole);
 }
 
 // ── ux-gate-scope ──────────────────────────────────────────────────────────
@@ -56,9 +50,6 @@ export class UxGateScope extends HTMLElement {
     this.style.display = 'contents';
   }
 }
-if (typeof customElements !== 'undefined' && !customElements.get('ux-gate-scope')) {
-  customElements.define('ux-gate-scope', UxGateScope);
-}
 
 // ── ux-gate-feature ────────────────────────────────────────────────────────
 export class UxGateFeature extends HTMLElement {
@@ -71,7 +62,4 @@ export class UxGateFeature extends HTMLElement {
     this.appendChild(gate);
     this.style.display = 'contents';
   }
-}
-if (typeof customElements !== 'undefined' && !customElements.get('ux-gate-feature')) {
-  customElements.define('ux-gate-feature', UxGateFeature);
 }

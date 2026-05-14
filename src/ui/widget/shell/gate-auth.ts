@@ -162,7 +162,3 @@ export class UxGateAuth extends HTMLElement {
     if (this.pendingSlot) this.pendingSlot.style.display = type === 'pending' ? '' : 'none';
   }
 }
-
-if (typeof customElements !== 'undefined' && !customElements.get('ux-gate-auth')) {
-  customElements.define('ux-gate-auth', UxGateAuth);
-}

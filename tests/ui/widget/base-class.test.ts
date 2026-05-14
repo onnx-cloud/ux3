@@ -126,7 +126,7 @@ const ACCEPTABLE_BASES = new Set([
   UxBase,
   LifecycleComponent,
   HTMLElement,
-  // The abstract __HTMLElement shim used when HTMLElement is unavailable (SSR):
+  // This __HTMLElement shim used when HTMLElement is unavailable (SSR):
   (LifecycleComponent as any).prototype
     ? Object.getPrototypeOf(LifecycleComponent.prototype)?.constructor
     : null,

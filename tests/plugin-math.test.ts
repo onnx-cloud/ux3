@@ -1,17 +1,25 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { MathPlugin } from '@ux3/plugin-math';
 import type { MathPluginUtils } from '@ux3/plugin-math';
-
-import { parseMathExpression, normalizeMathNode } from '@ux3/plugin-math/src/parser.js';
-import { renderMathHtml, renderMathMathML, serializeMathNode } from '@ux3/plugin-math/src/render.js';
+import { parse, normalize, serialize, renderHtml, renderMathML } from '@ux3/plugin-math';
 
 const mathUtils = {
-  parse: parseMathExpression,
-  normalize: normalizeMathNode,
-  serialize: serializeMathNode,
-  renderHtml: renderMathHtml,
-  renderMathML: renderMathMathML,
+  parse,
+  normalize,
+  serialize,
+  renderHtml,
+  renderMathML,
 } as MathPluginUtils;
+
+let mockApp: any;
+
+beforeEach(() => {
+  delete (MathPlugin as any).config;
+  mockApp = {
+    config: { plugins: {} },
+    utils: {},
+  };
+});
 
 describe('@ux3/plugin-math', () => {
   it('parses and normalizes basic operators', () => {
@@ -34,7 +42,7 @@ describe('@ux3/plugin-math', () => {
   });
 
   it('serializes round-trip TeX-lite', () => {
-    const node = mathUtils.parse('x^2 + \sin y = \frac{1}{2}');
+    const node = mathUtils.parse('x^2 + \\sin y = \\frac{1}{2}');
     const serialized = mathUtils.serialize(node);
     expect(serialized).toContain('x^{2}');
     expect(serialized).toContain('\\sin');
@@ -42,7 +50,7 @@ describe('@ux3/plugin-math', () => {
   });
 
   it('renders HTML and MathML from IR', () => {
-    const node = mathUtils.parse('x^2 + \frac{a}{b}');
+    const node = mathUtils.parse('x^2 + \\frac{a}{b}');
     const html = mathUtils.renderHtml(node);
     const mathml = mathUtils.renderMathML(node);
 
@@ -55,8 +63,38 @@ describe('@ux3/plugin-math', () => {
   it('supports implicit multiplication and grouping', () => {
     const node = mathUtils.parse('2x + (a + b)');
     expect(node.kind).toBe('operator');
-    expect(node.operands[0].kind).toBe('operator');
-    expect(node.operands[0].operator).toBe('*');
-    expect(node.operands[1].kind).toBe('group');
+    expect(node.operator).toBe('+');
+    const multiply = node.operands.find((operand) => operand.kind === 'operator' && operand.operator === '*');
+    const group = node.operands.find((operand) => operand.kind === 'group');
+    expect(multiply).toBeDefined();
+    expect(group).toBeDefined();
+  });
+
+  it('registers math utilities on plugin install', () => {
+    MathPlugin.install?.(mockApp);
+    expect(mockApp.utils.math).toBeDefined();
+    expect(typeof mockApp.utils.math.parse).toBe('function');
+    expect(typeof mockApp.utils.math.serialize).toBe('function');
+  });
+
+  it('registers markdown math renderers when markdown service is available', () => {
+    mockApp.services = {
+      markdown: {
+        registerCodeBlockRenderer: vi.fn(),
+        registerInlineCodeRenderer: vi.fn(),
+      },
+    };
+
+    MathPlugin.install?.(mockApp);
+    expect(mockApp.services.markdown.registerCodeBlockRenderer).toHaveBeenCalledWith('math', expect.any(Function));
+    expect(mockApp.services.markdown.registerCodeBlockRenderer).toHaveBeenCalledWith('latex', expect.any(Function));
+    expect(mockApp.services.markdown.registerInlineCodeRenderer).toHaveBeenCalledWith('math', expect.any(Function));
+    expect(mockApp.services.markdown.registerInlineCodeRenderer).toHaveBeenCalledWith('latex', expect.any(Function));
+  });
+
+  it('skips plugin install when both inline and block math are disabled', () => {
+    (MathPlugin as any).config = { enableInlineMath: false, enableBlockMath: false };
+    MathPlugin.install?.(mockApp);
+    expect(mockApp.utils.math).toBeUndefined();
   });
 });

@@ -1,0 +1,16 @@
+title: "Open Ecosystems Live UX"
+description: "Evidence for plugin interoperability and ecosystem integration."
+categories:
+  - open-ecosystems-live-ux
+pluginEvidence:
+  - ux-charts
+  - plugin-math
+  - plugin-pdf
+commands:
+  - label: npm-package-integration
+    command: npm run test -- tests/plugins/npm-packages.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-npm-packages.json
+  - label: ui-plugin-integration
+    command: npm run test -- tests/ui/create-app-context.test.ts --reporter=json --outputFile=test-results/vitest/open-ecosystems-live-ux-create-app-context.json
+artifacts:
+  - test-results/vitest/open-ecosystems-live-ux-npm-packages.json
+  - test-results/vitest/open-ecosystems-live-ux-create-app-context.json

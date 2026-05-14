@@ -15,6 +15,8 @@ import { previewCommand } from '../../src/cli/commands/preview.ts';
 import { helpCommand } from '../../src/cli/commands/help.ts';
 import { pluginCommand } from '../../src/cli/commands/plugin.ts';
 import { componentCommand } from '../../src/cli/commands/component.ts';
+import { selfCommand } from '../../src/cli/commands/self.ts';
+import * as devCommandModule from '../../src/cli/commands/dev.ts';
 
 // helper to run a command and capture exit code
 async function runCommand(cmd: any, args: string[], cwd: string) {
@@ -63,6 +65,7 @@ describe('UX3 CLI commands', () => {
     expect(idx.createCommand).toBeDefined();
     expect(idx.componentCommand).toBeDefined();
     expect(idx.devCommand).toBeDefined();
+    expect(idx.selfCommand).toBeDefined();
     expect(idx.buildCommand).toBeDefined();
     expect(idx.syncCommand).toBeDefined();
     expect(idx.lintCommand).toBeDefined();
@@ -96,6 +99,30 @@ describe('UX3 CLI commands', () => {
     expect(await fs.pathExists(path.join(project, 'ux', 'widget', 'hello.yaml'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux', 'widget', 'hello', 'clicked.html'))).toBe(true);
     expect(await fs.pathExists(path.join(project, 'ux3.config.json'))).toBe(true);
+  });
+
+  it('`self` bootstraps a self-hosted project scaffold without starting the server', async () => {
+    const project = path.join(tmpRoot, 'proj-self');
+    const startSpy = vi.spyOn(devCommandModule, 'startDevServer').mockResolvedValue(undefined);
+
+    try {
+      const exit = await runCommand(selfCommand, ['proj-self', '--template', 'app', '--port', '1337', '--host', 'localhost'], tmpRoot);
+      expect(exit).toBe(0);
+      expect(await fs.pathExists(path.join(project, 'ux', 'widget', 'self-onboarding.yaml'))).toBe(true);
+      expect(await fs.pathExists(path.join(project, 'ux', 'widget', 'self-onboarding', 'details.html'))).toBe(true);
+      expect(await fs.pathExists(path.join(project, 'ux', 'route', 'routes.yaml'))).toBe(true);
+
+      const env = await fs.readFile(path.join(project, '.env'), 'utf-8');
+      expect(env).toContain('UX3_SELF=1');
+      expect(env).toContain('UX3_MCP=1');
+      expect(env).toContain('UX3_PORT=1337');
+      expect(env).toContain('UX3_HOST=localhost');
+
+      const pkg = await fs.readJson(path.join(project, 'package.json'));
+      expect(pkg.dependencies['@ux3/plugin-self']).toBeDefined();
+    } finally {
+      startSpy.mockRestore();
+    }
   });
 
   it('`create --template app` scaffolds from the app project template', async () => {

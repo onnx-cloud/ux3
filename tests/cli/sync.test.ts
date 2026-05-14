@@ -68,20 +68,20 @@ describe('ux3 sync hints', () => {
 
   it('does not overwrite without --force', async () => {
     await fs.ensureDir(path.join(project, 'ux', 'view'));
-    await fs.writeFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'sentinel', 'utf8');
+    await fs.writeFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'sentinel', 'utf8');
 
     const code = await runHints(['--project', project]);
     expect(code).toBe(0);
-    expect(await fs.readFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'utf8')).toBe('sentinel');
+    expect(await fs.readFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'utf8')).toBe('sentinel');
   });
 
   it('overwrites existing hint files with --force', async () => {
     await fs.ensureDir(path.join(project, 'ux', 'view'));
-    await fs.writeFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'sentinel', 'utf8');
+    await fs.writeFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'sentinel', 'utf8');
 
     const code = await runHints(['--project', project, '--force']);
     expect(code).toBe(0);
-    expect(await fs.readFile(path.join(project, 'ux', 'view', 'HINTS.md'), 'utf8')).not.toBe('sentinel');
+    expect(await fs.readFile(path.join(project, 'ux', 'view', HINTS_FILENAME), 'utf8')).not.toBe('sentinel');
   });
 });
 

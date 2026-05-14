@@ -18,7 +18,16 @@ npm run test:watch
 npm run test:e2e
 npm run test:e2e:debug
 npm run a11y-audit
+npm run researcher
 ```
+
+## Research Assistant
+
+Run `npm run researcher` to collect build, validation, and test artifacts into a root report and paper-specific findings files under `papers/*/findings/verified-findings.json`.
+
+Paper-specific experiment configuration is now stored in `papers/*/experiments.yaml`, and the researcher command reads each paper manifest to execute the correct evidence pipeline.
+
+Use `npm run researcher -- --skip-commands` to generate findings from existing artifact files without re-running the full build/test pipeline.
 
 ## What Build Validates
 

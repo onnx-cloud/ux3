@@ -165,6 +165,4 @@ export class UxButton extends LifecycleComponent {
   }
 }
 
-if (!customElements.get('ux-button')) {
-  customElements.define('ux-button', UxButton);
-}
+// registered via registerBuiltInPrimitives()
